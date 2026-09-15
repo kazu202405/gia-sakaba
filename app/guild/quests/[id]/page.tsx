@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { BackLink, MemberRow, Window, questCategoryMark } from "@/components/guild/cards";
+import { BackLink, MemberRow, MoreLink, Window, questCategoryMark } from "@/components/guild/cards";
 import { QuestJoinButton } from "@/components/guild/quest-join-button";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
-import { getProfile, getQuest, guild, parties } from "@/lib/guild/mock-data";
+import { ME_ID, applicantCount, canSeeApplicants, getProfile, getQuest, guild, parties } from "@/lib/guild/mock-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -44,7 +44,7 @@ export default async function QuestDetailPage({ params }: Props) {
             <>
               <dt className="c-label">にんずう</dt>
               <dd>
-                {q.member_limit}人まで（参加したい {q.applicant_ids.length}人）
+                {q.member_limit}人まで（参加したい {applicantCount(q.id)}人）
               </dd>
             </>
           )}
@@ -54,6 +54,12 @@ export default async function QuestDetailPage({ params }: Props) {
 
         <div className="c-dashed-top mt-8 pt-6">
           <QuestJoinButton quest={q} />
+          {/* ギルドマスターは、人のクエストでも参加したい人を見られる */}
+          {q.creator_id !== ME_ID && canSeeApplicants(q, ME_ID) && (
+            <div className="mt-4">
+              <MoreLink href={`/guild/quests/${q.id}/applicants`} label={`参加したい人を見る（${guild.terms.master}）`} />
+            </div>
+          )}
         </div>
       </Window>
 

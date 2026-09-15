@@ -105,7 +105,21 @@ export type Quest = {
   is_urgent: boolean;
   status: QuestStatus;
   created_at: string;
-  applicant_ids: string[];
+};
+
+/**
+ * 「参加したい」。見えるのは本人・出した人・ギルドマスターだけ（ほかの参加希望者には人数だけ）。
+ * 出した人が「この人にお願いしたい」を押すと、quest_id 付きの紹介依頼（IntroRequest）ができる。
+ * 「選ばれた」かどうかはここに持たず、紹介依頼があるかで判断する（同じ意味の列を2つ作らない）。
+ */
+export type QuestApplicationStatus = "applied" | "withdrawn";
+
+export type QuestApplication = {
+  quest_id: string;
+  user_id: string;
+  message: string;
+  status: QuestApplicationStatus;
+  created_at: string;
 };
 
 export type IntroPurpose = "work" | "consult" | "collab" | "info";

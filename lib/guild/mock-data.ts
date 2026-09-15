@@ -1,7 +1,16 @@
 // 見本用の架空データ。実在の人物ではない（ギルドマスターの五島さんだけ本人）。
 // Supabase につなぐときは、このファイルの関数を同じ名前・同じ戻り値のまま中身だけ差し替える。
 
-import type { GiaApplicantImport, Guild, IntroRequest, Party, Profile, ProfileContact, Quest } from "./types";
+import type {
+  GiaApplicantImport,
+  Guild,
+  IntroRequest,
+  Party,
+  Profile,
+  ProfileContact,
+  Quest,
+  QuestApplication,
+} from "./types";
 
 /** 業種の選択肢（本番は sakaba.tags の kind=industry） */
 export const industryOptions = [
@@ -329,7 +338,6 @@ export const quests: Quest[] = [
     is_urgent: true,
     status: "open",
     created_at: "2026-09-12",
-    applicant_ids: ["p-morita"],
   },
   {
     id: "q-izakaya-tax",
@@ -344,7 +352,6 @@ export const quests: Quest[] = [
     is_urgent: false,
     status: "open",
     created_at: "2026-09-13",
-    applicant_ids: [],
   },
   {
     id: "q-akiya-biz",
@@ -359,7 +366,6 @@ export const quests: Quest[] = [
     is_urgent: false,
     status: "open",
     created_at: "2026-09-10",
-    applicant_ids: ["p-komatsu", "p-ishii"],
   },
   {
     id: "q-ai-training",
@@ -374,7 +380,6 @@ export const quests: Quest[] = [
     is_urgent: false,
     status: "in_progress",
     created_at: "2026-09-05",
-    applicant_ids: ["p-goto"],
   },
   {
     id: "q-seminar-cohost",
@@ -389,7 +394,6 @@ export const quests: Quest[] = [
     is_urgent: false,
     status: "open",
     created_at: "2026-09-14",
-    applicant_ids: [],
   },
   {
     id: "q-seitai-lp",
@@ -404,8 +408,62 @@ export const quests: Quest[] = [
     is_urgent: false,
     status: "completed",
     created_at: "2026-09-02",
-    applicant_ids: ["p-komatsu", "p-ishii"],
   },
+  // 見本の本人（森田）が出したクエスト。「参加したい人を見る」を試せるように
+  {
+    id: "q-lp-writing",
+    creator_id: "p-morita",
+    title: "LPの文章を書ける方を探しています",
+    category: "work",
+    summary: "制作は自分で。お客様に響く文章を一緒に考えてほしい。",
+    body: "中小企業のLPを月に2〜3本作っています。デザインと組み上げは自分でできますが、文章でいつも止まります。\nお客様への聞き取りから一緒に入って、文章を書いていただける方を探しています。",
+    region: "東京（オンライン可）",
+    deadline: "2026-10-31",
+    member_limit: 2,
+    is_urgent: false,
+    status: "open",
+    created_at: "2026-09-13",
+  },
+];
+
+/** 「参加したい」。本番は sakaba.quest_applications */
+export const questApplications: QuestApplication[] = [
+  {
+    quest_id: "q-recruit-page",
+    user_id: "p-morita",
+    message: "採用ページの制作実績があります。撮影は協力会社と一緒に伺えます。",
+    status: "applied",
+    created_at: "2026-09-12",
+  },
+  {
+    quest_id: "q-akiya-biz",
+    user_id: "p-komatsu",
+    message: "古民家の雰囲気に合うロゴと看板を考えられます。",
+    status: "applied",
+    created_at: "2026-09-11",
+  },
+  { quest_id: "q-akiya-biz", user_id: "p-ishii", message: "", status: "applied", created_at: "2026-09-12" },
+  { quest_id: "q-ai-training", user_id: "p-goto", message: "", status: "applied", created_at: "2026-09-06" },
+  { quest_id: "q-seitai-lp", user_id: "p-komatsu", message: "", status: "applied", created_at: "2026-09-03" },
+  { quest_id: "q-seitai-lp", user_id: "p-ishii", message: "", status: "applied", created_at: "2026-09-03" },
+  // 森田のクエストへの参加希望
+  {
+    quest_id: "q-lp-writing",
+    user_id: "p-ishii",
+    message: "広告用のLPの文章なら何本も書いてきました。聞き取りから入れます。",
+    status: "applied",
+    created_at: "2026-09-13",
+  },
+  {
+    quest_id: "q-lp-writing",
+    user_id: "p-komatsu",
+    message: "デザインと合わせて、文章の方向も一緒に考えられます。",
+    status: "applied",
+    created_at: "2026-09-14",
+  },
+  { quest_id: "q-lp-writing", user_id: "p-hasegawa", message: "", status: "applied", created_at: "2026-09-15" },
+  // 取り消した人は一覧にも人数にも出さない
+  { quest_id: "q-lp-writing", user_id: "p-murakami", message: "", status: "withdrawn", created_at: "2026-09-14" },
 ];
 
 export const parties: Party[] = [
@@ -530,6 +588,19 @@ export const introRequests: IntroRequest[] = [
     created_at: "2026-09-03",
     updated_at: "2026-09-05",
   },
+  // 森田が自分のクエストの参加希望者から選んだ（クエスト経由の紹介）
+  {
+    id: "r-10",
+    requester_id: "p-morita",
+    target_id: "p-ishii",
+    quest_id: "q-lp-writing",
+    purpose: "work",
+    message: "LPの文章のクエストに手をあげてくださった石井さんにお願いしたいです。",
+    status: "reviewing",
+    outcome: null,
+    created_at: "2026-09-14",
+    updated_at: "2026-09-15",
+  },
 ];
 
 // ---- 取得関数（本番ではここを Supabase の RPC に差し替える） ----
@@ -547,10 +618,42 @@ export function listMembers(): Profile[] {
   return profiles;
 }
 
+/** そのクエストの「参加したい」（取り消した人は除く） */
+export function listApplications(questId: string): QuestApplication[] {
+  return questApplications.filter((a) => a.quest_id === questId && a.status === "applied");
+}
+
+export function applicantCount(questId: string): number {
+  return listApplications(questId).length;
+}
+
+/** その人の「参加したい」（取り消していないもの） */
+export function getApplication(questId: string, userId: string): QuestApplication | undefined {
+  return listApplications(questId).find((a) => a.user_id === userId);
+}
+
+/** 参加したい人の一覧を見られるのは、出した人とギルドマスター（owner/master）だけ */
+export function canSeeApplicants(quest: Quest, viewerId: string): boolean {
+  if (quest.creator_id === viewerId) return true;
+  const role = getProfile(viewerId)?.role;
+  return role === "owner" || role === "master";
+}
+
+/** 出した人が、その参加希望者について出した紹介依頼（取り下げたものは除く） */
+export function findQuestIntro(quest: Quest, applicantId: string): IntroRequest | undefined {
+  return introRequests.find(
+    (r) =>
+      r.quest_id === quest.id &&
+      r.requester_id === quest.creator_id &&
+      r.target_id === applicantId &&
+      r.status !== "cancelled",
+  );
+}
+
 /** 出した人か参加した人として関わり、クリアになったクエストの数 */
 export function questClearCount(profileId: string): number {
   return quests.filter(
-    (q) => q.status === "completed" && (q.creator_id === profileId || q.applicant_ids.includes(profileId)),
+    (q) => q.status === "completed" && (q.creator_id === profileId || getApplication(q.id, profileId) !== undefined),
   ).length;
 }
 

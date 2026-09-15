@@ -3,7 +3,7 @@ import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { PageTitle, QuestCard, Window } from "@/components/guild/cards";
 import { MyStatusSettings } from "@/components/guild/my-status-settings";
-import { ME_ID, getProfile, guild, parties, quests } from "@/lib/guild/mock-data";
+import { ME_ID, applicantCount, getApplication, getProfile, guild, parties, quests } from "@/lib/guild/mock-data";
 
 export const metadata: Metadata = { title: "マイページ" };
 
@@ -15,7 +15,8 @@ export default function MyPage() {
   const filled = fields.filter((f) => f.trim() !== "").length + (me.photo_url ? 1 : 0);
   const total = fields.length + 1;
 
-  const joinedQuests = quests.filter((q) => q.applicant_ids.includes(ME_ID));
+  const myQuests = quests.filter((q) => q.creator_id === ME_ID);
+  const joinedQuests = quests.filter((q) => getApplication(q.id, ME_ID) !== undefined);
   const myParties = parties.filter((p) => p.member_ids.includes(ME_ID));
 
   return (
@@ -59,6 +60,31 @@ export default function MyPage() {
 
       <Window title="こうかい はんい">
         <MyStatusSettings me={me} />
+      </Window>
+
+      <Window title={`出した ${guild.terms.quest}`}>
+        {myQuests.length === 0 ? (
+          <p className="c-muted text-sm">
+            まだ ありません。
+            <Link href="/guild/quests/new" className="ml-1 underline underline-offset-4">
+              {guild.terms.quest}を出す
+            </Link>
+          </p>
+        ) : (
+          <div className="grid gap-5 md:grid-cols-2">
+            {myQuests.map((q) => (
+              <div key={q.id} className="space-y-2">
+                <QuestCard quest={q} compact />
+                <Link
+                  href={`/guild/quests/${q.id}/applicants`}
+                  className="c-muted block text-xs underline underline-offset-4"
+                >
+                  ▶ 参加したい人を見る（{applicantCount(q.id)}人）
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
       </Window>
 
       <Window title={`参加したい ${guild.terms.quest}`}>

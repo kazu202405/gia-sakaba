@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Profile, Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
-import { getProfile } from "@/lib/guild/mock-data";
+import { applicantCount, getProfile } from "@/lib/guild/mock-data";
 import { JobAvatar } from "./job-avatar";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +121,7 @@ export function QuestCard({ quest, compact = false }: { quest: Quest; compact?: 
             {creator && <span>{creator.display_name}</span>}
             <span>ばしょ：{quest.region}</span>
             {quest.deadline && <span>しめきり：{formatDate(quest.deadline)}</span>}
-            <span>参加したい {quest.applicant_ids.length}人</span>
+            <span>参加したい {applicantCount(quest.id)}人</span>
           </p>
         </div>
       </div>
