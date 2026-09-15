@@ -6,8 +6,9 @@ import { guild, quests } from "@/lib/guild/mock-data";
 export const metadata: Metadata = { title: `${guild.terms.quest} けいじばん` };
 
 export default function QuestsPage() {
+  // 取り下げたクエストは けいじばんに出さない（参加したいと伝えていた人には おしらせで伝える）
   const open = quests
-    .filter((q) => q.status !== "completed")
+    .filter((q) => q.status === "open" || q.status === "in_progress")
     .sort((a, b) => Number(b.is_urgent) - Number(a.is_urgent) || b.created_at.localeCompare(a.created_at));
   const done = quests.filter((q) => q.status === "completed");
 

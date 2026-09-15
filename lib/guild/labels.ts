@@ -52,6 +52,7 @@ export const questStatusLabel:Record<QuestStatus, string> = {
   open: "募集中",
   in_progress: "進行中",
   completed: "クリア",
+  withdrawn: "取り下げ",
 };
 
 export const outcomeLabel: Record<IntroOutcome, string> = {

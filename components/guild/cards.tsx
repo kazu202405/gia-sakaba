@@ -149,7 +149,7 @@ function QuestMeta({ quest }: { quest: Quest }) {
       <span className="c-label">
         {questCategoryMark[quest.category]} {questCategoryLabel[quest.category]}
       </span>
-      {quest.is_urgent && !done && <span className="c-tag-urgent">急ぎ</span>}
+      {quest.is_urgent && !done && quest.status !== "withdrawn" && <span className="c-tag-urgent">急ぎ</span>}
       {quest.status !== "open" && <span className="c-chip">{questStatusLabel[quest.status]}</span>}
     </span>
   );

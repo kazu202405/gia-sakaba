@@ -4,6 +4,7 @@
 import type {
   GiaApplicantImport,
   Guild,
+  GuildNotification,
   IntroRequest,
   Party,
   Profile,
@@ -333,7 +334,7 @@ export const quests: Quest[] = [
     summary: "求人媒体に頼らず、自社のページから応募が来るようにしたい。",
     body: "今は求人媒体に年100万円ほど払っていますが、応募はほとんど来ません。\n現場の写真と先輩職人の声を載せた採用ページを作りたいです。撮影から相談できる方だと助かります。",
     region: "埼玉",
-    deadline: "2026-10-10",
+    deadline: "2026-09-26",
     member_limit: 2,
     is_urgent: true,
     status: "open",
@@ -424,6 +425,21 @@ export const quests: Quest[] = [
     status: "open",
     created_at: "2026-09-13",
   },
+  // 出した人が取り下げたクエスト（見本の本人は参加したいと伝えていた）
+  {
+    id: "q-shop-sns",
+    creator_id: "p-noguchi",
+    title: "お店のInstagramを一緒に回してくれる方",
+    category: "work",
+    summary: "新メニューの写真と投稿を、月4回ほどお願いしたい。",
+    body: "2店舗ぶんのInstagramを、スタッフが片手間で更新しています。写真の撮り方と投稿の型を一緒に作ってくれる方を探していました。",
+    region: "福岡（オンライン可）",
+    deadline: null,
+    member_limit: 1,
+    is_urgent: false,
+    status: "withdrawn",
+    created_at: "2026-09-06",
+  },
 ];
 
 /** 「参加したい」。本番は sakaba.quest_applications */
@@ -464,6 +480,7 @@ export const questApplications: QuestApplication[] = [
   { quest_id: "q-lp-writing", user_id: "p-hasegawa", message: "", status: "applied", created_at: "2026-09-15" },
   // 取り消した人は一覧にも人数にも出さない
   { quest_id: "q-lp-writing", user_id: "p-murakami", message: "", status: "withdrawn", created_at: "2026-09-14" },
+  { quest_id: "q-shop-sns", user_id: "p-morita", message: "", status: "applied", created_at: "2026-09-07" },
 ];
 
 export const parties: Party[] = [
@@ -659,4 +676,111 @@ export function questClearCount(profileId: string): number {
 
 export function partyCount(profileId: string): number {
   return parties.filter((p) => p.member_ids.includes(profileId)).length;
+}
+
+/** 見本の本人（森田）への「おしらせ」。本番は sakaba.notifications */
+export const notifications: GuildNotification[] = [
+  {
+    id: "n-1",
+    user_id: "p-morita",
+    kind: "quest_applied",
+    actor_id: "p-hasegawa",
+    quest_id: "q-lp-writing",
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: [],
+    read_at: null,
+    created_at: "2026-09-15",
+  },
+  {
+    id: "n-2",
+    user_id: "p-morita",
+    kind: "quest_applied",
+    actor_id: "p-komatsu",
+    quest_id: "q-lp-writing",
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: [],
+    read_at: null,
+    created_at: "2026-09-14",
+  },
+  {
+    id: "n-3",
+    user_id: "p-morita",
+    kind: "quest_updated",
+    actor_id: "p-kawashima",
+    quest_id: "q-recruit-page",
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: ["deadline", "is_urgent"],
+    read_at: null,
+    created_at: "2026-09-14",
+  },
+  {
+    id: "n-4",
+    user_id: "p-morita",
+    kind: "intro_progress",
+    actor_id: null,
+    quest_id: null,
+    intro_request_id: "r-5",
+    intro_status: "proposed",
+    changed_fields: [],
+    read_at: null,
+    created_at: "2026-09-14",
+  },
+  {
+    id: "n-5",
+    user_id: "p-morita",
+    kind: "intro_progress",
+    actor_id: null,
+    quest_id: null,
+    intro_request_id: "r-2",
+    intro_status: "proposed",
+    changed_fields: [],
+    read_at: "2026-09-13",
+    created_at: "2026-09-13",
+  },
+  {
+    id: "n-6",
+    user_id: "p-morita",
+    kind: "quest_applied",
+    actor_id: "p-ishii",
+    quest_id: "q-lp-writing",
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: [],
+    read_at: "2026-09-13",
+    created_at: "2026-09-13",
+  },
+  {
+    id: "n-7",
+    user_id: "p-morita",
+    kind: "intro_progress",
+    actor_id: null,
+    quest_id: null,
+    intro_request_id: "r-3",
+    intro_status: "accepted",
+    changed_fields: [],
+    read_at: "2026-09-11",
+    created_at: "2026-09-11",
+  },
+  {
+    id: "n-8",
+    user_id: "p-morita",
+    kind: "quest_withdrawn",
+    actor_id: "p-noguchi",
+    quest_id: "q-shop-sns",
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: [],
+    read_at: "2026-09-09",
+    created_at: "2026-09-09",
+  },
+];
+
+/** 新しい順 */
+export function listNotifications(userId: string): GuildNotification[] {
+  return notifications
+    .filter((n) => n.user_id === userId)
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
 }

@@ -1,8 +1,19 @@
 import { notFound } from "next/navigation";
 import { BackLink, MemberRow, MoreLink, Window, questCategoryMark } from "@/components/guild/cards";
 import { QuestJoinButton } from "@/components/guild/quest-join-button";
+import { QuestOwnerActions } from "@/components/guild/quest-owner-actions";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
-import { ME_ID, applicantCount, canSeeApplicants, getProfile, getQuest, guild, parties } from "@/lib/guild/mock-data";
+import {
+  ME_ID,
+  applicantCount,
+  canSeeApplicants,
+  getProfile,
+  getQuest,
+  guild,
+  introRequests,
+  parties,
+} from "@/lib/guild/mock-data";
+import { introsToCancelOnWithdraw } from "@/lib/guild/notifications";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -59,6 +70,13 @@ export default async function QuestDetailPage({ params }: Props) {
             <div className="mt-4">
               <MoreLink href={`/guild/quests/${q.id}/applicants`} label={`参加したい人を見る（${guild.terms.master}）`} />
             </div>
+          )}
+          {q.creator_id === ME_ID && q.status === "open" && (
+            <QuestOwnerActions
+              questId={q.id}
+              applicantCount={applicantCount(q.id)}
+              openIntroCount={introsToCancelOnWithdraw(q.id, introRequests).length}
+            />
           )}
         </div>
       </Window>

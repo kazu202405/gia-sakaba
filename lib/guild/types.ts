@@ -90,7 +90,11 @@ export type GiaApplicantImport = {
 };
 
 export type QuestCategory ="work" | "consult" | "collab" | "info";
-export type QuestStatus = "open" | "in_progress" | "completed";
+/** withdrawn＝出した人が取り下げた。けいじばんには出さない */
+export type QuestStatus = "open" | "in_progress" | "completed" | "withdrawn";
+
+/** クエストをなおしたときに「どこが変わったか」を知らせる単位（入力画面の項目と同じ） */
+export type QuestField = "category" | "title" | "summary" | "body" | "region" | "deadline" | "member_limit" | "is_urgent";
 
 export type Quest = {
   id: string;
@@ -157,4 +161,27 @@ export type Party = {
   quest_id: string;
   member_ids: string[];
   formed_at: string;
+};
+
+export type NotificationKind = "quest_applied" | "quest_updated" | "quest_withdrawn" | "intro_progress";
+
+/**
+ * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。
+ * 本番は sakaba.notifications（読めるのは本人だけ・作るのはRPCとトリガーだけ）。
+ * 文面は保存せず、種類と参照先から画面で組み立てる（lib/guild/notifications.ts）。
+ */
+export type GuildNotification = {
+  id: string;
+  user_id: string;
+  kind: NotificationKind;
+  /** 知らせのきっかけを作った人（参加したいと伝えた人など） */
+  actor_id: string | null;
+  quest_id: string | null;
+  intro_request_id: string | null;
+  /** 知らせた時点の紹介の状態。あとで依頼が進んでも、この知らせの文面は変えない */
+  intro_status: IntroStatus | null;
+  /** quest_updated のときだけ入る */
+  changed_fields: QuestField[];
+  read_at: string | null;
+  created_at: string;
 };

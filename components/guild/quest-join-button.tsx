@@ -30,7 +30,13 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
     );
   }
   if (quest.status !== "open") {
-    return <p className="c-muted text-sm">この クエストは ぼしゅうを おえています。</p>;
+    return (
+      <p className="c-muted text-sm">
+        {quest.status === "withdrawn"
+          ? "この クエストは 出した人が 取り下げました。"
+          : "この クエストは ぼしゅうを おえています。"}
+      </p>
+    );
   }
 
   if (joined) {

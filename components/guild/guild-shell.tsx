@@ -3,10 +3,13 @@
 // 酒場の外枠（C案）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
 // ギルドマスター画面はスマホの下に入りきらないので、ヘッダー右から行けるようにする。
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { guild } from "@/lib/guild/mock-data";
+import { getInitialNotifications, getNotifications, subscribeNotifications } from "@/lib/guild/notification-store";
+import { unreadCount } from "@/lib/guild/notifications";
 
 type NavItem = { href: string; label: string; short: string; exact?: boolean };
 
@@ -25,6 +28,8 @@ function isActive(pathname: string, item: { href: string; exact?: boolean }) {
 export function GuildShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const masterActive = pathname.startsWith("/guild/master");
+  const noticeActive = pathname.startsWith("/guild/notifications");
+  const unread = unreadCount(useSyncExternalStore(subscribeNotifications, getNotifications, getInitialNotifications));
 
   return (
     <div className="guild-theme min-h-screen">
@@ -34,12 +39,29 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
             GIAの酒場
           </Link>
           <span className="hidden text-xs text-[#e8cf8e] lg:inline">見本です。データは架空で、操作しても保存されません</span>
-          <Link
-            href="/guild/master"
-            className={cn("text-xs tracking-wider lg:hidden", masterActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80")}
-          >
-            {masterActive && "▶"}マスター
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/guild/notifications"
+              aria-label={unread > 0 ? `おしらせ（読んでいないもの ${unread}件）` : "おしらせ"}
+              className={cn(
+                "flex items-center gap-1 text-xs tracking-wider",
+                noticeActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80",
+              )}
+            >
+              {noticeActive && "▶"}しらせ
+              {unread > 0 && (
+                <span className="inline-flex min-w-5 justify-center bg-[#e8cf8e] px-1 text-[11px] leading-5 text-[#1b2a41] tabular-nums">
+                  {unread}
+                </span>
+              )}
+            </Link>
+            <Link
+              href="/guild/master"
+              className={cn("text-xs tracking-wider lg:hidden", masterActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80")}
+            >
+              {masterActive && "▶"}マスター
+            </Link>
+          </div>
         </div>
       </header>
 
