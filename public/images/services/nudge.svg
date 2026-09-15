@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f1f33"/>
+      <stop offset="100%" stop-color="#1a2d45"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <line x1="100" y1="100" x2="200" y2="100" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="600" y1="350" x2="700" y2="350" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="680" y1="80" x2="680" y2="180" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <line x1="120" y1="270" x2="120" y2="370" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <g transform="translate(400, 225)" opacity="0.15">
+    <circle cx="0" cy="0" r="90" fill="none" stroke="#2d8a80" stroke-width="5"/>
+    <circle cx="0" cy="0" r="60" fill="none" stroke="#2d8a80" stroke-width="4"/>
+    <circle cx="0" cy="0" r="30" fill="none" stroke="#2d8a80" stroke-width="3"/>
+    <circle cx="0" cy="0" r="8" fill="#2d8a80"/>
+    <line x1="60" y1="-60" x2="12" y2="-12" stroke="#2d8a80" stroke-width="4"/>
+    <polygon points="8,-8 20,-4 16,-16" fill="#2d8a80"/>
+    <line x1="-100" y1="0" x2="-95" y2="0" stroke="#2d8a80" stroke-width="2"/>
+    <line x1="95" y1="0" x2="100" y2="0" stroke="#2d8a80" stroke-width="2"/>
+    <line x1="0" y1="-100" x2="0" y2="-95" stroke="#2d8a80" stroke-width="2"/>
+    <line x1="0" y1="95" x2="0" y2="100" stroke="#2d8a80" stroke-width="2"/>
+  </g>
+  <circle cx="60" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="60" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+</svg>

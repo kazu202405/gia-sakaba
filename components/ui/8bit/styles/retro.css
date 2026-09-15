@@ -1,0 +1,20 @@
+/*
+ * 8bitcn/ui の retro.css を元にした（MIT・LICENSE.md 参照）。
+ * 変更点：Google Fonts の @import をやめ、next/font で読み込んだ変数を使う。
+ * Press Start 2P は英数字しか無いので、日本語は DotGothic16 に落とす。
+ */
+
+.retro {
+  font-family:
+    var(--font-pixel-en),
+    var(--font-pixel-jp),
+    system-ui,
+    sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

@@ -1,0 +1,573 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+
+  /* GIA Brand Colors */
+  /* B系統（モダン・オンラインUI / サロンLP・gia-next 全般）— Navy + Teal */
+  --gia-navy: #0f1f33;
+  --gia-teal: #2d8a80;
+  --gia-teal-light: #3a9e93;
+  --gia-gold: #c8a55a;
+  --gia-gold-light: #d4b46a;
+  --gia-warm-gray: #f8f7f5;
+
+  /* A系統（フォーマル・エディトリアル / 資料・認証導線）— Navy + Warm Gold + ivory + Serif */
+  --gia-deck-navy: #1c3550;        /* deck表紙の主色 */
+  --gia-deck-navy-deep: #0f2236;
+  --gia-deck-gold: #c08a3e;
+  --gia-deck-gold-light: #e8d4a0;
+  --gia-deck-paper: #fafaf7;       /* 紙の背景 */
+  --gia-deck-ink: #1a1a1a;
+  --gia-deck-sub: #555555;
+  --gia-deck-line: #d9d9d9;
+
+  /* ===== Editorial design language（gia-hp-redesign 由来） =====
+     Pattern B: 50/50 Hero + Cinematic Vision + Editorial TOC */
+  --edl-navy: #0B1F4A;
+  --edl-navy-deep: #050E26;
+  --edl-off-white: #F8F6F1;
+  --edl-white: #FFFFFF;
+  --edl-gold: #B89968;
+  --edl-gold-soft: #d4b888;
+  --edl-body: #1F1F1F;
+  --edl-muted: #6B6B6B;
+  --edl-line: rgba(11, 31, 74, 0.12);
+  --edl-line-dark: rgba(255, 255, 255, 0.14);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Serif headings utility */
+.heading-serif {
+  font-family: var(--font-noto-serif-jp), serif;
+}
+
+/* A系統用：本文〜ラベルまで含めて使えるserif指定。Tailwindの `font-serif` を上書きする想定。 */
+.font-serif {
+  font-family: var(--font-noto-serif-jp), "Noto Serif JP", serif;
+}
+
+/* ===== Premium Design System ===== */
+
+/* Floating animations */
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(0, -20px); }
+}
+@keyframes float-x {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(15px, -10px); }
+}
+@keyframes float-reverse {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-10px, 15px); }
+}
+
+/* Gradient mesh blob animation */
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -25px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+@keyframes mesh-drift-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 30px) scale(0.95); }
+  66% { transform: translate(25px, -15px) scale(1.05); }
+}
+
+/* Shimmer sweep */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Pulse ring for CTA */
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+/* Scroll indicator line */
+@keyframes scroll-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(300%); }
+}
+
+/* Gentle spin */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Card hover glow */
+.card-glow {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-glow:hover {
+  box-shadow:
+    0 8px 32px rgba(45, 138, 128, 0.12),
+    0 0 0 1px rgba(45, 138, 128, 0.06);
+  transform: translateY(-4px);
+}
+
+/* CTA button glow effect */
+.btn-glow {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+.btn-glow::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #c8a55a, #d4b46a, #c8a55a);
+  z-index: -1;
+  opacity: 0;
+  filter: blur(16px);
+  transition: opacity 0.4s ease;
+}
+.btn-glow:hover::after {
+  opacity: 0.5;
+}
+
+/* Shimmer badge */
+.shimmer-badge {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(200, 165, 90, 0.15) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Gradient border (animated) */
+.border-gradient-animated {
+  position: relative;
+}
+.border-gradient-animated::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    rgba(45, 138, 128, 0.4),
+    rgba(200, 165, 90, 0.4),
+    rgba(45, 138, 128, 0.4)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Noise/grain texture overlay */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Section divider gradient */
+.section-glow-top {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(45, 138, 128, 0.2), transparent);
+}
+
+/* Smooth selection color */
+::selection {
+  background: rgba(45, 138, 128, 0.15);
+  color: inherit;
+}
+
+/* ============================================================
+   Editorial Design Language — Utility classes
+   gia-hp-redesign の表現を流し込むためのクラス群
+   ============================================================ */
+
+/* font-feature: 約物詰め */
+.edl-root {
+  font-family: var(--font-jp-sans), sans-serif;
+  color: var(--edl-body);
+  font-feature-settings: "palt";
+  line-height: 1.7;
+}
+
+/* eyebrow（小見出しラベル：金線 + 全文大文字） */
+.edl-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-en), sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--edl-gold);
+  text-transform: uppercase;
+}
+.edl-eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--edl-gold);
+}
+.edl-eyebrow.is-centered {
+  justify-content: center;
+}
+
+/* section-num（"01 — Section" 表記） */
+.edl-section-num {
+  display: block;
+  font-family: var(--font-en), sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  color: var(--edl-muted);
+  text-transform: uppercase;
+}
+.edl-section-num.on-dark {
+  color: var(--edl-gold-soft);
+}
+
+/* headline（明朝系の見出し）
+   word-break: keep-all で日本語の語中改行を防ぐ。改行は <br> で明示制御する想定。 */
+.edl-headline {
+  font-family: var(--font-mincho), serif;
+  font-weight: 600;
+  line-height: 1.34;
+  color: var(--edl-navy);
+  letter-spacing: 0.015em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+/* 日本語見出し用：語中で割らせない汎用ユーティリティ */
+.edl-jp-keep {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.edl-headline .accent {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+.edl-headline .accent::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: 6px;
+  height: 14px;
+  background: var(--edl-gold);
+  opacity: 0.32;
+  z-index: -1;
+}
+.edl-headline .period {
+  color: var(--edl-gold);
+  font-weight: 700;
+}
+.edl-headline.on-dark {
+  color: var(--edl-white);
+}
+.edl-headline.on-dark .period {
+  color: var(--edl-gold-soft);
+}
+.edl-headline.on-dark .accent::after {
+  background: var(--edl-gold);
+  opacity: 0.45;
+}
+
+/* 本文ハイライト */
+.edl-hl {
+  font-weight: 600;
+  color: var(--edl-navy);
+  background: linear-gradient(transparent 65%, rgba(184, 153, 104, 0.22) 65%);
+  padding: 0 2px;
+}
+
+/* ===== CTA ===== */
+.edl-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 32px;
+  background: var(--edl-navy);
+  color: var(--edl-white);
+  text-decoration: none;
+  font-family: var(--font-jp-sans), sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  border: 1px solid var(--edl-navy);
+  transition: all 0.3s ease;
+}
+.edl-cta-primary:hover {
+  background: var(--edl-navy-deep);
+  letter-spacing: 0.14em;
+}
+.edl-cta-primary .arrow {
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: var(--edl-gold-soft);
+  position: relative;
+  transition: width 0.3s ease;
+}
+.edl-cta-primary .arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -3.5px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--edl-gold-soft);
+  border-right: 1px solid var(--edl-gold-soft);
+  transform: rotate(45deg);
+}
+.edl-cta-primary:hover .arrow {
+  width: 32px;
+}
+.edl-cta-primary.on-dark {
+  background: var(--edl-white);
+  color: var(--edl-navy);
+  border-color: var(--edl-white);
+}
+.edl-cta-primary.on-dark .arrow,
+.edl-cta-primary.on-dark .arrow::after {
+  background: var(--edl-gold);
+  border-color: var(--edl-gold);
+}
+.edl-cta-primary.on-dark:hover {
+  background: var(--edl-gold);
+  border-color: var(--edl-gold);
+  color: var(--edl-navy-deep);
+}
+.edl-cta-primary.line {
+  background: #06C755;
+  border-color: #06C755;
+}
+.edl-cta-primary.line:hover {
+  background: #04a548;
+  border-color: #04a548;
+}
+.edl-cta-primary.line .arrow,
+.edl-cta-primary.line .arrow::after {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.edl-cta-secondary {
+  font-family: var(--font-en), sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--edl-body);
+  text-decoration: none;
+  letter-spacing: 0.12em;
+  border-bottom: 1px solid var(--edl-muted);
+  padding-bottom: 5px;
+  transition: all 0.25s ease;
+}
+.edl-cta-secondary:hover {
+  color: var(--edl-navy);
+  border-color: var(--edl-gold);
+}
+.edl-cta-secondary.on-dark {
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.edl-cta-secondary.on-dark:hover {
+  color: var(--edl-gold-soft);
+  border-color: var(--edl-gold);
+}
+
+/* navy → navy-deep の縦グラデ。
+   ページ末端のdarkセクションに適用すると、Footer(navy-deep)との段差を溶かせる。
+   中盤のdarkセクションには使わない（途中で色が変わると不自然になるため）。 */
+.edl-section-fade-deep {
+  background: linear-gradient(
+    to bottom,
+    var(--edl-navy) 0%,
+    var(--edl-navy) 65%,
+    var(--edl-navy-deep) 100%
+  );
+}
+
+/* fade-in reveal（IntersectionObserverと併用） */
+.edl-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.edl-reveal.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.edl-reveal[data-delay="1"] { transition-delay: 0.1s; }
+.edl-reveal[data-delay="2"] { transition-delay: 0.2s; }
+.edl-reveal[data-delay="3"] { transition-delay: 0.35s; }
+.edl-reveal[data-delay="4"] { transition-delay: 0.5s; }
+.edl-reveal[data-delay="5"] { transition-delay: 0.65s; }
+.edl-reveal[data-delay="6"] { transition-delay: 0.8s; }
+
+/* アクセシビリティ: モーション軽減設定 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ===========================================================
+   /admin/divination の人渡し用 PNG 出力モード
+   .print-sheet ラッパー内の .print-hide を非表示にする。
+   テーブル行 <tr.print-hide> もこのラッパー内でのみ非表示。
+   通常画面（.print-sheet なし）では何も hide しない。
+
+   .print-hide-keep-space は grid セル等で「見せないが場所は残す」
+   ケース用（display:none だと grid 配置が詰まるのを避ける）。
+   =========================================================== */
+.print-sheet .print-hide {
+  display: none !important;
+}
+.print-sheet .print-hide-keep-space {
+  visibility: hidden !important;
+}

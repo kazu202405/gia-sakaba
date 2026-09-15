@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f1f33"/>
+      <stop offset="100%" stop-color="#1a2d45"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <line x1="100" y1="90" x2="220" y2="90" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="580" y1="360" x2="700" y2="360" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="690" y1="120" x2="690" y2="240" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <line x1="110" y1="210" x2="110" y2="330" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <g transform="translate(400, 225)" opacity="0.15">
+    <circle cx="0" cy="0" r="80" fill="none" stroke="#2d8a80" stroke-width="5"/>
+    <polygon points="0,-80 10,-70 -10,-70" fill="#2d8a80" transform="rotate(30, 0, 0)"/>
+    <polygon points="0,-80 10,-70 -10,-70" fill="#2d8a80" transform="rotate(150, 0, 0)"/>
+    <polygon points="0,-80 10,-70 -10,-70" fill="#2d8a80" transform="rotate(270, 0, 0)"/>
+    <circle cx="0" cy="0" r="45" fill="none" stroke="#2d8a80" stroke-width="3"/>
+    <polygon points="0,-45 7,-37 -7,-37" fill="#2d8a80" transform="rotate(90, 0, 0)"/>
+    <polygon points="0,-45 7,-37 -7,-37" fill="#2d8a80" transform="rotate(210, 0, 0)"/>
+    <polygon points="0,-45 7,-37 -7,-37" fill="#2d8a80" transform="rotate(330, 0, 0)"/>
+    <polyline points="-12,2 -4,10 14,-8" fill="none" stroke="#2d8a80" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="0" cy="-80" r="6" fill="#2d8a80"/>
+    <circle cx="69" cy="40" r="6" fill="#2d8a80"/>
+    <circle cx="-69" cy="40" r="6" fill="#2d8a80"/>
+  </g>
+  <circle cx="60" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="60" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+</svg>

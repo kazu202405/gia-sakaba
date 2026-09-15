@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f1f33"/>
+      <stop offset="100%" stop-color="#1a2d45"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <line x1="120" y1="380" x2="280" y2="380" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="520" y1="70" x2="680" y2="70" stroke="#2d8a80" stroke-width="1" opacity="0.08"/>
+  <line x1="650" y1="100" x2="650" y2="260" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <line x1="150" y1="190" x2="150" y2="350" stroke="#2d8a80" stroke-width="1" opacity="0.06"/>
+  <g transform="translate(400, 225)" opacity="0.15">
+    <path d="M-8,-70 C-55,-70 -80,-40 -80,0 C-80,25 -70,45 -55,58 C-45,67 -30,72 -8,72" fill="none" stroke="#2d8a80" stroke-width="6"/>
+    <path d="M-8,-40 C-35,-40 -50,-20 -50,5" fill="none" stroke="#2d8a80" stroke-width="4"/>
+    <path d="M-8,5 C-40,5 -55,20 -55,40" fill="none" stroke="#2d8a80" stroke-width="4"/>
+    <path d="M8,-70 C55,-70 80,-40 80,0 C80,25 70,45 55,58 C45,67 30,72 8,72" fill="none" stroke="#2d8a80" stroke-width="6"/>
+    <path d="M8,-40 C35,-40 50,-20 50,5" fill="none" stroke="#2d8a80" stroke-width="4"/>
+    <path d="M8,5 C40,5 55,20 55,40" fill="none" stroke="#2d8a80" stroke-width="4"/>
+    <line x1="0" y1="-70" x2="0" y2="72" stroke="#2d8a80" stroke-width="3"/>
+    <line x1="-90" y1="-30" x2="90" y2="-30" stroke="#2d8a80" stroke-width="1.5" stroke-dasharray="8,6"/>
+    <line x1="-90" y1="30" x2="90" y2="30" stroke="#2d8a80" stroke-width="1.5" stroke-dasharray="8,6"/>
+  </g>
+  <circle cx="60" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="60" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="60" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+  <circle cx="740" cy="390" r="3" fill="#2d8a80" opacity="0.1"/>
+</svg>

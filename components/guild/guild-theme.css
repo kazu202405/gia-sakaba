@@ -1,0 +1,338 @@
+/*
+ * GIAの酒場の見た目（C案・2026-09-15 五島さん決定）
+ * 明るい方眼の背景＋紺の太枠の窓＋文字はすべてドット（DotGothic16）。
+ * /guild と /guild-look で読み込む。
+ *
+ * 色の役割：紺 #1b2a41＝文字・枠・カーソル／金 #c8a55a＝押すボタン／赤＝「急ぎ」と入力エラーだけ
+ */
+
+.guild-theme,
+.look-c {
+  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  color: #1b2a41;
+  letter-spacing: 0.04em;
+  background-color: #f3ecd9;
+  background-image:
+    linear-gradient(rgba(27, 42, 65, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 42, 65, 0.05) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+/* ---------- 窓・カード ---------- */
+
+/* 紺の太枠＋内側の細い線＋右下にずらした影 */
+.c-window {
+  position: relative;
+  background: #fffdf6;
+  border: 3px solid #1b2a41;
+  box-shadow:
+    inset 0 0 0 3px #fffdf6,
+    inset 0 0 0 4px rgba(27, 42, 65, 0.35),
+    5px 5px 0 0 rgba(27, 42, 65, 0.18);
+}
+
+/* 窓の左上に乗る名札 */
+.c-window-title {
+  position: absolute;
+  top: -0.95rem;
+  left: 0.9rem;
+  margin: 0;
+  padding: 0.1rem 0.65rem;
+  background: #1b2a41;
+  color: #fffdf6;
+  font-size: 0.85rem;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0.1em;
+}
+
+.c-card {
+  position: relative;
+  background: #fffdf6;
+  border: 3px solid #1b2a41;
+  box-shadow: 4px 4px 0 0 rgba(27, 42, 65, 0.18);
+}
+a.c-card:hover {
+  background: #ffffff;
+}
+
+.c-dashed-top {
+  border-top: 2px dashed rgba(27, 42, 65, 0.3);
+}
+
+/* ---------- 文字 ---------- */
+
+.c-label {
+  color: #8f7337;
+}
+.c-muted {
+  color: rgba(27, 42, 65, 0.62);
+}
+
+.c-chip {
+  display: inline-block;
+  border: 2px solid #1b2a41;
+  background: #f3ecd9;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.c-chip-strong {
+  display: inline-block;
+  border: 2px solid #1b2a41;
+  background: #1b2a41;
+  color: #fffdf6;
+  padding: 0.05rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* 色が付くのは「急ぎ」だけ */
+.c-tag-urgent {
+  display: inline-block;
+  background: #c62828;
+  color: #ffffff;
+  padding: 0 0.4rem;
+  line-height: 1.6;
+}
+
+/* ---------- ボタン・入力 ---------- */
+
+/* 金のドットボタン（押す操作） */
+.rpg-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  background: #c8a55a;
+  color: #1b2a41;
+  border: 3px solid #1b2a41;
+  box-shadow:
+    inset -3px -3px 0 0 #8f7337,
+    inset 3px 3px 0 0 #e8cf8e;
+  font-family: inherit;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rpg-button:hover {
+  background: #d4b46a;
+}
+.rpg-button:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 3px 3px 0 0 #8f7337,
+    inset -3px -3px 0 0 #e8cf8e;
+}
+
+/* 控えめなボタン（戻る・キャンセル・別の人を提案 など） */
+.c-button-sub {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  background: #fffdf6;
+  color: #1b2a41;
+  border: 3px solid #1b2a41;
+  box-shadow: inset -3px -3px 0 0 rgba(27, 42, 65, 0.12);
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.c-button-sub:hover {
+  background: #f3ecd9;
+}
+.c-button-sub:active {
+  transform: translateY(2px);
+}
+
+/* 選ぶボタン（目的・アイコン・件数カードなど）。押されている間は紺に反転 */
+.c-choice {
+  border: 2px solid #1b2a41;
+  background: #fffdf6;
+  color: #1b2a41;
+  font-family: inherit;
+  cursor: pointer;
+}
+.c-choice:hover {
+  background: #f3ecd9;
+}
+.c-choice[aria-pressed="true"] {
+  background: #1b2a41;
+  color: #fffdf6;
+}
+
+.c-input {
+  width: 100%;
+  min-width: 0;
+  background: #fffdf6;
+  color: #1b2a41;
+  border: 2px solid #1b2a41;
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.c-input::placeholder {
+  color: rgba(27, 42, 65, 0.4);
+}
+.c-input:focus {
+  outline: 3px solid #c8a55a;
+  outline-offset: 0;
+}
+
+/* スイッチ：四角いつまみ。オンで金 */
+.c-switch {
+  position: relative;
+  width: 3rem;
+  height: 1.6rem;
+  flex-shrink: 0;
+  border: 3px solid #1b2a41;
+  background: #fffdf6;
+  cursor: pointer;
+}
+.c-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(1.6rem - 12px);
+  height: calc(1.6rem - 12px);
+  background: #1b2a41;
+  transition: transform 0.12s steps(2);
+}
+.c-switch[aria-checked="true"] {
+  background: #c8a55a;
+}
+.c-switch[aria-checked="true"]::after {
+  transform: translateX(1.4rem);
+}
+
+/* ドットのゲージ（進み具合・完成度） */
+.c-gauge {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 2px solid #1b2a41;
+  background: #fffdf6;
+}
+.c-gauge > span {
+  flex: 1;
+  height: 8px;
+  background: rgba(27, 42, 65, 0.12);
+}
+.c-gauge > span[data-on="true"] {
+  background: #1b2a41;
+}
+
+/* ---------- カーソル・動き ---------- */
+
+/* ▶カーソル：選べる行にマウスを乗せた／キーボードで選んだ／今いる所だけ出す */
+.rpg-cursor-row .rpg-cursor {
+  visibility: hidden;
+  display: inline-block;
+  width: 1em;
+  flex-shrink: 0;
+}
+.rpg-cursor-row:hover .rpg-cursor,
+.rpg-cursor-row:focus-visible .rpg-cursor,
+.rpg-cursor-row[data-active="true"] .rpg-cursor {
+  visibility: visible;
+}
+.guild-theme .rpg-cursor {
+  color: #1b2a41;
+}
+
+.guild-theme a:focus-visible,
+.guild-theme button:focus-visible,
+.guild-theme select:focus-visible {
+  outline: 3px solid #c8a55a;
+  outline-offset: 2px;
+}
+
+/* ▼の点滅（メッセージの続き） */
+@keyframes rpg-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.rpg-blink {
+  animation: rpg-blink 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rpg-blink {
+    animation: none;
+  }
+}
+
+/* ---------- 共通のモーダル・トースト（components/ui/dialog-host.tsx）を酒場の画面でだけ着せ替える ---------- */
+
+body:has(.guild-theme) [data-ui-dialog-card] {
+  border-radius: 0 !important;
+  background: #fffdf6 !important;
+  border: 3px solid #1b2a41;
+  box-shadow:
+    inset 0 0 0 3px #fffdf6,
+    inset 0 0 0 4px rgba(27, 42, 65, 0.35),
+    5px 5px 0 0 rgba(27, 42, 65, 0.25) !important;
+  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  color: #1b2a41;
+}
+body:has(.guild-theme) [data-ui-dialog-card] h2,
+body:has(.guild-theme) [data-ui-dialog-card] p,
+body:has(.guild-theme) [data-ui-dialog-card] input {
+  font-family: inherit !important;
+  color: #1b2a41 !important;
+}
+body:has(.guild-theme) [data-ui-dialog-card] p.text-red-600 {
+  color: #c62828 !important;
+}
+body:has(.guild-theme) [data-ui-dialog-card] input {
+  border-radius: 0 !important;
+  border: 2px solid #1b2a41 !important;
+}
+body:has(.guild-theme) [data-ui-dialog-ok] {
+  border-radius: 0 !important;
+  background: #c8a55a !important;
+  color: #1b2a41 !important;
+  border: 3px solid #1b2a41;
+  box-shadow:
+    inset -3px -3px 0 0 #8f7337,
+    inset 3px 3px 0 0 #e8cf8e;
+  font-family: inherit;
+}
+body:has(.guild-theme) [data-ui-dialog-ok][data-danger="true"] {
+  background: #c62828 !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+body:has(.guild-theme) [data-ui-dialog-cancel] {
+  border-radius: 0 !important;
+  background: #fffdf6 !important;
+  color: #1b2a41 !important;
+  border: 3px solid #1b2a41;
+  font-family: inherit;
+}
+body:has(.guild-theme) [data-ui-dialog-close] {
+  border-radius: 0 !important;
+}
+body:has(.guild-theme) [data-ui-toast] {
+  border-radius: 0 !important;
+  background: #1b2a41 !important;
+  color: #fffdf6 !important;
+  border: 3px solid #fffdf6;
+  box-shadow: 0 0 0 3px #1b2a41 !important;
+  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+body:has(.guild-theme) [data-ui-toast][data-kind="error"] {
+  background: #c62828 !important;
+}

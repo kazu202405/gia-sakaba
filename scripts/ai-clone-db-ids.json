@@ -1,0 +1,90 @@
+{
+  "mission_db": {
+    "dbId": "89951f61-31dd-4eca-bb29-9c47a15dc5fa",
+    "dsId": "e673f3a0-72f4-4392-ad9c-dd0727738de9"
+  },
+  "three_year_plan_db": {
+    "dbId": "8c87b995-4677-45f8-801e-6585701ebde5",
+    "dsId": "afe8e46e-48b3-413a-bf05-e0f4a424a26a"
+  },
+  "annual_kpi_db": {
+    "dbId": "7637ac79-c794-4655-872a-4c17fc7ab63a",
+    "dsId": "d3a3df46-66bd-4a35-81b4-7ca08d21615c"
+  },
+  "decision_principle_db": {
+    "dbId": "9053f7d5-3182-44f2-b850-5f7c3048d7fe",
+    "dsId": "ca235261-9898-43ed-a0fa-2dbac6bde912"
+  },
+  "tone_rule_db": {
+    "dbId": "c2960df5-5489-4ef2-8e49-dba272417cff",
+    "dsId": "50bc7696-7a04-4c91-ad6e-d04c36e6b9ab"
+  },
+  "ng_decision_db": {
+    "dbId": "89f4e8b4-e554-4e8f-8c14-a5405188b502",
+    "dsId": "50c116fe-84b4-4438-a7d2-b00c00ce9cbf"
+  },
+  "faq_db": {
+    "dbId": "b72baa9d-864b-4020-9691-c22a9da43375",
+    "dsId": "303a828e-9dbf-4738-ac5e-400b76d9422e"
+  },
+  "service_db": {
+    "dbId": "8ce6c732-0009-403e-8501-2199df471a72",
+    "dsId": "ac529098-90f2-4ade-a20d-010ca9877892"
+  },
+  "person_db": {
+    "dbId": "3c6594cc-01b8-453c-826b-35d3c6c633c1",
+    "dsId": "bc69802c-275d-4d0b-bf71-f38969c5d167"
+  },
+  "project_db": {
+    "dbId": "7d080918-4922-4b66-b85d-31b1d0bdd25a",
+    "dsId": "2648216b-915a-4286-ba75-7dd458ab12ba"
+  },
+  "conversation_log_db": {
+    "dbId": "d5e9d09d-4e23-437c-8f8a-8ddcaccf52e4",
+    "dsId": "e5bba92d-d85e-4211-86d9-de32835cf8e9"
+  },
+  "person_note_db": {
+    "dbId": "216a273f-7353-4f69-98e2-edf48be2676c",
+    "dsId": "53d483d6-98cd-403b-adbd-b55cac86f651"
+  },
+  "project_progress_log_db": {
+    "dbId": "63cf8587-1c23-491c-8287-f14dadea8a7b",
+    "dsId": "4fd1ba39-a5c9-4761-ac35-6bc894ba2884"
+  },
+  "task_db": {
+    "dbId": "d17173b1-d83a-42c4-9599-c3ab7f251ed5",
+    "dsId": "2be6f035-06dc-4b11-9c86-3fbd2f912c9a"
+  },
+  "activity_log_db": {
+    "dbId": "643c4875-16b0-4ad5-bfcc-940d8a923538",
+    "dsId": "eb7cf2c9-5484-4399-b386-bbc03470143d"
+  },
+  "expense_db": {
+    "dbId": "0b4018dd-8865-4917-8ce5-93544370af5e",
+    "dsId": "33da10b2-fa5e-40df-b462-0ad6ef9d0757"
+  },
+  "revenue_db": {
+    "dbId": "2aad3a24-d896-45b3-98d3-bf239b276dec",
+    "dsId": "9f8f02a0-8a82-40f1-b87c-275e958b8450"
+  },
+  "decision_log_db": {
+    "dbId": "230edb39-6f12-422d-84b5-491e367956e3",
+    "dsId": "cb0e70ed-52d2-4789-984c-565c391e2939"
+  },
+  "knowledge_candidate_db": {
+    "dbId": "27fdca91-287e-4f6b-8044-2c31da995782",
+    "dsId": "8fa9ef0e-4dd2-41f5-83dc-33215263b712"
+  },
+  "pending_rule_db": {
+    "dbId": "88123459-2bd4-4b58-ba69-67614dc0974c",
+    "dsId": "3c225e35-6d39-4cf2-aa36-df95d4e929df"
+  },
+  "weekly_review_db": {
+    "dbId": "55f52179-b3a7-4274-957b-234aa139061a",
+    "dsId": "e69751f5-f297-46d8-a0bb-afb598193951"
+  },
+  "monthly_review_db": {
+    "dbId": "d251f984-4226-4b9c-b273-9341be1a9d4d",
+    "dsId": "29429315-7798-4771-a957-7e3809c58d9f"
+  }
+}

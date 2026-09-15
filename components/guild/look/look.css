@@ -1,0 +1,53 @@
+/*
+ * 見比べ用（A・B）だけの見た目。/guild-look で読み込む。
+ * ボタン・▶カーソル・点滅・C案の窓は、決定版として components/guild/guild-theme.css に移した。
+ */
+
+/* ---------- A：夜の酒場（窓はRPG風・文字は要所だけドット） ---------- */
+
+.look-a-bg {
+  background-color: #0a1428;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(180deg, #0a1428 0%, #101c3a 100%);
+  background-size: 4px 4px, 100% 100%;
+}
+
+.rpg-window {
+  position: relative;
+  background: rgba(8, 16, 36, 0.92);
+  border: 3px solid #f4f1e8;
+  box-shadow:
+    0 0 0 3px #050a18,
+    inset 0 0 0 3px #050a18,
+    inset 0 0 0 4px rgba(244, 241, 232, 0.25);
+  color: #f4f1e8;
+}
+
+.rpg-window-title {
+  position: absolute;
+  top: -0.9rem;
+  left: 0.9rem;
+  padding: 0.1rem 0.6rem;
+  background: #050a18;
+  border: 2px solid #f4f1e8;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+}
+
+/* Aの金ボタンは暗い背景用に文字色を戻す */
+.look-a-bg .rpg-button {
+  color: #0a1428;
+  border-color: #050a18;
+}
+
+/* ---------- B：がっつり8bit（8bitcnの部品＋全部ドット） ---------- */
+
+.look-b-bg {
+  background-color: #efe6cf;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+  background-size: 8px 8px;
+}

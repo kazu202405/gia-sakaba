@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会社を見る目｜GIA 無料セミナー</title>
+<style>
+  :root {
+    --navy:#10283f; --navy-2:#193a57; --navy-3:#28506f;
+    --gold:#bd8a45; --gold-2:#e4c48e; --ivory:#f7f4ec;
+    --paper:#fffdf8; --ink:#17212a; --sub:#5f6870; --line:#d9d3c7;
+    --red:#a94c43; --green:#39745b; --blue:#3e6f91;
+  }
+  * { box-sizing:border-box; }
+  html, body { width:100%; height:100%; margin:0; overflow:hidden; background:#071522; }
+  body { font-family:"Yu Gothic UI","Yu Gothic","Hiragino Kaku Gothic ProN",Meiryo,sans-serif; color:var(--ink); }
+  button { font:inherit; }
+  #stage { position:fixed; inset:0; display:grid; place-items:center; }
+  #deck {
+    position:relative; width:1280px; height:720px; overflow:hidden;
+    transform-origin:center center; background:var(--ivory);
+    box-shadow:0 28px 90px rgba(0,0,0,.48);
+  }
+  .slide {
+    position:absolute; inset:0; display:none; overflow:hidden;
+    padding:64px 86px 54px; background:var(--ivory);
+  }
+  .slide.active { display:flex; flex-direction:column; }
+  .slide::after {
+    content:""; position:absolute; left:0; right:0; bottom:0; height:6px;
+    background:linear-gradient(90deg,var(--gold) 0 13%,transparent 13% 100%);
+  }
+  .eyebrow { color:var(--navy-3); font-size:13px; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
+  .eyebrow::before { content:""; display:inline-block; width:32px; height:2px; margin:0 13px 4px 0; background:var(--gold); }
+  h1,h2,h3,p { margin:0; }
+  h1,h2,.serif { font-family:"Yu Mincho","Hiragino Mincho ProN","Noto Serif JP",serif; }
+  h2 { color:var(--navy); font-size:42px; line-height:1.38; letter-spacing:.015em; }
+  .title { margin-top:25px; }
+  .subtitle { margin-top:12px; color:var(--sub); font-size:20px; line-height:1.7; }
+  .gold { color:var(--gold); }
+  .red { color:var(--red); }
+  .muted { color:var(--sub); }
+  .small { font-size:18px; }
+  .tiny { font-size:13px; }
+  .slide-no { position:absolute; right:56px; bottom:24px; z-index:4; font:600 12px/1 "Yu Gothic UI",sans-serif; color:#8d8d8a; letter-spacing:.16em; }
+  .brand { position:absolute; left:86px; bottom:22px; z-index:4; color:#8d8d8a; font-size:11px; letter-spacing:.18em; }
+  .diagnostic-line { position:absolute; top:31px; right:56px; width:176px; height:14px; opacity:.72; }
+  .diagnostic-line::before { content:""; position:absolute; left:0; right:0; top:6px; height:1px; background:var(--gold); }
+  .diagnostic-line::after { content:""; position:absolute; left:67%; top:1px; width:10px; height:10px; border:2px solid var(--gold); border-radius:50%; background:var(--ivory); }
+
+  /* Hero and chapter slides */
+  .hero { padding:0; background:var(--navy); color:white; }
+  .hero::after { display:none; }
+  .hero img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .hero .shade { position:absolute; inset:0; background:linear-gradient(90deg,rgba(7,21,34,.98) 0%,rgba(7,21,34,.78) 34%,rgba(7,21,34,.08) 73%); }
+  .hero-copy { position:relative; z-index:2; width:55%; margin:auto 0; padding-left:88px; }
+  .hero .kicker { color:var(--gold-2); font-size:14px; letter-spacing:.28em; font-weight:700; }
+  .hero h1 { margin-top:24px; font-size:66px; line-height:1.18; letter-spacing:.04em; }
+  .hero .promise { margin-top:28px; font-size:22px; line-height:1.8; color:rgba(255,255,255,.78); }
+  .hero .legal { position:absolute; left:88px; bottom:30px; z-index:2; color:rgba(255,255,255,.48); font-size:11px; letter-spacing:.08em; }
+
+  .chapter { justify-content:center; background:var(--navy); color:white; padding-left:110px; }
+  .chapter::after { background:var(--gold); width:180px; right:auto; }
+  .chapter .chapter-num { position:absolute; right:80px; top:50%; transform:translateY(-54%); font:500 220px/1 "Yu Mincho",serif; color:rgba(255,255,255,.055); }
+  .chapter .rule { width:72px; height:3px; background:var(--gold); margin-bottom:30px; }
+  .chapter .label { color:var(--gold-2); font-size:14px; font-weight:700; letter-spacing:.35em; }
+  .chapter h2 { margin-top:18px; color:white; font-size:52px; max-width:880px; }
+  .chapter p { margin-top:24px; max-width:760px; font-size:21px; line-height:1.9; color:rgba(255,255,255,.7); }
+
+  /* Core layouts */
+  .center { justify-content:center; align-items:center; text-align:center; }
+  .center h2 { max-width:1050px; font-size:48px; }
+  .question-mark { color:var(--gold); font:700 80px/1 "Yu Mincho",serif; margin-bottom:24px; }
+  .prompt { max-width:980px; font:700 46px/1.55 "Yu Mincho",serif; color:var(--navy); }
+  .write { margin-top:34px; padding:12px 22px; border:1px solid var(--gold); color:var(--gold); font-size:18px; letter-spacing:.08em; }
+  .big-quote { max-width:1040px; font:700 50px/1.62 "Yu Mincho",serif; color:var(--navy); }
+  .big-quote em { color:var(--gold); font-style:normal; }
+  .hairline { width:70px; height:2px; background:var(--gold); margin:34px auto; }
+  .support { max-width:860px; color:var(--sub); font-size:21px; line-height:1.85; }
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:54px; align-items:center; flex:1; }
+  .split.narrow { grid-template-columns:.86fr 1.14fr; }
+  .panel { background:rgba(255,255,255,.68); border-top:3px solid var(--navy); padding:28px 30px; }
+  .panel.gold-top { border-color:var(--gold); }
+  .panel h3 { color:var(--navy); font-size:24px; line-height:1.45; }
+  .panel p { margin-top:13px; font-size:19px; color:var(--sub); line-height:1.7; }
+  .panel .metric { font:700 44px/1.15 "Yu Mincho",serif; color:var(--navy); }
+  .panel .metric small { font:500 17px/1 sans-serif; color:var(--sub); }
+  .keyword-cloud { display:flex; flex-wrap:wrap; justify-content:center; gap:16px; max-width:970px; margin-top:42px; }
+  .keyword { padding:13px 22px; background:white; border-bottom:2px solid var(--gold); color:var(--navy); font-size:22px; font-weight:700; box-shadow:0 8px 24px rgba(16,40,63,.06); }
+  .reveal-band { margin-top:38px; padding:22px 34px; background:var(--navy); color:white; font:700 34px/1.45 "Yu Mincho",serif; }
+  .photo-full { padding:0; background:#071522; color:white; }
+  .photo-full::after { display:none; }
+  .photo-full img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .photo-full .photo-title { position:absolute; left:50%; top:48px; transform:translateX(-50%); width:980px; text-align:center; font:700 40px/1.35 "Yu Mincho",serif; text-shadow:0 3px 18px rgba(0,0,0,.65); }
+  .photo-full .side-labels { position:absolute; left:0; right:0; bottom:42px; display:grid; grid-template-columns:1fr 1fr; padding:0 54px; gap:80px; }
+  .photo-full .side-label { padding:16px 20px; background:rgba(7,21,34,.75); backdrop-filter:blur(8px); font-size:19px; line-height:1.5; text-align:center; }
+
+  /* Numbers, formulas, and charts */
+  .formula { display:flex; align-items:center; justify-content:center; gap:28px; margin-top:40px; color:var(--navy); }
+  .formula .term { padding:25px 30px; min-width:235px; background:white; border-bottom:4px solid var(--gold); font:700 30px/1.3 "Yu Mincho",serif; text-align:center; }
+  .formula .op { font-size:34px; color:var(--gold); }
+  .formula-note { margin-top:30px; text-align:center; font-size:22px; color:var(--sub); }
+  .company-card { margin-top:30px; background:white; border-left:6px solid var(--gold); padding:28px 42px; box-shadow:0 12px 36px rgba(16,40,63,.07); }
+  .company-card h3 { color:var(--navy); font:700 30px/1.2 "Yu Mincho",serif; }
+  .facts { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; margin-top:22px; background:var(--line); border:1px solid var(--line); }
+  .fact { background:white; padding:18px 12px; text-align:center; }
+  .fact span { display:block; color:var(--sub); font-size:14px; }
+  .fact strong { display:block; margin-top:7px; color:var(--navy); font:700 28px/1.2 "Yu Mincho",serif; }
+  .price-question { margin-top:34px; display:flex; justify-content:center; align-items:baseline; gap:20px; }
+  .price-question .price { color:var(--gold); font:700 68px/1 "Yu Mincho",serif; }
+  .price-question .ask { color:var(--navy); font:700 38px/1.3 "Yu Mincho",serif; }
+  .unknowns { display:grid; grid-template-columns:1fr 1fr; gap:14px 42px; margin-top:34px; }
+  .unknown { padding:15px 18px; border-bottom:1px solid var(--line); font-size:20px; color:var(--navy); }
+  .unknown::before { content:"?"; color:var(--gold); font:700 26px/1 "Yu Mincho",serif; margin-right:14px; }
+  .axis { display:grid; grid-template-columns:160px repeat(5,1fr); gap:0; align-items:center; margin-top:32px; }
+  .axis > div { padding:10px 12px; border-bottom:1px solid var(--line); text-align:center; font-size:19px; }
+  .axis .row-label { text-align:left; color:var(--navy); font-weight:700; }
+  .axis .year { color:var(--sub); font-size:13px; }
+  .axis .hot { color:var(--gold); font-weight:800; background:#fff8ea; }
+  .axis .danger { color:var(--red); font-weight:800; background:#fff1ee; }
+  .axis .good { color:var(--green); font-weight:800; background:#eef8f2; }
+
+  table { border-collapse:collapse; }
+  .compare { width:100%; margin-top:22px; font-variant-numeric:tabular-nums; background:white; }
+  .compare th,.compare td { text-align:center; border-bottom:1px solid #ebe6dc; padding:8px 5px; }
+  .compare thead th { background:var(--navy); color:white; font-size:16px; padding:10px 5px; }
+  .compare thead th:first-child { background:transparent; color:var(--navy); }
+  .compare tbody th { width:138px; text-align:left; color:var(--navy); font-size:14px; padding-left:10px; }
+  .compare tbody td { font-size:15px; }
+  .compare .sep { border-right:4px solid var(--ivory); }
+  .compare .neg { color:var(--red); font-weight:800; }
+  .compare .pos { color:var(--green); font-weight:800; }
+  .focus-a td.a,.focus-b td.b,.focus-c td.c { background:#fff7e8; font-weight:700; }
+  .focus-a td:not(.a),.focus-b td:not(.b),.focus-c td:not(.c) { color:#b6b4af; }
+  .trend-title { display:flex; align-items:baseline; justify-content:space-between; margin-top:22px; }
+  .trend-title .company { color:var(--navy); font:700 50px/1 "Yu Mincho",serif; }
+  .trend-title .verdict { color:var(--sub); font-size:20px; }
+  .insight { margin-top:28px; display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+  .insight .box { padding:24px 28px; background:white; border-left:4px solid var(--navy); }
+  .insight .box.warn { border-color:var(--red); }
+  .insight .box.good { border-color:var(--green); }
+  .insight .box h3 { font-size:18px; color:var(--sub); }
+  .insight .box strong { display:block; margin-top:10px; color:var(--navy); font:700 34px/1.25 "Yu Mincho",serif; }
+  .insight .box.warn strong { color:var(--red); }
+  .insight .box.good strong { color:var(--green); }
+  .hypothesis { margin-top:26px; padding:20px 24px; background:var(--navy); color:white; font-size:20px; line-height:1.7; }
+  .hypothesis b { color:var(--gold-2); }
+  .price-table { width:100%; margin-top:38px; background:white; font-variant-numeric:tabular-nums; }
+  .price-table th,.price-table td { padding:18px 20px; text-align:center; border-bottom:1px solid var(--line); }
+  .price-table thead th { background:var(--navy); color:white; font-size:22px; }
+  .price-table thead th:first-child { background:transparent; color:var(--navy); }
+  .price-table tbody th { text-align:left; color:var(--navy); font-size:18px; }
+  .price-table td { font:700 31px/1.2 "Yu Mincho",serif; }
+  .price-table td.pop { color:var(--gold); background:#fff8ea; }
+
+  /* Apple lesson: exact data in HTML, visual texture from a generated paper-cut apple */
+  .apple-lesson .title { margin-top:16px; font-size:38px; }
+  .apple-meta { margin-top:5px; color:var(--sub); font-size:15px; letter-spacing:.03em; }
+  .apple-board { display:grid; grid-template-columns:168px 1fr 1fr; grid-template-rows:58px repeat(3,78px) 96px; margin-top:16px; border-top:1px solid var(--gold); border-left:1px solid var(--line); background:rgba(255,255,255,.52); box-shadow:0 14px 34px rgba(16,40,63,.07); }
+  .apple-cell { min-width:0; border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .apple-head { display:flex; flex-direction:column; justify-content:center; align-items:center; background:var(--navy); color:white; text-align:center; }
+  .apple-head .mode { color:var(--gold-2); font-size:11px; font-weight:700; letter-spacing:.18em; }
+  .apple-head strong { margin-top:4px; font-size:20px; }
+  .apple-head.price { background:#18334c; color:rgba(255,255,255,.78); font-size:15px; letter-spacing:.08em; }
+  .apple-month { display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f1ece1; color:var(--navy); }
+  .apple-month strong { font:700 25px/1.1 "Yu Mincho",serif; }
+  .apple-month span { margin-top:5px; font-size:14px; color:var(--sub); }
+  .apple-purchase { display:flex; justify-content:center; align-items:center; gap:16px; padding:7px 14px; }
+  .apple-icons { display:flex; flex-wrap:wrap; justify-content:center; align-content:center; gap:2px; width:104px; }
+  .apple-icons img { width:31px; height:31px; object-fit:contain; }
+  .apple-cost { color:var(--sub); font-size:14px; white-space:nowrap; }
+  .apple-total-label { display:flex; flex-direction:column; justify-content:center; align-items:center; background:#e8dfcf; color:var(--navy); }
+  .apple-total-label strong { font:700 24px/1.2 "Yu Mincho",serif; }
+  .apple-total-label span { margin-top:5px; color:var(--sub); font-size:13px; }
+  .apple-result { display:grid; grid-template-columns:96px 1fr; align-items:center; gap:10px; padding:13px 18px; background:white; }
+  .apple-result .count { color:var(--navy); font:700 34px/1 "Yu Mincho",serif; text-align:center; }
+  .apple-result .detail { color:var(--sub); font-size:13px; line-height:1.5; }
+  .apple-result .detail b { color:var(--navy); font-size:16px; }
+  .apple-result.highlight { background:var(--navy); }
+  .apple-result.highlight .count { color:var(--gold-2); }
+  .apple-result.highlight .detail { color:rgba(255,255,255,.68); }
+  .apple-result.highlight .detail b { color:white; }
+  .divergence-slide .title { margin-top:18px; font-size:36px; }
+  .divergence-layout { display:grid; grid-template-columns:650px minmax(0,1fr); gap:36px; align-items:center; min-height:0; margin-top:18px; }
+  .divergence-figure { position:relative; width:100%; aspect-ratio:16/9; margin:0; overflow:hidden; background:var(--navy); border-left:4px solid var(--gold); box-shadow:0 16px 38px rgba(16,40,63,.16); }
+  .divergence-figure img { width:100%; height:100%; object-fit:contain; }
+  .divergence-label { position:absolute; padding:9px 14px; background:rgba(7,21,34,.82); color:white; border-left:2px solid var(--gold); backdrop-filter:blur(7px); font-size:16px; letter-spacing:.04em; }
+  .divergence-label.performance { top:18px; right:18px; color:var(--gold-2); }
+  .divergence-label.price { left:18px; bottom:18px; border-color:var(--paper); }
+  .divergence-situation { position:absolute; right:66px; top:122px; padding:8px 13px; background:var(--paper); color:var(--navy); border:2px solid var(--gold); box-shadow:0 8px 22px rgba(0,0,0,.26); font-size:16px; font-weight:800; letter-spacing:.05em; }
+  .divergence-situation::after { content:""; position:absolute; left:50%; top:100%; width:2px; height:29px; background:var(--gold); }
+  .divergence-situation::before { content:""; position:absolute; left:calc(50% - 4px); top:calc(100% + 25px); width:9px; height:9px; border-radius:50%; background:var(--gold); box-shadow:0 0 0 4px rgba(247,244,236,.72); }
+  .divergence-copy { display:flex; flex-direction:column; justify-content:center; min-width:0; }
+  .divergence-case { display:flex; align-items:center; gap:15px; padding:20px 22px; color:var(--navy); background:white; border-top:3px solid var(--gold); box-shadow:0 10px 28px rgba(16,40,63,.06); }
+  .divergence-case span { color:var(--gold); font:700 36px/1 "Yu Mincho",serif; }
+  .divergence-case strong { font-size:21px; line-height:1.5; }
+  .divergence-copy > p { margin-top:16px; padding:0 2px; color:var(--sub); font-size:17px; line-height:1.75; }
+  .divergence-next { display:flex; flex-direction:column; justify-content:center; margin-top:20px; padding:18px 20px; background:var(--navy); color:white; font-size:16px; line-height:1.55; }
+  .divergence-next small { color:var(--gold-2); font-size:10px; font-weight:700; letter-spacing:.16em; }
+  .divergence-next b { margin-top:2px; color:white; font-size:18px; }
+
+  /* Closing and invitation */
+  .misconceptions { margin-top:34px; display:grid; gap:15px; }
+  .myth { display:grid; grid-template-columns:.78fr 1.45fr; background:white; min-height:90px; }
+  .myth .wrong { padding:22px 26px; color:var(--red); font:700 25px/1.5 "Yu Mincho",serif; border-left:5px solid var(--red); }
+  .myth .real { padding:22px 26px; color:var(--navy); font-size:21px; line-height:1.55; }
+  .three-steps { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-top:44px; }
+  .step { padding:30px 28px; background:white; border-top:4px solid var(--gold); }
+  .step .num { color:var(--gold); font:700 42px/1 "Yu Mincho",serif; }
+  .step h3 { margin-top:14px; color:var(--navy); font-size:26px; }
+  .step p { margin-top:10px; color:var(--sub); font-size:17px; line-height:1.65; }
+  .two-layer { display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:42px; }
+  .layer { position:relative; padding:34px 36px 32px; background:white; min-height:250px; border-top:5px solid var(--navy); }
+  .layer.school { border-color:var(--gold); }
+  .layer .label { color:var(--sub); font-size:13px; letter-spacing:.18em; }
+  .layer h3 { margin-top:13px; color:var(--navy); font:700 34px/1.3 "Yu Mincho",serif; }
+  .layer p { margin-top:18px; font-size:20px; line-height:1.75; color:var(--sub); }
+  .check-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-top:34px; }
+  .check { padding:17px 16px; background:white; color:var(--navy); font-size:18px; font-weight:700; border-left:3px solid var(--gold); }
+  .check::before { content:"□"; margin-right:10px; color:var(--gold); }
+  .closing { padding:0; background:#071522; color:white; }
+  .closing::after { display:none; }
+  .closing img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  .closing .shade { position:absolute; inset:0; background:linear-gradient(90deg,rgba(7,21,34,.96),rgba(7,21,34,.66) 48%,rgba(7,21,34,.08)); }
+  .closing .copy { position:relative; z-index:2; width:61%; padding-left:90px; margin:auto 0; }
+  .closing h2 { color:white; font-size:48px; line-height:1.55; }
+  .closing h2 em { color:var(--gold-2); font-style:normal; }
+  .closing p { margin-top:28px; color:rgba(255,255,255,.68); font-size:19px; line-height:1.8; }
+
+  /* Fragments, notes, controls */
+  .fragment { opacity:0; transform:translateY(12px); transition:.28s ease; }
+  .fragment.visible { opacity:1; transform:none; }
+  /* 表の行は transform が効かない環境があるので不透明度だけで出す */
+  tr.fragment { transform:none; }
+  .notes { display:none; }
+  #notes-panel { position:fixed; left:20px; right:20px; bottom:20px; z-index:20; display:none; max-height:38vh; overflow:auto; padding:20px 24px; background:rgba(5,14,23,.95); color:white; border-top:3px solid var(--gold); box-shadow:0 10px 40px rgba(0,0,0,.4); font-size:16px; line-height:1.75; white-space:pre-line; }
+  #notes-panel.open { display:block; }
+  #controls { position:fixed; right:22px; bottom:18px; z-index:30; display:flex; align-items:center; gap:9px; }
+  #controls button { width:38px; height:38px; border-radius:50%; border:1px solid rgba(255,255,255,.3); background:rgba(7,21,34,.74); color:white; cursor:pointer; }
+  #counter { min-width:72px; text-align:center; color:rgba(255,255,255,.72); font-size:12px; letter-spacing:.08em; }
+  #help { position:fixed; left:20px; bottom:18px; z-index:30; color:rgba(255,255,255,.56); font-size:11px; letter-spacing:.04em; }
+  #progress { position:fixed; left:0; bottom:0; height:3px; z-index:40; background:var(--gold); transition:width .25s ease; }
+
+  /* キーワード群を意図した位置で改行させる（1個だけ孤立するのを防ぐ） */
+  .keyword-cloud { max-width:1108px; }
+  .row-break { flex-basis:100%; height:0; margin:0; }
+
+  /* ───────── 日本語の改行位置を文節で折る ───────── */
+  h1, h2, h3, .prompt, .big-quote, .support, .subtitle, .promise, .title,
+  .panel p, .layer p, .step p, .myth .real, .myth .wrong, .hypothesis,
+  .reveal-band, .side-label, .formula .term, .check, .keyword, .unknown,
+  .insight .box strong, .trend-title .verdict, .closing p, .chapter p {
+    word-break: auto-phrase;   /* 単語・文節の途中で折らない */
+    line-break: strict;        /* 禁則処理を厳格に */
+    text-wrap: pretty;         /* 最終行の孤立を防ぐ */
+  }
+  /* 収まりきらず「す／る。」のように割れていた箇所 */
+  .big-quote { font-size:46px; max-width:1108px; }
+  .closing .copy { width:66%; }
+  .closing h2 { font-size:42px; }
+
+  /* ───────── 下余白の偏りを解消（上寄せ→天地中央） ───────── */
+  /* 見出し帯は従来どおり左上に固定し、本文ブロックだけを天地中央に置く */
+  .slide:not(.center):not(.chapter):not(.hero):not(.closing):not(.photo-full) {
+    justify-content:center;
+  }
+  .slide:not(.center):not(.chapter):not(.hero):not(.closing):not(.photo-full) > .eyebrow {
+    position:absolute; top:64px; left:86px;
+  }
+  .slide:not(.center):not(.chapter):not(.hero):not(.closing):not(.photo-full) > .title {
+    margin-top:0;
+  }
+
+  /* ───────── 写真背景は、意味のある転換・判断ページだけ ───────── */
+  .visual-slide { isolation:isolate; }
+  .visual-slide .bg-photo { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; }
+  .visual-slide > :not(.bg-photo):not(.photo-wash):not(.brand):not(.slide-no):not(.diagnostic-line) { position:relative; z-index:2; }
+  .visual-slide .brand,
+  .visual-slide .slide-no,
+  .visual-slide .diagnostic-line { z-index:3; }
+  .visual-slide .photo-wash { position:absolute; inset:0; z-index:1; pointer-events:none; }
+
+  /* 冒頭の問い：写真は下端に留め、問いの余白を守る */
+  .question-photo .bg-photo { object-position:center center; }
+  .question-photo .photo-wash {
+    background:linear-gradient(180deg,rgba(247,244,236,.05) 0%,rgba(247,244,236,.02) 62%,rgba(247,244,236,.18) 100%);
+  }
+  .question-photo .question-mark { margin-top:-36px; }
+
+  /* 同じ会社・違う値段：同一背景を固定し、値段だけが変わることを強調 */
+  .price-photo .bg-photo { object-position:center center; }
+  .price-photo .photo-wash {
+    background:linear-gradient(180deg,rgba(247,244,236,.08) 0%,rgba(247,244,236,.03) 58%,rgba(247,244,236,.22) 100%);
+  }
+  .price-photo .price-question { margin-top:38px; }
+
+  /* 自社への接続：左に問い、右に経営者と現場 */
+  .photo-worth,
+  .photo-cash {
+    align-items:flex-start; justify-content:center; text-align:left;
+    padding-left:88px; background:var(--navy); color:white;
+  }
+  .photo-worth .bg-photo,
+  .photo-cash .bg-photo { object-position:center center; }
+  .photo-worth .photo-wash {
+    background:linear-gradient(90deg,rgba(7,21,34,.12) 0%,rgba(7,21,34,.02) 54%,rgba(7,21,34,.08) 100%);
+  }
+  .photo-cash .photo-wash {
+    background:linear-gradient(90deg,rgba(7,21,34,.06) 0%,rgba(7,21,34,.01) 55%,rgba(7,21,34,.12) 100%);
+  }
+  .photo-worth .eyebrow,
+  .photo-cash .eyebrow { color:var(--gold-2); }
+  .photo-worth .big-quote,
+  .photo-cash .big-quote { color:white; max-width:650px; }
+  .photo-worth .hairline,
+  .photo-cash .hairline { margin-left:0; margin-right:0; }
+  .photo-worth .support,
+  .photo-cash .support { color:rgba(255,255,255,.78); max-width:650px; }
+  .photo-worth .tiny { color:rgba(255,255,255,.58); max-width:670px !important; line-height:1.65; }
+  .photo-worth .brand,
+  .photo-cash .brand { display:none; }
+  .photo-worth .slide-no,
+  .photo-cash .slide-no { color:rgba(255,255,255,.55); }
+
+  @media print {
+    html,body { overflow:visible; background:white; }
+    #stage { position:static; display:block; }
+    #deck { width:auto; height:auto; transform:none !important; box-shadow:none; overflow:visible; }
+    .slide { position:relative; display:flex !important; flex-direction:column; width:1280px; height:720px; page-break-after:always; }
+    .fragment { opacity:1 !important; transform:none !important; }
+    #controls,#help,#progress,#notes-panel { display:none !important; }
+    @page { size:16in 9in; margin:0; }
+  }
+
+  /* 誤解4つ：左の見出しを1行に収める */
+  #traps .myth { grid-template-columns:.95fr 1.3fr; }
+
+  /* データ表：行数が多いので詰め、指標名の列は折り返さない幅を確保する */
+  .data-table th, .data-table td { padding:4px 6px; }
+  .data-table tbody th { width:186px; font-size:14px; white-space:nowrap; }
+
+  /* 録画モード： URL に ?rec を付けると操作UI・進捗・ページ番号を隠す（画面録画用） */
+  body.rec #controls,
+  body.rec #help,
+  body.rec #progress,
+  body.rec #notes-panel,
+  body.rec .slide-no { display:none !important; }
+  body.rec { cursor:none; }
+</style>
+</head>
+<body>
+<div id="stage"><main id="deck">
+
+  <section class="slide hero active">
+    <img src="assets/company-anatomy.png" alt="会社の中身を透かして見るイメージ">
+    <div class="shade"></div>
+    <div class="hero-copy">
+      <div class="kicker">GIA BUSINESS SEMINAR</div>
+      <h1>会社を見る目</h1>
+      <p class="promise">良い会社を見つけるだけでは足りない。<br>数字から、会社の変化を読み取る。</p>
+    </div>
+    <div class="legal">教育目的のセミナーです。事例はすべて架空企業を使用しています。</div>
+    <aside class="notes">今日は株の銘柄を当てる話ではありません。会社を見る目を、経営者の皆さんと一緒に磨く90分です。結論を先に教えるのではなく、まず皆さん自身に判断していただきます。</aside>
+  </section>
+
+  <section class="slide center">
+    <div class="eyebrow">TODAY'S PROMISE</div>
+    <div class="big-quote" style="margin-top:34px">数字は、<em>会社がどんな状況か</em>を<br>教えてくれる。</div>
+    <div class="hairline"></div>
+    <p class="support">セミナー終了時には、数字から会社の状況がわかる状態を目指します。</p>
+    <aside class="notes">今日のゴールは指標を暗記することではありません。数字を見て、その会社がいまどういう状況にあるのかが読める状態を目指します。</aside>
+  </section>
+
+  <section class="slide center visual-slide question-photo">
+    <img class="bg-photo" src="assets/opening-question-desk.png" alt="問いを紙に書き出す手元">
+    <div class="photo-wash"></div>
+    <div class="question-mark">Q</div>
+    <div class="prompt">知人から、こう言われました。<br>「うちの会社に10万円出資してくれ」<br><span class="gold">何を聞きますか？</span></div>
+    <div class="write">紙に3つ書いてください　— 2分</div>
+    <aside class="notes">ここでは株の話をしません。実際に紙に3つ書いてもらい、2分待ちます。その後、数人に発表してもらって板書します。絶対に講義から始めないこと。</aside>
+  </section>
+
+  <section class="slide center">
+    <div class="eyebrow">WHAT YOU ALREADY KNOW</div>
+    <h2 class="title">よくでそうな質問</h2>
+    <div class="keyword-cloud">
+      <div class="keyword fragment">何の会社？</div><div class="keyword fragment">売上は？</div>
+      <div class="keyword fragment">利益は？</div><div class="keyword fragment">借金は？</div>
+      <div class="row-break"></div>
+      <div class="keyword fragment">社長はどんな人？</div><div class="keyword fragment">今後伸びる？</div>
+      <div class="keyword fragment">どう儲けている？</div>
+    </div>
+    <div class="reveal-band fragment">いま挙げてくださったもの。これが、企業分析です。</div>
+    <aside class="notes">出た答えに合わせて順番は調整してください。最後に「これが企業分析です」と明かします。今日の内容は、ほぼこの7つの中に入っている。皆さんはもう入口に立っている、と安心させます。</aside>
+  </section>
+
+  <section class="slide chapter">
+    <div class="chapter-num">01</div><div class="rule"></div><div class="label">CHAPTER 01</div>
+    <h2>株を買うとは、<br>会社の一部を買い<br>オーナーになるということ</h2>
+    <p>上場会社になると、なぜ私たちは会社を見なくなるのでしょうか。</p>
+    <aside class="notes">ここがセミナー全体の旗になる章です。短縮版でも削らないでください。</aside>
+  </section>
+
+  <section class="slide photo-full">
+    <img src="assets/company-eye-split.png" alt="知人の会社は中身を見るが、株になると値動きだけを見る対比">
+    <div class="photo-title">上場企業になると<br>業績ではなく株価の意識が強くなる</div>
+    <div class="side-labels"><div class="side-label fragment">知人の会社なら<br><b>事業・利益・借金・人を見る</b></div><div class="side-label fragment">株になると<br><b>チャート・ニュース・「上がりそう」を見る</b></div></div>
+    <aside class="notes">左と右の自分は何が違うのでしょう。上場企業になると、値段だけを見て会社を見なくなる。ここで参加者に違和感を持ってもらいます。</aside>
+  </section>
+
+  <section class="slide chapter">
+    <div class="chapter-num">02</div><div class="rule"></div><div class="label">CHAPTER 02</div>
+    <h2>数字から、<br>会社の状況を読む</h2>
+    <p>2つの会社を並べて、それぞれの数字が何を語っているかを見ていきます。</p>
+    <aside class="notes">判断が先、用語は後の原則は維持します。まず2社の表を見せて「どちらが良さそうか」を判断させ、そのあとで一つずつ指標の名前と意味を明かしていきます。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow" style="position:static;margin-bottom:6px">CASE STUDY</div><h2 class="title" style="font-size:32px">2つの会社を、並べて見てみます。<span class="tiny muted" style="margin-left:16px">業績は3年分・単位は億円</span></h2>
+    <table class="compare data-table" style="margin-top:14px">
+      <thead><tr>
+        <th style="background:var(--navy);color:#fff;text-align:left;padding-left:12px">項目</th>
+        <th>X社</th><th>Y社</th>
+      </tr></thead>
+      <tbody>
+        <tr class="fragment"><th>売上高</th><td style="font-size:17px">3,800 → 3,450 → 4,050</td><td style="font-size:17px">340 → 380 → 420</td></tr>
+        <tr class="fragment"><th>営業利益</th><td style="font-size:17px">170 → 120 → 175</td><td style="font-size:17px">27 → 33 → 40</td></tr>
+        <tr class="fragment"><th>営業利益率</th><td style="font-size:17px">4.5％ → 3.5％ → 4.3％</td><td style="font-size:17px">7.9％ → 8.7％ → 9.5％</td></tr>
+        <tr class="fragment"><th>経常利益</th><td style="font-size:17px">125 → 78 → 130</td><td style="font-size:17px">28 → 34 → 41</td></tr>
+        <tr class="fragment"><th>当期純利益</th><td style="font-size:17px">82 → 50 → 86</td><td style="font-size:17px">18 → 22 → 27</td></tr>
+        <tr class="fragment"><th>営業キャッシュフロー</th><td style="font-size:17px">＋180 → ＋95 → ＋30</td><td style="font-size:17px">＋24 → ＋30 → ＋35</td></tr>
+        <tr class="fragment"><th style="border-top:3px solid var(--ivory)">自己資本比率</th><td style="font-size:17px;border-top:3px solid var(--ivory)">13％</td><td style="font-size:17px;border-top:3px solid var(--ivory)">53％</td></tr>
+        <tr class="fragment"><th>PER</th><td style="font-size:17px">35倍</td><td style="font-size:17px">10倍</td></tr>
+        <tr class="fragment"><th>PBR</th><td style="font-size:17px">4.0倍</td><td style="font-size:17px">0.9倍</td></tr>
+        <tr class="fragment"><th>配当利回り</th><td style="font-size:17px">3.2％</td><td style="font-size:17px">3.0％</td></tr>
+        <tr class="fragment"><th>配当性向</th><td style="font-size:17px">112％</td><td style="font-size:17px">30％</td></tr>
+        <tr class="fragment"><th>時価総額</th><td style="font-size:17px">3,000億円</td><td style="font-size:17px">270億円</td></tr>
+      </tbody>
+    </table>
+    <div class="hypothesis fragment" style="margin-top:14px;text-align:center">どちらの会社の方が、<b>投資対象としては良さそうでしょうか。</b></div>
+    <aside class="notes">この2社が、この章すべての土台になります。以降の指標はすべてこの表に戻って説明します。色をつけていないのは、参加者に自分で選んでもらうためです。X社は規模も配当利回りも上で、パッと見はこちらが良く見えます。読みどころ＝①X社は経常利益が営業利益よりかなり小さい（借金の利息で削られている）②X社の業績は落ちて戻したが、まだ以前の水準に届いていない③配当性向103％＝稼いだ以上を配っている。数字はすべて架空です。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">PER</div><h2 class="title">利益の何年分を払うのか。</h2>
+    <div class="formula"><div class="term">時価総額</div><div class="op">÷</div><div class="term">当期純利益</div><div class="op">＝</div><div class="term gold">PER</div></div>
+    <div class="formula-note fragment">X社： 3,000億円 ÷ 86億円 ＝ <b class="gold">35倍</b>　　Y社： 270億円 ÷ 27億円 ＝ <b class="gold">10倍</b></div>
+    <div class="reveal-band fragment" style="text-align:center;margin-top:26px">これが、PERと呼ばれるものです。</div>
+    <p class="subtitle fragment" style="text-align:center;margin-top:22px">つまり、<b>数字が小さいほうが、投資したお金を回収するのが早い</b>ということになります。</p>
+    <aside class="notes">PERは「利益の何年分を払うか」と説明します。さきほどの表に戻って、X社は30年分、Y社は12年分を払う計算になる、と数えさせるのが一番伝わります。厳密には将来利益への期待も含む市場評価ですが、ここでは入口としてこの言い方にします。分母は当期純利益（経常利益ではない）です。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">REFERENCE</div><h2 class="title">PERの水準は、業種によって違います。</h2>
+    <div class="two-layer" style="margin-top:36px">
+      <div class="layer fragment"><div class="label">AVERAGE</div><h3>およそ 15倍</h3><p>日本の上場企業の平均と言われる水準。業種によって、この平均は大きく上下します。</p></div>
+      <div class="layer school fragment"><div class="label">CAUTION</div><h3>30倍を大きく超えたら</h3><p>期待が先行していないかを疑う。流行しすぎていないか、を確認しにいく。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:24px">業種ごとの平均は<b>覚えなくて結構です。</b>「いま見ている会社は、同業と比べて高いのか安いのか」——それだけ確認できれば十分です。<br>とはいえ<b>「PERが安いから買う」というわけではありません。</b>他の指標も見てみましょう。</div>
+    <aside class="notes">ここで初めて目安の数字を出します。ただし暗記は求めません。絶対値ではなく、同業と比べてどうかという相対の見方に誘導します。次のスライドで、この目安自体を壊します。</aside>
+  </section>
+
+
+  <section class="slide">
+    <div class="eyebrow">PBR</div><h2 class="title">積み上げた純資産と、市場価格を比べる。</h2>
+    <div class="formula"><div class="term">時価総額</div><div class="op">÷</div><div class="term">帳簿上の純資産</div><div class="op">＝</div><div class="term gold">PBR</div></div>
+    <div class="insight fragment" style="margin-top:30px">
+      <div class="box good"><h3>10万円で売られている財布に、20万円が入っていたら</h3><strong>PBR 0.5倍</strong></div>
+      <div class="box warn"><h3>10万円で売られている財布に、2万円しか入っていなければ</h3><strong>PBR 5倍</strong></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:22px"><b>X社 4.0倍　／　Y社 0.9倍。</b> Y社は<b>1倍を割っています</b>。帳簿上の純資産より、市場のつけた値段の方が小さい状態です。<br><span style="color:var(--gold-2)">※帳簿上の資産が、そのまま現金で残るわけではありません。</span></div>
+    <aside class="notes">PBRを「解散価値」と言い切らないこと。帳簿上の資産と市場価格の比較であり、実際に清算したとき同額の現金になるわけではありません。</aside>
+  </section>
+
+
+  <section class="slide">
+    <div class="eyebrow">EQUITY RATIO</div><h2 class="title">その会社は、誰のお金で回っているか。</h2>
+    <div class="formula"><div class="term">自己資本</div><div class="op">÷</div><div class="term">総資産</div><div class="op">＝</div><div class="term gold">自己資本比率</div></div>
+    <p class="formula-note fragment">自分のお金が、会社全体の何％を占めるか。<br><b>裏返せば、残りは他人のお金。</b>ただしその全部が借金ではなく、仕入代金の未払いなども含みます。</p>
+    <div class="hypothesis fragment" style="margin-top:24px"><b>X社 13％　／　Y社 53％。</b> 参考値として<b>40％以上</b>あると財務は安定と見られます。<br>ただし業種で普通の水準が違います。<b>工場や店舗を多く持つ会社は借入が大きくなり、低めに出ます。</b></div>
+    <aside class="notes">経営者は自社の自己資本比率を把握しているので、ここは一番腹落ちしやすい指標です。40％はあくまで目安で、業種によって当たり前の水準が違う、と必ず添えます。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">TOP LINE &amp; PROFIT</div><h2 class="title">売上と利益は、増えているか。</h2>
+    <div class="three-steps">
+      <div class="step fragment"><div class="num">売上高</div><h3>事業の大きさ</h3><p>まず伸びているか。減っているなら、その理由を探しにいく。</p></div>
+      <div class="step fragment"><div class="num">営業利益</div><h3>本業の儲け</h3><p>本業でどれだけ稼げているか。</p></div>
+      <div class="step fragment"><div class="num">経常利益</div><h3>金利まで含めた儲け</h3><p>受取利息や支払利息まで含めた、会社全体の実力。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:24px">売上はX社が約10倍。でも<b>100円売って手元に残る利益は、X社4.3円／Y社9.5円。</b><br>会社が大きいほど効率がいい、とは限りません。</div>
+    <aside class="notes">営業利益と経常利益の違いはここで一度だけ整理します。深入りしません。営業利益率の逆転（規模10倍のX社より、Y社の方が率が高い）が、この章の結論の伏線になります。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">OPERATING CASH FLOW</div><h2 class="title" style="font-size:38px">利益は出ている。では、現金は増えていますか。</h2>
+    <p class="formula-note fragment" style="margin-top:32px">営業キャッシュフロー ＝ <b>本業で、実際に手元に入ってきた現金。</b><br>利益は「売れた」時点で立ちますが、現金は「入金された」時点でしか動きません。</p>
+    <div class="insight fragment" style="margin-top:24px">
+      <div class="box warn"><h3>X社 ── 純利益 86億円に対して</h3><strong>営業CF ＋30億円</strong></div>
+      <div class="box good"><h3>Y社 ── 純利益 27億円に対して</h3><strong>営業CF ＋35億円</strong></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:20px">帳簿の上ではX社が3倍稼いでいます。<b>それなのに、実際に入ってきた現金はY社の方が多い。</b><br>原因はたいてい<b>売ったのに回収できていない（売掛金）</b>か、<b>仕入れたのに売れていない（在庫）</b>。次はそこを見にいきます。</div>
+    <aside class="notes">この章で経営者に最も刺さるスライドです。X社の営業CFは3年で180→95→30と落ちている。利益は増えているのに現金は減っている状態。ここで「自社の売掛と在庫が頭に浮かびませんか」と問いかけて間を取ってください。設備投資は営業CFではなく投資CFに出るので、原因は投資ではなく回収か在庫だと言い切れます。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">DIVIDEND</div><h2 class="title">会社が、株主に利益を分けるお金。</h2>
+    <div class="formula"><div class="term">1株あたり配当</div><div class="op">÷</div><div class="term">株価</div><div class="op">＝</div><div class="term gold">配当利回り</div></div>
+    <div class="insight fragment" style="margin-top:28px">
+      <div class="box good"><h3>株価1,000円・配当50円なら</h3><strong>利回り 5％</strong></div>
+      <div class="box warn"><h3>配当50円のまま、株価が500円に下がると</h3><strong>利回り 10％</strong></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:22px"><b>X社 3.2％　／　Y社 3.0％。</b> 参考値は2〜3％以上。どちらも悪くない数字に見えます。<br>ただし<b>利回りが高いのは、株価が下がったからか、稼いだ利益を超えて配っているからかもしれません。</b></div>
+    <aside class="notes">右の箱がこの章の肝です。利回りは分母（株価）が下がっても上がる。数字が良く見える理由を疑う癖をつけてもらいます。次のスライドの配当性向と、あとの「高配当＝良い会社」の誤解に直接つながります。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">PAYOUT RATIO</div><h2 class="title" style="font-size:36px">その配当は、稼いだ利益の中から出ていますか。</h2>
+    <div class="formula"><div class="term">配当の総額</div><div class="op">÷</div><div class="term">当期純利益</div><div class="op">＝</div><div class="term gold">配当性向</div></div>
+    <div class="insight fragment" style="margin-top:28px">
+      <div class="box warn"><h3>X社 ── 稼いだ利益より、多く配っている</h3><strong>112％</strong></div>
+      <div class="box good"><h3>Y社 ── 利益の3分の1ほどを配っている</h3><strong>30％</strong></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:24px">利回りだけ見れば <b>X社 3.2％／Y社 3.0％</b>。ほとんど差がありません。<br>でもX社は<b>稼いだ以上を配っている</b>状態。その配当が続くかどうかは、別の話になります。</div>
+    <aside class="notes">配当性向が100％を超えるということは、その年に稼いだ利益では足りず、過去の蓄えか借入から配っているということです。経営者には「自社で同じことをしたらどうなるか」と聞くと一瞬で伝わります。X社の高い利回りは、ここを見ないと評価できません。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">MARKET CAP</div><h2 class="title">その会社は、どのくらいの大きさか。</h2>
+    <div class="formula"><div class="term">株価</div><div class="op">×</div><div class="term">発行済株式数</div><div class="op">＝</div><div class="term gold">時価総額</div></div>
+    <div class="two-layer" style="margin-top:30px">
+      <div class="layer fragment"><div class="label">SMALL</div><h3>数百億円以下</h3><p>値動きは大きくなりやすい。その分、伸びしろも大きい。</p></div>
+      <div class="layer school fragment"><div class="label">LARGE</div><h3>1,000億円以上</h3><p>規模が大きく、比較的安定しやすい。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:22px"><b>X社 3,000億円　／　Y社 270億円。</b> 会社としてはX社の方が10倍以上大きい。<br><b>ただし「大きい」と「良い投資先」は、別の話です。</b></div>
+    <aside class="notes">時価総額は「会社の値段」であり「会社の大きさ」でもあります。第2章の冒頭で使った時価総額と同じものだと、ここで結び直します。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow" style="position:static;margin-bottom:6px">QUICK REFERENCE</div><h2 class="title" style="font-size:32px">会社を選ぶときに見る、8つの数字。</h2>
+    <table class="compare data-table" style="margin-top:14px">
+      <thead><tr><th style="background:var(--navy);color:#fff">指標</th><th style="text-align:left;padding-left:16px">何を見るか</th><th>参考値</th></tr></thead>
+      <tbody>
+        <tr class="fragment"><th>業績</th><td style="text-align:left;font-size:17px;padding-left:16px">売上と利益が増えているか</td><td style="font-size:18px;font-weight:800;color:var(--gold)">増加傾向</td></tr>
+        <tr class="fragment"><th>営業利益率</th><td style="text-align:left;font-size:17px;padding-left:16px">本業でどれだけ効率よく稼げているか</td><td style="font-size:18px;font-weight:800;color:var(--gold)">業種差が大きい・同業と比べる</td></tr>
+        <tr class="fragment"><th>営業CF</th><td style="text-align:left;font-size:17px;padding-left:16px">利益が現金として入ってきているか</td><td style="font-size:18px;font-weight:800;color:var(--gold)">プラス・利益と乖離しない</td></tr>
+        <tr class="fragment"><th>自己資本比率</th><td style="text-align:left;font-size:17px;padding-left:16px">誰のお金で会社が回っているか</td><td style="font-size:18px;font-weight:800;color:var(--gold)">40％以上</td></tr>
+        <tr class="fragment"><th>PER</th><td style="text-align:left;font-size:17px;padding-left:16px">利益の何年分を払うか</td><td style="font-size:18px;font-weight:800;color:var(--gold)">平均15倍・30倍超は要注意</td></tr>
+        <tr class="fragment"><th>PBR</th><td style="text-align:left;font-size:17px;padding-left:16px">純資産と、市場の値段の比較</td><td style="font-size:18px;font-weight:800;color:var(--gold)">小さいほど割安・1倍割れは純資産割れ</td></tr>
+        <tr class="fragment"><th>配当（利回り／性向）</th><td style="text-align:left;font-size:17px;padding-left:16px">株主への還元と、その無理のなさ</td><td style="font-size:18px;font-weight:800;color:var(--gold)">利回り2〜3％以上・性向100％超は要注意</td></tr>
+        <tr class="fragment"><th>時価総額</th><td style="text-align:left;font-size:17px;padding-left:16px">会社の大きさ</td><td style="font-size:18px;font-weight:800;color:var(--gold)">1,000億円以上は安定寄り</td></tr>
+      </tbody>
+    </table>
+    <div class="hypothesis fragment" style="margin-top:16px"><b>参考値は、あくまで目安です。</b> 業種によって普通の水準は変わるので、<b>まずは同じ業種の会社と並べて比べてみてください。</b></div>
+    <aside class="notes">ここは配布資料にもなるページです。基準値を隠さず全部渡します。そのうえで「業種と成長段階で変わる」と必ず添える。基準の当て方こそが有料側の中身になる、という線引きの伏線です。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">NEXT STEP</div><h2 class="title">まずは、この8つで十分です。</h2>
+    <p class="subtitle" style="margin-top:2px">慣れて余裕が出てきたら、こんなことも足してみてください。</p>
+    <div class="unknowns" style="margin-top:14px">
+      <div class="unknown fragment">利益は毎年伸びているか</div><div class="unknown fragment">売上が1社の取引先に偏っていないか</div>
+      <div class="unknown fragment">市場そのものは伸びているか</div><div class="unknown fragment">社長はどんな人か</div>
+      <div class="unknown fragment">その利益は一時的なものではないか</div><div class="unknown fragment">市場はその会社をどう見ているか</div>
+    </div>
+    <div class="reveal-band fragment" style="text-align:center;margin-top:26px">まずは、<b>この8つの指標に慣れるところから。</b></div>
+    <aside class="notes">ここは脅しにしないこと。「これ全部やらないとダメ」と受け取られると手が止まります。8つで十分に戦える、と言い切ってから、余裕が出たときの上積みとして6つを渡します。うち「社長はどんな人か」は冒頭の"よくでそうな質問"に出てきたもの。最初に自分たちが挙げた問いに戻ってくる、と気づかせると効きます。</aside>
+  </section>
+
+
+
+  <section class="slide center visual-slide photo-worth">
+    <img class="bg-photo" src="assets/owner-company-worth.png" alt="自社の現場を見ながら数字と向き合う経営者">
+    <div class="photo-wash"></div>
+    <div class="big-quote">1年の数字には<em>事情</em>が出る。<br>5年の数字には<em>会社の体質</em>が出る。</div>
+    <div class="hairline"></div><p class="support">点ではなく、変化の方向を見ます。</p>
+    <aside class="notes">「決算は演出できる」とは言いません。1年には個別事情が出る。5年を並べると、会社の体質や経営の方向性が見えやすくなる、と伝えます。</aside>
+  </section>
+
+
+
+
+
+
+
+
+
+  <section class="slide center" style="background:var(--navy);color:white">
+    <div class="eyebrow" style="color:var(--gold-2)">CORE MESSAGE</div>
+    <div class="big-quote" style="margin-top:34px;color:white">大きい会社と、<br><em>良い投資先</em>は、同じではない。</div>
+    <div class="hairline"></div><p class="support" style="color:rgba(255,255,255,.72)">良い会社を、どの値段で買うのかまで考える。それが企業分析です。</p>
+    <aside class="notes">セミナーの中心メッセージです。章をまたいで作った判断体験を、この一文に回収します。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">COMMON TRAPS</div><h2 class="title">数字を見たとき、やりがちな4つの飛躍。</h2>
+    <div class="misconceptions" id="traps">
+      <div class="myth fragment"><div class="wrong">PERが低い ＝ 割安</div><div class="real">低いには理由がある。市場が「もう伸びない」と見ているだけかもしれない。</div></div>
+      <div class="myth fragment"><div class="wrong">自己資本比率が低い ＝ 危ない</div><div class="real">工場や店舗を多く持つ業種は、もともと低く出る。同じ業種と並べて判断する。</div></div>
+      <div class="myth fragment"><div class="wrong">売上が大きい ＝ 儲かっている</div><div class="real">見るのは金額ではなく率。100円売って、手元にいくら残るか。</div></div>
+      <div class="myth fragment"><div class="wrong">高配当 ＝ 良い会社</div><div class="real">稼いだ利益を超えて配っていることがある。配当性向まで見る。</div></div>
+    </div>
+    <aside class="notes">4つとも、今日X社とY社で実際に見た指標です。注意事項の列挙ではなく体験の回収になります。「決算が良い＝株価上昇」は今回決算を扱っていないので外しました。</aside>
+  </section>
+
+  <section class="slide chapter">
+    <div class="chapter-num">03</div><div class="rule"></div><div class="label">CHAPTER 03</div>
+    <h2>良い会社を、<br>どう買うか</h2>
+    <p>見方がわかっても、買い方を間違えると結果は安定しません。</p>
+    <aside class="notes">ここまでは「どの会社か」の話でした。ここからは「どう買うか」に切り替えます。経営者であっても、実際に買う段になると全員が同じところでつまずきます。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">DIVERSIFY</div><h2 class="title">3つに、分ける。</h2>
+    <div class="three-steps">
+      <div class="step fragment"><div class="num">時期</div><h3>タイミングの分散</h3><p>暴落は必ず起きるうえに、いつ来るかは予測できない。だから時期を分けて買う。</p></div>
+      <div class="step fragment"><div class="num">会社</div><h3>銘柄の分散</h3><p>気に入った会社が見つかっても、1社に集中させない。目安は5〜30社。</p></div>
+      <div class="step fragment"><div class="num">業種</div><h3>業種の分散</h3><p>景気に敏感な業種と、影響を受けにくい業種を混ぜる。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:30px">分散は「当てられないこと」を前提にした設計です。<b>予測を諦めるかわりに、生き残る確率を上げる。</b></div>
+    <aside class="notes">分散の話は退屈になりがちなので、「予測できないことを認める技術」という角度で入ります。経営のリスク分散と同じ発想だと言うと、経営者には一瞬で伝わります。</aside>
+  </section>
+
+  <section class="slide apple-lesson">
+    <div class="eyebrow">DOLLAR COST AVERAGING</div><h2 class="title">同じ900円でも、買い方で「9個」と「11個」に分かれる。</h2>
+    <p class="apple-meta">リンゴ1個の値段：1ヶ月め100円 → 2ヶ月め150円 → 3ヶ月め50円</p>
+    <div class="apple-board">
+      <div class="apple-cell apple-head price">リンゴの値段</div>
+      <div class="apple-cell apple-head"><span class="mode">QUANTITY</span><strong>毎月3個ずつ買う</strong></div>
+      <div class="apple-cell apple-head"><span class="mode">AMOUNT</span><strong>毎月300円分買う</strong></div>
+
+      <div class="apple-cell apple-month"><strong>1ヶ月め</strong><span>1個 100円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">300円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">300円</span></div>
+
+      <div class="apple-cell apple-month"><strong>2ヶ月め</strong><span>1個 150円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">450円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">300円</span></div>
+
+      <div class="apple-cell apple-month"><strong>3ヶ月め</strong><span>1個 50円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">150円</span></div>
+      <div class="apple-cell apple-purchase fragment"><div class="apple-icons"><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""><img src="assets/apple-paper-cut.png" alt=""></div><span class="apple-cost">300円</span></div>
+
+      <div class="apple-cell apple-total-label"><strong>3か月計</strong><span>どちらも900円</span></div>
+      <div class="apple-cell apple-result fragment"><div class="count">9個</div><div class="detail">平均購入単価 <b>100円</b><br>100円で売ると ±0円</div></div>
+      <div class="apple-cell apple-result highlight fragment"><div class="count">11個</div><div class="detail">平均購入単価 <b>約82円</b><br>100円で売ると <b>＋200円</b></div></div>
+    </div>
+    <aside class="notes">最初に「どちらも3ヶ月で900円」と確認します。クリックごとに、1ヶ月めの左→右、2ヶ月めの左→右、3ヶ月めの左→右の順で表示します。最後に合計を左→右で見せ、個数を固定すると9個、金額を固定すると11個になることを一緒に数えてください。値段が100円に戻ったとき、右側だけ200円の利益が出るのは、安い3ヶ月めに多く買えているからです。</aside>
+  </section>
+
+  <section class="slide center">
+    <div class="eyebrow">WHY IT WORKS</div>
+    <div class="big-quote" style="margin-top:30px">積立が効くのは、<em>相場が荒れているとき</em>です。</div>
+    <div class="hairline"></div>
+    <p class="support">波があった方が、平均の取得単価は下がります。<br>一時的に含み損でも、一喜一憂せず淡々と続ける。</p>
+    <p class="tiny muted" style="margin-top:34px;max-width:900px">投資である以上、相場環境によってはマイナスになることもあります。</p>
+    <aside class="notes">暴落は「敵」ではなく「安く買える期間」だと置き直します。ただし必ず、マイナスになることもあると添えてください。ここを飛ばさないこと。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">SECTOR MIX</div><h2 class="title" style="font-size:38px">景気で揺れる業種と、揺れにくい業種。</h2>
+    <div class="two-layer" style="margin-top:30px">
+      <div class="layer fragment"><div class="label">CYCLICAL ── 景気敏感</div><h3>自動車・鉄鋼・機械・不動産</h3><p>景気が良いときに大きく伸びる。悪くなると、その分だけ大きく落ちる。</p></div>
+      <div class="layer school fragment"><div class="label">DEFENSIVE ── ディフェンシブ</div><h3>食品・医薬品・電力・通信</h3><p>好況でも不況でも使われ続けるので、値動きが穏やかになりやすい。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:24px">どちらが良い、という話ではありません。<b>両方を混ぜておくと、相場全体が荒れたときの振れ幅が小さくなります。</b></div>
+    <aside class="notes">経営者には「自社の売上は景気に振られますか」と聞くのが早いです。振られる事業をされている方なら、投資の方はディフェンシブを厚めに、という組み方もあると伝えると自分ごとになります。個別の銘柄名は出さないこと（業種名まで）。</aside>
+  </section>
+
+
+  <section class="slide divergence-slide">
+    <div class="eyebrow">APPENDIX</div><h2 class="title">おまけ：業績が伸びても、株価は一直線には上がらない。</h2>
+    <div class="divergence-layout">
+      <figure class="divergence-figure">
+        <img src="assets/trend-entry-exit-editorial.png" alt="右肩上がりの業績線と、その周囲を上下する株価線の概念図">
+        <div class="divergence-label performance fragment">企業の業績：右肩上がり</div>
+        <div class="divergence-label price fragment">株価：上下しながら動く</div>
+        <div class="divergence-situation fragment">状況①</div>
+      </figure>
+      <div class="divergence-copy">
+        <div class="divergence-case fragment"><span>①</span><strong>業績 ↑<br>株価 ↓</strong></div>
+        <p class="fragment">業績に対して株価が下に離れた局面は、割安になっている可能性があります。</p>
+        <div class="divergence-next fragment"><small>BUYING PRINCIPLE</small>下落中は待つ。<b>反発を確認してから。</b></div>
+      </div>
+    </div>
+    <aside class="notes">ここからはおまけです。まず金色の業績線、次に白い株価線を見せ、3クリック目でグラフ上の「状況①」を示します。状況①は、業績が伸びている一方で株価が下に離れている状態です。ただし、安そうに見えても下落中には入らず、反発を確認してから考える——と次のスライドへつないでください。断定はせず、あくまで見方の一つとして扱います。</aside>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">APPENDIX</div><h2 class="title" style="font-size:36px">おまけ：トレンドの転換を、どう見るか。</h2>
+    <img src="assets/trend-turning-points.png" alt="トレンド転換のタイミング" style="width:100%;max-height:390px;object-fit:contain;margin-top:14px">
+    <div class="hypothesis fragment" style="margin-top:18px">緑の矢印で買い、赤や黄の矢印で売る——という考え方です。<b>本編の企業分析とは別の技術</b>なので、今日はここまでにします。</div>
+    <aside class="notes">深追いしないこと。ここを掘ると、今日の軸（良い会社を適切な値段で買う）がぼやけます。「別の技術です」と言い切って、次の章へ進みます。</aside>
+  </section>
+
+
+
+
+
+
+  <section class="slide">
+    <div class="eyebrow">WHERE TO BUY</div><h2 class="title">口座は、ネット証券で十分です。</h2>
+    <div class="three-steps">
+      <div class="step fragment"><div class="num">01</div><h3>手数料</h3><p>店舗を持たないネット証券の方が、手数料は安く済む。</p></div>
+      <div class="step fragment"><div class="num">02</div><h3>単元未満株</h3><p>本来100株単位の日本株を、1株から買える。</p></div>
+      <div class="step fragment"><div class="num">03</div><h3>注文の時間帯</h3><p>単元未満株なら、取引時間を気にせず注文を出せる。</p></div>
+    </div>
+    <div class="hypothesis fragment" style="margin-top:30px">まずは<b>1株だけ</b>、実際に1社を持ってみてください。持った瞬間から、その会社の決算の見え方が変わります。</div>
+    <aside class="notes">具体的な証券会社名は口頭で（例：SBI証券など）。スライドには社名を載せていません。最後の一言が一番効きます——1株持つと当事者になる、という体験を勧めます。</aside>
+  </section>
+
+  <section class="slide closing">
+    <img src="assets/mirror-company.png" alt="他社を見ることが自社を見ることにつながるイメージ"><div class="shade"></div>
+    <div class="copy"><h2>企業分析は、<br>株式投資だけの技術ではありません。</h2><p>他社を見る目を持つことで、<br><em class="serif" style="color:var(--gold-2);font-size:28px">自社を見る目も変わります。</em></p></div>
+    <aside class="notes">冒頭の問いに戻って締めます。会社を見る目は、投資だけでなく経営にも返ってくる。商品案内の後でも、最後はこの世界観で終えます。</aside>
+  </section>
+
+</main></div>
+<div id="notes-panel" aria-live="polite"></div>
+<div id="controls"><button id="prev" aria-label="前へ">‹</button><span id="counter">1 / 31</span><button id="next" aria-label="次へ">›</button></div>
+<div id="help">← → / Space：移動・表示　S：講師ノート　F：全画面　P：印刷　R：録画モード</div><div id="progress"></div>
+<script>
+(() => {
+  // ?rec で録画モード（操作UI・進捗・ページ番号を隠す。R キーでも切替可）
+  const recMode = /[?&]rec\b/.test(location.search);
+  if (recMode) document.body.classList.add('rec');
+
+  const deck = document.getElementById('deck');
+  const slides = [...document.querySelectorAll('.slide')];
+  const notesPanel = document.getElementById('notes-panel');
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  let current = 0;
+
+  slides.forEach((s, i) => {
+    if (!s.querySelector('.brand') && !s.classList.contains('hero') && !s.classList.contains('photo-full') && !s.classList.contains('closing')) {
+      const brand = document.createElement('div'); brand.className='brand'; brand.textContent='会社を見る目　｜　GIA'; s.appendChild(brand);
+      const line = document.createElement('div'); line.className='diagnostic-line'; s.appendChild(line);
+    }
+    const n = document.createElement('div'); n.className='slide-no'; n.textContent=String(i+1).padStart(2,'0'); s.appendChild(n);
+  });
+
+  function fit() {
+    const scale = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    deck.style.transform = `scale(${scale})`;
+  }
+  function updateNotes() {
+    const note = slides[current].querySelector('.notes');
+    notesPanel.textContent = note ? note.textContent.trim() : '講師ノートはありません。';
+  }
+  function show(i) {
+    slides[current].classList.remove('active');
+    current = (i + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    counter.textContent = `${current + 1} / ${slides.length}`;
+    progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+    updateNotes();
+  }
+  function next() {
+    const hidden = [...slides[current].querySelectorAll('.fragment:not(.visible)')];
+    if (hidden.length) { hidden[0].classList.add('visible'); return; }
+    show(current + 1);
+  }
+  function prev() {
+    const visible = [...slides[current].querySelectorAll('.fragment.visible')];
+    if (visible.length) { visible[visible.length-1].classList.remove('visible'); return; }
+    show(current - 1);
+  }
+  document.getElementById('next').onclick = next;
+  document.getElementById('prev').onclick = prev;
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight',' ','PageDown','Enter'].includes(e.key)) { e.preventDefault(); next(); }
+    if (['ArrowLeft','PageUp','Backspace'].includes(e.key)) { e.preventDefault(); prev(); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length-1);
+    if (e.key.toLowerCase() === 's') notesPanel.classList.toggle('open');
+    if (e.key.toLowerCase() === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    if (e.key.toLowerCase() === 'p') window.print();
+    if (e.key.toLowerCase() === 'r') document.body.classList.toggle('rec');
+  });
+  window.addEventListener('resize', fit);
+  fit(); show(0);
+})();
+</script>
+</body>
+</html>
