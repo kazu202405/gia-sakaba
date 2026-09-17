@@ -11,8 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryHint, questCategoryLabel } from "@/lib/guild/labels";
-import { PROMISE_NOTE, activeBosses } from "@/lib/guild/boss";
-import { TODAY, bosses, guild, regionOptions } from "@/lib/guild/mock-data";
+import { PROMISE_NOTE } from "@/lib/guild/rules";
+import { TODAY, guild, regionOptions } from "@/lib/guild/mock-data";
 import { diffQuestFields, pickQuestFields, questFieldLabel, type QuestFields } from "@/lib/guild/notifications";
 import { uiToast } from "@/lib/ui-dialog";
 import { BackLink, questCategoryMark } from "./cards";
@@ -28,8 +28,6 @@ type Draft = {
   deadline: string;
   member_limit: string;
   is_urgent: boolean;
-  /** 挑む ボス（任意）。「変わるところ」の知らせには含めない */
-  boss_id: string;
 };
 
 const EMPTY: Draft = {
@@ -42,7 +40,6 @@ const EMPTY: Draft = {
   deadline: "",
   member_limit: "",
   is_urgent: false,
-  boss_id: "",
 };
 
 // 「集まり」（有料会員だけの リアルの集まり）を出せるのは ギルドマスターだけ。ここは だれでも使う画面なので出さない
@@ -78,7 +75,6 @@ function draftFromQuest(q: Quest): Draft {
     deadline: q.deadline ?? "",
     member_limit: q.member_limit ? String(q.member_limit) : "",
     is_urgent: q.is_urgent,
-    boss_id: q.boss_id ?? "",
   };
 }
 
@@ -100,23 +96,16 @@ export function QuestForm({
   quest,
   applicantCount = 0,
   gathering = false,
-  initialBossId = "",
 }: {
   quest?: Quest;
   applicantCount?: number;
-  /** ボスの画面から来たとき、そのボスを 最初から選んでおく */
-  initialBossId?: string;
   /** ギルドマスターが「集まり」（有料会員だけの リアルの集まり）を ひらくとき。しゅるいと急ぎは出さない */
   gathering?: boolean;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [draft, setDraft] = useState<Draft>(() =>
-    quest
-      ? draftFromQuest(quest)
-      : gathering
-        ? { ...EMPTY, category: "gathering" }
-        : { ...EMPTY, boss_id: activeBosses(bosses).some((b) => b.id === initialBossId) ? initialBossId : "" },
+    quest ? draftFromQuest(quest) : gathering ? { ...EMPTY, category: "gathering" } : EMPTY,
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const topRef = useRef<HTMLDivElement>(null);
@@ -292,18 +281,6 @@ export function QuestForm({
                 />
               </Field>
             </div>
-
-            {!gathering && activeBosses(bosses).length > 0 && (
-              <Field label="挑む ボス" hint="任意。ギルドで みんなが 挑んでいる課題に つながるなら えらんでください">
-                <Select
-                  value={draft.boss_id}
-                  onChange={(v) => set("boss_id", v)}
-                  options={activeBosses(bosses).map((b) => ({ value: b.id, label: `⚑ ${b.title}` }))}
-                  label="挑む ボス"
-                  placeholder="えらばない"
-                />
-              </Field>
-            )}
 
             <Field label="しめきり" hint="任意" error={errors.deadline}>
               <div className="sm:max-w-60">

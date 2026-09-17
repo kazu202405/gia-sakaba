@@ -32,6 +32,7 @@ type Draft = Pick<
   | "strengths"
   | "values_text"
   | "vision"
+  | "social_issue"
   | "looking_for"
   | "want_to_meet"
   | "visible_groups"
@@ -106,6 +107,7 @@ const EMPTY_DRAFT: Draft = {
   strengths: "",
   values_text: "",
   vision: "",
+  social_issue: "",
   looking_for: "",
   want_to_meet: "",
   visible_groups: ["work", "values", "connect"],
@@ -295,6 +297,18 @@ export function StatusWizard({
                   </Field>
                   <Field label="これから やりたいこと" hint="れい：関西の飲食店の廃業を減らす">
                     <TextArea value={draft.vision} onChange={(v) => set("vision", v)} rows={3} max={200} />
+                  </Field>
+                  <Field
+                    label="とりくんでいる 社会かだい"
+                    hint="任意。同じ課題に とりくむ人と つながる手がかりに なります"
+                  >
+                    <TextArea
+                      value={draft.social_issue}
+                      onChange={(v) => set("social_issue", v)}
+                      rows={2}
+                      max={100}
+                      placeholder="れい：職人の 後継者不足"
+                    />
                   </Field>
                 </>
               )}
@@ -710,7 +724,7 @@ function ConfirmStep({
     {
       step: "values",
       title: "おもい",
-      filled: !!(draft.values_text || draft.vision),
+      filled: !!(draft.values_text || draft.vision || draft.social_issue),
       visible: draft.visible_groups.includes("values"),
     },
     {

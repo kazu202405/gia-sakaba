@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
-import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/boss";
+import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/rules";
 import {
   JOIN_COMPANY_MAX,
   JOIN_NAME_MAX,

@@ -117,6 +117,7 @@ export default async function MemberStatusPage({ params }: Props) {
         <GroupBlock profile={p} group="values">
           <Item label="だいじにしていること" value={p.values_text} />
           <Item label="これから" value={p.vision} />
+          <Item label="とりくんでいる 社会かだい" value={p.social_issue} />
         </GroupBlock>
         <GroupBlock profile={p} group="connect">
           <Item label="さがしているもの" value={p.looking_for} />

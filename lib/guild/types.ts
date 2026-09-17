@@ -67,6 +67,8 @@ export type Profile = {
   strengths: string;
   values_text: string;
   vision: string;
+  /** とりくんでいる 社会かだい（任意）。「いま解決したいこと」は 自分の困りごと、こちらは 世の中への取り組み */
+  social_issue: string;
   // ④ つながり
   looking_for: string;
   want_to_meet: string;
@@ -88,19 +90,6 @@ export type Profile = {
   /** 入会のときに聞く「いま、なにを解決したいですか？」（任意・ひとこと） */
   want_to_solve: string;
   joined_at: string;
-};
-
-/**
- * ギルドの ボス＝みんなで挑む課題。ギルドマスターが掲げ、ふだんのクエストに「このボスに挑む」を付けられる。
- * 敵にするのは 課題だけ（人・会社・業界を 敵にしない）。
- */
-export type Boss = {
-  id: string;
-  title: string;
-  description: string;
-  created_by: string;
-  status: "active" | "defeated";
-  created_at: string;
 };
 
 export type Position = "ceo" | "officer" | "decider" | "other";
@@ -156,8 +145,6 @@ export type Quest = {
   is_urgent: boolean;
   /** 有料会員だけが くわしい内容を見て 参加できる。出せるのは ギルドマスターだけ（リアルの集まりなど） */
   members_only: boolean;
-  /** このクエストで挑む ボス（ギルドの課題）。任意 */
-  boss_id: string | null;
   status: QuestStatus;
   created_at: string;
 };

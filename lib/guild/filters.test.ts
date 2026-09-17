@@ -14,7 +14,6 @@ const q = (id: string, patch: Partial<Quest> = {}): Quest => ({
   member_limit: null,
   is_urgent: false,
   members_only: false,
-  boss_id: null,
   status: "open",
   created_at: "2026-09-10",
   ...patch,

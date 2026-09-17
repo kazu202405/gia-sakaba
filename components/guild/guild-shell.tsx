@@ -24,7 +24,7 @@ type NavItem = {
 const NAV: NavItem[] = [
   { href: "/guild", label: "ホーム", short: "ホーム", exact: true },
   { href: "/guild/members", label: "ギルド", short: "ギルド" },
-  { href: "/guild/quests", label: guild.terms.quest, short: guild.terms.quest, also: ["/guild/bosses"] },
+  { href: "/guild/quests", label: guild.terms.quest, short: guild.terms.quest },
   { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
   { href: "/guild/me", label: "マイページ", short: "マイページ", also: ["/guild/requests"] },
 ];
