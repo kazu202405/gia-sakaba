@@ -39,20 +39,54 @@ type Draft = Pick<
 
 type ContactDraft = Omit<ProfileContact, "profile_id">;
 
-type StepKey = "intro" | "basic" | "work" | "strength" | "values" | "connect" | "contact" | "visibility" | "confirm";
+type StepKey = "intro" | "basic" | "work" | "values" | "connect" | "contact" | "visibility" | "confirm";
 
 const STEP_META: Record<Exclude<StepKey, "intro">, { tag: string; title: string; lead: string; optional: boolean }> = {
-  basic: { tag: "きほん", title: "まずは きほんから", lead: "名鑑のカードに出る情報です。ここだけは必須です。", optional: false },
-  work: { tag: "しごと", title: "どんな しごとを していますか？", lead: "「この人に頼めそう」と思ってもらうための情報です。", optional: true },
-  strength: { tag: "とくい", title: "とくいなことは なんですか？", lead: "仕事の種類ではなく、あなたの持ち味を一言で。", optional: true },
-  values: { tag: "おもい", title: "だいじにしていること、これから", lead: "紹介するとき、人柄が伝わる材料になります。", optional: true },
-  connect: { tag: "つながり", title: "どんな人と つながりたいですか？", lead: "ギルドマスターが紹介を考えるときに一番見るところです。", optional: true },
-  contact: { tag: "れんらく先", title: "れんらく先", lead: "名鑑には出ません。紹介が承諾された相手にだけ見えます。", optional: true },
-  visibility: { tag: "こうかい", title: "どこまで 見せますか？", lead: `${guild.name}の ${guild.terms.member}に見せる範囲です。あとから変えられます。`, optional: false },
-  confirm: { tag: "さいごに", title: `この ${guild.terms.status}で とうろくします`, lead: `${guild.terms.member}からは こう見えます。`, optional: false },
+  basic: {
+    tag: "きほん",
+    title: "まずは きほんから",
+    lead: "名鑑のカードに出る情報です。ここだけは必須です。",
+    optional: false,
+  },
+  work: {
+    tag: "しごと",
+    title: "どんな しごとを していますか？",
+    lead: "「この人に頼めそう」と思ってもらうための情報です。",
+    optional: true,
+  },
+  values: {
+    tag: "おもい",
+    title: "だいじにしていること、これから",
+    lead: "紹介するとき、人柄が伝わる材料になります。",
+    optional: true,
+  },
+  connect: {
+    tag: "つながり",
+    title: "どんな人と つながりたいですか？",
+    lead: "ギルドマスターが紹介を考えるときに一番見るところです。",
+    optional: true,
+  },
+  contact: {
+    tag: "れんらく先",
+    title: "れんらく先",
+    lead: "名鑑には出ません。紹介が承諾された相手にだけ見えます。",
+    optional: true,
+  },
+  visibility: {
+    tag: "こうかい",
+    title: "どこまで 見せますか？",
+    lead: `${guild.name}の ${guild.terms.member}に見せる範囲です。あとから変えられます。`,
+    optional: false,
+  },
+  confirm: {
+    tag: "さいごに",
+    title: `この ${guild.terms.status}で とうろくします`,
+    lead: `${guild.terms.member}からは こう見えます。`,
+    optional: false,
+  },
 };
 
-const FLOW: Exclude<StepKey, "intro">[] = ["basic", "work", "strength", "values", "connect", "contact", "visibility", "confirm"];
+const FLOW: Exclude<StepKey, "intro">[] = ["basic", "work", "values", "connect", "contact", "visibility", "confirm"];
 
 const MAX_KEYWORDS = 5;
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -118,7 +152,8 @@ export function StatusWizard({
       if (!draft.region) next.region = "地域を選んでください";
     }
     if (s === "contact") {
-      if (contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email)) next.email = "メールアドレスの形になっていません";
+      if (contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email))
+        next.email = "メールアドレスの形になっていません";
       for (const k of ["line_url", "website_url"] as const) {
         if (contact[k] && !/^https?:\/\//.test(contact[k])) next[k] = "https:// から始まるURLを入れてください";
       }
@@ -164,7 +199,9 @@ export function StatusWizard({
   };
 
   const finish = () => {
-    uiToast(isNew ? `${guild.name}へようこそ（見本のため保存はされません）` : `${guild.terms.status}を保存しました（見本）`);
+    uiToast(
+      isNew ? `${guild.name}へようこそ（見本のため保存はされません）` : `${guild.terms.status}を保存しました（見本）`,
+    );
     router.push(isNew ? "/guild" : "/guild/me");
   };
 
@@ -207,11 +244,6 @@ export function StatusWizard({
             <div className="mt-6 space-y-6">
               {step === "basic" && <BasicStep draft={draft} set={set} errors={errors} />}
               {step === "work" && <WorkStep draft={draft} set={set} />}
-              {step === "strength" && (
-                <Field label="とくいなこと" hint="れい：数字を平易な言葉で説明すること">
-                  <TextArea value={draft.strengths} onChange={(v) => set("strengths", v)} rows={3} max={200} />
-                </Field>
-              )}
               {step === "values" && (
                 <>
                   <Field label="だいじにしていること" hint="れい：作ったあと、社内で更新できること">
@@ -324,10 +356,37 @@ function BasicStep({
     <>
       <PhotoField draft={draft} set={set} />
       <Field label="おなまえ" required error={errors.display_name}>
-        <TextInput value={draft.display_name} onChange={(v) => set("display_name", v)} placeholder="田中 一郎" max={30} />
+        <TextInput
+          value={draft.display_name}
+          onChange={(v) => set("display_name", v)}
+          placeholder="田中 一郎"
+          max={30}
+        />
       </Field>
-      <Field label="ひとことで「なにをしている人」？" required hint="名鑑のカードに出ます。20〜30文字くらいで" error={errors.headline}>
-        <TextInput value={draft.headline} onChange={(v) => set("headline", v)} placeholder="中小企業のホームページ・LP制作" max={40} />
+      <Field
+        label="ひとことで「なにをしている人」？"
+        required
+        hint="名鑑のカードに出ます。20〜30文字くらいで"
+        error={errors.headline}
+      >
+        <TextInput
+          value={draft.headline}
+          onChange={(v) => set("headline", v)}
+          placeholder="中小企業のホームページ・LP制作"
+          max={40}
+        />
+      </Field>
+      <Field
+        label="あなたならではの つよみ"
+        hint="ほかの人と ちがうところ。有料会員に なるときに 必要です（あとから 書けます）"
+      >
+        <TextArea
+          value={draft.strengths}
+          onChange={(v) => set("strengths", v)}
+          rows={3}
+          max={200}
+          placeholder="れい：職人の採用ページを 撮影から 1社で まとめて作れる"
+        />
       </Field>
       <div className="grid gap-6 sm:grid-cols-2">
         <Field label="ぎょうしゅ" required error={errors.industry}>
@@ -360,13 +419,7 @@ function BasicStep({
   );
 }
 
-function PhotoField({
-  draft,
-  set,
-}: {
-  draft: Draft;
-  set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
-}) {
+function PhotoField({ draft, set }: { draft: Draft; set: <K extends keyof Draft>(key: K, value: Draft[K]) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -413,7 +466,13 @@ function PhotoField({
         </div>
         <p className="mt-1 min-h-[1rem] text-xs text-[#c62828]">{error}</p>
       </div>
-      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={(e) => onPick(e.target.files?.[0])} />
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onPick(e.target.files?.[0])}
+      />
       <ImageCropDialog
         open={cropSrc !== null}
         src={cropSrc}
@@ -428,13 +487,7 @@ function PhotoField({
   );
 }
 
-function WorkStep({
-  draft,
-  set,
-}: {
-  draft: Draft;
-  set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
-}) {
+function WorkStep({ draft, set }: { draft: Draft; set: <K extends keyof Draft>(key: K, value: Draft[K]) => void }) {
   const [word, setWord] = useState("");
   const [error, setError] = useState("");
 
@@ -494,7 +547,12 @@ function WorkStep({
                 {k}
                 <button
                   type="button"
-                  onClick={() => set("keywords", draft.keywords.filter((x) => x !== k))}
+                  onClick={() =>
+                    set(
+                      "keywords",
+                      draft.keywords.filter((x) => x !== k),
+                    )
+                  }
                   aria-label={`${k}を外す`}
                   className="px-1 leading-none"
                 >
@@ -521,16 +579,33 @@ function ContactStep({
   return (
     <>
       <p className="c-card border-dashed px-3 py-2.5 text-xs leading-relaxed">
-        ※ ここに書いた れんらく先は、名鑑にもステータスにも出ません。ギルドマスターの しょうかいを あなたが承諾したとき、その相手にだけ見えます。
+        ※ ここに書いた れんらく先は、名鑑にもステータスにも出ません。ギルドマスターの しょうかいを
+        あなたが承諾したとき、その相手にだけ見えます。
       </p>
       <Field label="メールアドレス" error={errors.email}>
-        <TextInput type="email" value={contact.email} onChange={(v) => setContact({ ...contact, email: v })} placeholder="you@example.com" max={120} />
+        <TextInput
+          type="email"
+          value={contact.email}
+          onChange={(v) => setContact({ ...contact, email: v })}
+          placeholder="you@example.com"
+          max={120}
+        />
       </Field>
       <Field label="LINE の URL" error={errors.line_url}>
-        <TextInput value={contact.line_url} onChange={(v) => setContact({ ...contact, line_url: v })} placeholder="https://line.me/..." max={200} />
+        <TextInput
+          value={contact.line_url}
+          onChange={(v) => setContact({ ...contact, line_url: v })}
+          placeholder="https://line.me/..."
+          max={200}
+        />
       </Field>
       <Field label="Webサイト" error={errors.website_url}>
-        <TextInput value={contact.website_url} onChange={(v) => setContact({ ...contact, website_url: v })} placeholder="https://example.com" max={200} />
+        <TextInput
+          value={contact.website_url}
+          onChange={(v) => setContact({ ...contact, website_url: v })}
+          placeholder="https://example.com"
+          max={200}
+        />
       </Field>
     </>
   );
@@ -544,13 +619,22 @@ function VisibilityStep({
   set: <K extends keyof Draft>(key: K, value: Draft[K]) => void;
 }) {
   const toggle = (g: VisibleGroup) =>
-    set("visible_groups", draft.visible_groups.includes(g) ? draft.visible_groups.filter((x) => x !== g) : [...draft.visible_groups, g]);
+    set(
+      "visible_groups",
+      draft.visible_groups.includes(g) ? draft.visible_groups.filter((x) => x !== g) : [...draft.visible_groups, g],
+    );
 
   return (
     <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/20">
       <SwitchRow title="きほん" note="名前・写真・肩書・業種・地域" fixed="いつも公開" />
       {(Object.keys(groupLabel) as VisibleGroup[]).map((g) => (
-        <SwitchRow key={g} title={groupLabel[g].title} note={groupLabel[g].note} on={draft.visible_groups.includes(g)} onToggle={() => toggle(g)} />
+        <SwitchRow
+          key={g}
+          title={groupLabel[g].title}
+          note={groupLabel[g].note}
+          on={draft.visible_groups.includes(g)}
+          onToggle={() => toggle(g)}
+        />
       ))}
       <SwitchRow
         title="しょうかいを受けつける"
@@ -573,9 +657,24 @@ function ConfirmStep({
 }) {
   const hasContact = contact.email || contact.line_url || contact.website_url;
   const rows: { step: StepKey; title: string; filled: boolean; visible: boolean | null }[] = [
-    { step: "work", title: "しごと", filled: !!(draft.bio || draft.can_help_with || draft.keywords.length), visible: draft.visible_groups.includes("work") },
-    { step: "values", title: "おもい", filled: !!(draft.strengths || draft.values_text || draft.vision), visible: draft.visible_groups.includes("values") },
-    { step: "connect", title: "つながり", filled: !!(draft.looking_for || draft.want_to_meet), visible: draft.visible_groups.includes("connect") },
+    {
+      step: "work",
+      title: "しごと",
+      filled: !!(draft.bio || draft.can_help_with || draft.keywords.length),
+      visible: draft.visible_groups.includes("work"),
+    },
+    {
+      step: "values",
+      title: "おもい",
+      filled: !!(draft.values_text || draft.vision),
+      visible: draft.visible_groups.includes("values"),
+    },
+    {
+      step: "connect",
+      title: "つながり",
+      filled: !!(draft.looking_for || draft.want_to_meet),
+      visible: draft.visible_groups.includes("connect"),
+    },
     { step: "contact", title: "れんらく先", filled: !!hasContact, visible: null },
   ];
 
@@ -648,7 +747,14 @@ function SwitchRow({
       {fixed ? (
         <span className="c-muted shrink-0 text-xs">{fixed}</span>
       ) : (
-        <button type="button" role="switch" aria-checked={on} aria-label={title} onClick={onToggle} className="c-switch" />
+        <button
+          type="button"
+          role="switch"
+          aria-checked={on}
+          aria-label={title}
+          onClick={onToggle}
+          className="c-switch"
+        />
       )}
     </li>
   );

@@ -35,6 +35,12 @@ export default async function MemberStatusPage({ params }: Props) {
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl tracking-[0.15em]">{p.display_name}</h1>
             <p className="mt-2 text-[15px] break-words">{p.headline}</p>
+            {p.strengths && (
+              <p className="c-card mt-3 px-3 py-2 text-sm leading-relaxed break-words">
+                <span className="c-label mr-2 text-xs">つよみ</span>
+                {p.strengths}
+              </p>
+            )}
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px]">
               {/* 会社名と役職は、本人が「出す」を選んだときだけ */}
               {p.show_company && (
@@ -109,7 +115,6 @@ export default async function MemberStatusPage({ params }: Props) {
           )}
         </GroupBlock>
         <GroupBlock profile={p} group="values">
-          <Item label="つよみ" value={p.strengths} />
           <Item label="だいじにしていること" value={p.values_text} />
           <Item label="これから" value={p.vision} />
         </GroupBlock>
