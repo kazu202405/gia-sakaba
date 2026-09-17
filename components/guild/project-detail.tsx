@@ -105,7 +105,7 @@ export function ProjectDetail({ id }: { id: string }) {
         <p className="c-muted mt-4 text-xs">
           {isParty
             ? "パーティの人にだけ 見えています。"
-            : "あなたにしか 見えていません（ギルドマスターにも 見えません）。"}
+            : "あなたにしか 見えていません。"}
         </p>
       </Window>
 
