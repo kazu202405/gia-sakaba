@@ -66,7 +66,7 @@ export function HomeProjects() {
   );
 }
 
-/** 人ごとの すすみの予定。完了は ます目で入れるので、押すとプロジェクトへ移る */
+/** あいてごとの じょうきょうの予定。完了は ます目で入れるので、押すとプロジェクトへ移る */
 function StepLine({ item }: { item: Extract<UpcomingItem, { kind: "step" }> }) {
   const due = dueLabel(item.date, TODAY);
   return (

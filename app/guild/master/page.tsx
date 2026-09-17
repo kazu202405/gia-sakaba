@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageTitle } from "@/components/guild/cards";
+import { GatheringApprovals } from "@/components/guild/gathering-approvals";
 import { MasterConsole } from "@/components/guild/master-console";
 import { guild, introRequests } from "@/lib/guild/mock-data";
 
@@ -14,6 +15,9 @@ export default function MasterPage() {
         lead="とどいた しょうかい依頼を見て、つなぐ・別の人を提案する・見送るを決めます。"
       />
       <MasterConsole initial={introRequests} />
+      <div className="mt-11">
+        <GatheringApprovals />
+      </div>
     </div>
   );
 }

@@ -89,11 +89,11 @@ describe("introsToCancelOnWithdraw", () => {
 describe("recipientsOnQuestChange", () => {
   it("取り消した人・出した本人・ほかのクエストの人には送らない。同じ人は1回", () => {
     const apps: QuestApplication[] = [
-      { quest_id: "q1", user_id: "a", message: "", status: "applied", created_at: "2026-09-14" },
-      { quest_id: "q1", user_id: "a", message: "", status: "applied", created_at: "2026-09-15" },
-      { quest_id: "q1", user_id: "b", message: "", status: "withdrawn", created_at: "2026-09-14" },
-      { quest_id: "q1", user_id: "owner", message: "", status: "applied", created_at: "2026-09-14" },
-      { quest_id: "q2", user_id: "c", message: "", status: "applied", created_at: "2026-09-14" },
+      { quest_id: "q1", user_id: "a", message: "", status: "applied", approved_at: null, created_at: "2026-09-14" },
+      { quest_id: "q1", user_id: "a", message: "", status: "applied", approved_at: null, created_at: "2026-09-15" },
+      { quest_id: "q1", user_id: "b", message: "", status: "withdrawn", approved_at: null, created_at: "2026-09-14" },
+      { quest_id: "q1", user_id: "owner", message: "", status: "applied", approved_at: null, created_at: "2026-09-14" },
+      { quest_id: "q2", user_id: "c", message: "", status: "applied", approved_at: null, created_at: "2026-09-14" },
     ];
     expect(recipientsOnQuestChange(quest, apps)).toEqual(["a"]);
   });

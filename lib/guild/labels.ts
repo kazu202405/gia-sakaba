@@ -1,15 +1,7 @@
 // 画面に出す言葉と、状態ごとの見せ方。
 // 状態の文言はここ1か所にまとめる（画面ごとに書くと食い違う）。
 
-import type {
-  IntroOutcome,
-  IntroPurpose,
-  IntroStatus,
-  JobIconKey,
-  QuestCategory,
-  QuestStatus,
-  VisibleGroup,
-} from "./types";
+import type { IntroOutcome, IntroPurpose, IntroStatus, JobIconKey, Position, QuestCategory, QuestStatus, VisibleGroup } from "./types";
 
 /** 職業アイコンの選択肢に出す名前 */
 export const jobIconLabel: Record<JobIconKey, string> = {
@@ -48,6 +40,14 @@ export const questCategoryHint: Record<QuestCategory, string> = {
   collab: "いっしょに何かを始めたい",
   info: "知っている人に教えてほしい",
   gathering: "ギルドマスターが ひらく リアルの集まり",
+};
+
+/** 役職。代表・役員・決裁者を「経営者」として 限定の集まりの対象にする */
+export const positionLabel: Record<Position, string> = {
+  ceo: "代表",
+  officer: "役員",
+  decider: "決裁者",
+  other: "その他",
 };
 
 export const questStatusLabel:Record<QuestStatus, string> = {

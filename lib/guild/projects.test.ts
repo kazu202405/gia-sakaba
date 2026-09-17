@@ -177,7 +177,7 @@ describe("工程表", () => {
   });
 });
 
-describe("人ごとの すすみ", () => {
+describe("あいてごとの じょうきょう", () => {
   const steps: ProjectStep[] = [
     { id: "s2", project_id: "a", name: "契約", sort_order: 2 },
     { id: "s1", project_id: "a", name: "初回アポ", sort_order: 1 },
@@ -221,6 +221,7 @@ describe("クエストから プロジェクトにする", () => {
     user_id,
     message: "",
     status,
+    approved_at: null,
     created_at: "2026-09-10",
   });
   const intro = (target_id: string, status: IntroRequest["status"], patch: Partial<IntroRequest> = {}): IntroRequest => ({

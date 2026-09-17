@@ -4,17 +4,9 @@ import { BackLink, QuestCard, Window } from "@/components/guild/cards";
 import { IntroRequestButton } from "@/components/guild/intro-request-dialog";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { AchievementsView } from "@/components/guild/membership-parts";
-import { groupLabel } from "@/lib/guild/labels";
+import { groupLabel, positionLabel } from "@/lib/guild/labels";
 import { achievementCounts, badges, canPostMembersOnly } from "@/lib/guild/membership";
-import {
-  ME_ID,
-  getProfile,
-  guild,
-  introRequests,
-  parties,
-  questApplications,
-  quests,
-} from "@/lib/guild/mock-data";
+import { ME_ID, getProfile, guild, introRequests, parties, questApplications, quests } from "@/lib/guild/mock-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -44,6 +36,15 @@ export default async function MemberStatusPage({ params }: Props) {
             <h1 className="text-3xl tracking-[0.15em]">{p.display_name}</h1>
             <p className="mt-2 text-[15px] break-words">{p.headline}</p>
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px]">
+              {/* 会社名と役職は、本人が「出す」を選んだときだけ */}
+              {p.show_company && (
+                <>
+                  <dt className="c-label">かいしゃ</dt>
+                  <dd className="break-words">
+                    {p.company_name}（{positionLabel[p.position]}）
+                  </dd>
+                </>
+              )}
               <dt className="c-label">しょくぎょう</dt>
               <dd>{p.job}</dd>
               <dt className="c-label">ぎょうしゅ</dt>
@@ -80,7 +81,9 @@ export default async function MemberStatusPage({ params }: Props) {
             <IntroRequestButton target={p} />
           )}
           {!isMe && (
-            <p className="c-muted mt-2 text-xs leading-relaxed">れんらく先は、しょうかいが承諾されたときにだけ見えるようになります。</p>
+            <p className="c-muted mt-2 text-xs leading-relaxed">
+              れんらく先は、しょうかいが承諾されたときにだけ見えるようになります。
+            </p>
           )}
         </div>
       </Window>
@@ -123,11 +126,23 @@ export default async function MemberStatusPage({ params }: Props) {
   );
 }
 
-function GroupBlock({ profile, group, children }: { profile: Profile; group: VisibleGroup; children: React.ReactNode }) {
+function GroupBlock({
+  profile,
+  group,
+  children,
+}: {
+  profile: Profile;
+  group: VisibleGroup;
+  children: React.ReactNode;
+}) {
   const visible = profile.visible_groups.includes(group);
   return (
     <Window title={groupLabel[group].title}>
-      {visible ? <div className="space-y-3">{children}</div> : <p className="c-muted text-sm">※ ひこうかいに しています</p>}
+      {visible ? (
+        <div className="space-y-3">{children}</div>
+      ) : (
+        <p className="c-muted text-sm">※ ひこうかいに しています</p>
+      )}
     </Window>
   );
 }

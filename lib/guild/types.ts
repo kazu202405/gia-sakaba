@@ -65,7 +65,29 @@ export type Profile = {
   role: GuildRole;
   visible_groups: VisibleGroup[];
   accept_intro: boolean;
+  /** 会社名（入会時に入れる） */
+  company_name: string;
+  /** 役職。限定の集まりは 経営者（代表・役員・決裁者）の方向け */
+  position: Position;
+  /** 名鑑に 会社名と役職を 出すか（本人が選ぶ） */
+  show_company: boolean;
+  /**
+   * 限定の集まりへの はじめての申し込みを ギルドマスターが承認した日。
+   * 入っていれば 次からは 承認なしで 参加できる（経営者の確認を 別の作業にしない）
+   */
+  gathering_approved_at: string | null;
   joined_at: string;
+};
+
+export type Position = "ceo" | "officer" | "decider" | "other";
+
+/** 招待リンク。入会は 招待リンクからだけ（本番は sakaba.invites） */
+export type Invite = {
+  code: string;
+  created_by: string;
+  max_uses: number;
+  used: number;
+  expires_at: string | null;
 };
 
 /**
@@ -125,6 +147,8 @@ export type QuestApplication = {
   user_id: string;
   message: string;
   status: QuestApplicationStatus;
+  /** 限定の集まりで ギルドマスターが承認した日。null＝承認待ち（ふつうのクエストでは使わない） */
+  approved_at: string | null;
   created_at: string;
 };
 
@@ -209,7 +233,7 @@ export type ProjectTask = {
 };
 
 /**
- * 人ごとの すすみ（営業など、同じ手順を何人にも進める仕事）。
+ * あいてごとの じょうきょう（営業など、同じ手順を何人にも進める仕事）。
  * 行＝相手、列＝ステップ、ます目＝予定日と完了日。連絡先や商談の内容は持たない（呼び名と ひとことメモだけ）。
  */
 export type ProjectStep = {

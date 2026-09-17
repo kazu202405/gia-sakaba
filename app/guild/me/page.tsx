@@ -69,6 +69,9 @@ export default function MyPage() {
             <Link href="/guild/me/status?new=1" className="c-muted text-center text-[11px] underline underline-offset-4">
               はじめての人の画面を見る（見本）
             </Link>
+            <Link href="/guild/join?invite=GIA-2026" className="c-muted text-center text-[11px] underline underline-offset-4">
+              入会の画面を見る（見本）
+            </Link>
           </div>
         </div>
       </Window>

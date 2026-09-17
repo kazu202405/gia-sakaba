@@ -102,8 +102,8 @@ describe("実績（集めるもの・段は付けない）", () => {
       { ...quests[0], id: "c3", creator_id: "other", status: "completed" },
     ],
     applications: [
-      { quest_id: "c2", user_id: "me", message: "", status: "applied", created_at: "2026-09-01" },
-      { quest_id: "c3", user_id: "me", message: "", status: "withdrawn", created_at: "2026-09-01" },
+      { quest_id: "c2", user_id: "me", message: "", status: "applied", approved_at: null, created_at: "2026-09-01" },
+      { quest_id: "c3", user_id: "me", message: "", status: "withdrawn", approved_at: null, created_at: "2026-09-01" },
     ],
     intros: [
       intro({ id: "1" }),

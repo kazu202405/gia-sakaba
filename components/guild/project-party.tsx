@@ -2,7 +2,7 @@
 
 // プロジェクトのパーティ。持ち主だけが、あとから人を足す・外す。
 // 足せるのは、ギルドマスター経由の紹介が承諾された・紹介済みでつながっている人だけ。
-// 足した人にはプロジェクトの中身（タスク・備考・人ごとのすすみ）が見えるので、足す前に確かめる。
+// 足した人にはプロジェクトの中身（タスク・備考・あいてごとの じょうきょう）が見えるので、足す前に確かめる。
 
 import { useState } from "react";
 import type { Profile, Project } from "@/lib/guild/types";
@@ -33,8 +33,8 @@ export function ProjectParty({ project, people, isOwner }: { project: Project; p
       title: `${name}さんを ${guild.terms.party}に 足します`,
       message:
         project.member_ids.length === 0
-          ? `いまは あなたにしか見えない プロジェクトです。足すと、${name}さんにも タスク・備考・人ごとの すすみ が見えるようになります。`
-          : `${name}さんにも タスク・備考・人ごとの すすみ が見えるようになります。`,
+          ? `いまは あなたにしか見えない プロジェクトです。足すと、${name}さんにも タスク・備考・あいてごとの じょうきょう が見えるようになります。`
+          : `${name}さんにも タスク・備考・あいてごとの じょうきょう が見えるようになります。`,
       okLabel: "足す",
     });
     if (!ok) return;

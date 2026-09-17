@@ -1,6 +1,6 @@
 "use client";
 
-// 人ごとの すすみ。行＝相手、列＝ステップ、ます目＝予定日と完了日。
+// あいてごとの じょうきょう。行＝相手、列＝ステップ、ます目＝予定日と完了日。
 // 持つのは呼び名・ひとことメモ・日付だけ（連絡先や商談の内容は持たない。タスク管理のための表）。
 // ます目や名前を押すと、表のすぐ下に入力の枠が開く（スマホで小さな画面を重ねない）。
 
@@ -70,7 +70,7 @@ export function ProjectPeople({
         </p>
         {editable && (
           <button type="button" className="c-button-sub h-11 px-4 text-sm" onClick={() => startSteps(project.id)}>
-            ▶ 人ごとの すすみを はじめる
+            ▶ あいてごとの じょうきょうを はじめる
           </button>
         )}
       </div>

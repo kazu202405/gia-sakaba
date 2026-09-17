@@ -177,7 +177,7 @@ export function taskBar(range: DateRange, t: ProjectTask): { left: number; width
   return { left, width: Math.max(datePct(range, t.due_date) - left, 1) };
 }
 
-// ---------- 人ごとの すすみ ----------
+// ---------- あいてごとの じょうきょう ----------
 
 export function stepsOf(steps: ProjectStep[], projectId: string): ProjectStep[] {
   return steps.filter((s) => s.project_id === projectId).sort((a, b) => a.sort_order - b.sort_order);
@@ -211,8 +211,8 @@ export type UpcomingItem =
   | { kind: "step"; date: string; contact: ProjectContact; step: ProjectStep; project: Project };
 
 /**
- * ホームの「しめきりが近い」。タスクに加えて、人ごとの すすみの予定日（まだ終わっていないもの）も並べる。
- * 人ごとの すすみの予定は、プロジェクトの持ち主のものとして出す（パーティ全員に出すと同じ予定が重なる）。
+ * ホームの「しめきりが近い」。タスクに加えて、あいてごとの じょうきょうの予定日（まだ終わっていないもの）も並べる。
+ * あいてごとの じょうきょうの予定は、プロジェクトの持ち主のものとして出す（パーティ全員に出すと同じ予定が重なる）。
  */
 export function upcomingItems(
   data: { projects: Project[]; tasks: ProjectTask[]; steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] },

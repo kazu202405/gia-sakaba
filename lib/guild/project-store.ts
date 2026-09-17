@@ -1,4 +1,4 @@
-// プロジェクト・タスク・人ごとの すすみ の変更を、ホーム・一覧・くわしい画面で共有する（見本用）。
+// プロジェクト・タスク・あいてごとの じょうきょう の変更を、ホーム・一覧・くわしい画面で共有する（見本用）。
 // 本番では sakaba.projects / project_tasks / project_steps / project_contacts / step_records をRPCで更新し、
 // ここはその読み込みに差し替える。
 
@@ -180,7 +180,7 @@ export function removeTask(taskId: string): void {
   set({ tasks: state.tasks.filter((t) => t.id !== taskId) });
 }
 
-// ---------- 人ごとの すすみ ----------
+// ---------- あいてごとの じょうきょう ----------
 
 /** 営業の型（初回アポ／興味付け／提案／契約）で はじめる */
 export function startSteps(projectId: string): void {

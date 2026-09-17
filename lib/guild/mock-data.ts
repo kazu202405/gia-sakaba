@@ -5,6 +5,7 @@ import type {
   GiaApplicantImport,
   Guild,
   GuildNotification,
+  Invite,
   IntroRequest,
   Party,
   Profile,
@@ -109,6 +110,10 @@ export const profiles: Profile[] = [
     role: "owner",
     visible_groups: ["work", "values", "connect"],
     accept_intro: true,
+    company_name: "株式会社GIA",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: "2026-09-01",
     joined_at: "2026-09-01",
   },
   {
@@ -131,6 +136,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "connect"],
     accept_intro: true,
+    company_name: "森田ウェブ制作",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-05",
   },
   {
@@ -153,6 +162,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "values", "connect"],
     accept_intro: true,
+    company_name: "佐伯税理士事務所",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-03",
   },
   {
@@ -175,6 +188,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "values", "connect"],
     accept_intro: true,
+    company_name: "川島工務店",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: "2026-09-10",
     joined_at: "2026-09-02",
   },
   {
@@ -197,6 +214,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "connect"],
     accept_intro: true,
+    company_name: "のぐち食堂",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-08",
   },
   {
@@ -219,6 +240,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work"],
     accept_intro: true,
+    company_name: "株式会社ブライト",
+    position: "officer",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-04",
   },
   {
@@ -241,6 +266,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "values", "connect"],
     accept_intro: true,
+    company_name: "藤原不動産",
+    position: "decider",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-06",
   },
   {
@@ -263,6 +292,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work"],
     accept_intro: true,
+    company_name: "大野法律事務所",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-07",
   },
   {
@@ -285,6 +318,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "values", "connect"],
     accept_intro: true,
+    company_name: "こまつデザイン室",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: "2026-09-12",
     joined_at: "2026-09-09",
   },
   {
@@ -307,6 +344,10 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "connect"],
     accept_intro: false,
+    company_name: "長谷川研修",
+    position: "other",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-10",
   },
   {
@@ -329,8 +370,18 @@ export const profiles: Profile[] = [
     role: "member",
     visible_groups: ["work", "values"],
     accept_intro: true,
+    company_name: "むらかみ整体院",
+    position: "ceo",
+    show_company: true,
+    gathering_approved_at: null,
     joined_at: "2026-09-11",
   },
+];
+
+/** 招待リンク（見本）。/guild/join?invite=GIA-2026 で入会画面を試せる */
+export const invites: Invite[] = [
+  { code: "GIA-2026", created_by: "p-goto", max_uses: 50, used: 12, expires_at: "2026-12-31" },
+  { code: "OLD-2025", created_by: "p-goto", max_uses: 10, used: 3, expires_at: "2025-12-31" },
 ];
 
 export const quests: Quest[] = [
@@ -481,6 +532,7 @@ export const questApplications: QuestApplication[] = [
     user_id: "p-morita",
     message: "採用ページの制作実績があります。撮影は協力会社と一緒に伺えます。",
     status: "applied",
+    approved_at: null,
     created_at: "2026-09-12",
   },
   {
@@ -488,18 +540,20 @@ export const questApplications: QuestApplication[] = [
     user_id: "p-komatsu",
     message: "古民家の雰囲気に合うロゴと看板を考えられます。",
     status: "applied",
+    approved_at: null,
     created_at: "2026-09-11",
   },
-  { quest_id: "q-akiya-biz", user_id: "p-ishii", message: "", status: "applied", created_at: "2026-09-12" },
-  { quest_id: "q-ai-training", user_id: "p-goto", message: "", status: "applied", created_at: "2026-09-06" },
-  { quest_id: "q-seitai-lp", user_id: "p-komatsu", message: "", status: "applied", created_at: "2026-09-03" },
-  { quest_id: "q-seitai-lp", user_id: "p-ishii", message: "", status: "applied", created_at: "2026-09-03" },
+  { quest_id: "q-akiya-biz", user_id: "p-ishii", message: "", status: "applied", approved_at: null, created_at: "2026-09-12" },
+  { quest_id: "q-ai-training", user_id: "p-goto", message: "", status: "applied", approved_at: null, created_at: "2026-09-06" },
+  { quest_id: "q-seitai-lp", user_id: "p-komatsu", message: "", status: "applied", approved_at: null, created_at: "2026-09-03" },
+  { quest_id: "q-seitai-lp", user_id: "p-ishii", message: "", status: "applied", approved_at: null, created_at: "2026-09-03" },
   // 森田のクエストへの参加希望
   {
     quest_id: "q-lp-writing",
     user_id: "p-ishii",
     message: "広告用のLPの文章なら何本も書いてきました。聞き取りから入れます。",
     status: "applied",
+    approved_at: null,
     created_at: "2026-09-13",
   },
   {
@@ -507,12 +561,17 @@ export const questApplications: QuestApplication[] = [
     user_id: "p-komatsu",
     message: "デザインと合わせて、文章の方向も一緒に考えられます。",
     status: "applied",
+    approved_at: null,
     created_at: "2026-09-14",
   },
-  { quest_id: "q-lp-writing", user_id: "p-hasegawa", message: "", status: "applied", created_at: "2026-09-15" },
+  { quest_id: "q-lp-writing", user_id: "p-hasegawa", message: "", status: "applied", approved_at: null, created_at: "2026-09-15" },
   // 取り消した人は一覧にも人数にも出さない
-  { quest_id: "q-lp-writing", user_id: "p-murakami", message: "", status: "withdrawn", created_at: "2026-09-14" },
-  { quest_id: "q-shop-sns", user_id: "p-morita", message: "", status: "applied", created_at: "2026-09-07" },
+  { quest_id: "q-lp-writing", user_id: "p-murakami", message: "", status: "withdrawn", approved_at: null, created_at: "2026-09-14" },
+  { quest_id: "q-shop-sns", user_id: "p-morita", message: "", status: "applied", approved_at: null, created_at: "2026-09-07" },
+  // 限定の集まり：小松さんは前に承認ずみ（そのまま参加）、石井さん・長谷川さんは はじめてなので承認待ち
+  { quest_id: "q-sakaba-night", user_id: "p-komatsu", message: "", status: "applied", approved_at: "2026-09-16", created_at: "2026-09-16" },
+  { quest_id: "q-sakaba-night", user_id: "p-ishii", message: "はじめて参加します。よろしくお願いします。", status: "applied", approved_at: null, created_at: "2026-09-16" },
+  { quest_id: "q-sakaba-night", user_id: "p-hasegawa", message: "", status: "applied", approved_at: null, created_at: "2026-09-17" },
 ];
 
 export const parties: Party[] = [
@@ -815,7 +874,7 @@ export const projectTasks: ProjectTask[] = [
   seedTask({ id: "t-other-1", project_id: "pj-private-other", title: "領収書を まとめる", status: "todo", assignee_id: null, due_date: "2026-09-17", sort_order: 1 }),
 ];
 
-/** 「人ごとの すすみ」を はじめるときの 型（営業） */
+/** 「あいてごとの じょうきょう」を はじめるときの 型（営業） */
 export const SALES_STEP_NAMES = ["初回アポ", "興味付け", "提案", "契約"];
 
 export const projectSteps: ProjectStep[] = SALES_STEP_NAMES.map((name, i) => ({

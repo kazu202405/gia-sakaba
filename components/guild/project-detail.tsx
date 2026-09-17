@@ -1,7 +1,7 @@
 "use client";
 
 // プロジェクトの くわしい画面。
-// 期間のバー → 備考 → タスク（一覧／工程表）→ 人ごとの すすみ → パーティ → おわりにする。
+// 期間のバー → 備考 → タスク（一覧／工程表）→ あいてごとの じょうきょう → パーティ → おわりにする。
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -160,7 +160,7 @@ export function ProjectDetail({ id }: { id: string }) {
 
       {(hasSteps || (isOwner && project.status === "active")) && (
         <div id="people" className="scroll-mt-24">
-          <Window title="人ごとの すすみ">
+          <Window title="あいてごとの じょうきょう">
             <ProjectPeople project={project} state={state} editable={project.status === "active"} />
           </Window>
         </div>

@@ -147,7 +147,7 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
                 className="mt-1 h-5 w-5 shrink-0 accent-[#1b2a41]"
               />
               <span>
-                <span className="block text-[15px]">人ごとの すすみも つかう</span>
+                <span className="block text-[15px]">あいてごとの じょうきょうも つかう</span>
                 <span className="c-muted block text-xs leading-relaxed">
                   営業など、同じ手順を 何人にも すすめるとき。
                   {SALES_STEP_NAMES.join("／")} で はじまり、あとで なおせます
