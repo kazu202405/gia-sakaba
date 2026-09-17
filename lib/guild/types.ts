@@ -174,11 +174,15 @@ export type Project = {
   title: string;
   /** なにができたら おわりか */
   goal: string;
+  /** 備考。内容の管理ではなく、タスクを進めるための控え */
+  memo: string;
   /** クエストから始まったとき */
   source_quest_id: string | null;
   /** 一緒に進める人（パーティ）。owner は含めない */
   member_ids: string[];
   status: ProjectStatus;
+  /** 期間のはじまり。入れなければ作った日 */
+  start_date: string;
   due_date: string | null;
   created_at: string;
   done_at: string | null;
@@ -195,9 +199,39 @@ export type ProjectTask = {
   status: TaskStatus;
   /** null はだれでも（本人だけのプロジェクトなら本人） */
   assignee_id: string | null;
+  /** 入れると工程表で期間のバーになる。無ければしめきりの◆だけ */
+  start_date: string | null;
   due_date: string | null;
   sort_order: number;
   done_at: string | null;
+};
+
+/**
+ * 人ごとの すすみ（営業など、同じ手順を何人にも進める仕事）。
+ * 行＝相手、列＝ステップ、ます目＝予定日と完了日。連絡先や商談の内容は持たない（呼び名と ひとことメモだけ）。
+ */
+export type ProjectStep = {
+  id: string;
+  project_id: string;
+  name: string;
+  sort_order: number;
+};
+
+export type ProjectContact = {
+  id: string;
+  project_id: string;
+  /** 呼び名だけ（例：Aさん（工務店）） */
+  label: string;
+  /** ひとことメモ。連絡先は書かない */
+  memo: string;
+  sort_order: number;
+};
+
+export type StepRecord = {
+  contact_id: string;
+  step_id: string;
+  planned_on: string | null;
+  done_on: string | null;
 };
 
 export type NotificationKind = "quest_applied" | "quest_updated" | "quest_withdrawn" | "intro_progress";

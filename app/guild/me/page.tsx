@@ -60,39 +60,25 @@ export default function MyPage() {
         </div>
       </Window>
 
-      <div className="grid gap-11 md:grid-cols-2">
-        <Window title="プロジェクト" action={<MoreLink href="/guild/projects" />}>
-          <p className="text-sm leading-relaxed">すすめている ものも、おわった ものも ここから見られます。</p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <Link href="/guild/projects" className="c-button-sub h-11 px-4 text-sm">
-              一覧を見る
-            </Link>
-            <Link href="/guild/projects/new" className="rpg-button h-11 px-4 text-sm">
-              ▶ つくる
-            </Link>
-          </div>
-        </Window>
-
-        <Window title="しょうかい いらい" action={<MoreLink href="/guild/requests" />}>
-          {myActiveRequests.length === 0 ? (
-            <p className="c-muted text-sm">すすんでいる いらいは ありません。</p>
-          ) : (
-            <ul className="space-y-1">
-              {myActiveRequests.map((r) => (
-                <li key={r.id}>
-                  <Link href="/guild/requests" className="rpg-cursor-row flex items-center justify-between gap-3 py-1.5 text-[15px]">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      <span className="rpg-cursor">▶</span>
-                      <span className="truncate">{getProfile(r.target_id)?.display_name}さん</span>
-                    </span>
-                    <span className="c-muted shrink-0 text-xs">{introStatusLabel[r.status].requester}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Window>
-      </div>
+      <Window title="しょうかい いらい" action={<MoreLink href="/guild/requests" />}>
+        {myActiveRequests.length === 0 ? (
+          <p className="c-muted text-sm">すすんでいる いらいは ありません。</p>
+        ) : (
+          <ul className="space-y-1">
+            {myActiveRequests.map((r) => (
+              <li key={r.id}>
+                <Link href="/guild/requests" className="rpg-cursor-row flex items-center justify-between gap-3 py-1.5 text-[15px]">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="rpg-cursor">▶</span>
+                    <span className="truncate">{getProfile(r.target_id)?.display_name}さん</span>
+                  </span>
+                  <span className="c-muted shrink-0 text-xs">{introStatusLabel[r.status].requester}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Window>
 
       <Window title="こうかい はんい">
         <MyStatusSettings me={me} />

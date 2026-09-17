@@ -1,6 +1,7 @@
 "use client";
 
-// プロジェクトの くわしい画面。タスクを足す・おわりにする・消す、プロジェクトを おわりにする。
+// プロジェクトの くわしい画面。
+// 期間のバー → 備考 → タスク（一覧／工程表）→ 人ごとの すすみ → パーティ → おわりにする。
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -15,17 +16,22 @@ import {
   setProjectStatus,
   subscribeProjects,
 } from "@/lib/guild/project-store";
-import { canSeeProject, isPrivateProject, projectProgress, tasksOf } from "@/lib/guild/projects";
+import { canSeeProject, isPrivateProject, projectProgress, stepsOf, tasksOf } from "@/lib/guild/projects";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { cn } from "@/lib/utils";
 import { BackLink, MemberRow, Window } from "./cards";
 import { Select, TextInput } from "./form-parts";
-import { ProjectGauge, TaskLine, VisibilityChip } from "./project-parts";
+import { ProjectGantt } from "./project-gantt";
+import { ProjectProgressView, TaskLine, VisibilityChip } from "./project-parts";
+import { ProjectPeople } from "./project-people";
 
 const TASK_TITLE_MAX = 60;
+type TaskView = "list" | "gantt";
 
 export function ProjectDetail({ id }: { id: string }) {
-  const { projects, tasks } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
-  const project = projects.find((p) => p.id === id);
+  const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
+  const [view, setView] = useState<TaskView>("list");
+  const project = state.projects.find((p) => p.id === id);
 
   // 見えないプロジェクトは「ない」と同じに見せる（あることも伝えない）
   if (!project || !canSeeProject(project, ME_ID)) {
@@ -39,11 +45,12 @@ export function ProjectDetail({ id }: { id: string }) {
     );
   }
 
-  const list = tasksOf(tasks, project.id);
-  const { done, total } = projectProgress(tasks, project.id);
+  const list = tasksOf(state.tasks, project.id);
+  const { done, total } = projectProgress(state.tasks, project.id);
   const isParty = !isPrivateProject(project);
   const quest = project.source_quest_id ? getQuest(project.source_quest_id) : undefined;
   const isOwner = project.owner_id === ME_ID;
+  const hasSteps = stepsOf(state.steps, project.id).length > 0;
   const people = [project.owner_id, ...project.member_ids].map((pid) => getProfile(pid)).filter((p) => p !== undefined);
 
   const confirmRemove = async (t: ProjectTask) => {
@@ -63,12 +70,13 @@ export function ProjectDetail({ id }: { id: string }) {
       <BackLink href="/guild/projects" label="プロジェクト" />
 
       <Window title={project.status === "done" ? "おわった プロジェクト" : "プロジェクト"}>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <VisibilityChip project={project} />
-          {project.due_date && project.status === "active" && (
-            <span className="c-muted">いつまでに：{formatDate(project.due_date)}</span>
+          {isOwner && (
+            <Link href={`/guild/projects/${project.id}/edit`} className="c-muted text-xs underline underline-offset-4">
+              なおす
+            </Link>
           )}
-          {project.done_at && <span className="c-muted">{formatDate(project.done_at)}に おわりました</span>}
         </div>
         <h1 className="mt-3 text-2xl leading-snug tracking-[0.08em] break-words">{project.title}</h1>
         {project.goal && (
@@ -86,15 +94,43 @@ export function ProjectDetail({ id }: { id: string }) {
           </p>
         )}
         <div className="mt-5">
-          <ProjectGauge done={done} total={total} />
+          <ProjectProgressView project={project} state={state} />
         </div>
-        <p className="c-muted mt-3 text-xs">
-          {isParty ? "パーティの人にだけ 見えています。" : "あなたにしか 見えていません（ギルドマスターにも 見えません）。"}
+        {project.done_at && <p className="c-muted mt-2 text-xs">{formatDate(project.done_at)}に おわりました</p>}
+        {project.memo && (
+          <div className="c-dashed-top mt-5 pt-4">
+            <p className="c-label text-xs">備考</p>
+            <p className="mt-1 text-sm leading-relaxed break-words whitespace-pre-wrap">{project.memo}</p>
+          </div>
+        )}
+        <p className="c-muted mt-4 text-xs">
+          {isParty
+            ? "パーティの人にだけ 見えています。"
+            : "あなたにしか 見えていません（ギルドマスターにも 見えません）。"}
         </p>
       </Window>
 
-      <Window title="タスク">
-        {list.length === 0 ? (
+      <Window
+        title="タスク"
+        action={
+          <div className="flex gap-3 text-xs" role="group" aria-label="タスクの見せ方">
+            {(["list", "gantt"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={view === v}
+                onClick={() => setView(v)}
+                className={cn("py-1", view === v ? "underline underline-offset-4" : "c-muted")}
+              >
+                {v === "list" ? "一覧" : "工程表"}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        {view === "gantt" ? (
+          <ProjectGantt project={project} tasks={list} />
+        ) : list.length === 0 ? (
           <p className="c-muted text-sm">まだ タスクが ありません。下から 足してください。</p>
         ) : (
           <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
@@ -123,6 +159,14 @@ export function ProjectDetail({ id }: { id: string }) {
         )}
       </Window>
 
+      {(hasSteps || (isOwner && project.status === "active")) && (
+        <div id="people" className="scroll-mt-24">
+          <Window title="人ごとの すすみ">
+            <ProjectPeople project={project} state={state} editable={project.status === "active"} />
+          </Window>
+        </div>
+      )}
+
       {isParty && (
         <Window title="パーティ">
           <ul className="grid gap-4 sm:grid-cols-2">
@@ -140,7 +184,7 @@ export function ProjectDetail({ id }: { id: string }) {
           {project.status === "active" ? (
             <button
               type="button"
-              className="c-button-sub h-11 w-full text-sm sm:w-auto"
+              className="c-button-sub h-11 w-full text-sm sm:w-auto sm:px-5"
               onClick={async () => {
                 const left = total - done;
                 const ok = await uiConfirm({
@@ -161,7 +205,7 @@ export function ProjectDetail({ id }: { id: string }) {
           ) : (
             <button
               type="button"
-              className="c-button-sub h-11 w-full text-sm sm:w-auto"
+              className="c-button-sub h-11 w-full text-sm sm:w-auto sm:px-5"
               onClick={() => {
                 setProjectStatus(project.id, "active");
                 uiToast("すすめている プロジェクトに もどしました");
@@ -178,6 +222,7 @@ export function ProjectDetail({ id }: { id: string }) {
 
 function AddTaskForm({ projectId, memberIds }: { projectId: string; memberIds: string[] | null }) {
   const [title, setTitle] = useState("");
+  const [start, setStart] = useState("");
   const [due, setDue] = useState("");
   const [assignee, setAssignee] = useState(ME_ID);
   const [error, setError] = useState("");
@@ -200,34 +245,56 @@ function AddTaskForm({ projectId, memberIds }: { projectId: string; memberIds: s
           setError("しめきりは きょう以降の日にしてください");
           return;
         }
+        if (start !== "" && due !== "" && due < start) {
+          setError("しめきりは はじめる日より あとにしてください");
+          return;
+        }
         addTask(projectId, {
           title: title.trim(),
+          start_date: start || null,
           due_date: due || null,
           // パーティでは「きまっていない」も選べる。本人だけなら担当は持ち主
           assignee_id: memberIds ? assignee || null : null,
         });
         setTitle("");
+        setStart("");
         setDue("");
         setError("");
       }}
       className="c-dashed-top mt-5 space-y-3 pt-5"
     >
       <p className="text-[15px] tracking-wider">タスクを 足す</p>
-      <TextInput value={title} onChange={setTitle} max={TASK_TITLE_MAX} label="タスクの なまえ" placeholder="例：画像を 用意する" />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
+      <TextInput
+        value={title}
+        onChange={setTitle}
+        max={TASK_TITLE_MAX}
+        label="タスクの なまえ"
+        placeholder="例：画像を 用意する"
+      />
+      <div className="grid grid-cols-2 gap-3">
+        <div className="min-w-0">
+          <p className="c-muted mb-1 text-xs">はじめる日（空でも可）</p>
+          <TextInput type="date" value={start} onChange={setStart} max={10} label="はじめる日" />
+        </div>
+        <div className="min-w-0">
           <p className="c-muted mb-1 text-xs">しめきり（空でも可）</p>
           <TextInput type="date" value={due} onChange={setDue} max={10} label="しめきり" />
         </div>
-        {memberIds && (
-          <div>
-            <p className="c-muted mb-1 text-xs">たんとう</p>
-            <Select value={assignee} onChange={setAssignee} options={options} label="たんとう" placeholder="きまっていない" />
-          </div>
-        )}
       </div>
+      {memberIds && (
+        <div>
+          <p className="c-muted mb-1 text-xs">たんとう</p>
+          <Select
+            value={assignee}
+            onChange={setAssignee}
+            options={options}
+            label="たんとう"
+            placeholder="きまっていない"
+          />
+        </div>
+      )}
       {error && <p className="text-xs text-[#c62828]">{error}</p>}
-      <button type="submit" className="rpg-button h-11 w-full text-sm sm:w-auto">
+      <button type="submit" className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
         ▶ 足す
       </button>
     </form>

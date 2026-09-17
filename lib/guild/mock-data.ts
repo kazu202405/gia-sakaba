@@ -9,7 +9,10 @@ import type {
   Party,
   Profile,
   Project,
+  ProjectContact,
+  ProjectStep,
   ProjectTask,
+  StepRecord,
   ProfileContact,
   Quest,
   QuestApplication,
@@ -690,11 +693,27 @@ export const projects: Project[] = [
     owner_id: "p-morita",
     title: "自社ホームページを 新しくする",
     goal: "トップと サービスのページを 今の仕事に合わせて 公開しなおす",
+    memo: "写真は 9月中に撮影。文章は 先に仮で入れて、あとで差し替える。",
     source_quest_id: null,
     member_ids: [],
     status: "active",
+    start_date: "2026-09-01",
     due_date: "2026-09-30",
-    created_at: "2026-09-08",
+    created_at: "2026-09-01",
+    done_at: null,
+  },
+  {
+    id: "pj-sales",
+    owner_id: "p-morita",
+    title: "ホームページ制作の 営業",
+    goal: "9月中に 3社と 話をして、1社 契約する",
+    memo: "紹介でいただいた方から 先に連絡する。",
+    source_quest_id: null,
+    member_ids: [],
+    status: "active",
+    start_date: "2026-09-01",
+    due_date: "2026-09-30",
+    created_at: "2026-09-01",
     done_at: null,
   },
   {
@@ -702,9 +721,11 @@ export const projects: Project[] = [
     owner_id: "p-morita",
     title: "LPの文章づくり（石井さんと）",
     goal: "聞き取りの型を作って、次の2本のLPで 試す",
+    memo: "",
     source_quest_id: "q-lp-writing",
     member_ids: ["p-ishii"],
     status: "active",
+    start_date: "2026-09-14",
     due_date: "2026-10-15",
     created_at: "2026-09-14",
     done_at: null,
@@ -714,9 +735,11 @@ export const projects: Project[] = [
     owner_id: "p-murakami",
     title: "整体院LP改善",
     goal: "予約ボタンまで 迷わず行けるページにする",
+    memo: "",
     source_quest_id: "q-seitai-lp",
     member_ids: ["p-komatsu", "p-morita"],
     status: "active",
+    start_date: "2026-09-09",
     due_date: null,
     created_at: "2026-09-09",
     done_at: null,
@@ -726,9 +749,11 @@ export const projects: Project[] = [
     owner_id: "p-morita",
     title: "名刺を つくりなおす",
     goal: "肩書と QRコードを 今の仕事に合わせる",
+    memo: "",
     source_quest_id: null,
     member_ids: [],
     status: "done",
+    start_date: "2026-09-01",
     due_date: null,
     created_at: "2026-09-01",
     done_at: "2026-09-10",
@@ -739,28 +764,60 @@ export const projects: Project[] = [
     owner_id: "p-ishii",
     title: "確定申告の じゅんび",
     goal: "",
+    memo: "",
     source_quest_id: null,
     member_ids: [],
     status: "active",
+    start_date: "2026-09-12",
     due_date: null,
     created_at: "2026-09-12",
     done_at: null,
   },
 ];
 
+type TaskSeed = Omit<ProjectTask, "start_date" | "done_at"> & Partial<Pick<ProjectTask, "start_date" | "done_at">>;
+const seedTask = (t: TaskSeed): ProjectTask => ({ start_date: null, done_at: null, ...t });
+
 export const projectTasks: ProjectTask[] = [
-  { id: "t-hp-1", project_id: "pj-hp", title: "キャッチコピーを 考える", status: "done", assignee_id: null, due_date: "2026-09-12", sort_order: 1, done_at: "2026-09-12" },
-  { id: "t-hp-2", project_id: "pj-hp", title: "トップの画像を 用意する", status: "todo", assignee_id: null, due_date: "2026-09-14", sort_order: 2, done_at: null },
-  { id: "t-hp-3", project_id: "pj-hp", title: "サービスの説明を なおす", status: "todo", assignee_id: null, due_date: "2026-09-19", sort_order: 3, done_at: null },
-  { id: "t-hp-4", project_id: "pj-hp", title: "公開する", status: "todo", assignee_id: null, due_date: "2026-09-30", sort_order: 4, done_at: null },
-  { id: "t-lp-1", project_id: "pj-lp-writing", title: "聞き取りの 質問を 10こ 出す", status: "done", assignee_id: "p-ishii", due_date: null, sort_order: 1, done_at: "2026-09-15" },
-  { id: "t-lp-2", project_id: "pj-lp-writing", title: "1本目の お客様と 日程を決める", status: "todo", assignee_id: "p-morita", due_date: "2026-09-18", sort_order: 2, done_at: null },
-  { id: "t-lp-3", project_id: "pj-lp-writing", title: "聞き取りに 同席する", status: "todo", assignee_id: "p-ishii", due_date: null, sort_order: 3, done_at: null },
-  { id: "t-sei-1", project_id: "pj-seitai", title: "いまの予約の流れを 書き出す", status: "done", assignee_id: "p-komatsu", due_date: null, sort_order: 1, done_at: "2026-09-11" },
-  { id: "t-sei-2", project_id: "pj-seitai", title: "ボタンの位置の 案を出す", status: "todo", assignee_id: "p-morita", due_date: "2026-09-20", sort_order: 2, done_at: null },
-  { id: "t-card-1", project_id: "pj-card", title: "肩書を決める", status: "done", assignee_id: null, due_date: null, sort_order: 1, done_at: "2026-09-05" },
-  { id: "t-card-2", project_id: "pj-card", title: "印刷を 頼む", status: "done", assignee_id: null, due_date: null, sort_order: 2, done_at: "2026-09-10" },
-  { id: "t-other-1", project_id: "pj-private-other", title: "領収書を まとめる", status: "todo", assignee_id: null, due_date: "2026-09-17", sort_order: 1, done_at: null },
+  seedTask({ id: "t-hp-1", project_id: "pj-hp", title: "キャッチコピーを 考える", status: "done", assignee_id: null, start_date: "2026-09-08", due_date: "2026-09-12", sort_order: 1, done_at: "2026-09-12" }),
+  seedTask({ id: "t-hp-2", project_id: "pj-hp", title: "トップの画像を 用意する", status: "todo", assignee_id: null, start_date: "2026-09-10", due_date: "2026-09-14", sort_order: 2 }),
+  seedTask({ id: "t-hp-3", project_id: "pj-hp", title: "サービスの説明を なおす", status: "todo", assignee_id: null, start_date: "2026-09-15", due_date: "2026-09-19", sort_order: 3 }),
+  seedTask({ id: "t-hp-4", project_id: "pj-hp", title: "公開する", status: "todo", assignee_id: null, due_date: "2026-09-30", sort_order: 4 }),
+  seedTask({ id: "t-sales-1", project_id: "pj-sales", title: "提案資料を つくる", status: "done", assignee_id: null, start_date: "2026-09-01", due_date: "2026-09-05", sort_order: 1, done_at: "2026-09-05" }),
+  seedTask({ id: "t-sales-2", project_id: "pj-sales", title: "料金表を なおす", status: "todo", assignee_id: null, due_date: "2026-09-19", sort_order: 2 }),
+  seedTask({ id: "t-lp-1", project_id: "pj-lp-writing", title: "聞き取りの 質問を 10こ 出す", status: "done", assignee_id: "p-ishii", due_date: null, sort_order: 1, done_at: "2026-09-15" }),
+  seedTask({ id: "t-lp-2", project_id: "pj-lp-writing", title: "1本目の お客様と 日程を決める", status: "todo", assignee_id: "p-morita", due_date: "2026-09-18", sort_order: 2 }),
+  seedTask({ id: "t-lp-3", project_id: "pj-lp-writing", title: "聞き取りに 同席する", status: "todo", assignee_id: "p-ishii", due_date: null, sort_order: 3 }),
+  seedTask({ id: "t-sei-1", project_id: "pj-seitai", title: "いまの予約の流れを 書き出す", status: "done", assignee_id: "p-komatsu", due_date: null, sort_order: 1, done_at: "2026-09-11" }),
+  seedTask({ id: "t-sei-2", project_id: "pj-seitai", title: "ボタンの位置の 案を出す", status: "todo", assignee_id: "p-morita", due_date: "2026-09-20", sort_order: 2 }),
+  seedTask({ id: "t-card-1", project_id: "pj-card", title: "肩書を決める", status: "done", assignee_id: null, due_date: null, sort_order: 1, done_at: "2026-09-05" }),
+  seedTask({ id: "t-card-2", project_id: "pj-card", title: "印刷を 頼む", status: "done", assignee_id: null, due_date: null, sort_order: 2, done_at: "2026-09-10" }),
+  seedTask({ id: "t-other-1", project_id: "pj-private-other", title: "領収書を まとめる", status: "todo", assignee_id: null, due_date: "2026-09-17", sort_order: 1 }),
+];
+
+/** 「人ごとの すすみ」を はじめるときの 型（営業） */
+export const SALES_STEP_NAMES = ["初回アポ", "興味付け", "提案", "契約"];
+
+export const projectSteps: ProjectStep[] = SALES_STEP_NAMES.map((name, i) => ({
+  id: `st-sales-${i + 1}`,
+  project_id: "pj-sales",
+  name,
+  sort_order: i + 1,
+}));
+
+export const projectContacts: ProjectContact[] = [
+  { id: "c-a", project_id: "pj-sales", label: "Aさん（工務店）", memo: "", sort_order: 1 },
+  { id: "c-b", project_id: "pj-sales", label: "Bさん（整骨院）", memo: "採用ページも 気にしていた", sort_order: 2 },
+  { id: "c-c", project_id: "pj-sales", label: "Cさん（税理士）", memo: "紹介：石井さん", sort_order: 3 },
+];
+
+export const stepRecords: StepRecord[] = [
+  { contact_id: "c-a", step_id: "st-sales-1", planned_on: "2026-09-18", done_on: null },
+  { contact_id: "c-b", step_id: "st-sales-1", planned_on: "2026-09-10", done_on: "2026-09-10" },
+  { contact_id: "c-b", step_id: "st-sales-2", planned_on: "2026-09-17", done_on: null },
+  { contact_id: "c-c", step_id: "st-sales-1", planned_on: null, done_on: "2026-09-03" },
+  { contact_id: "c-c", step_id: "st-sales-2", planned_on: null, done_on: "2026-09-12" },
+  { contact_id: "c-c", step_id: "st-sales-4", planned_on: "2026-09-25", done_on: null },
 ];
 
 /** 見本の本人（森田）への「おしらせ」。本番は sakaba.notifications */

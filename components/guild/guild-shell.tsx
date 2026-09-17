@@ -18,16 +18,15 @@ type NavItem = {
   exact?: boolean;
   /** この道の下も「ここにいる」とみなす（マイページから入る画面） */
   also?: string[];
-  /** 未読の数を付けるか */
-  badge?: boolean;
 };
 
+// プロジェクトは毎日開くので下に置く。おしらせは数が付いたときに開くので上のヘッダー
 const NAV: NavItem[] = [
   { href: "/guild", label: "ホーム", short: "ホーム", exact: true },
   { href: "/guild/members", label: "ギルド", short: "ギルド" },
   { href: "/guild/quests", label: guild.terms.quest, short: guild.terms.quest },
-  { href: "/guild/notifications", label: "おしらせ", short: "おしらせ", badge: true },
-  { href: "/guild/me", label: "マイページ", short: "マイページ", also: ["/guild/requests", "/guild/projects"] },
+  { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
+  { href: "/guild/me", label: "マイページ", short: "マイページ", also: ["/guild/requests"] },
 ];
 
 function isUnder(pathname: string, href: string) {
@@ -42,6 +41,7 @@ function isActive(pathname: string, item: NavItem) {
 export function GuildShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const masterActive = pathname.startsWith("/guild/master");
+  const noticeActive = pathname.startsWith("/guild/notifications");
   const unread = unreadCount(useSyncExternalStore(subscribeNotifications, getNotifications, getInitialNotifications));
 
   return (
@@ -53,6 +53,21 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
           </Link>
           <span className="hidden text-xs text-[#e8cf8e] lg:inline">見本です。データは架空で、操作しても保存されません</span>
           <div className="flex items-center gap-4">
+            <Link
+              href="/guild/notifications"
+              aria-label={unread > 0 ? `おしらせ（読んでいないもの ${unread}件）` : "おしらせ"}
+              className={cn(
+                "flex items-center gap-1 text-xs tracking-wider",
+                noticeActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80",
+              )}
+            >
+              {noticeActive && "▶"}しらせ
+              {unread > 0 && (
+                <span className="inline-flex min-w-5 justify-center bg-[#e8cf8e] px-1 text-[11px] leading-5 text-[#1b2a41] tabular-nums">
+                  {unread}
+                </span>
+              )}
+            </Link>
             <Link
               href="/guild/master"
               className={cn("text-xs tracking-wider lg:hidden", masterActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80")}
@@ -74,13 +89,13 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
           <ul className="space-y-1">
             {NAV.map((item) => (
               <li key={item.href}>
-                <CommandLink item={item} active={isActive(pathname, item)} count={item.badge ? unread : 0} />
+                <CommandLink item={item} active={isActive(pathname, item)} />
               </li>
             ))}
           </ul>
           <div className="c-dashed-top mt-4 pt-3">
             <p className="c-muted text-[11px]">マスターのみ</p>
-            <CommandLink item={{ href: "/guild/master", label: guild.terms.master, short: "" }} active={masterActive} count={0} />
+            <CommandLink item={{ href: "/guild/master", label: guild.terms.master, short: "" }} active={masterActive} />
           </div>
         </nav>
 
@@ -94,29 +109,19 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
       >
         {NAV.map((item) => {
           const active = isActive(pathname, item);
-          const count = item.badge ? unread : 0;
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              aria-label={count > 0 ? `${item.short}（読んでいないもの ${count}件）` : undefined}
               className={cn(
-                "relative py-3 text-center text-[11px] tracking-wider",
+                "relative py-3 text-center text-[11px] tracking-normal",
                 active ? "text-[#1b2a41]" : "text-[#1b2a41]/50",
               )}
             >
               {/* 「▶」を文字の前に足すと「マイページ」が幅に入りきらないので、いる所は上の線で示す */}
               {active && <span className="absolute inset-x-3 top-0 h-1 bg-[#1b2a41]" aria-hidden />}
               {item.short}
-              {count > 0 && (
-                <span
-                  className="ml-0.5 inline-flex min-w-4 -translate-y-1 justify-center bg-[#1b2a41] px-1 align-top text-[10px] leading-4 text-[#fffdf6] tabular-nums"
-                  aria-hidden
-                >
-                  {count}
-                </span>
-              )}
             </Link>
           );
         })}
@@ -125,25 +130,16 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function CommandLink({ item, active, count }: { item: NavItem; active: boolean; count: number }) {
+function CommandLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
       data-active={active}
       aria-current={active ? "page" : undefined}
-      aria-label={count > 0 ? `${item.label}（読んでいないもの ${count}件）` : undefined}
       className="rpg-cursor-row flex items-center gap-1.5 py-1.5 text-[15px] tracking-wider"
     >
       <span className="rpg-cursor">▶</span>
       {item.label}
-      {count > 0 && (
-        <span
-          className="ml-auto inline-flex min-w-5 justify-center bg-[#1b2a41] px-1 text-[11px] leading-5 text-[#fffdf6] tabular-nums"
-          aria-hidden
-        >
-          {count}
-        </span>
-      )}
     </Link>
   );
 }

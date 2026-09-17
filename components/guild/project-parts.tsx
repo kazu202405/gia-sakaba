@@ -1,12 +1,13 @@
 "use client";
 
-// プロジェクトの画面で共通に使う部品（進みぐあい・1行・タスクの1行）。
+// プロジェクトの画面で共通に使う部品（期間のバー・進みぐあい・1行・タスクの1行）。
 
 import Link from "next/link";
 import type { Project, ProjectTask } from "@/lib/guild/types";
+import { formatDate } from "@/lib/guild/labels";
 import { TODAY, getProfile } from "@/lib/guild/mock-data";
-import { dueLabel, isPrivateProject } from "@/lib/guild/projects";
-import { toggleTask } from "@/lib/guild/project-store";
+import { dueLabel, isPrivateProject, projectProgress, projectSchedule, reachedLastStep } from "@/lib/guild/projects";
+import { toggleTask, type ProjectState } from "@/lib/guild/project-store";
 import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,61 @@ export function VisibilityChip({ project }: { project: Project }) {
   );
 }
 
-export function ProjectRow({ project, done, total }: { project: Project; done: number; total: number }) {
+/**
+ * 期間のバー。塗り＝終わったタスクの割合、金の縦線＝きょう（日数の上でどこまで来たか）。
+ * 塗りが縦線より手前なら遅れている。しめきりが無いプロジェクトは10マスのゲージにする。
+ */
+export function ProjectProgressView({ project, state }: { project: Project; state: ProjectState }) {
+  const progress = projectProgress(state.tasks, project.id);
+  const schedule = projectSchedule(project, progress, TODAY);
+  const pipeline = reachedLastStep(state.steps, state.contacts, state.records, project.id);
+  const due = project.due_date && project.status === "active" ? dueLabel(project.due_date, TODAY) : null;
+
+  return (
+    <span className="block">
+      {schedule ? (
+        <>
+          <span className="c-muted flex flex-wrap items-center justify-between gap-x-3 text-xs">
+            <span className="tabular-nums">
+              {formatDate(project.start_date)} → {formatDate(project.due_date!)}
+            </span>
+            {due && <span className={due.overdue ? "c-chip-strong" : ""}>{due.text}</span>}
+          </span>
+          <span className="relative mt-1.5 block h-3.5 border-2 border-[#1b2a41] bg-[#fffdf6]" aria-hidden>
+            <span className="absolute inset-y-0 left-0 bg-[#1b2a41]" style={{ width: `${schedule.donePct}%` }} />
+            {project.status === "active" && (
+              <span
+                className="absolute -top-1.5 -bottom-1.5 w-[3px] -translate-x-1/2 bg-[#b58a2a]"
+                style={{ left: `${schedule.elapsedPct}%` }}
+              />
+            )}
+          </span>
+          <span className="sr-only">
+            期間の {Math.round(schedule.elapsedPct)}% が経ち、タスクは {Math.round(schedule.donePct)}% おわっています
+          </span>
+        </>
+      ) : (
+        <ProjectGauge done={progress.done} total={progress.total} />
+      )}
+      <span className="c-muted mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+        {schedule && (
+          <span className="tabular-nums">
+            タスク {progress.done}/{progress.total}
+          </span>
+        )}
+        {pipeline && pipeline.total > 0 && (
+          <span className="tabular-nums">
+            {pipeline.stepName} {pipeline.reached}/{pipeline.total}人
+          </span>
+        )}
+        {/* 赤は「急ぎ」と入力エラーだけに使うので、濃紺の札にする */}
+        {schedule?.behind && <span className="c-chip-strong">よていより おくれぎみ</span>}
+      </span>
+    </span>
+  );
+}
+
+export function ProjectRow({ project, state }: { project: Project; state: ProjectState }) {
   return (
     <Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row flex items-start gap-1.5">
       <span className="rpg-cursor mt-0.5">▶</span>
@@ -47,8 +102,8 @@ export function ProjectRow({ project, done, total }: { project: Project; done: n
           <span className="text-[15px] leading-snug break-words">{project.title}</span>
           <VisibilityChip project={project} />
         </span>
-        <span className="mt-1.5 block">
-          <ProjectGauge done={done} total={total} />
+        <span className="mt-2 block">
+          <ProjectProgressView project={project} state={state} />
         </span>
       </span>
     </Link>
@@ -101,9 +156,7 @@ export function TaskLine({
           )}
           {due && (
             // 赤は「急ぎ」と入力エラーだけに使うので、すぎたものは濃紺で目立たせる
-            <span className={due.overdue ? "c-chip-strong" : "c-muted"}>
-              {due.text}
-            </span>
+            <span className={due.overdue ? "c-chip-strong" : "c-muted"}>{due.text}</span>
           )}
           {showAssignee && <span className="c-muted">たんとう：{assignee ? `${assignee}さん` : "きまっていない"}</span>}
         </p>
