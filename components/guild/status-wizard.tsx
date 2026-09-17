@@ -8,14 +8,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { GiaApplicantImport, JobIconKey, Profile, ProfileContact, VisibleGroup } from "@/lib/guild/types";
-import { groupLabel, jobIconLabel } from "@/lib/guild/labels";
+import type {
+  GiaApplicantImport,
+  JobIconKey,
+  Position,
+  Profile,
+  ProfileContact,
+  VisibleGroup,
+} from "@/lib/guild/types";
+import { groupLabel, jobIconLabel, positionLabel } from "@/lib/guild/labels";
 import { guild, industryOptions, regionOptions } from "@/lib/guild/mock-data";
 import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
 import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { JobAvatar } from "./job-avatar";
-import { Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { CheckBox, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
 type Draft = Pick<
   Profile,
@@ -29,6 +36,10 @@ type Draft = Pick<
   | "bio"
   | "can_help_with"
   | "keywords"
+  | "company_name"
+  | "position"
+  | "show_company"
+  | "want_to_solve"
   | "strengths"
   | "values_text"
   | "vision"
@@ -104,6 +115,10 @@ const EMPTY_DRAFT: Draft = {
   bio: "",
   can_help_with: "",
   keywords: [],
+  company_name: "",
+  position: "ceo",
+  show_company: true,
+  want_to_solve: "",
   strengths: "",
   values_text: "",
   vision: "",
@@ -320,6 +335,12 @@ export function StatusWizard({
                   <Field label="であいたい人" hint="れい：店舗を増やしたい経営者">
                     <TextArea value={draft.want_to_meet} onChange={(v) => set("want_to_meet", v)} rows={3} max={200} />
                   </Field>
+                  <Field
+                    label="いま 解決したいこと"
+                    hint="入会のときに 入れたものです。ギルドマスターが つなぐ相手を 考える手がかりに なります"
+                  >
+                    <TextInput value={draft.want_to_solve} onChange={(v) => set("want_to_solve", v)} max={60} />
+                  </Field>
                 </>
               )}
               {step === "contact" && (
@@ -454,6 +475,28 @@ function BasicStep({
           <Select value={draft.region} onChange={(v) => set("region", v)} options={regionOptions} label="地域" />
         </Field>
       </div>
+      <Field label="かいしゃ" hint="入会のときに 入れたものです。個人事業の方は 屋号">
+        <TextInput value={draft.company_name} onChange={(v) => set("company_name", v)} max={60} />
+      </Field>
+      <Field label="やくしょく" hint="限定の集まりは 経営者（代表・役員・決裁者）の方向けです">
+        <div role="radiogroup" aria-label="やくしょく" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(Object.keys(positionLabel) as Position[]).map((p) => (
+            <button
+              key={p}
+              type="button"
+              role="radio"
+              aria-checked={draft.position === p}
+              onClick={() => set("position", p)}
+              className={draft.position === p ? "rpg-button h-11 text-sm" : "c-button-sub h-11 text-sm"}
+            >
+              {positionLabel[p]}
+            </button>
+          ))}
+        </div>
+      </Field>
+      <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
+        <span className="text-[15px]">かいしゃと やくしょくを めいかんに 出す</span>
+      </CheckBox>
       <Field label="しょくぎょう" required hint="れい：税理士、工務店経営、Web制作" error={errors.job}>
         <TextInput value={draft.job} onChange={(v) => set("job", v)} max={20} />
       </Field>
@@ -684,7 +727,11 @@ function VisibilityStep({
 
   return (
     <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/20">
-      <SwitchRow title="きほん" note="名前・写真・肩書・業種・地域" fixed="いつも公開" />
+      <SwitchRow
+        title="きほん"
+        note="名前・写真・ひとこと・つよみ・しょくぎょう・業種・地域（かいしゃと やくしょくは きほんで 出す/出さないを 選べます）"
+        fixed="いつも公開"
+      />
       {(Object.keys(groupLabel) as VisibleGroup[]).map((g) => (
         <SwitchRow
           key={g}
@@ -748,6 +795,12 @@ function ConfirmStep({
             </span>
           </p>
           <p className="mt-0.5 text-sm break-words">{draft.headline}</p>
+          {draft.show_company && draft.company_name && (
+            <p className="c-muted mt-0.5 text-xs break-words">
+              {draft.company_name}（{positionLabel[draft.position]}）
+            </p>
+          )}
+          {draft.strengths && <p className="mt-1 text-xs break-words">つよみ：{draft.strengths}</p>}
           {draft.keywords.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {draft.keywords.slice(0, 3).map((k) => (

@@ -83,7 +83,7 @@ export const outcomeLabel: Record<IntroOutcome, string> = {
 
 export const groupLabel: Record<VisibleGroup, { title: string; note: string }> = {
   work: { title: "しごと", note: "仕事内容・できること・キーワード" },
-  values: { title: "おもい", note: "強み・大事にしていること・これから" },
+  values: { title: "おもい", note: "大事にしていること・これから・とりくんでいる社会かだい" },
   connect: { title: "つながり", note: "探しているもの・出会いたい人" },
 };
 
