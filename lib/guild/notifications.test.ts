@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { GuildNotification, IntroRequest, Quest, QuestApplication } from "./types";
 import {
   diffQuestFields,
+  gatheringDecisionNotification,
   introsToCancelOnWithdraw,
   notificationText,
   pickQuestFields,
@@ -147,14 +148,23 @@ describe("notificationText", () => {
     );
     expect(toTarget.text).toBe("森田 陽介さんとの しょうかいの打診が 届きました");
     const toRequester = notificationText(
-      note({ kind: "intro_progress", user_id: "owner", quest_id: null, intro_request_id: "r1", intro_status: "proposed" }),
+      note({
+        kind: "intro_progress",
+        user_id: "owner",
+        quest_id: null,
+        intro_request_id: "r1",
+        intro_status: "proposed",
+      }),
       ctx,
     );
     expect(toRequester.text).toBe("小松 由佳さんへの しょうかい：相手に打診中");
   });
 
   it("依頼が見つからなくても落ちない", () => {
-    const t = notificationText(note({ kind: "intro_progress", intro_request_id: "none", intro_status: "accepted" }), ctx);
+    const t = notificationText(
+      note({ kind: "intro_progress", intro_request_id: "none", intro_status: "accepted" }),
+      ctx,
+    );
     expect(t.href).toBe("/guild/requests");
   });
 });
@@ -162,5 +172,26 @@ describe("notificationText", () => {
 describe("unreadCount", () => {
   it("読んでいないものだけ数える", () => {
     expect(unreadCount([note({ id: "1" }), note({ id: "2", read_at: "2026-09-15" }), note({ id: "3" })])).toBe(2);
+  });
+});
+
+describe("限定の集まりの 承認・見送りの知らせ", () => {
+  const ctx = {
+    name: () => "?",
+    questTitle: (id: string) => (id === "g1" ? "酒場の夜" : "?"),
+    intro: () => undefined,
+  };
+
+  it("申し込んだ本人に、承認なら「決まりました」、見送りなら「見送りになりました」を送る", () => {
+    const ok = gatheringDecisionNotification({ quest_id: "g1", user_id: "u" }, true, "master", "2026-09-18", "n1");
+    expect(ok).toMatchObject({ user_id: "u", kind: "gathering_approved", actor_id: "master", read_at: null });
+    expect(notificationText(ok, ctx)).toEqual({
+      text: "「酒場の夜」への 参加が 決まりました",
+      href: "/guild/quests/g1",
+    });
+
+    const ng = gatheringDecisionNotification({ quest_id: "g1", user_id: "u" }, false, "master", "2026-09-18", "n2");
+    expect(ng.kind).toBe("gathering_declined");
+    expect(notificationText(ng, ctx).text).toBe("「酒場の夜」への 申し込みは 今回 見送りになりました");
   });
 });

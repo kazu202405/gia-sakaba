@@ -4,14 +4,7 @@
 // - 知らせは酒場の中だけ。メール・LINEにはまだ送らない（GIAのSupabaseに独自SMTPが無いため）
 // - だれに何を知らせるかは、ここ1か所で決める（画面ごとに書くと食い違う）
 
-import type {
-  GuildNotification,
-  IntroRequest,
-  IntroStatus,
-  Quest,
-  QuestApplication,
-  QuestField,
-} from "./types";
+import type { GuildNotification, IntroRequest, IntroStatus, Quest, QuestApplication, QuestField } from "./types";
 import { introStatusLabel } from "./labels";
 
 export type QuestFields = Pick<Quest, QuestField>;
@@ -113,6 +106,10 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
     }
     case "quest_withdrawn":
       return { text: `「${title}」が 取り下げられました`, href: `/guild/quests/${n.quest_id}` };
+    case "gathering_approved":
+      return { text: `「${title}」への 参加が 決まりました`, href: `/guild/quests/${n.quest_id}` };
+    case "gathering_declined":
+      return { text: `「${title}」への 申し込みは 今回 見送りになりました`, href: `/guild/quests/${n.quest_id}` };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };
@@ -125,4 +122,29 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       };
     }
   }
+}
+
+/**
+ * 限定の集まりへの申し込みを ギルドマスターが決めたときに、申し込んだ本人へ送る知らせ。
+ * 見送りも必ず知らせる（知らせないと、承認待ちのまま ずっと待たせてしまう）。
+ */
+export function gatheringDecisionNotification(
+  app: { quest_id: string; user_id: string },
+  approve: boolean,
+  masterId: string,
+  today: string,
+  id: string,
+): GuildNotification {
+  return {
+    id,
+    user_id: app.user_id,
+    kind: approve ? "gathering_approved" : "gathering_declined",
+    actor_id: masterId,
+    quest_id: app.quest_id,
+    intro_request_id: null,
+    intro_status: null,
+    changed_fields: [],
+    read_at: null,
+    created_at: today,
+  };
 }

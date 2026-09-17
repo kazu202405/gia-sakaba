@@ -91,10 +91,21 @@ function fieldsFromDraft(d: Draft, fallbackCategory: QuestCategory): QuestFields
   };
 }
 
-export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applicantCount?: number }) {
+export function QuestForm({
+  quest,
+  applicantCount = 0,
+  gathering = false,
+}: {
+  quest?: Quest;
+  applicantCount?: number;
+  /** ギルドマスターが「集まり」（有料会員だけの リアルの集まり）を ひらくとき。しゅるいと急ぎは出さない */
+  gathering?: boolean;
+}) {
   const router = useRouter();
   const [step, setStep] = useState<"form" | "confirm">("form");
-  const [draft, setDraft] = useState<Draft>(() => (quest ? draftFromQuest(quest) : EMPTY));
+  const [draft, setDraft] = useState<Draft>(() =>
+    quest ? draftFromQuest(quest) : gathering ? { ...EMPTY, category: "gathering" } : EMPTY,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -116,10 +127,14 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
     const next: Record<string, string> = {};
     if (!draft.category) next.category = "しゅるいを選んでください";
     if (!draft.title.trim()) next.title = "タイトルを入れてください";
-    if (!draft.summary.trim()) next.summary = "ひとことで何をしてほしいかを入れてください";
+    if (!draft.summary.trim())
+      next.summary = gathering
+        ? "どんな集まりかを ひとことで入れてください"
+        : "ひとことで何をしてほしいかを入れてください";
     if (!draft.body.trim()) next.body = "くわしい内容を入れてください";
     if (!draft.region) next.region = "ばしょを選んでください";
-    if (draft.deadline && daysBetween(TODAY, draft.deadline) < 0) next.deadline = "しめきりは きょう以降の日にしてください";
+    if (draft.deadline && daysBetween(TODAY, draft.deadline) < 0)
+      next.deadline = "しめきりは きょう以降の日にしてください";
     if (draft.is_urgent) {
       if (!draft.deadline) next.is_urgent = "急ぎにするときは、しめきりも入れてください";
       else if (daysBetween(TODAY, draft.deadline) > URGENT_DAYS)
@@ -139,6 +154,11 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
       router.push(`/guild/quests/${quest.id}`);
       return;
     }
+    if (gathering) {
+      uiToast("集まりを ひらきました（見本のため保存はされません）");
+      router.push("/guild/master");
+      return;
+    }
     uiToast(`${guild.terms.quest}を出しました（見本のため保存はされません）`);
     router.push("/guild/quests");
   };
@@ -148,6 +168,8 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
       <div className="mb-9">
         {quest ? (
           <BackLink href={`/guild/quests/${quest.id}`} label={`${guild.terms.quest}に もどる`} />
+        ) : gathering ? (
+          <BackLink href="/guild/master" label={guild.terms.master} />
         ) : (
           <BackLink href="/guild/quests" label={`${guild.terms.quest} けいじばん`} />
         )}
@@ -155,44 +177,71 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
 
       {step === "form" ? (
         <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
-          <span className="c-window-title">{quest ? `${guild.terms.quest}を なおす` : `${guild.terms.quest}を出す`}</span>
+          <span className="c-window-title">
+            {quest ? `${guild.terms.quest}を なおす` : gathering ? "集まりを ひらく" : `${guild.terms.quest}を出す`}
+          </span>
           <h1 className="text-xl leading-snug tracking-wider">
-            {quest ? "内容を なおします" : `どんな ${guild.terms.quest}を 出しますか？`}
+            {quest
+              ? "内容を なおします"
+              : gathering
+                ? "どんな 集まりを ひらきますか？"
+                : `どんな ${guild.terms.quest}を 出しますか？`}
           </h1>
           <p className="c-muted mt-1.5 text-sm leading-relaxed">
-            {quest
-              ? applicantCount > 0
-                ? `なおすと、参加したいと伝えた ${applicantCount}人に 知らせが届きます。`
-                : "まだ 参加したい人は いません。"
-              : `${guild.name}の ${guild.terms.member}全員が見られます。気になった人が「参加したい」を押すと、あなたに とどきます。`}
+            {gathering
+              ? "有料会員だけが くわしい内容を見て 申し込めます。無料の人には タイトル・ばしょ・しめきり・ひとことだけ 見えます。はじめて申し込んだ人は あなたの承認が いります。"
+              : quest
+                ? applicantCount > 0
+                  ? `なおすと、参加したいと伝えた ${applicantCount}人に 知らせが届きます。`
+                  : "まだ 参加したい人は いません。"
+                : `${guild.name}の ${guild.terms.member}全員が見られます。気になった人が「参加したい」を押すと、あなたに とどきます。`}
           </p>
 
           <div className="mt-7 space-y-6">
-            <Field label="しゅるい" required error={errors.category}>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    aria-pressed={draft.category === c}
-                    onClick={() => set("category", c)}
-                    className="c-choice px-3 py-2.5 text-left"
-                  >
-                    <span className="block text-[15px]">
-                      {questCategoryMark[c]} {questCategoryLabel[c]}
-                    </span>
-                    <span className="block text-[11px] opacity-70">{questCategoryHint[c]}</span>
-                  </button>
-                ))}
-              </div>
-            </Field>
+            {gathering ? (
+              <p className="c-card px-3 py-2.5 text-sm">
+                {questCategoryMark.gathering} {questCategoryLabel.gathering}
+                <span className="c-chip ml-2">有料会員限定</span>
+              </p>
+            ) : (
+              <Field label="しゅるい" required error={errors.category}>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {CATEGORIES.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-pressed={draft.category === c}
+                      onClick={() => set("category", c)}
+                      className="c-choice px-3 py-2.5 text-left"
+                    >
+                      <span className="block text-[15px]">
+                        {questCategoryMark[c]} {questCategoryLabel[c]}
+                      </span>
+                      <span className="block text-[11px] opacity-70">{questCategoryHint[c]}</span>
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            )}
 
             <Field label="タイトル" required hint="ひとめで 何を頼みたいか わかるように" error={errors.title}>
-              <TextInput value={draft.title} onChange={(v) => set("title", v)} placeholder="れい：職人の採用ページを作れる人を探しています" max={40} label="タイトル" />
+              <TextInput
+                value={draft.title}
+                onChange={(v) => set("title", v)}
+                placeholder="れい：職人の採用ページを作れる人を探しています"
+                max={40}
+                label="タイトル"
+              />
             </Field>
 
             <Field label="ひとことで" required hint="けいじばんの カードに出ます" error={errors.summary}>
-              <TextInput value={draft.summary} onChange={(v) => set("summary", v)} placeholder="れい：求人媒体に頼らず、自社のページから応募が来るようにしたい" max={60} label="ひとことで" />
+              <TextInput
+                value={draft.summary}
+                onChange={(v) => set("summary", v)}
+                placeholder="れい：求人媒体に頼らず、自社のページから応募が来るようにしたい"
+                max={60}
+                label="ひとことで"
+              />
             </Field>
 
             <Field label="くわしく" required hint="いまの状況・してほしいこと・来てほしい人" error={errors.body}>
@@ -200,12 +249,19 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
             </Field>
 
             <p className="c-card border-dashed px-3 py-2.5 text-xs leading-relaxed">
-              ※ 金額（報酬・予算）は ここには書かず、会って話すときに決めてください。
+              {gathering
+                ? "※ 会費は 当日 お店で払う形なら「くわしく」に書いてください。酒場で 会費を 集める仕組みは まだ ありません。"
+                : "※ 金額（報酬・予算）は ここには書かず、会って話すときに決めてください。"}
             </p>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <Field label="ばしょ" required error={errors.region}>
-                <Select value={draft.region} onChange={(v) => set("region", v)} options={regionChoices} label="ばしょ" />
+                <Select
+                  value={draft.region}
+                  onChange={(v) => set("region", v)}
+                  options={regionChoices}
+                  label="ばしょ"
+                />
                 {draft.region && draft.region !== "オンライン" && (
                   <label className="mt-2 flex items-center gap-2 text-sm">
                     <input
@@ -243,22 +299,24 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
               />
             </Field>
 
-            <Field label="急ぎにする" error={errors.is_urgent}>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={draft.is_urgent}
-                  aria-label="急ぎにする"
-                  onClick={() => set("is_urgent", !draft.is_urgent)}
-                  className="c-switch"
-                />
-                <p className="c-muted text-xs leading-relaxed">
-                  しめきりが{URGENT_DAYS}日以内のときだけ 付けられます。けいじばんで <span className="c-tag-urgent">急ぎ</span>{" "}
-                  の札が付き、上に出ます。
-                </p>
-              </div>
-            </Field>
+            {!gathering && (
+              <Field label="急ぎにする" error={errors.is_urgent}>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={draft.is_urgent}
+                    aria-label="急ぎにする"
+                    onClick={() => set("is_urgent", !draft.is_urgent)}
+                    className="c-switch"
+                  />
+                  <p className="c-muted text-xs leading-relaxed">
+                    しめきりが{URGENT_DAYS}日以内のときだけ 付けられます。けいじばんで{" "}
+                    <span className="c-tag-urgent">急ぎ</span> の札が付き、上に出ます。
+                  </p>
+                </div>
+              </Field>
+            )}
           </div>
 
           <div className="mt-9 flex justify-end">
@@ -286,7 +344,8 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
                 <p>変わるところ：{changed.map((f) => questFieldLabel[f]).join("・")}</p>
                 {applicantCount > 0 && (
                   <p className="c-muted mt-1 text-xs">
-                    参加したいと伝えた {applicantCount}人に、変わった項目つきで 知らせます。合わなくなった人は 自分で取り消せます。
+                    参加したいと伝えた {applicantCount}人に、変わった項目つきで 知らせます。合わなくなった人は
+                    自分で取り消せます。
                   </p>
                 )}
               </div>
@@ -299,6 +358,7 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
                   {questCategoryMark[draft.category]} {questCategoryLabel[draft.category]}
                 </span>
                 {draft.is_urgent && <span className="c-tag-urgent">急ぎ</span>}
+                {gathering && <span className="c-chip">有料会員限定</span>}
               </div>
               <h1 className="mt-2 text-xl leading-snug tracking-wider break-words">{draft.title}</h1>
               <p className="c-muted mt-1 text-sm break-words">{draft.summary}</p>
@@ -310,7 +370,9 @@ export function QuestForm({ quest, applicantCount = 0 }: { quest?: Quest; applic
                 <dt className="c-label">にんずう</dt>
                 <dd>{draft.member_limit ? `${draft.member_limit}人まで` : "きめない"}</dd>
               </dl>
-              <p className="c-dashed-top mt-4 whitespace-pre-line pt-4 text-[15px] leading-loose break-words">{draft.body}</p>
+              <p className="c-dashed-top mt-4 whitespace-pre-line pt-4 text-[15px] leading-loose break-words">
+                {draft.body}
+              </p>
             </div>
           )}
 

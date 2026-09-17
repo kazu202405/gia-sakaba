@@ -260,7 +260,14 @@ export type StepRecord = {
   done_on: string | null;
 };
 
-export type NotificationKind = "quest_applied" | "quest_updated" | "quest_withdrawn" | "intro_progress";
+export type NotificationKind =
+  | "quest_applied"
+  | "quest_updated"
+  | "quest_withdrawn"
+  | "intro_progress"
+  /** 限定の集まりへの申し込みを ギルドマスターが承認した／見送った */
+  | "gathering_approved"
+  | "gathering_declined";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。
