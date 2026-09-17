@@ -829,6 +829,11 @@ export const projectContacts: ProjectContact[] = [
   { id: "c-a", project_id: "pj-sales", label: "Aさん（工務店）", memo: "", sort_order: 1 },
   { id: "c-b", project_id: "pj-sales", label: "Bさん（整骨院）", memo: "採用ページも 気にしていた", sort_order: 2 },
   { id: "c-c", project_id: "pj-sales", label: "Cさん（税理士）", memo: "紹介：石井さん", sort_order: 3 },
+  { id: "c-d", project_id: "pj-sales", label: "Dさん（美容室）", memo: "見積もりは 2案 出す", sort_order: 4 },
+  { id: "c-e", project_id: "pj-sales", label: "Eさん（歯科医院）", memo: "", sort_order: 5 },
+  { id: "c-f", project_id: "pj-sales", label: "Fさん（不動産）", memo: "10月から 制作を はじめる", sort_order: 6 },
+  { id: "c-g", project_id: "pj-sales", label: "Gさん（飲食店）", memo: "返事待ち。来週 もう一度 連絡", sort_order: 7 },
+  { id: "c-h", project_id: "pj-sales", label: "Hさん（学習塾）", memo: "今期は 見送り", sort_order: 8 },
 ];
 
 export const stepRecords: StepRecord[] = [
@@ -838,6 +843,24 @@ export const stepRecords: StepRecord[] = [
   { contact_id: "c-c", step_id: "st-sales-1", planned_on: null, done_on: "2026-09-03" },
   { contact_id: "c-c", step_id: "st-sales-2", planned_on: null, done_on: "2026-09-12" },
   { contact_id: "c-c", step_id: "st-sales-4", planned_on: "2026-09-25", done_on: null },
+  // 提案の予定が近い
+  { contact_id: "c-d", step_id: "st-sales-1", planned_on: null, done_on: "2026-09-05" },
+  { contact_id: "c-d", step_id: "st-sales-2", planned_on: null, done_on: "2026-09-09" },
+  { contact_id: "c-d", step_id: "st-sales-3", planned_on: "2026-09-19", done_on: null },
+  // まだ はじめの予定だけ
+  { contact_id: "c-e", step_id: "st-sales-1", planned_on: "2026-09-22", done_on: null },
+  // 契約まで 進んだ
+  { contact_id: "c-f", step_id: "st-sales-1", planned_on: null, done_on: "2026-08-28" },
+  { contact_id: "c-f", step_id: "st-sales-2", planned_on: null, done_on: "2026-09-02" },
+  { contact_id: "c-f", step_id: "st-sales-3", planned_on: null, done_on: "2026-09-08" },
+  { contact_id: "c-f", step_id: "st-sales-4", planned_on: null, done_on: "2026-09-14" },
+  // 予定日を すぎても 終わっていない
+  { contact_id: "c-g", step_id: "st-sales-1", planned_on: null, done_on: "2026-09-01" },
+  { contact_id: "c-g", step_id: "st-sales-2", planned_on: "2026-09-12", done_on: null },
+  // 提案までで 止まっている
+  { contact_id: "c-h", step_id: "st-sales-1", planned_on: null, done_on: "2026-08-20" },
+  { contact_id: "c-h", step_id: "st-sales-2", planned_on: null, done_on: "2026-08-27" },
+  { contact_id: "c-h", step_id: "st-sales-3", planned_on: null, done_on: "2026-09-04" },
 ];
 
 /** 見本の本人（森田）への「おしらせ」。本番は sakaba.notifications */
