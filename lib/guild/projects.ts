@@ -3,7 +3,16 @@
 // - 見える人は owner と member_ids だけ。ギルドマスターにも見せない（見えると自分の整理に使われなくなる）
 // - 進みぐあいは保存せず、タスクから毎回数える（別に持つと食い違う）
 
-import type { Project, ProjectContact, ProjectStep, ProjectTask, StepRecord } from "./types";
+import type {
+  IntroRequest,
+  Project,
+  ProjectContact,
+  ProjectStep,
+  ProjectTask,
+  Quest,
+  QuestApplication,
+  StepRecord,
+} from "./types";
 
 export function canSeeProject(p: Project, userId: string): boolean {
   return p.owner_id === userId || p.member_ids.includes(userId);
@@ -63,6 +72,39 @@ export function upcomingTasks(
       return [{ task, project }];
     })
     .sort((a, b) => a.task.due_date!.localeCompare(b.task.due_date!));
+}
+
+// ---------- クエストから プロジェクトにする ----------
+
+/** そのクエストから作ったプロジェクト（1クエストにつき1つ） */
+export function projectOfQuest(items: Project[], questId: string): Project | undefined {
+  return items.find((p) => p.source_quest_id === questId);
+}
+
+/** プロジェクトにできるのは、出した人だけ・募集中か進行中のクエストだけ */
+export function canMakeProject(quest: Quest, userId: string): boolean {
+  return quest.creator_id === userId && (quest.status === "open" || quest.status === "in_progress");
+}
+
+export type PartyCandidate = { user_id: string; canJoin: boolean };
+
+/**
+ * パーティに入れられる人。参加したいと伝えた人のうち、ギルドマスター経由の紹介が承諾された人だけ。
+ * 承諾前に入れると、ギルドマスターを通さずにつながれてしまう（紹介はマスター経由という決まりが崩れる）。
+ */
+export function partyCandidates(
+  quest: Quest,
+  applications: QuestApplication[],
+  intros: IntroRequest[],
+): PartyCandidate[] {
+  return applications
+    .filter((a) => a.quest_id === quest.id && a.status === "applied")
+    .map((a) => {
+      const intro = intros.find(
+        (r) => r.quest_id === quest.id && r.requester_id === quest.creator_id && r.target_id === a.user_id,
+      );
+      return { user_id: a.user_id, canJoin: intro?.status === "accepted" || intro?.status === "introduced" };
+    });
 }
 
 // ---------- 期間（プロジェクト全体の日付） ----------

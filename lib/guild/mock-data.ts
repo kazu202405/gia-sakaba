@@ -626,6 +626,19 @@ export const introRequests: IntroRequest[] = [
     created_at: "2026-09-14",
     updated_at: "2026-09-15",
   },
+  // 同じクエストで、小松さんは承諾済み（プロジェクトのパーティに入れられる）
+  {
+    id: "r-11",
+    requester_id: "p-morita",
+    target_id: "p-komatsu",
+    quest_id: "q-lp-writing",
+    purpose: "work",
+    message: "デザインと合わせて文章の方向も一緒に考えていただけたら心強いです。",
+    status: "accepted",
+    outcome: null,
+    created_at: "2026-09-14",
+    updated_at: "2026-09-16",
+  },
 ];
 
 // ---- 取得関数（本番ではここを Supabase の RPC に差し替える） ----
@@ -717,20 +730,6 @@ export const projects: Project[] = [
     done_at: null,
   },
   {
-    id: "pj-lp-writing",
-    owner_id: "p-morita",
-    title: "LPの文章づくり（石井さんと）",
-    goal: "聞き取りの型を作って、次の2本のLPで 試す",
-    memo: "",
-    source_quest_id: "q-lp-writing",
-    member_ids: ["p-ishii"],
-    status: "active",
-    start_date: "2026-09-14",
-    due_date: "2026-10-15",
-    created_at: "2026-09-14",
-    done_at: null,
-  },
-  {
     id: "pj-seitai",
     owner_id: "p-murakami",
     title: "整体院LP改善",
@@ -785,9 +784,6 @@ export const projectTasks: ProjectTask[] = [
   seedTask({ id: "t-hp-4", project_id: "pj-hp", title: "公開する", status: "todo", assignee_id: null, due_date: "2026-09-30", sort_order: 4 }),
   seedTask({ id: "t-sales-1", project_id: "pj-sales", title: "提案資料を つくる", status: "done", assignee_id: null, start_date: "2026-09-01", due_date: "2026-09-05", sort_order: 1, done_at: "2026-09-05" }),
   seedTask({ id: "t-sales-2", project_id: "pj-sales", title: "料金表を なおす", status: "todo", assignee_id: null, due_date: "2026-09-19", sort_order: 2 }),
-  seedTask({ id: "t-lp-1", project_id: "pj-lp-writing", title: "聞き取りの 質問を 10こ 出す", status: "done", assignee_id: "p-ishii", due_date: null, sort_order: 1, done_at: "2026-09-15" }),
-  seedTask({ id: "t-lp-2", project_id: "pj-lp-writing", title: "1本目の お客様と 日程を決める", status: "todo", assignee_id: "p-morita", due_date: "2026-09-18", sort_order: 2 }),
-  seedTask({ id: "t-lp-3", project_id: "pj-lp-writing", title: "聞き取りに 同席する", status: "todo", assignee_id: "p-ishii", due_date: null, sort_order: 3 }),
   seedTask({ id: "t-sei-1", project_id: "pj-seitai", title: "いまの予約の流れを 書き出す", status: "done", assignee_id: "p-komatsu", due_date: null, sort_order: 1, done_at: "2026-09-11" }),
   seedTask({ id: "t-sei-2", project_id: "pj-seitai", title: "ボタンの位置の 案を出す", status: "todo", assignee_id: "p-morita", due_date: "2026-09-20", sort_order: 2 }),
   seedTask({ id: "t-card-1", project_id: "pj-card", title: "肩書を決める", status: "done", assignee_id: null, due_date: null, sort_order: 1, done_at: "2026-09-05" }),

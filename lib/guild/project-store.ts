@@ -85,6 +85,36 @@ export function createProject(input: ProjectInput & { withSteps: boolean }): str
   return id;
 }
 
+/**
+ * クエストから プロジェクトを作る。持ち主はクエストを出した人、パーティは選んだ人（紹介が承諾された人だけ）。
+ * すでに作ってあれば、新しく作らずに その id を返す（1クエストにつき1つ）。
+ */
+export function createProjectFromQuest(
+  quest: { id: string; title: string; summary: string; deadline: string | null },
+  input: { title: string; member_ids: string[] },
+): string {
+  const existing = state.projects.find((p) => p.source_quest_id === quest.id);
+  if (existing) return existing.id;
+  const id = newId("pj");
+  const project: Project = {
+    id,
+    owner_id: ME_ID,
+    title: input.title,
+    goal: quest.summary,
+    memo: "",
+    source_quest_id: quest.id,
+    member_ids: input.member_ids,
+    status: "active",
+    start_date: TODAY,
+    // しめきりがクエストより前にならないように、きょうより前なら入れない
+    due_date: quest.deadline && quest.deadline >= TODAY ? quest.deadline : null,
+    created_at: TODAY,
+    done_at: null,
+  };
+  set({ projects: [project, ...state.projects] });
+  return id;
+}
+
 export function updateProject(projectId: string, input: ProjectInput): void {
   set({ projects: state.projects.map((p) => (p.id === projectId ? { ...p, ...input } : p)) });
 }

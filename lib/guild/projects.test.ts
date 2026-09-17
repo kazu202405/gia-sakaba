@@ -1,8 +1,20 @@
 import { describe, expect, it } from "vitest";
-import type { Project, ProjectContact, ProjectStep, ProjectTask, StepRecord } from "./types";
+import type {
+  IntroRequest,
+  Project,
+  ProjectContact,
+  ProjectStep,
+  ProjectTask,
+  Quest,
+  QuestApplication,
+  StepRecord,
+} from "./types";
 import {
   addDays,
+  canMakeProject,
   canSeeProject,
+  partyCandidates,
+  projectOfQuest,
   datePct,
   daysBetween,
   dueLabel,
@@ -198,5 +210,61 @@ describe("人ごとの すすみ", () => {
     );
     const labels = items.map((i) => (i.kind === "task" ? i.task.id : i.contact.label + ":" + i.step.name));
     expect(labels).toEqual(["Bさん:初回アポ", "t", "Bさん:契約"]);
+  });
+});
+
+describe("クエストから プロジェクトにする", () => {
+  const quest = { id: "q1", creator_id: "me", status: "open" } as Quest;
+  const app = (user_id: string, status: QuestApplication["status"] = "applied"): QuestApplication => ({
+    quest_id: "q1",
+    user_id,
+    message: "",
+    status,
+    created_at: "2026-09-10",
+  });
+  const intro = (target_id: string, status: IntroRequest["status"], patch: Partial<IntroRequest> = {}): IntroRequest => ({
+    id: `r-${target_id}`,
+    requester_id: "me",
+    target_id,
+    quest_id: "q1",
+    purpose: "work",
+    message: "",
+    status,
+    outcome: null,
+    created_at: "2026-09-10",
+    updated_at: "2026-09-10",
+    ...patch,
+  });
+
+  it("パーティに入れられるのは、紹介が承諾された・紹介済みの人だけ", () => {
+    const apps = [app("accepted"), app("introduced"), app("reviewing"), app("none"), app("gone", "withdrawn")];
+    const intros = [
+      intro("accepted", "accepted"),
+      intro("introduced", "introduced"),
+      intro("reviewing", "reviewing"),
+      // ほかのクエストの紹介や、ほかの人が出した紹介では入れない
+      intro("none", "accepted", { quest_id: "q2" }),
+      intro("none", "accepted", { requester_id: "someone" }),
+    ];
+    expect(partyCandidates(quest, apps, intros)).toEqual([
+      { user_id: "accepted", canJoin: true },
+      { user_id: "introduced", canJoin: true },
+      { user_id: "reviewing", canJoin: false },
+      { user_id: "none", canJoin: false },
+    ]);
+  });
+
+  it("作れるのは出した人だけ・募集中か進行中だけ", () => {
+    expect(canMakeProject(quest, "me")).toBe(true);
+    expect(canMakeProject(quest, "other")).toBe(false);
+    expect(canMakeProject({ ...quest, status: "in_progress" }, "me")).toBe(true);
+    expect(canMakeProject({ ...quest, status: "withdrawn" }, "me")).toBe(false);
+    expect(canMakeProject({ ...quest, status: "completed" }, "me")).toBe(false);
+  });
+
+  it("1クエストにつき1つ。作ってあれば それを返す", () => {
+    const items = [project("a"), project("b", { source_quest_id: "q1" })];
+    expect(projectOfQuest(items, "q1")?.id).toBe("b");
+    expect(projectOfQuest(items, "q9")).toBeUndefined();
   });
 });

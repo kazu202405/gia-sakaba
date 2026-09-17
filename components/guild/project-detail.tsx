@@ -7,7 +7,7 @@ import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import type { ProjectTask } from "@/lib/guild/types";
 import { formatDate } from "@/lib/guild/labels";
-import { ME_ID, TODAY, getProfile, getQuest } from "@/lib/guild/mock-data";
+import { ME_ID, TODAY, getProfile } from "@/lib/guild/mock-data";
 import {
   addTask,
   getInitialProjectState,
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { BackLink, MemberRow, Window } from "./cards";
 import { Select, TextInput } from "./form-parts";
 import { ProjectGantt } from "./project-gantt";
-import { ProjectProgressView, TaskLine, VisibilityChip } from "./project-parts";
+import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
 import { ProjectPeople } from "./project-people";
 
 const TASK_TITLE_MAX = 60;
@@ -48,7 +48,6 @@ export function ProjectDetail({ id }: { id: string }) {
   const list = tasksOf(state.tasks, project.id);
   const { done, total } = projectProgress(state.tasks, project.id);
   const isParty = !isPrivateProject(project);
-  const quest = project.source_quest_id ? getQuest(project.source_quest_id) : undefined;
   const isOwner = project.owner_id === ME_ID;
   const hasSteps = stepsOf(state.steps, project.id).length > 0;
   const people = [project.owner_id, ...project.member_ids].map((pid) => getProfile(pid)).filter((p) => p !== undefined);
@@ -71,7 +70,10 @@ export function ProjectDetail({ id }: { id: string }) {
 
       <Window title={project.status === "done" ? "おわった プロジェクト" : "プロジェクト"}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <VisibilityChip project={project} />
+          <span className="flex flex-wrap items-center gap-2">
+            <QuestOriginChip project={project} />
+            <VisibilityChip project={project} />
+          </span>
           {isOwner && (
             <Link href={`/guild/projects/${project.id}/edit`} className="c-muted text-xs underline underline-offset-4">
               なおす
@@ -85,14 +87,7 @@ export function ProjectDetail({ id }: { id: string }) {
             {project.goal}
           </p>
         )}
-        {quest && (
-          <p className="c-muted mt-3 text-xs">
-            はじまりの クエスト：
-            <Link href={`/guild/quests/${quest.id}`} className="underline underline-offset-4">
-              {quest.title}
-            </Link>
-          </p>
-        )}
+        <QuestOriginCard project={project} />
         <div className="mt-5">
           <ProjectProgressView project={project} state={state} />
         </div>

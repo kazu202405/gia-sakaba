@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { BackLink, MemberRow, MoreLink, Window, questCategoryMark } from "@/components/guild/cards";
 import { QuestJoinButton } from "@/components/guild/quest-join-button";
 import { QuestOwnerActions } from "@/components/guild/quest-owner-actions";
+import { QuestToProject } from "@/components/guild/quest-to-project";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import {
   ME_ID,
@@ -71,6 +72,7 @@ export default async function QuestDetailPage({ params }: Props) {
               <MoreLink href={`/guild/quests/${q.id}/applicants`} label={`参加したい人を見る（${guild.terms.master}）`} />
             </div>
           )}
+          <QuestToProject quest={q} />
           {q.creator_id === ME_ID && q.status === "open" && (
             <QuestOwnerActions
               questId={q.id}

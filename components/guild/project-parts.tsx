@@ -4,12 +4,13 @@
 
 import Link from "next/link";
 import type { Project, ProjectTask } from "@/lib/guild/types";
-import { formatDate } from "@/lib/guild/labels";
-import { TODAY, getProfile } from "@/lib/guild/mock-data";
+import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
+import { TODAY, getProfile, getQuest, guild } from "@/lib/guild/mock-data";
 import { dueLabel, isPrivateProject, projectProgress, projectSchedule, reachedLastStep } from "@/lib/guild/projects";
 import { toggleTask, type ProjectState } from "@/lib/guild/project-store";
 import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
+import { questCategoryMark } from "./cards";
 
 const GAUGE_CELLS = 10;
 
@@ -36,6 +37,31 @@ export function VisibilityChip({ project }: { project: Project }) {
     <span className="c-chip">
       {isPrivateProject(project) ? "自分だけ" : `パーティ ${project.member_ids.length + 1}人`}
     </span>
+  );
+}
+
+/** クエストから作ったプロジェクトの印。一覧でも「外から来た仕事」だと分かるように */
+export function QuestOriginChip({ project }: { project: Project }) {
+  if (!project.source_quest_id) return null;
+  // 濃紺の札は「おくれぎみ」「すぎています」に使っているので、ここは金の文字で分ける
+  return <span className="c-label text-xs">◆ {guild.terms.quest}から</span>;
+}
+
+/** くわしい画面の「はじまりの クエスト」。押すとクエストの画面へ */
+export function QuestOriginCard({ project }: { project: Project }) {
+  const quest = project.source_quest_id ? getQuest(project.source_quest_id) : undefined;
+  if (!quest) return null;
+  return (
+    <Link href={`/guild/quests/${quest.id}`} className="c-card rpg-cursor-row mt-4 flex items-start gap-1.5 p-3">
+      <span className="rpg-cursor mt-0.5">▶</span>
+      <span className="min-w-0 flex-1">
+        <span className="c-label block text-xs">
+          はじまりの {guild.terms.quest}（{questCategoryMark[quest.category]} {questCategoryLabel[quest.category]}・
+          {questStatusLabel[quest.status]}）
+        </span>
+        <span className="mt-0.5 block text-[15px] leading-snug break-words">{quest.title}</span>
+      </span>
+    </Link>
   );
 }
 
@@ -100,6 +126,7 @@ export function ProjectRow({ project, state }: { project: Project; state: Projec
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="text-[15px] leading-snug break-words">{project.title}</span>
+          <QuestOriginChip project={project} />
           <VisibilityChip project={project} />
         </span>
         <span className="mt-2 block">
