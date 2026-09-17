@@ -41,7 +41,8 @@ const EMPTY: Draft = {
   is_urgent: false,
 };
 
-const CATEGORIES = Object.keys(questCategoryLabel) as QuestCategory[];
+// 「集まり」（有料会員だけの リアルの集まり）を出せるのは ギルドマスターだけ。ここは だれでも使う画面なので出さない
+const CATEGORIES = (Object.keys(questCategoryLabel) as QuestCategory[]).filter((c) => c !== "gathering");
 const URGENT_DAYS = 14;
 const MEMBER_LIMIT_OPTIONS = Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: `${i + 1}人まで` }));
 const ONLINE_OK_SUFFIX = "（オンライン可）";

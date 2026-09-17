@@ -8,21 +8,29 @@ import { formatDate } from "@/lib/guild/labels";
 import { ME_ID } from "@/lib/guild/mock-data";
 import { getInitialProjectState, getProjectState, subscribeProjects } from "@/lib/guild/project-store";
 import { visibleProjects } from "@/lib/guild/projects";
+import { FREE_ACTIVE_PROJECT_LIMIT, activeOwnedProjectCount } from "@/lib/guild/membership";
 import { Window } from "./cards";
+import { useMembership } from "./membership-parts";
 import { ProjectRow } from "./project-parts";
 
 export function ProjectList() {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
+  const { isPaid } = useMembership();
   const mine = visibleProjects(state.projects, ME_ID);
   const active = mine.filter((p) => p.status === "active");
   const done = mine.filter((p) => p.status === "done");
 
   return (
     <div className="space-y-11">
-      <div>
+      <div className="space-y-2">
         <Link href="/guild/projects/new" className="rpg-button h-12 w-full text-base sm:w-auto">
           ▶ プロジェクトを つくる
         </Link>
+        <p className="c-muted text-xs tabular-nums">
+          {isPaid
+            ? "有料会員：いくつでも すすめられます"
+            : `あなたが すすめている数 ${activeOwnedProjectCount(state.projects, ME_ID)} / ${FREE_ACTIVE_PROJECT_LIMIT}（無料）`}
+        </p>
       </div>
 
       <Window title="すすめている">

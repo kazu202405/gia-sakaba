@@ -38,6 +38,7 @@ export const questCategoryLabel: Record<QuestCategory, string> = {
   consult: "相談",
   collab: "協業",
   info: "情報交換",
+  gathering: "集まり",
 };
 
 /** クエストを出す画面で、しゅるいの下に出す説明 */
@@ -46,6 +47,7 @@ export const questCategoryHint: Record<QuestCategory, string> = {
   consult: "話を聞いてほしい・知恵を借りたい",
   collab: "いっしょに何かを始めたい",
   info: "知っている人に教えてほしい",
+  gathering: "ギルドマスターが ひらく リアルの集まり",
 };
 
 export const questStatusLabel:Record<QuestStatus, string> = {

@@ -3,8 +3,18 @@ import Link from "next/link";
 import { BackLink, QuestCard, Window } from "@/components/guild/cards";
 import { IntroRequestButton } from "@/components/guild/intro-request-dialog";
 import { JobAvatar } from "@/components/guild/job-avatar";
+import { AchievementsView } from "@/components/guild/membership-parts";
 import { groupLabel } from "@/lib/guild/labels";
-import { ME_ID, getProfile, guild, partyCount, questClearCount, quests } from "@/lib/guild/mock-data";
+import { achievementCounts, badges, canPostMembersOnly } from "@/lib/guild/membership";
+import {
+  ME_ID,
+  getProfile,
+  guild,
+  introRequests,
+  parties,
+  questApplications,
+  quests,
+} from "@/lib/guild/mock-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -21,6 +31,7 @@ export default async function MemberStatusPage({ params }: Props) {
 
   const isMe = p.id === ME_ID;
   const theirQuests = quests.filter((q) => q.creator_id === p.id && q.status !== "completed");
+  const achievementData = { profile: p, quests, applications: questApplications, intros: introRequests, parties };
 
   return (
     <div className="space-y-11">
@@ -49,16 +60,15 @@ export default async function MemberStatusPage({ params }: Props) {
           </div>
         </div>
 
-        {/* 人にレベルは付けない。数えるのは一緒に動いた実績だけ */}
-        <div className="c-dashed-top mt-6 grid grid-cols-2 gap-3 pt-5">
-          <div>
-            <p className="c-muted text-xs">{guild.terms.quest}クリア</p>
-            <p className="text-3xl">{questClearCount(p.id)}</p>
-          </div>
-          <div>
-            <p className="c-muted text-xs">{guild.terms.party}</p>
-            <p className="text-3xl">{partyCount(p.id)}</p>
-          </div>
+        {/* 人にレベル（段）は付けない。積み上がる数と、集めたバッジだけ */}
+        <div className="c-dashed-top mt-6 pt-5">
+          <AchievementsView
+            counts={achievementCounts(achievementData)}
+            badges={badges(achievementData)}
+            mine={false}
+            isMaster={canPostMembersOnly(p.role)}
+            selfPreview={isMe}
+          />
         </div>
 
         <div className="mt-6">

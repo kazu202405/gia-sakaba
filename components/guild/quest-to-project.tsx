@@ -16,7 +16,9 @@ import {
   subscribeProjects,
 } from "@/lib/guild/project-store";
 import { canMakeProject, partyCandidates, projectOfQuest } from "@/lib/guild/projects";
+import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
+import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { TextInput } from "./form-parts";
 
 const TITLE_MAX = 40;
@@ -24,6 +26,7 @@ const TITLE_MAX = 40;
 export function QuestToProject({ quest }: { quest: Quest }) {
   const { projects } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const [open, setOpen] = useState(false);
+  const { isPaid } = useMembership();
 
   if (!canMakeProject(quest, ME_ID)) return null;
   const existing = projectOfQuest(projects, quest.id);
@@ -37,6 +40,10 @@ export function QuestToProject({ quest }: { quest: Quest }) {
           <Link href={`/guild/projects/${existing.id}`} className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
             ▶ プロジェクトを 見る
           </Link>
+        </div>
+      ) : !canActivateProject(projects, ME_ID, isPaid) ? (
+        <div className="mt-2">
+          <ProjectLimitNotice compact />
         </div>
       ) : open ? (
         <QuestToProjectForm quest={quest} onCancel={() => setOpen(false)} />
@@ -93,7 +100,8 @@ function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () =>
       <fieldset>
         <legend className="text-[15px] tracking-wider">いっしょに すすめる人（{guild.terms.party}）</legend>
         <p className="c-muted mt-0.5 text-xs leading-relaxed">
-          入れられるのは、{guild.terms.master}の しょうかいが 承諾された人だけです。あとから プロジェクトの画面で 足すこともできます。
+          入れられるのは、{guild.terms.master}の しょうかいが 承諾された人だけです。あとから プロジェクトの画面で
+          足すこともできます。
         </p>
         {candidates.length === 0 ? (
           <p className="c-muted mt-3 text-sm">参加したいと伝えた人は まだ いません。自分だけで はじめられます。</p>

@@ -21,6 +21,7 @@ const quest: Quest = {
   deadline: null,
   member_limit: 2,
   is_urgent: false,
+  members_only: false,
   status: "open",
   created_at: "2026-09-13",
 };

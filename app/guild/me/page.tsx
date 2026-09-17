@@ -2,9 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { MoreLink, PageTitle, QuestCard, Window } from "@/components/guild/cards";
+import { AchievementsView, MembershipPreviewSwitch } from "@/components/guild/membership-parts";
 import { MyStatusSettings } from "@/components/guild/my-status-settings";
 import { closedStatuses, introStatusLabel } from "@/lib/guild/labels";
-import { ME_ID, applicantCount, getApplication, getProfile, guild, introRequests, parties, quests } from "@/lib/guild/mock-data";
+import { achievementCounts, badges, canPostMembersOnly } from "@/lib/guild/membership";
+import {
+  ME_ID,
+  applicantCount,
+  getApplication,
+  getProfile,
+  guild,
+  introRequests,
+  parties,
+  questApplications,
+  quests,
+} from "@/lib/guild/mock-data";
 
 export const metadata: Metadata = { title: "マイページ" };
 
@@ -20,6 +32,7 @@ export default function MyPage() {
   const joinedQuests = quests.filter((q) => getApplication(q.id, ME_ID) !== undefined);
   const myParties = parties.filter((p) => p.member_ids.includes(ME_ID));
   const myActiveRequests = introRequests.filter((r) => r.requester_id === ME_ID && !closedStatuses.includes(r.status));
+  const achievementData = { profile: me, quests, applications: questApplications, intros: introRequests, parties };
 
   return (
     <div className="space-y-11">
@@ -58,6 +71,15 @@ export default function MyPage() {
             </Link>
           </div>
         </div>
+      </Window>
+
+      <Window title="じっせき">
+        <AchievementsView
+          counts={achievementCounts(achievementData)}
+          badges={badges(achievementData)}
+          mine
+          isMaster={canPostMembersOnly(me.role)}
+        />
       </Window>
 
       <Window title="しょうかい いらい" action={<MoreLink href="/guild/requests" />}>
@@ -135,6 +157,11 @@ export default function MyPage() {
             ))}
           </ul>
         )}
+      </Window>
+
+      {/* 見本だけ。本番では出さない */}
+      <Window title="見本：会員の種類">
+        <MembershipPreviewSwitch />
       </Window>
     </div>
   );

@@ -17,10 +17,12 @@ import {
   subscribeProjects,
 } from "@/lib/guild/project-store";
 import { canSeeProject, isPrivateProject, projectProgress, stepsOf, tasksOf } from "@/lib/guild/projects";
-import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT, canActivateProject } from "@/lib/guild/membership";
+import { uiAlert, uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { BackLink, Window } from "./cards";
 import { Select, TextInput } from "./form-parts";
+import { useMembership } from "./membership-parts";
 import { ProjectGantt } from "./project-gantt";
 import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
 import { ProjectParty } from "./project-party";
@@ -32,6 +34,7 @@ type TaskView = "list" | "gantt";
 export function ProjectDetail({ id }: { id: string }) {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const [view, setView] = useState<TaskView>("list");
+  const { isPaid } = useMembership();
   const project = state.projects.find((p) => p.id === id);
 
   // 見えないプロジェクトは「ない」と同じに見せる（あることも伝えない）
@@ -196,7 +199,14 @@ export function ProjectDetail({ id }: { id: string }) {
             <button
               type="button"
               className="c-button-sub h-11 w-full text-sm sm:w-auto sm:px-5"
-              onClick={() => {
+              onClick={async () => {
+                if (!canActivateProject(state.projects, ME_ID, isPaid)) {
+                  await uiAlert({
+                    title: "もどせません",
+                    message: `無料では、すすめている プロジェクトは ${FREE_ACTIVE_PROJECT_LIMIT}つまで です。ほかの プロジェクトを 1つ おわりにするか、有料会員（${ENTRY_PLAN_PRICE_LABEL}）なら もどせます。`,
+                  });
+                  return;
+                }
                 setProjectStatus(project.id, "active");
                 uiToast("すすめている プロジェクトに もどしました");
               }}

@@ -44,7 +44,8 @@ export function VisibilityChip({ project }: { project: Project }) {
 export function QuestOriginChip({ project }: { project: Project }) {
   if (!project.source_quest_id) return null;
   // 濃紺の札は「おくれぎみ」「すぎています」に使っているので、ここは金の文字で分ける
-  return <span className="c-label text-xs">◆ {guild.terms.quest}から</span>;
+  // ◆は「協業」と工程表の「しめきり」に使っているので、ここは使わない
+  return <span className="c-label text-xs">▷ {guild.terms.quest}から</span>;
 }
 
 /** くわしい画面の「はじまりの クエスト」。押すとクエストの画面へ */

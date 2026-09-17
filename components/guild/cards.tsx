@@ -13,6 +13,7 @@ export const questCategoryMark: Record<QuestCategory, string> = {
   consult: "？",
   collab: "◆",
   info: "★",
+  gathering: "▲",
 };
 
 /** 紺の太枠の窓。左上に名札（title）、右上に小さな操作（action） */
@@ -150,6 +151,7 @@ function QuestMeta({ quest }: { quest: Quest }) {
         {questCategoryMark[quest.category]} {questCategoryLabel[quest.category]}
       </span>
       {quest.is_urgent && !done && quest.status !== "withdrawn" && <span className="c-tag-urgent">急ぎ</span>}
+      {quest.members_only && <span className="c-chip">有料会員限定</span>}
       {quest.status !== "open" && <span className="c-chip">{questStatusLabel[quest.status]}</span>}
     </span>
   );

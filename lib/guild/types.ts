@@ -89,7 +89,7 @@ export type GiaApplicantImport = {
   want_to_connect_with: string;
 };
 
-export type QuestCategory ="work" | "consult" | "collab" | "info";
+export type QuestCategory = "work" | "consult" | "collab" | "info" | "gathering";
 /** withdrawn＝出した人が取り下げた。けいじばんには出さない */
 export type QuestStatus = "open" | "in_progress" | "completed" | "withdrawn";
 
@@ -107,6 +107,8 @@ export type Quest = {
   deadline: string | null;
   member_limit: number | null;
   is_urgent: boolean;
+  /** 有料会員だけが くわしい内容を見て 参加できる。出せるのは ギルドマスターだけ（リアルの集まりなど） */
+  members_only: boolean;
   status: QuestStatus;
   created_at: string;
 };

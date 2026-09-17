@@ -13,7 +13,9 @@ import {
   subscribeProjects,
   updateProject,
 } from "@/lib/guild/project-store";
+import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
+import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { BackLink, PageTitle, Window } from "./cards";
 import { Field, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
@@ -25,7 +27,19 @@ type Errors = { title?: string; start?: string; due?: string };
 
 export function ProjectForm({ projectId }: { projectId?: string }) {
   const { projects } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
+  const { isPaid } = useMembership();
   const editing = projectId ? projects.find((p) => p.id === projectId) : undefined;
+
+  // 無料で すすめられる数を こえていたら、作る画面の代わりに案内を出す（なおす画面は いつでも使える）
+  if (!projectId && !canActivateProject(projects, ME_ID, isPaid)) {
+    return (
+      <div className="space-y-9">
+        <BackLink href="/guild/projects" label="プロジェクト" />
+        <PageTitle title="プロジェクトを つくる" />
+        <ProjectLimitNotice />
+      </div>
+    );
+  }
 
   // なおせるのは持ち主だけ。見えない・無いときは「ない」と同じに見せる
   if (projectId && (!editing || editing.owner_id !== ME_ID)) {
