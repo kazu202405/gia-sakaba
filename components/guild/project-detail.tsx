@@ -19,10 +19,11 @@ import {
 import { canSeeProject, isPrivateProject, projectProgress, stepsOf, tasksOf } from "@/lib/guild/projects";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
-import { BackLink, MemberRow, Window } from "./cards";
+import { BackLink, Window } from "./cards";
 import { Select, TextInput } from "./form-parts";
 import { ProjectGantt } from "./project-gantt";
 import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
+import { ProjectParty } from "./project-party";
 import { ProjectPeople } from "./project-people";
 
 const TASK_TITLE_MAX = 60;
@@ -162,15 +163,9 @@ export function ProjectDetail({ id }: { id: string }) {
         </div>
       )}
 
-      {isParty && (
+      {(isParty || (isOwner && project.status === "active")) && (
         <Window title="パーティ">
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {people.map((p) => (
-              <li key={p.id}>
-                <MemberRow profile={p} />
-              </li>
-            ))}
-          </ul>
+          <ProjectParty project={project} people={people} isOwner={isOwner} />
         </Window>
       )}
 

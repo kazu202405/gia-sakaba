@@ -13,6 +13,7 @@ import {
   addDays,
   canMakeProject,
   canSeeProject,
+  connectedPeople,
   partyCandidates,
   projectOfQuest,
   datePct,
@@ -260,6 +261,19 @@ describe("クエストから プロジェクトにする", () => {
     expect(canMakeProject({ ...quest, status: "in_progress" }, "me")).toBe(true);
     expect(canMakeProject({ ...quest, status: "withdrawn" }, "me")).toBe(false);
     expect(canMakeProject({ ...quest, status: "completed" }, "me")).toBe(false);
+  });
+
+  it("あとから足せるのは、どちら向きでも紹介が承諾・紹介済みでつながっている人だけ（重複なし）", () => {
+    const intros = [
+      intro("a", "accepted"),
+      intro("b", "introduced", { quest_id: null }),
+      intro("c", "reviewing"),
+      intro("d", "cancelled"),
+      intro("me", "accepted", { id: "r-x", requester_id: "e" }),
+      intro("a", "introduced", { id: "r-dup" }),
+      intro("z", "accepted", { requester_id: "stranger" }),
+    ];
+    expect(connectedPeople("me", intros)).toEqual(["a", "b", "e"]);
   });
 
   it("1クエストにつき1つ。作ってあれば それを返す", () => {

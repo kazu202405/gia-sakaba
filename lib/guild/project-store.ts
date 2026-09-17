@@ -119,6 +119,28 @@ export function updateProject(projectId: string, input: ProjectInput): void {
   set({ projects: state.projects.map((p) => (p.id === projectId ? { ...p, ...input } : p)) });
 }
 
+export function addMember(projectId: string, userId: string): void {
+  set({
+    projects: state.projects.map((p) =>
+      p.id === projectId && p.owner_id !== userId && !p.member_ids.includes(userId)
+        ? { ...p, member_ids: [...p.member_ids, userId] }
+        : p,
+    ),
+  });
+}
+
+/** パーティから外すと、その人が担当していたタスクは「きまっていない」に戻る */
+export function removeMember(projectId: string, userId: string): void {
+  set({
+    projects: state.projects.map((p) =>
+      p.id === projectId ? { ...p, member_ids: p.member_ids.filter((m) => m !== userId) } : p,
+    ),
+    tasks: state.tasks.map((t) =>
+      t.project_id === projectId && t.assignee_id === userId ? { ...t, assignee_id: null } : t,
+    ),
+  });
+}
+
 export function setProjectStatus(projectId: string, status: Project["status"]): void {
   set({
     projects: state.projects.map((p) =>

@@ -107,6 +107,17 @@ export function partyCandidates(
     });
 }
 
+/**
+ * 作ったあとにパーティへ足せる人。持ち主と、紹介が承諾された・紹介済みでつながっている人（どちらが頼んだ紹介でもよい）。
+ * 紹介を通っていない人は足せない（ギルドマスターを通さずに、中身を見せる相手を増やせてしまうため）。
+ */
+export function connectedPeople(ownerId: string, intros: IntroRequest[]): string[] {
+  const ids = intros
+    .filter((r) => r.status === "accepted" || r.status === "introduced")
+    .flatMap((r) => (r.requester_id === ownerId ? [r.target_id] : r.target_id === ownerId ? [r.requester_id] : []));
+  return [...new Set(ids)];
+}
+
 // ---------- 期間（プロジェクト全体の日付） ----------
 
 /** 経った日数の割合より、終わったタスクの割合がこれだけ少なければ「おくれぎみ」 */
