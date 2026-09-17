@@ -120,7 +120,16 @@ export function ProjectProgressView({ project, state }: { project: Project; stat
   );
 }
 
-export function ProjectRow({ project, state }: { project: Project; state: ProjectState }) {
+export function ProjectRow({
+  project,
+  state,
+  compact = false,
+}: {
+  project: Project;
+  state: ProjectState;
+  /** かんたん表示：なまえと札だけ（1画面に入る数を増やす） */
+  compact?: boolean;
+}) {
   return (
     <Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row flex items-start gap-1.5">
       <span className="rpg-cursor mt-0.5">▶</span>
@@ -130,9 +139,11 @@ export function ProjectRow({ project, state }: { project: Project; state: Projec
           <QuestOriginChip project={project} />
           <VisibilityChip project={project} />
         </span>
-        <span className="mt-2 block">
-          <ProjectProgressView project={project} state={state} />
-        </span>
+        {!compact && (
+          <span className="mt-2 block">
+            <ProjectProgressView project={project} state={state} />
+          </span>
+        )}
       </span>
     </Link>
   );

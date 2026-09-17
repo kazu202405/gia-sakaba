@@ -111,19 +111,27 @@ export function QuestCard({ quest, compact = false }: { quest: Quest; compact?: 
   const creator = getProfile(quest.creator_id);
   const done = quest.status === "completed";
   return (
-    <Link href={`/guild/quests/${quest.id}`} className={cn("c-card rpg-cursor-row block p-3 sm:p-4", done && "opacity-75")}>
+    <Link
+      href={`/guild/quests/${quest.id}`}
+      className={cn("c-card rpg-cursor-row block p-3 sm:p-4", done && "opacity-75")}
+    >
       <div className="flex items-start gap-1.5">
         <span className="rpg-cursor mt-1">▶</span>
         <div className="min-w-0 flex-1">
           <QuestMeta quest={quest} />
           <p className="mt-1 text-[15px] leading-snug break-words">{quest.title}</p>
-          {!compact && <p className="c-muted mt-1 text-sm break-words">{quest.summary}</p>}
-          <p className="c-muted mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
-            {creator && <span>{creator.display_name}</span>}
-            <span>ばしょ：{quest.region}</span>
-            {quest.deadline && <span>しめきり：{formatDate(quest.deadline)}</span>}
-            <span>参加したい {applicantCount(quest.id)}人</span>
-          </p>
+          {/* かんたん表示は しゅるいの札と タイトルだけ（1画面に入る数を増やす） */}
+          {!compact && (
+            <>
+              <p className="c-muted mt-1 text-sm break-words">{quest.summary}</p>
+              <p className="c-muted mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+                {creator && <span>{creator.display_name}</span>}
+                <span>ばしょ：{quest.region}</span>
+                {quest.deadline && <span>しめきり：{formatDate(quest.deadline)}</span>}
+                <span>参加したい {applicantCount(quest.id)}人</span>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </Link>
