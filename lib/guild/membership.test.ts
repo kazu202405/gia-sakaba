@@ -8,8 +8,19 @@ import {
   canActivateProject,
   canOpenQuest,
   canPostMembersOnly,
+  strengthError,
   type AchievementData,
 } from "./membership";
+
+describe("有料会員の あなたの つよみ（必須）", () => {
+  it("空・短すぎ・長すぎは だめ。前後の空白は 数えない", () => {
+    expect(strengthError("   ")).toContain("有料会員に なれます");
+    expect(strengthError("あ".repeat(19))).toContain("いま 19字");
+    expect(strengthError(` ${"あ".repeat(19)} `)).toContain("いま 19字");
+    expect(strengthError("あ".repeat(201))).toContain("200字");
+    expect(strengthError("あ".repeat(20))).toBeNull();
+  });
+});
 import { profiles, quests } from "./mock-data";
 
 const project = (id: string, patch: Partial<Project> = {}): Project => ({

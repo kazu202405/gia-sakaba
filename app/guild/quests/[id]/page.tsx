@@ -5,6 +5,7 @@ import { MembersOnlyGate } from "@/components/guild/membership-parts";
 import { QuestJoinButton } from "@/components/guild/quest-join-button";
 import { QuestOwnerActions } from "@/components/guild/quest-owner-actions";
 import { QuestToProject } from "@/components/guild/quest-to-project";
+import { GROUND_RULES } from "@/lib/guild/boss";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import {
   ME_ID,
@@ -72,6 +73,18 @@ export default async function QuestDetailPage({ params }: Props) {
 
         {/* 限定の集まりは、ひとことだけ だれにでも見せる（「こういう集まりがある」が分かるように） */}
         {q.members_only && <p className="mt-6 text-[15px] leading-relaxed break-words">{q.summary}</p>}
+
+        {/* 集まりでは 話すときの約束（グランドルール）を 先に見せる */}
+        {q.category === "gathering" && (
+          <div className="c-card mt-6 px-4 py-3">
+            <p className="c-label text-xs">話すときの 約束（グランドルール）</p>
+            <ul className="mt-1 space-y-1 text-sm leading-relaxed">
+              {GROUND_RULES.map((rule) => (
+                <li key={rule}>・{rule}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <MembersOnlyGate quest={q}>
           <p className="mt-6 whitespace-pre-line text-[15px] leading-loose break-words">{q.body}</p>

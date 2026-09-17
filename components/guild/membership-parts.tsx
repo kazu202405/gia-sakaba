@@ -4,6 +4,7 @@
 // 案内は「異常」ではなく「操作の続き」なので、止めるモーダルではなく その場の枠で出す。
 
 import { useSyncExternalStore } from "react";
+import Link from "next/link";
 import type { Quest } from "@/lib/guild/types";
 import { ME_ID, guild } from "@/lib/guild/mock-data";
 import {
@@ -14,7 +15,6 @@ import {
   type Badge,
 } from "@/lib/guild/membership";
 import { getInitialMembership, getMembership, setMembership, subscribeMembership } from "@/lib/guild/membership-store";
-import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 
 export function useMembership() {
@@ -23,13 +23,9 @@ export function useMembership() {
 
 function PlanButton() {
   return (
-    <button
-      type="button"
-      className="rpg-button h-11 w-full px-5 text-sm sm:w-auto"
-      onClick={() => uiToast("見本のため、まだ申し込めません", "info")}
-    >
+    <Link href="/guild/plan" className="rpg-button h-11 w-full px-5 text-sm sm:w-auto">
       ▶ 有料会員について 見る
-    </button>
+    </Link>
   );
 }
 

@@ -12,6 +12,19 @@ export const FREE_ACTIVE_PROJECT_LIMIT = 2;
 /** 入口の段。金額は予定（Stripe商品は見本を触って確定してから作る） */
 export const ENTRY_PLAN_PRICE_LABEL = "月480円（税込・予定）";
 
+/** 有料会員になるときに 必須の「あなたの つよみ」（ステータスの つよみと 同じ欄。別の列に 持たない） */
+export const STRENGTH_MIN = 20;
+export const STRENGTH_MAX = 200;
+
+/** つよみの確かめ。空・短すぎ・長すぎを 分けて知らせる */
+export function strengthError(text: string): string | null {
+  const t = text.trim();
+  if (t === "") return "あなたの つよみを 書くと、有料会員に なれます";
+  if (t.length < STRENGTH_MIN) return `もう少し くわしく 書いてください（${STRENGTH_MIN}字以上。いま ${t.length}字）`;
+  if (t.length > STRENGTH_MAX) return `${STRENGTH_MAX}字までに してください`;
+  return null;
+}
+
 /** 持ち主として すすめている数（パーティで参加しているものは数えない） */
 export function activeOwnedProjectCount(items: Project[], userId: string): number {
   return items.filter((p) => p.owner_id === userId && p.status === "active").length;

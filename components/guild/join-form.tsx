@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
-import { GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/boss";
+import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/boss";
 import {
   JOIN_COMPANY_MAX,
   JOIN_NAME_MAX,
@@ -131,14 +131,22 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
         {/* 儲かるなら何でもいい、ではない。入会の前に 約束に同意してもらう */}
         <div data-field-error={errors.agreed ? "true" : undefined} className="c-card space-y-3 p-4">
           <p className="text-[15px] tracking-wider">ギルドの 約束</p>
-          <ul className="space-y-1.5 text-sm leading-relaxed">
-            {GUILD_PROMISES.map((promise) => (
-              <li key={promise} className="flex gap-2">
-                <span aria-hidden>・</span>
-                <span>{promise}</span>
-              </li>
-            ))}
-          </ul>
+          {[
+            { title: "しごとの 約束", items: GUILD_PROMISES },
+            { title: "話すときの 約束（グランドルール）", items: GROUND_RULES },
+          ].map((group) => (
+            <div key={group.title}>
+              <p className="c-label text-xs">{group.title}</p>
+              <ul className="mt-1 space-y-1.5 text-sm leading-relaxed">
+                {group.items.map((promise) => (
+                  <li key={promise} className="flex gap-2">
+                    <span aria-hidden>・</span>
+                    <span>{promise}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
           <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
           <label className="flex cursor-pointer items-center gap-3 pt-1">
             <input
