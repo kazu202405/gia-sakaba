@@ -149,7 +149,7 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
         </div>
 
         <button type="submit" className="rpg-button h-12 w-full text-base sm:w-auto sm:px-8">
-          ▶ 入会する
+          ▶ スタート
         </button>
       </form>
     </Window>

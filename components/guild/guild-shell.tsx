@@ -49,7 +49,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/guild" className="text-lg tracking-[0.2em]">
-            GIAの酒場
+            {guild.name}
           </Link>
           <span className="hidden text-xs text-[#e8cf8e] lg:inline">見本です。データは架空で、操作しても保存されません</span>
           <div className="flex items-center gap-4">
