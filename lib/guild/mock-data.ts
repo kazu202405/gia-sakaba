@@ -4,6 +4,7 @@
 import type {
   GiaApplicantImport,
   Guild,
+  Boss,
   GuildNotification,
   Invite,
   IntroRequest,
@@ -114,6 +115,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: "2026-09-01",
+    want_to_solve: "紹介が 仕事につながる 仕組みを つくりたい",
     joined_at: "2026-09-01",
   },
   {
@@ -140,6 +142,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "問い合わせが 紹介だけで 波がある",
     joined_at: "2026-09-05",
   },
   {
@@ -166,6 +169,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "",
     joined_at: "2026-09-03",
   },
   {
@@ -192,6 +196,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: "2026-09-10",
+    want_to_solve: "若い職人が 入ってこない",
     joined_at: "2026-09-02",
   },
   {
@@ -218,6 +223,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "3店舗目の 店長候補が いない",
     joined_at: "2026-09-08",
   },
   {
@@ -244,6 +250,7 @@ export const profiles: Profile[] = [
     position: "officer",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "",
     joined_at: "2026-09-04",
   },
   {
@@ -270,6 +277,7 @@ export const profiles: Profile[] = [
     position: "decider",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "空き家を 使いたい人と 出会えない",
     joined_at: "2026-09-06",
   },
   {
@@ -296,6 +304,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "",
     joined_at: "2026-09-07",
   },
   {
@@ -322,6 +331,7 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: "2026-09-12",
+    want_to_solve: "",
     joined_at: "2026-09-09",
   },
   {
@@ -348,6 +358,7 @@ export const profiles: Profile[] = [
     position: "other",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "",
     joined_at: "2026-09-10",
   },
   {
@@ -374,7 +385,28 @@ export const profiles: Profile[] = [
     position: "ceo",
     show_company: true,
     gathering_approved_at: null,
+    want_to_solve: "予約が 平日の昼に 入らない",
     joined_at: "2026-09-11",
+  },
+];
+
+/** ギルドの ボス（見本）。敵は 課題だけ。人・会社・業界は 敵にしない */
+export const bosses: Boss[] = [
+  {
+    id: "boss-successor",
+    title: "職人の 後継者不足",
+    description: "腕のいい職人が 引退しても、あとを継ぐ人が いない。採用・育て方・仕事の見せ方を みんなの知恵で 変えていく。",
+    created_by: "p-goto",
+    status: "active",
+    created_at: "2026-09-10",
+  },
+  {
+    id: "boss-akiya",
+    title: "地域の 空き家",
+    description: "使われない家が 増えて、まちが 静かになっていく。仕事の場所・住む場所として もう一度 使えるようにする。",
+    created_by: "p-goto",
+    status: "active",
+    created_at: "2026-09-12",
   },
 ];
 
@@ -398,6 +430,7 @@ export const quests: Quest[] = [
     member_limit: 12,
     is_urgent: false,
     members_only: true,
+    boss_id: null,
     status: "open",
     created_at: "2026-09-16",
   },
@@ -413,6 +446,7 @@ export const quests: Quest[] = [
     member_limit: 2,
     is_urgent: true,
     members_only: false,
+    boss_id: "boss-successor",
     status: "open",
     created_at: "2026-09-12",
   },
@@ -428,6 +462,7 @@ export const quests: Quest[] = [
     member_limit: 1,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "open",
     created_at: "2026-09-13",
   },
@@ -443,6 +478,7 @@ export const quests: Quest[] = [
     member_limit: 3,
     is_urgent: false,
     members_only: false,
+    boss_id: "boss-akiya",
     status: "open",
     created_at: "2026-09-10",
   },
@@ -458,6 +494,7 @@ export const quests: Quest[] = [
     member_limit: 1,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "in_progress",
     created_at: "2026-09-05",
   },
@@ -473,6 +510,7 @@ export const quests: Quest[] = [
     member_limit: 2,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "open",
     created_at: "2026-09-14",
   },
@@ -488,6 +526,7 @@ export const quests: Quest[] = [
     member_limit: 2,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "completed",
     created_at: "2026-09-02",
   },
@@ -504,6 +543,7 @@ export const quests: Quest[] = [
     member_limit: 2,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "open",
     created_at: "2026-09-13",
   },
@@ -520,6 +560,7 @@ export const quests: Quest[] = [
     member_limit: 1,
     is_urgent: false,
     members_only: false,
+    boss_id: null,
     status: "withdrawn",
     created_at: "2026-09-06",
   },

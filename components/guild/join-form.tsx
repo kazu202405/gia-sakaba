@@ -7,7 +7,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
-import { JOIN_COMPANY_MAX, JOIN_NAME_MAX, validateJoin, type JoinDraft, type JoinErrors } from "@/lib/guild/join";
+import { GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/boss";
+import {
+  JOIN_COMPANY_MAX,
+  JOIN_NAME_MAX,
+  JOIN_SOLVE_MAX,
+  validateJoin,
+  type JoinDraft,
+  type JoinErrors,
+} from "@/lib/guild/join";
 import { guild } from "@/lib/guild/mock-data";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
@@ -22,6 +30,8 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
     company_name: "",
     position: "",
     show_company: true,
+    want_to_solve: "",
+    agreed: false,
   });
   const [errors, setErrors] = useState<JoinErrors>({});
 
@@ -103,6 +113,44 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
             <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
           </span>
         </label>
+
+        <Field
+          label="いま、なにを 解決したいですか？"
+          hint="任意。ギルドマスターが だれと つなぐかを 考える手がかりに なります"
+          error={errors.want_to_solve}
+        >
+          <TextInput
+            value={draft.want_to_solve}
+            onChange={(v) => set("want_to_solve", v)}
+            max={JOIN_SOLVE_MAX}
+            label="いま、なにを 解決したいですか？"
+            placeholder="例：若い職人が 入ってこない"
+          />
+        </Field>
+
+        {/* 儲かるなら何でもいい、ではない。入会の前に 約束に同意してもらう */}
+        <div data-field-error={errors.agreed ? "true" : undefined} className="c-card space-y-3 p-4">
+          <p className="text-[15px] tracking-wider">ギルドの 約束</p>
+          <ul className="space-y-1.5 text-sm leading-relaxed">
+            {GUILD_PROMISES.map((promise) => (
+              <li key={promise} className="flex gap-2">
+                <span aria-hidden>・</span>
+                <span>{promise}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
+          <label className="flex cursor-pointer items-center gap-3 pt-1">
+            <input
+              type="checkbox"
+              checked={draft.agreed}
+              onChange={(e) => set("agreed", e.target.checked)}
+              className="h-5 w-5 shrink-0 accent-[#1b2a41]"
+            />
+            <span className="text-[15px]">約束を まもります</span>
+          </label>
+          {errors.agreed && <p className="text-xs text-[#c62828]">{errors.agreed}</p>}
+        </div>
 
         <button type="submit" className="rpg-button h-12 w-full text-base sm:w-auto sm:px-8">
           ▶ 入会する

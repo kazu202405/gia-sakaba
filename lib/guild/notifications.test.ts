@@ -23,6 +23,7 @@ const quest: Quest = {
   member_limit: 2,
   is_urgent: false,
   members_only: false,
+  boss_id: null,
   status: "open",
   created_at: "2026-09-13",
 };

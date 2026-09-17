@@ -36,8 +36,21 @@ export const inviteErrorText: Record<Exclude<InviteCheck, { ok: true }>["reason"
   used_up: "この招待リンクは 決められた人数に 達しました。招待してくれた人に 新しいリンクを もらってください。",
 };
 
-export type JoinDraft = { display_name: string; company_name: string; position: Position | ""; show_company: boolean };
-export type JoinErrors = Partial<Record<"display_name" | "company_name" | "position", string>>;
+export const JOIN_SOLVE_MAX = 60;
+
+export type JoinDraft = {
+  display_name: string;
+  company_name: string;
+  position: Position | "";
+  show_company: boolean;
+  /** いま、なにを解決したいですか？（任意） */
+  want_to_solve: string;
+  /** ギルドの約束に 同意したか（必須） */
+  agreed: boolean;
+};
+export type JoinErrors = Partial<
+  Record<"display_name" | "company_name" | "position" | "want_to_solve" | "agreed", string>
+>;
 
 export function validateJoin(d: JoinDraft): JoinErrors {
   const errors: JoinErrors = {};
@@ -47,6 +60,8 @@ export function validateJoin(d: JoinDraft): JoinErrors {
   else if (d.company_name.trim().length > JOIN_COMPANY_MAX)
     errors.company_name = `${JOIN_COMPANY_MAX}字までに してください`;
   if (d.position === "") errors.position = "役職を えらんでください";
+  if (d.want_to_solve.trim().length > JOIN_SOLVE_MAX) errors.want_to_solve = `${JOIN_SOLVE_MAX}字までに してください`;
+  if (!d.agreed) errors.agreed = "ギルドの約束に 同意すると 入会できます";
   return errors;
 }
 

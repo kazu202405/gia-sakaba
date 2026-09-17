@@ -47,7 +47,14 @@ describe("招待リンク", () => {
 });
 
 describe("入会の入力", () => {
-  const ok = { display_name: "山田 太郎", company_name: "山田商店", position: "ceo" as const, show_company: true };
+  const ok = {
+    display_name: "山田 太郎",
+    company_name: "山田商店",
+    position: "ceo" as const,
+    show_company: true,
+    want_to_solve: "",
+    agreed: true,
+  };
 
   it("名前・会社名・役職がそろえば エラーなし", () => {
     expect(validateJoin(ok)).toEqual({});
@@ -60,6 +67,12 @@ describe("入会の入力", () => {
       "position",
     ]);
     expect(validateJoin({ ...ok, display_name: "あ".repeat(31) }).display_name).toContain("30字");
+  });
+
+  it("解決したいことは 空でもよい（長すぎだけ知らせる）。約束に同意しないと 入会できない", () => {
+    expect(validateJoin({ ...ok, want_to_solve: "" })).toEqual({});
+    expect(validateJoin({ ...ok, want_to_solve: "あ".repeat(61) }).want_to_solve).toContain("60字");
+    expect(validateJoin({ ...ok, agreed: false }).agreed).toBeDefined();
   });
 
   it("経営者は 代表・役員・決裁者", () => {

@@ -76,7 +76,22 @@ export type Profile = {
    * 入っていれば 次からは 承認なしで 参加できる（経営者の確認を 別の作業にしない）
    */
   gathering_approved_at: string | null;
+  /** 入会のときに聞く「いま、なにを解決したいですか？」（任意・ひとこと） */
+  want_to_solve: string;
   joined_at: string;
+};
+
+/**
+ * ギルドの ボス＝みんなで挑む課題。ギルドマスターが掲げ、ふだんのクエストに「このボスに挑む」を付けられる。
+ * 敵にするのは 課題だけ（人・会社・業界を 敵にしない）。
+ */
+export type Boss = {
+  id: string;
+  title: string;
+  description: string;
+  created_by: string;
+  status: "active" | "defeated";
+  created_at: string;
 };
 
 export type Position = "ceo" | "officer" | "decider" | "other";
@@ -131,6 +146,8 @@ export type Quest = {
   is_urgent: boolean;
   /** 有料会員だけが くわしい内容を見て 参加できる。出せるのは ギルドマスターだけ（リアルの集まりなど） */
   members_only: boolean;
+  /** このクエストで挑む ボス（ギルドの課題）。任意 */
+  boss_id: string | null;
   status: QuestStatus;
   created_at: string;
 };

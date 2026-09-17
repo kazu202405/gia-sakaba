@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Profile, Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
-import { applicantCount, getProfile } from "@/lib/guild/mock-data";
+import { applicantCount, bosses, getProfile } from "@/lib/guild/mock-data";
 import { JobAvatar } from "./job-avatar";
 import { cn } from "@/lib/utils";
 
@@ -143,6 +143,13 @@ export function QuestRow({ quest }: { quest: Quest }) {
   );
 }
 
+/** ボス（みんなで挑む課題）に挑んでいる クエストの印 */
+export function BossMark({ bossId }: { bossId: string }) {
+  const boss = bosses.find((b) => b.id === bossId);
+  if (!boss) return null;
+  return <span className="c-label">⚑ {boss.title}</span>;
+}
+
 function QuestMeta({ quest }: { quest: Quest }) {
   const done = quest.status === "completed";
   return (
@@ -152,6 +159,7 @@ function QuestMeta({ quest }: { quest: Quest }) {
       </span>
       {quest.is_urgent && !done && quest.status !== "withdrawn" && <span className="c-tag-urgent">急ぎ</span>}
       {quest.members_only && <span className="c-chip">有料会員限定</span>}
+      {quest.boss_id && <BossMark bossId={quest.boss_id} />}
       {quest.status !== "open" && <span className="c-chip">{questStatusLabel[quest.status]}</span>}
     </span>
   );

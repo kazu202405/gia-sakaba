@@ -69,6 +69,9 @@ export function GatheringApprovals() {
                   {q.title}・{formatDate(a.created_at)}に 申し込み
                 </p>
                 {a.message && <p className="text-sm leading-relaxed break-words">「{a.message}」</p>}
+                {p.want_to_solve && (
+                  <p className="c-muted text-xs leading-relaxed break-words">いま 解決したいこと：{p.want_to_solve}</p>
+                )}
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { BackLink, MemberRow, MoreLink, Window, questCategoryMark } from "@/components/guild/cards";
+import Link from "next/link";
+import { BackLink, BossMark, MemberRow, MoreLink, Window, questCategoryMark } from "@/components/guild/cards";
 import { MembersOnlyGate } from "@/components/guild/membership-parts";
 import { QuestJoinButton } from "@/components/guild/quest-join-button";
 import { QuestOwnerActions } from "@/components/guild/quest-owner-actions";
@@ -40,6 +41,11 @@ export default async function QuestDetailPage({ params }: Props) {
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {q.is_urgent && q.status === "open" && <span className="c-tag-urgent">急ぎ</span>}
           {q.members_only && <span className="c-chip">有料会員限定</span>}
+          {q.boss_id && (
+            <Link href={`/guild/bosses/${q.boss_id}`} className="underline underline-offset-4">
+              <BossMark bossId={q.boss_id} />
+            </Link>
+          )}
           <span className="c-chip">{questStatusLabel[q.status]}</span>
         </div>
 
