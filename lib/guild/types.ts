@@ -163,6 +163,43 @@ export type Party = {
   formed_at: string;
 };
 
+/**
+ * 自分（たち）が主体で進めること。クエスト＝外から来る仕事、プロジェクト＝中で進める仕事。
+ * 見える人は owner と member_ids だけ（ギルドマスターにも見えない）。member_ids が空なら本人だけ。
+ * 本番は sakaba.projects と sakaba.project_members。
+ */
+export type Project = {
+  id: string;
+  owner_id: string;
+  title: string;
+  /** なにができたら おわりか */
+  goal: string;
+  /** クエストから始まったとき */
+  source_quest_id: string | null;
+  /** 一緒に進める人（パーティ）。owner は含めない */
+  member_ids: string[];
+  status: ProjectStatus;
+  due_date: string | null;
+  created_at: string;
+  done_at: string | null;
+};
+
+export type ProjectStatus = "active" | "done";
+
+export type TaskStatus = "todo" | "done";
+
+export type ProjectTask = {
+  id: string;
+  project_id: string;
+  title: string;
+  status: TaskStatus;
+  /** null はだれでも（本人だけのプロジェクトなら本人） */
+  assignee_id: string | null;
+  due_date: string | null;
+  sort_order: number;
+  done_at: string | null;
+};
+
 export type NotificationKind = "quest_applied" | "quest_updated" | "quest_withdrawn" | "intro_progress";
 
 /**

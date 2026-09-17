@@ -6,7 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { IntroRequest } from "@/lib/guild/types";
 import { closedStatuses, formatDate, introStatusLabel, introSteps, outcomeLabel, purposeLabel } from "@/lib/guild/labels";
-import { ME_ID, getProfile, getQuest } from "@/lib/guild/mock-data";
+import { ME_ID, getProfile, getQuest, guild } from "@/lib/guild/mock-data";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { JobAvatar } from "./job-avatar";
 import { Window } from "./cards";
@@ -41,7 +41,7 @@ export function MyRequests({ initial }: { initial: IntroRequest[] }) {
 
       <Window title="あなたが出した いらい">
         {sent.length === 0 ? (
-          <p className="c-muted text-sm">まだ しょうかいを依頼していません。なかま めいかんから さがせます。</p>
+          <p className="c-muted text-sm">まだ しょうかいを依頼していません。{guild.terms.member} めいかんから さがせます。</p>
         ) : (
           <div className="space-y-4">
             {sent.map((r) => (

@@ -8,6 +8,8 @@ import type {
   IntroRequest,
   Party,
   Profile,
+  Project,
+  ProjectTask,
   ProfileContact,
   Quest,
   QuestApplication,
@@ -65,7 +67,7 @@ export const guild: Guild = {
   slug: "gia",
   name: "GIAギルド",
   terms: {
-    member: "なかま",
+    member: "ギルドメンバー",
     quest: "クエスト",
     party: "パーティ",
     master: "ギルドマスター",
@@ -78,6 +80,9 @@ export const TODAY = "2026-09-15";
 
 /** 見本でログインしている人 */
 export const ME_ID = "p-morita";
+
+/** 見本の本人が めいかん・けいじばんを最後に開いた日。本番は本人の行の members_seen_at / quests_seen_at */
+export const mySeenAt = { members_seen_at: "2026-09-08", quests_seen_at: "2026-09-12" };
 export const MASTER_ID = "p-goto";
 
 export const profiles: Profile[] = [
@@ -677,6 +682,86 @@ export function questClearCount(profileId: string): number {
 export function partyCount(profileId: string): number {
   return parties.filter((p) => p.member_ids.includes(profileId)).length;
 }
+
+/** 見本の本人（森田）が見えるプロジェクト。ほかの人の本人だけのプロジェクトも混ぜて、見えないことを確かめられるようにする */
+export const projects: Project[] = [
+  {
+    id: "pj-hp",
+    owner_id: "p-morita",
+    title: "自社ホームページを 新しくする",
+    goal: "トップと サービスのページを 今の仕事に合わせて 公開しなおす",
+    source_quest_id: null,
+    member_ids: [],
+    status: "active",
+    due_date: "2026-09-30",
+    created_at: "2026-09-08",
+    done_at: null,
+  },
+  {
+    id: "pj-lp-writing",
+    owner_id: "p-morita",
+    title: "LPの文章づくり（石井さんと）",
+    goal: "聞き取りの型を作って、次の2本のLPで 試す",
+    source_quest_id: "q-lp-writing",
+    member_ids: ["p-ishii"],
+    status: "active",
+    due_date: "2026-10-15",
+    created_at: "2026-09-14",
+    done_at: null,
+  },
+  {
+    id: "pj-seitai",
+    owner_id: "p-murakami",
+    title: "整体院LP改善",
+    goal: "予約ボタンまで 迷わず行けるページにする",
+    source_quest_id: "q-seitai-lp",
+    member_ids: ["p-komatsu", "p-morita"],
+    status: "active",
+    due_date: null,
+    created_at: "2026-09-09",
+    done_at: null,
+  },
+  {
+    id: "pj-card",
+    owner_id: "p-morita",
+    title: "名刺を つくりなおす",
+    goal: "肩書と QRコードを 今の仕事に合わせる",
+    source_quest_id: null,
+    member_ids: [],
+    status: "done",
+    due_date: null,
+    created_at: "2026-09-01",
+    done_at: "2026-09-10",
+  },
+  // ほかの人の、本人だけのプロジェクト（森田には見えない）
+  {
+    id: "pj-private-other",
+    owner_id: "p-ishii",
+    title: "確定申告の じゅんび",
+    goal: "",
+    source_quest_id: null,
+    member_ids: [],
+    status: "active",
+    due_date: null,
+    created_at: "2026-09-12",
+    done_at: null,
+  },
+];
+
+export const projectTasks: ProjectTask[] = [
+  { id: "t-hp-1", project_id: "pj-hp", title: "キャッチコピーを 考える", status: "done", assignee_id: null, due_date: "2026-09-12", sort_order: 1, done_at: "2026-09-12" },
+  { id: "t-hp-2", project_id: "pj-hp", title: "トップの画像を 用意する", status: "todo", assignee_id: null, due_date: "2026-09-14", sort_order: 2, done_at: null },
+  { id: "t-hp-3", project_id: "pj-hp", title: "サービスの説明を なおす", status: "todo", assignee_id: null, due_date: "2026-09-19", sort_order: 3, done_at: null },
+  { id: "t-hp-4", project_id: "pj-hp", title: "公開する", status: "todo", assignee_id: null, due_date: "2026-09-30", sort_order: 4, done_at: null },
+  { id: "t-lp-1", project_id: "pj-lp-writing", title: "聞き取りの 質問を 10こ 出す", status: "done", assignee_id: "p-ishii", due_date: null, sort_order: 1, done_at: "2026-09-15" },
+  { id: "t-lp-2", project_id: "pj-lp-writing", title: "1本目の お客様と 日程を決める", status: "todo", assignee_id: "p-morita", due_date: "2026-09-18", sort_order: 2, done_at: null },
+  { id: "t-lp-3", project_id: "pj-lp-writing", title: "聞き取りに 同席する", status: "todo", assignee_id: "p-ishii", due_date: null, sort_order: 3, done_at: null },
+  { id: "t-sei-1", project_id: "pj-seitai", title: "いまの予約の流れを 書き出す", status: "done", assignee_id: "p-komatsu", due_date: null, sort_order: 1, done_at: "2026-09-11" },
+  { id: "t-sei-2", project_id: "pj-seitai", title: "ボタンの位置の 案を出す", status: "todo", assignee_id: "p-morita", due_date: "2026-09-20", sort_order: 2, done_at: null },
+  { id: "t-card-1", project_id: "pj-card", title: "肩書を決める", status: "done", assignee_id: null, due_date: null, sort_order: 1, done_at: "2026-09-05" },
+  { id: "t-card-2", project_id: "pj-card", title: "印刷を 頼む", status: "done", assignee_id: null, due_date: null, sort_order: 2, done_at: "2026-09-10" },
+  { id: "t-other-1", project_id: "pj-private-other", title: "領収書を まとめる", status: "todo", assignee_id: null, due_date: "2026-09-17", sort_order: 1, done_at: null },
+];
 
 /** 見本の本人（森田）への「おしらせ」。本番は sakaba.notifications */
 export const notifications: GuildNotification[] = [

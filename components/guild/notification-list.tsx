@@ -5,7 +5,7 @@
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { formatDate } from "@/lib/guild/labels";
-import { getApplication, getProfile, getQuest, introRequests } from "@/lib/guild/mock-data";
+import { getApplication, getProfile, getQuest, guild, introRequests } from "@/lib/guild/mock-data";
 import {
   getInitialNotifications,
   getNotifications,
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { Window } from "./cards";
 
 const ctx: NotificationContext = {
-  name: (id) => getProfile(id)?.display_name ?? "なかま",
+  name: (id) => getProfile(id)?.display_name ?? guild.terms.member,
   questTitle: (id) => getQuest(id)?.title ?? "クエスト",
   intro: (id) => introRequests.find((r) => r.id === id),
 };
@@ -29,7 +29,7 @@ export function NotificationList() {
 
   return (
     <Window
-      title="おしらせ"
+      title="あなたあて"
       action={
         unread > 0 ? (
           <button type="button" onClick={markAllNotificationsRead} className="c-muted text-xs hover:underline">

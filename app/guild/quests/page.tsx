@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageTitle, QuestCard } from "@/components/guild/cards";
+import { MarkSeen } from "@/components/guild/mark-seen";
 import { guild, quests } from "@/lib/guild/mock-data";
 
 export const metadata: Metadata = { title: `${guild.terms.quest} けいじばん` };
@@ -14,6 +15,7 @@ export default function QuestsPage() {
 
   return (
     <div>
+      <MarkSeen list="quests" />
       <PageTitle title={`${guild.terms.quest} けいじばん`} lead="仕事の依頼・相談・協業したいことを、だれでも出せます。" />
 
       <div className="mb-9">

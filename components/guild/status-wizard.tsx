@@ -48,8 +48,8 @@ const STEP_META: Record<Exclude<StepKey, "intro">, { tag: string; title: string;
   values: { tag: "おもい", title: "だいじにしていること、これから", lead: "紹介するとき、人柄が伝わる材料になります。", optional: true },
   connect: { tag: "つながり", title: "どんな人と つながりたいですか？", lead: "ギルドマスターが紹介を考えるときに一番見るところです。", optional: true },
   contact: { tag: "れんらく先", title: "れんらく先", lead: "名鑑には出ません。紹介が承諾された相手にだけ見えます。", optional: true },
-  visibility: { tag: "こうかい", title: "どこまで 見せますか？", lead: `${guild.name}の なかまに見せる範囲です。あとから変えられます。`, optional: false },
-  confirm: { tag: "さいごに", title: `この ${guild.terms.status}で とうろくします`, lead: "なかまからは こう見えます。", optional: false },
+  visibility: { tag: "こうかい", title: "どこまで 見せますか？", lead: `${guild.name}の ${guild.terms.member}に見せる範囲です。あとから変えられます。`, optional: false },
+  confirm: { tag: "さいごに", title: `この ${guild.terms.status}で とうろくします`, lead: `${guild.terms.member}からは こう見えます。`, optional: false },
 };
 
 const FLOW: Exclude<StepKey, "intro">[] = ["basic", "work", "strength", "values", "connect", "contact", "visibility", "confirm"];
@@ -610,7 +610,7 @@ function ConfirmStep({
               <p className="text-[15px]">{r.title}</p>
               <p className="c-muted text-xs">
                 {r.filled ? "書きました" : "まだ書いていません"}
-                {r.visible === null ? "・承諾した相手にだけ" : r.visible ? "・なかまに公開" : "・非公開"}
+                {r.visible === null ? "・承諾した相手にだけ" : r.visible ? `・${guild.terms.member}に公開` : "・非公開"}
               </p>
             </div>
             <button type="button" onClick={() => onJump(r.step)} className="c-button-sub h-9 shrink-0 text-xs">
