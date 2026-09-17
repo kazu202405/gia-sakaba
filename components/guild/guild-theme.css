@@ -175,6 +175,14 @@ a.c-card:hover {
   font-family: inherit;
   font-size: 0.95rem;
 }
+/* 日付の欄：iOS Safari は そのままだと 中身の幅で ひろがり、枠から はみ出す */
+.c-date {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  max-width: 100%;
+}
+
 .c-input::placeholder {
   color: rgba(27, 42, 65, 0.4);
 }

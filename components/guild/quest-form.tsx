@@ -16,7 +16,7 @@ import { TODAY, bosses, guild, regionOptions } from "@/lib/guild/mock-data";
 import { diffQuestFields, pickQuestFields, questFieldLabel, type QuestFields } from "@/lib/guild/notifications";
 import { uiToast } from "@/lib/ui-dialog";
 import { BackLink, questCategoryMark } from "./cards";
-import { Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
 type Draft = {
   category: QuestCategory | "";
@@ -275,15 +275,11 @@ export function QuestForm({
                   label="ばしょ"
                 />
                 {draft.region && draft.region !== "オンライン" && (
-                  <label className="mt-2 flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={draft.online_ok}
-                      onChange={(e) => set("online_ok", e.target.checked)}
-                      className="size-4 accent-[#1b2a41]"
-                    />
-                    オンラインでもOK
-                  </label>
+                  <div className="mt-2">
+                    <CheckBox checked={draft.online_ok} onChange={(v) => set("online_ok", v)}>
+                      <span className="text-sm">オンラインでもOK</span>
+                    </CheckBox>
+                  </div>
                 )}
               </Field>
               <Field label="にんずう" hint="任意">
@@ -310,17 +306,17 @@ export function QuestForm({
             )}
 
             <Field label="しめきり" hint="任意" error={errors.deadline}>
-              <input
-                type="date"
-                value={draft.deadline}
-                min={TODAY}
-                onChange={(e) => {
-                  set("deadline", e.target.value);
-                  if (errors.is_urgent) setErrors((er) => ({ ...er, is_urgent: "" }));
-                }}
-                aria-label="しめきり"
-                className="c-input h-11 sm:max-w-60"
-              />
+              <div className="sm:max-w-60">
+                <DateInput
+                  value={draft.deadline}
+                  min={TODAY}
+                  onChange={(v) => {
+                    set("deadline", v);
+                    if (errors.is_urgent) setErrors((er) => ({ ...er, is_urgent: "" }));
+                  }}
+                  label="しめきり"
+                />
+              </div>
             </Field>
 
             {!gathering && (

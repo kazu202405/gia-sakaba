@@ -61,7 +61,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
                 noticeActive ? "text-[#e8cf8e]" : "text-[#fffdf6]/80",
               )}
             >
-              {noticeActive && "▶"}しらせ
+              {noticeActive && "▶"}おしらせ
               {unread > 0 && (
                 <span className="inline-flex min-w-5 justify-center bg-[#e8cf8e] px-1 text-[11px] leading-5 text-[#1b2a41] tabular-nums">
                   {unread}

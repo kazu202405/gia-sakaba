@@ -17,7 +17,7 @@ import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
 import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { BackLink, PageTitle, Window } from "./cards";
-import { Field, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { CheckBox, DateInput, Field, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
 const TITLE_MAX = 40;
 const GOAL_MAX = 200;
@@ -126,10 +126,10 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
           </Field>
           <div className="grid gap-7 sm:grid-cols-2">
             <Field label="はじめる日" required error={errors.start ?? ""}>
-              <TextInput type="date" value={start} onChange={setStart} max={10} label="はじめる日" />
+              <DateInput value={start} onChange={setStart} label="はじめる日" />
             </Field>
             <Field label="しめきり" hint="入れると 期間のバーと 工程表が出ます" error={errors.due ?? ""}>
-              <TextInput type="date" value={due} onChange={setDue} max={10} label="しめきり" />
+              <DateInput value={due} onChange={setDue} label="しめきり" />
             </Field>
           </div>
           <Field
@@ -139,21 +139,13 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
             <TextArea value={memo} onChange={setMemo} rows={4} max={PROJECT_MEMO_MAX} label="備考" />
           </Field>
           {!editing && (
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="checkbox"
-                checked={withSteps}
-                onChange={(e) => setWithSteps(e.target.checked)}
-                className="mt-1 h-5 w-5 shrink-0 accent-[#1b2a41]"
-              />
-              <span>
-                <span className="block text-[15px]">あいてごとの じょうきょうも つかう</span>
-                <span className="c-muted block text-xs leading-relaxed">
-                  営業など、同じ手順を 何人にも すすめるとき。
-                  {SALES_STEP_NAMES.join("／")} で はじまり、あとで なおせます
-                </span>
+            <CheckBox checked={withSteps} onChange={setWithSteps}>
+              <span className="block text-[15px]">あいてごとの じょうきょうも つかう</span>
+              <span className="c-muted block text-xs leading-relaxed">
+                営業など、同じ手順を 何人にも すすめるとき。
+                {SALES_STEP_NAMES.join("／")} で はじまり、あとで なおせます
               </span>
-            </label>
+            </CheckBox>
           )}
           <button type="submit" className="rpg-button h-12 w-full text-base sm:w-auto">
             ▶ {editing ? "なおす" : "つくる"}

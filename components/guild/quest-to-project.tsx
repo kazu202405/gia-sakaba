@@ -19,7 +19,7 @@ import { canMakeProject, partyCandidates, projectOfQuest } from "@/lib/guild/pro
 import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
 import { ProjectLimitNotice, useMembership } from "./membership-parts";
-import { TextInput } from "./form-parts";
+import { CheckBox, TextInput } from "./form-parts";
 
 const TITLE_MAX = 40;
 
@@ -111,27 +111,16 @@ function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () =>
               const p = getProfile(c.user_id);
               return (
                 <li key={c.user_id}>
-                  <label
-                    className={
-                      c.canJoin
-                        ? "flex cursor-pointer items-center gap-3"
-                        : "flex cursor-not-allowed items-center gap-3 opacity-60"
-                    }
+                  <CheckBox
+                    checked={members.includes(c.user_id)}
+                    disabled={!c.canJoin}
+                    onChange={() => toggle(c.user_id)}
                   >
-                    <input
-                      type="checkbox"
-                      disabled={!c.canJoin}
-                      checked={members.includes(c.user_id)}
-                      onChange={() => toggle(c.user_id)}
-                      className="h-5 w-5 shrink-0 accent-[#1b2a41]"
-                    />
-                    <span className="min-w-0">
-                      <span className="block text-[15px]">{p?.display_name}さん</span>
-                      {!c.canJoin && (
-                        <span className="c-muted block text-xs">しょうかいが 承諾されたら 入れられます</span>
-                      )}
-                    </span>
-                  </label>
+                    <span className="block text-[15px]">{p?.display_name}さん</span>
+                    {!c.canJoin && (
+                      <span className="c-muted block text-xs">しょうかいが 承諾されたら 入れられます</span>
+                    )}
+                  </CheckBox>
                 </li>
               );
             })}

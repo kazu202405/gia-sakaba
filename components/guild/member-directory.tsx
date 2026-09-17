@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { guild } from "@/lib/guild/mock-data";
 import type { Profile } from "@/lib/guild/types";
 import { MemberCard, Window } from "./cards";
+import { CheckBox } from "./form-parts";
 
 export function MemberDirectory({ members }: { members: Profile[] }) {
   const [keyword, setKeyword] = useState("");
@@ -46,28 +47,31 @@ export function MemberDirectory({ members }: { members: Profile[] }) {
             className="c-input h-11"
           />
         </label>
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <select value={industry} onChange={(e) => setIndustry(e.target.value)} aria-label="業種" className="c-input h-11">
-            <option value="">ぎょうしゅ：すべて</option>
-            {industries.map((i) => (
-              <option key={i}>{i}</option>
-            ))}
-          </select>
-          <select value={region} onChange={(e) => setRegion(e.target.value)} aria-label="地域" className="c-input h-11">
-            <option value="">ちいき：すべて</option>
-            {regions.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-          <label className="col-span-2 flex h-11 items-center gap-2 px-1 text-sm sm:col-span-1">
-            <input
-              type="checkbox"
-              checked={acceptOnly}
-              onChange={(e) => setAcceptOnly(e.target.checked)}
-              className="size-4 accent-[#1b2a41]"
-            />
-            しょうかいを受けつけている人だけ
+        {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <label className="block min-w-0">
+            <span className="c-muted mb-1 block text-xs">ぎょうしゅ</span>
+            <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="c-input h-11">
+              <option value="">すべて</option>
+              {industries.map((i) => (
+                <option key={i}>{i}</option>
+              ))}
+            </select>
           </label>
+          <label className="block min-w-0">
+            <span className="c-muted mb-1 block text-xs">ちいき</span>
+            <select value={region} onChange={(e) => setRegion(e.target.value)} className="c-input h-11">
+              <option value="">すべて</option>
+              {regions.map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="mt-3">
+          <CheckBox checked={acceptOnly} onChange={setAcceptOnly}>
+            <span className="text-sm">しょうかいを受けつけている人だけ</span>
+          </CheckBox>
         </div>
       </Window>
 

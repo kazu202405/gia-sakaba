@@ -19,7 +19,7 @@ import {
 import { guild } from "@/lib/guild/mock-data";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
-import { Field, TextInput, scrollToFirstError } from "./form-parts";
+import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
@@ -101,18 +101,10 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
           </div>
         </Field>
 
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            checked={draft.show_company}
-            onChange={(e) => set("show_company", e.target.checked)}
-            className="mt-0.5 h-5 w-5 shrink-0 accent-[#1b2a41]"
-          />
-          <span>
-            <span className="block text-[15px]">会社名と役職を {guild.terms.member}めいかんに 出す</span>
-            <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
-          </span>
-        </label>
+        <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
+          <span className="block text-[15px]">会社名と役職を {guild.terms.member}めいかんに 出す</span>
+          <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
+        </CheckBox>
 
         <Field
           label="いま、なにを 解決したいですか？"
@@ -148,15 +140,11 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
             </div>
           ))}
           <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
-          <label className="flex cursor-pointer items-center gap-3 pt-1">
-            <input
-              type="checkbox"
-              checked={draft.agreed}
-              onChange={(e) => set("agreed", e.target.checked)}
-              className="h-5 w-5 shrink-0 accent-[#1b2a41]"
-            />
-            <span className="text-[15px]">約束を まもります</span>
-          </label>
+          <div className="pt-1">
+            <CheckBox checked={draft.agreed} onChange={(v) => set("agreed", v)}>
+              <span className="text-[15px]">約束を まもります</span>
+            </CheckBox>
+          </div>
           {errors.agreed && <p className="text-xs text-[#c62828]">{errors.agreed}</p>}
         </div>
 

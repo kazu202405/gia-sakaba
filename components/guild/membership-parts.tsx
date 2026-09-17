@@ -16,6 +16,7 @@ import {
 } from "@/lib/guild/membership";
 import { getInitialMembership, getMembership, setMembership, subscribeMembership } from "@/lib/guild/membership-store";
 import { cn } from "@/lib/utils";
+import { CheckBox } from "./form-parts";
 
 export function useMembership() {
   return useSyncExternalStore(subscribeMembership, getMembership, getInitialMembership);
@@ -164,15 +165,9 @@ export function AchievementsView({
       )}
 
       {mine && (
-        <label className="flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            checked={showAchievements}
-            onChange={(e) => setMembership({ showAchievements: e.target.checked })}
-            className="h-5 w-5 shrink-0 accent-[#1b2a41]"
-          />
+        <CheckBox checked={showAchievements} onChange={(v) => setMembership({ showAchievements: v })}>
           <span className="text-sm">実績を みんなに 見せる</span>
-        </label>
+        </CheckBox>
       )}
     </div>
   );
