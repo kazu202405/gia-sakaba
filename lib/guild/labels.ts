@@ -1,7 +1,16 @@
 // 画面に出す言葉と、状態ごとの見せ方。
 // 状態の文言はここ1か所にまとめる（画面ごとに書くと食い違う）。
 
-import type { IntroOutcome, IntroPurpose, IntroStatus, JobIconKey, Position, QuestCategory, QuestStatus, VisibleGroup } from "./types";
+import type {
+  IntroOutcome,
+  IntroPurpose,
+  IntroStatus,
+  JobIconKey,
+  Position,
+  QuestCategory,
+  QuestStatus,
+  VisibleGroup,
+} from "./types";
 
 /** 職業アイコンの選択肢に出す名前 */
 export const jobIconLabel: Record<JobIconKey, string> = {
@@ -16,6 +25,15 @@ export const jobIconLabel: Record<JobIconKey, string> = {
   food: "飲食",
   health: "健康・医療",
   teach: "教える",
+  retail: "小売・EC",
+  maker: "製造",
+  beauty: "美容",
+  finance: "金融・保険",
+  logistics: "運送・物流",
+  care: "介護・福祉",
+  hr: "人材・採用",
+  farm: "農業・一次産業",
+  other: "その他",
 };
 
 export const purposeLabel: Record<IntroPurpose, string> = {
@@ -50,7 +68,7 @@ export const positionLabel: Record<Position, string> = {
   other: "その他",
 };
 
-export const questStatusLabel:Record<QuestStatus, string> = {
+export const questStatusLabel: Record<QuestStatus, string> = {
   open: "募集中",
   in_progress: "進行中",
   completed: "クリア",

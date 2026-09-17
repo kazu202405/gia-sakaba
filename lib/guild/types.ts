@@ -32,7 +32,16 @@ export type JobIconKey =
   | "design"
   | "teach"
   | "health"
-  | "owner";
+  | "owner"
+  | "retail"
+  | "maker"
+  | "beauty"
+  | "finance"
+  | "logistics"
+  | "care"
+  | "hr"
+  | "farm"
+  | "other";
 
 /** 公開範囲のまとまり。①基本 は常に公開なのでここには無い */
 export type VisibleGroup = "work" | "values" | "connect";
@@ -131,7 +140,8 @@ export type QuestCategory = "work" | "consult" | "collab" | "info" | "gathering"
 export type QuestStatus = "open" | "in_progress" | "completed" | "withdrawn";
 
 /** クエストをなおしたときに「どこが変わったか」を知らせる単位（入力画面の項目と同じ） */
-export type QuestField = "category" | "title" | "summary" | "body" | "region" | "deadline" | "member_limit" | "is_urgent";
+export type QuestField =
+  "category" | "title" | "summary" | "body" | "region" | "deadline" | "member_limit" | "is_urgent";
 
 export type Quest = {
   id: string;

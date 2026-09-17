@@ -13,6 +13,7 @@ import { groupLabel, jobIconLabel } from "@/lib/guild/labels";
 import { guild, industryOptions, regionOptions } from "@/lib/guild/mock-data";
 import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
 import { uiToast } from "@/lib/ui-dialog";
+import { cn } from "@/lib/utils";
 import { JobAvatar } from "./job-avatar";
 import { Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
@@ -124,6 +125,8 @@ export function StatusWizard({
 }) {
   const router = useRouter();
   const [step, setStep] = useState<StepKey>(isNew ? "intro" : "basic");
+  // はじめて作るときは 通り過ぎた札だけ押せる。なおすときは 最初から どこへでも飛べる
+  const [maxReached, setMaxReached] = useState(isNew ? 0 : FLOW.length - 1);
   const [draft, setDraft] = useState<Draft>(initial ?? EMPTY_DRAFT);
   const [contact, setContact] = useState<ContactDraft>(initialContact ?? { email: "", line_url: "", website_url: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -168,7 +171,10 @@ export function StatusWizard({
     if (step === "intro") return setStep("basic");
     if (!validate(step)) return;
     const n = FLOW[index + 1];
-    if (n) setStep(n);
+    if (n) {
+      setMaxReached((m) => Math.max(m, index + 1));
+      setStep(n);
+    }
   };
 
   const goBack = () => {
@@ -179,6 +185,19 @@ export function StatusWizard({
       return;
     }
     setStep(FLOW[index - 1]);
+  };
+
+  /** 上の札から飛ぶ。きほんの必須が空のまま先へ行くと、最後で戻されるので ここで止める */
+  const jumpTo = (target: Exclude<StepKey, "intro">) => {
+    const to = FLOW.indexOf(target);
+    if (to === index) return;
+    if (to > 0 && !validate("basic")) {
+      setStep("basic");
+      return;
+    }
+    setErrors({});
+    setMaxReached((m) => Math.max(m, to));
+    setStep(target);
   };
 
   const importFromGia = () => {
@@ -229,6 +248,31 @@ export function StatusWizard({
               </div>
             </div>
           </div>
+
+          {/* 手順の札。押すと その画面へ飛ぶ（スマホでは この枠の中だけ横に動く） */}
+          <nav aria-label="ステータスの てじゅん" className="-mx-1 mb-8 overflow-x-auto px-1 pb-1">
+            <div className="flex w-max gap-2">
+              {FLOW.map((s, i) => {
+                const reachable = i <= maxReached;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={!reachable}
+                    aria-current={s === step ? "step" : undefined}
+                    onClick={() => jumpTo(s)}
+                    className={cn(
+                      "border-2 border-[#1b2a41] px-2.5 py-1.5 text-xs whitespace-nowrap",
+                      s === step ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6] text-[#1b2a41]",
+                      !reachable && "border-dashed opacity-40",
+                    )}
+                  >
+                    {STEP_META[s].tag}
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
 
           {imported && step === "basic" && (
             <p className="c-card mb-8 border-dashed px-3 py-2 text-xs leading-relaxed">
