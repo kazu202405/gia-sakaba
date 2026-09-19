@@ -7,7 +7,7 @@ import type { Project, ProjectTask } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import { TODAY, getProfile, getQuest, guild } from "@/lib/guild/mock-data";
 import { dueLabel, isPrivateProject, projectProgress, projectSchedule, reachedLastStep } from "@/lib/guild/projects";
-import { toggleTask, type ProjectState } from "@/lib/guild/project-store";
+import { reopenTask, toggleTask, type ProjectState } from "@/lib/guild/project-store";
 import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { questCategoryMark } from "./cards";
@@ -175,8 +175,14 @@ export function TaskLine({
         aria-label={`「${task.title}」を ${isDone ? "まだに もどす" : "おわりにする"}`}
         onClick={() => {
           toggleTask(task.id);
-          // ホームでは おわったタスクが一覧から消えるので、押したことを知らせる
-          if (!isDone) uiToast(`「${task.title}」を おわりにしました`);
+          // ホームでは おわったタスクが一覧から消えるので、押したことを知らせる。
+          // 押しまちがいでも すぐ戻せるよう「もどす」を付ける（毎回たずねると 使うたびに手間）
+          if (!isDone) {
+            uiToast(`「${task.title}」を おわりにしました`, "success", {
+              label: "もどす",
+              onClick: () => reopenTask(task.id),
+            });
+          }
         }}
         // 見た目は24pxの□、押せる範囲は指で押しやすい40px
         className="-m-2 flex h-10 w-10 shrink-0 items-center justify-center"

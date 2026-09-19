@@ -9,6 +9,7 @@
 //   await uiAlert({ message: "コピーに失敗しました" });
 //   const name = await uiPrompt({ title: "フォルダ名" });
 //   uiToast("保存しました");
+//   uiToast("おわりにしました", "success", { label: "もどす", onClick: () => undo() });
 //
 // 実体を描くのは <UiDialogHost />（app/layout.tsx に1つだけ置く）。
 
@@ -45,7 +46,10 @@ export type DialogRequest =
   | { id: number; kind: "alert"; options: AlertOptions; resolve: () => void }
   | { id: number; kind: "prompt"; options: PromptOptions; resolve: (value: string | null) => void };
 
-export type ToastItem = { id: number; message: string; kind: ToastKind };
+/** トーストに1つだけ付けられるボタン（例：「もどす」）。押すとトーストも消える */
+export type ToastAction = { label: string; onClick: () => void };
+
+export type ToastItem = { id: number; message: string; kind: ToastKind; action?: ToastAction };
 
 type Listener = () => void;
 
@@ -131,13 +135,14 @@ export function uiPrompt(options: PromptOptions): Promise<string | null> {
 }
 
 /** 押さなくても消える短い知らせ。操作を止めない用途はこちら。 */
-export function uiToast(message: string, kind: ToastKind = "success"): void {
+/** ボタン付きは、読んで押すまでの時間がいるので長めに出す。 */
+export function uiToast(message: string, kind: ToastKind = "success", action?: ToastAction): void {
   if (!hostMounted) {
     noHost("uiToast");
     return;
   }
   const id = ++seq;
-  toasts = [...toasts, { id, message, kind }];
+  toasts = [...toasts, { id, message, kind, action }];
   emit();
-  setTimeout(() => dismissToast(id), kind === "error" ? 5000 : 3200);
+  setTimeout(() => dismissToast(id), action ? 6000 : kind === "error" ? 5000 : 3200);
 }

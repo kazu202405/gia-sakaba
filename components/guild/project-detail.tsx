@@ -21,7 +21,7 @@ import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT, canActivateProject }
 import { uiAlert, uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { BackLink, Window } from "./cards";
-import { Select, TextInput } from "./form-parts";
+import { DateInput, Select, TextInput } from "./form-parts";
 import { useMembership } from "./membership-parts";
 import { ProjectGantt } from "./project-gantt";
 import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
@@ -274,11 +274,11 @@ function AddTaskForm({ projectId, memberIds }: { projectId: string; memberIds: s
       <div className="grid grid-cols-2 gap-3">
         <div className="min-w-0">
           <p className="c-muted mb-1 text-xs">はじめる日（空でも可）</p>
-          <TextInput type="date" value={start} onChange={setStart} max={10} label="はじめる日" />
+          <DateInput value={start} onChange={setStart} label="はじめる日" />
         </div>
         <div className="min-w-0">
           <p className="c-muted mb-1 text-xs">しめきり（空でも可）</p>
-          <TextInput type="date" value={due} onChange={setDue} max={10} label="しめきり" />
+          <DateInput value={due} onChange={setDue} label="しめきり" />
         </div>
       </div>
       {memberIds && (

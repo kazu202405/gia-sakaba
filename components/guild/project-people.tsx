@@ -21,7 +21,7 @@ import {
 import { contactsOf, recordOf, stepsOf } from "@/lib/guild/projects";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
-import { TextInput } from "./form-parts";
+import { DateInput, TextInput } from "./form-parts";
 
 const LABEL_MAX = 30;
 const CONTACT_MEMO_MAX = 100;
@@ -254,11 +254,11 @@ function CellEditor({
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <p className="c-muted mb-1 text-xs">予定日</p>
-          <TextInput type="date" value={planned} onChange={setPlanned} max={10} label="予定日" />
+          <DateInput value={planned} onChange={setPlanned} label="予定日" />
         </div>
         <div>
           <p className="c-muted mb-1 text-xs">おわった日</p>
-          <TextInput type="date" value={done} onChange={setDone} max={10} label="おわった日" />
+          <DateInput value={done} onChange={setDone} label="おわった日" />
         </div>
       </div>
       <div className="flex flex-wrap gap-3">

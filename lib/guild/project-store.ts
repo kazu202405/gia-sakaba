@@ -176,6 +176,14 @@ export function toggleTask(taskId: string): void {
   });
 }
 
+/** おわったタスクを まだに戻す（トーストの「もどす」用）。
+ *  toggle だと、そのあいだに手で戻していた場合に また おわりになってしまうので、戻す向きだけにする */
+export function reopenTask(taskId: string): void {
+  set({
+    tasks: state.tasks.map((t) => (t.id === taskId && t.status === "done" ? { ...t, status: "todo", done_at: null } : t)),
+  });
+}
+
 export function removeTask(taskId: string): void {
   set({ tasks: state.tasks.filter((t) => t.id !== taskId) });
 }

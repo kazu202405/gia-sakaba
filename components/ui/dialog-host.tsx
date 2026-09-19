@@ -38,20 +38,36 @@ export function UiDialogHost() {
 
       {/* トースト：ヘッダーの下・中央。押さなくても消える */}
       <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-2 pointer-events-none w-max max-w-[92vw]">
-        {toasts.map((t) => (
-          <button
-            key={t.id}
-            data-ui-toast
-            data-kind={t.kind}
-            onClick={() => dismissToast(t.id)}
-            className={
-              "pointer-events-auto rounded-full px-4 py-2.5 text-[13px] leading-snug text-white shadow-lg whitespace-pre-line " +
-              (t.kind === "error" ? "bg-red-600" : t.kind === "info" ? "bg-slate-700" : "bg-gray-900")
-            }
-          >
-            {t.message}
-          </button>
-        ))}
+        {toasts.map((t) => {
+          const className =
+            "pointer-events-auto rounded-full px-4 py-2.5 text-[13px] leading-snug text-white shadow-lg whitespace-pre-line " +
+            (t.kind === "error" ? "bg-red-600" : t.kind === "info" ? "bg-slate-700" : "bg-gray-900");
+          // ボタン付きは、ボタンの中にボタンを入れられないので 枠を div にする
+          if (t.action) {
+            const action = t.action;
+            return (
+              <div key={t.id} data-ui-toast data-kind={t.kind} role="status" className={className + " flex items-center gap-3"}>
+                <span>{t.message}</span>
+                <button
+                  type="button"
+                  data-ui-toast-action
+                  onClick={() => {
+                    action.onClick();
+                    dismissToast(t.id);
+                  }}
+                  className="shrink-0 -my-1 px-2 py-1 font-semibold underline underline-offset-4"
+                >
+                  {action.label}
+                </button>
+              </div>
+            );
+          }
+          return (
+            <button key={t.id} data-ui-toast data-kind={t.kind} onClick={() => dismissToast(t.id)} className={className}>
+              {t.message}
+            </button>
+          );
+        })}
       </div>
     </>
   );
