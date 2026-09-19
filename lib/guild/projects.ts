@@ -243,3 +243,26 @@ export function dueLabel(due: string, today: string): { text: string; overdue: b
   if (d === 0) return { text: "きょうまで", overdue: false };
   return { text: `あと${d}日`, overdue: false };
 }
+
+/** タスクの一覧を「まだ」と「おわった」に分ける（まだを上に。おわったは たたんで下に出す） */
+export function splitTasks(list: ProjectTask[]): { open: ProjectTask[]; done: ProjectTask[] } {
+  return {
+    open: list.filter((t) => t.status !== "done"),
+    done: list.filter((t) => t.status === "done"),
+  };
+}
+
+export type TaskDraft = { title: string; start: string; due: string };
+
+/**
+ * タスクの入力チェック（足すときと なおすとき で同じ決まり）。問題なければ null。
+ * なおすときは、しめきりを変えていなければ すぎた日でも通す
+ * （しめきりを すぎたタスクの なまえだけ直そうとして 止められないように）。
+ */
+export function validateTaskDraft(draft: TaskDraft, today: string, currentDue?: string | null): string | null {
+  if (draft.title.trim() === "") return "タスクの なまえを 入れてください";
+  const dueChanged = draft.due !== (currentDue ?? "");
+  if (draft.due !== "" && dueChanged && draft.due < today) return "しめきりは きょう以降の日にしてください";
+  if (draft.start !== "" && draft.due !== "" && draft.due < draft.start) return "しめきりは はじめる日より あとにしてください";
+  return null;
+}

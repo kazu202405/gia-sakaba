@@ -166,6 +166,13 @@ export function addTask(
   set({ tasks: [...state.tasks, task] });
 }
 
+export function updateTask(
+  taskId: string,
+  input: { title: string; start_date: string | null; due_date: string | null; assignee_id: string | null },
+): void {
+  set({ tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...input } : t)) });
+}
+
 export function toggleTask(taskId: string): void {
   set({
     tasks: state.tasks.map((t) =>

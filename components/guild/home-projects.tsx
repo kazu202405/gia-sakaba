@@ -1,6 +1,8 @@
 "use client";
 
 // ホームの「すすめている プロジェクト」と「しめきりが近い」。自分の仕事の入口。
+// スマホ（1列）では「しめきりが近い」を先に出す。きょう手を動かすものが 下に埋もれないように。
+// 2列のときは 左がプロジェクト・右がしめきり のまま。
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
@@ -19,7 +21,7 @@ export function HomeProjects() {
 
   return (
     <div className="grid gap-11 md:grid-cols-2">
-      <Window title="すすめている プロジェクト" action={<MoreLink href="/guild/projects" />}>
+      <Window title="すすめている プロジェクト" action={<MoreLink href="/guild/projects" />} className="order-2 md:order-1">
         {active.length === 0 ? (
           <p className="c-muted text-sm leading-relaxed">
             すすめている プロジェクトは ありません。
@@ -38,7 +40,7 @@ export function HomeProjects() {
         )}
       </Window>
 
-      <Window title="しめきりが近い">
+      <Window title="しめきりが近い" className="order-1 md:order-2">
         {upcoming.length === 0 ? (
           <p className="c-muted text-sm">{UPCOMING_DAYS}日いないに しめきりや 予定は ありません。</p>
         ) : (

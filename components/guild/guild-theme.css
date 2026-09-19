@@ -181,6 +181,9 @@ a.c-card:hover {
   appearance: none;
   display: block;
   max-width: 100%;
+  /* 2つ横に並べたとき「2026/09/19」が 切れないよう、左右の余白を少し詰める */
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
 }
 /* iOS Safari：空の日付欄は 中の文字の高さが 0 になり、ほかの欄と 高さや寄せが ずれる */
 .c-date::-webkit-date-and-time-value {

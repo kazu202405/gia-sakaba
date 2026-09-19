@@ -24,6 +24,8 @@ import {
   projectProgress,
   projectSchedule,
   reachedLastStep,
+  splitTasks,
+  validateTaskDraft,
   taskBar,
   upcomingItems,
   upcomingTasks,
@@ -281,5 +283,44 @@ describe("クエストから プロジェクトにする", () => {
     const items = [project("a"), project("b", { source_quest_id: "q1" })];
     expect(projectOfQuest(items, "q1")?.id).toBe("b");
     expect(projectOfQuest(items, "q9")).toBeUndefined();
+  });
+});
+
+describe("splitTasks", () => {
+  const t = (id: string, status: ProjectTask["status"], sort_order: number) =>
+    ({ id, status, sort_order }) as ProjectTask;
+
+  it("まだを上、おわったを下に分け、それぞれの並び順は保つ", () => {
+    const { open, done } = splitTasks([t("a", "done", 1), t("b", "todo", 2), t("c", "done", 3), t("d", "todo", 4)]);
+    expect(open.map((x) => x.id)).toEqual(["b", "d"]);
+    expect(done.map((x) => x.id)).toEqual(["a", "c"]);
+  });
+});
+
+describe("validateTaskDraft", () => {
+  const today = "2026-09-19";
+
+  it("なまえが空なら止める", () => {
+    expect(validateTaskDraft({ title: "  ", start: "", due: "" }, today)).toMatch("なまえ");
+  });
+
+  it("足すとき、すぎた しめきりは止める", () => {
+    expect(validateTaskDraft({ title: "x", start: "", due: "2026-09-18" }, today)).toMatch("きょう以降");
+  });
+
+  it("なおすとき、しめきりを変えていなければ すぎた日でも通す", () => {
+    expect(validateTaskDraft({ title: "新しい名前", start: "", due: "2026-09-18" }, today, "2026-09-18")).toBeNull();
+  });
+
+  it("なおすとき、すぎた日に 変えるのは止める", () => {
+    expect(validateTaskDraft({ title: "x", start: "", due: "2026-09-17" }, today, "2026-09-18")).toMatch("きょう以降");
+  });
+
+  it("しめきりが はじめる日より前なら止める", () => {
+    expect(validateTaskDraft({ title: "x", start: "2026-09-25", due: "2026-09-20" }, today)).toMatch("はじめる日");
+  });
+
+  it("日にちが空なら通す", () => {
+    expect(validateTaskDraft({ title: "x", start: "", due: "" }, today)).toBeNull();
   });
 });

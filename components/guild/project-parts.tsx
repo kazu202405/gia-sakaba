@@ -149,22 +149,45 @@ export function ProjectRow({
   );
 }
 
-/** タスクの1行。□を押すと おわり／もどす */
+/** タスクの1行。□を押すと おわり／もどす。onOpen があれば、なまえを押すと なおす枠を開く */
 export function TaskLine({
   task,
   showAssignee,
   projectTitle,
-  trailing,
+  onOpen,
+  opened = false,
 }: {
   task: ProjectTask;
   showAssignee: boolean;
-  /** ホームなど、どのプロジェクトのタスクか分からない場所で出す */
+  /** ホームなど、どのプロジェクトのタスクか分からない場所で出す（onOpen とは いっしょに使わない） */
   projectTitle?: { id: string; title: string };
-  trailing?: React.ReactNode;
+  onOpen?: () => void;
+  opened?: boolean;
 }) {
   const isDone = task.status === "done";
   const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY) : null;
   const assignee = task.assignee_id ? getProfile(task.assignee_id)?.display_name : null;
+
+  // button の中にも置けるよう、ブロックは span で組む
+  const body = (
+    <>
+      <span className={cn("block text-[15px] leading-relaxed break-words", isDone && "c-muted line-through")}>
+        {task.title}
+      </span>
+      <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+        {projectTitle && !onOpen && (
+          <Link href={`/guild/projects/${projectTitle.id}`} className="c-muted underline underline-offset-4">
+            {projectTitle.title}
+          </Link>
+        )}
+        {due && (
+          // 赤は「急ぎ」と入力エラーだけに使うので、すぎたものは濃紺で目立たせる
+          <span className={due.overdue ? "c-chip-strong" : "c-muted"}>{due.text}</span>
+        )}
+        {showAssignee && <span className="c-muted">たんとう：{assignee ? `${assignee}さん` : "きまっていない"}</span>}
+      </span>
+    </>
+  );
 
   return (
     <div className="flex items-start gap-3 py-2.5">
@@ -191,22 +214,23 @@ export function TaskLine({
           {isDone ? "✓" : ""}
         </span>
       </button>
-      <div className="min-w-0 flex-1">
-        <p className={cn("text-[15px] leading-relaxed break-words", isDone && "c-muted line-through")}>{task.title}</p>
-        <p className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
-          {projectTitle && (
-            <Link href={`/guild/projects/${projectTitle.id}`} className="c-muted underline underline-offset-4">
-              {projectTitle.title}
-            </Link>
-          )}
-          {due && (
-            // 赤は「急ぎ」と入力エラーだけに使うので、すぎたものは濃紺で目立たせる
-            <span className={due.overdue ? "c-chip-strong" : "c-muted"}>{due.text}</span>
-          )}
-          {showAssignee && <span className="c-muted">たんとう：{assignee ? `${assignee}さん` : "きまっていない"}</span>}
-        </p>
-      </div>
-      {trailing}
+      {onOpen ? (
+        <button
+          type="button"
+          aria-expanded={opened}
+          aria-label={`「${task.title}」を なおす`}
+          onClick={onOpen}
+          className="flex min-w-0 flex-1 items-start gap-2 text-left"
+        >
+          <span className="min-w-0 flex-1">{body}</span>
+          {/* 押せることが分かる印。開いていれば ▲ */}
+          <span className="c-muted mt-1 shrink-0 text-xs" aria-hidden>
+            {opened ? "▲" : "▼"}
+          </span>
+        </button>
+      ) : (
+        <div className="min-w-0 flex-1">{body}</div>
+      )}
     </div>
   );
 }

@@ -2,38 +2,32 @@
 
 // プロジェクトの くわしい画面。
 // 期間のバー → 備考 → タスク（一覧／工程表）→ あいてごとの じょうきょう → パーティ → おわりにする。
+// タスクの一覧は まだ→おわった（たたむ）の順。行を押すと すぐ下に なおす枠（日にち・たんとう・消す）が開く。
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import type { ProjectTask } from "@/lib/guild/types";
 import { formatDate } from "@/lib/guild/labels";
-import { ME_ID, TODAY, getProfile } from "@/lib/guild/mock-data";
-import {
-  addTask,
-  getInitialProjectState,
-  getProjectState,
-  removeTask,
-  setProjectStatus,
-  subscribeProjects,
-} from "@/lib/guild/project-store";
-import { canSeeProject, isPrivateProject, projectProgress, stepsOf, tasksOf } from "@/lib/guild/projects";
+import { ME_ID, getProfile } from "@/lib/guild/mock-data";
+import { getInitialProjectState, getProjectState, setProjectStatus, subscribeProjects } from "@/lib/guild/project-store";
+import { canSeeProject, isPrivateProject, projectProgress, splitTasks, stepsOf, tasksOf } from "@/lib/guild/projects";
 import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT, canActivateProject } from "@/lib/guild/membership";
 import { uiAlert, uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { BackLink, Window } from "./cards";
-import { DateInput, Select, TextInput } from "./form-parts";
 import { useMembership } from "./membership-parts";
 import { ProjectGantt } from "./project-gantt";
 import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
 import { ProjectParty } from "./project-party";
 import { ProjectPeople } from "./project-people";
+import { AddTaskForm, TaskEditor } from "./task-editor";
 
-const TASK_TITLE_MAX = 60;
 type TaskView = "list" | "gantt";
 
 export function ProjectDetail({ id }: { id: string }) {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const [view, setView] = useState<TaskView>("list");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [showDone, setShowDone] = useState(false);
   const { isPaid } = useMembership();
   const project = state.projects.find((p) => p.id === id);
 
@@ -56,17 +50,28 @@ export function ProjectDetail({ id }: { id: string }) {
   const hasSteps = stepsOf(state.steps, project.id).length > 0;
   const people = [project.owner_id, ...project.member_ids].map((pid) => getProfile(pid)).filter((p) => p !== undefined);
 
-  const confirmRemove = async (t: ProjectTask) => {
-    const ok = await uiConfirm({
-      title: "タスクを 消します",
-      message: `「${t.title}」を 消します。もとに もどせません。`,
-      okLabel: "消す",
-      danger: true,
-    });
-    if (!ok) return;
-    removeTask(t.id);
-    uiToast("タスクを 消しました");
-  };
+  const memberIds = isParty ? [project.owner_id, ...project.member_ids] : null;
+  const editable = project.status === "active";
+  const { open: openTasks, done: doneTasks } = splitTasks(list);
+
+  // なおす枠は 1つだけ開く。同じ行を もう一度押すと閉じる
+  const renderTasks = (tasks: typeof list) => (
+    <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+      {tasks.map((t) => (
+        <li key={t.id}>
+          <TaskLine
+            task={t}
+            showAssignee={isParty}
+            onOpen={editable ? () => setEditingId(editingId === t.id ? null : t.id) : undefined}
+            opened={editingId === t.id}
+          />
+          {editingId === t.id && (
+            <TaskEditor key={t.id} task={t} memberIds={memberIds} onClose={() => setEditingId(null)} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
     <div className="space-y-11">
@@ -132,30 +137,31 @@ export function ProjectDetail({ id }: { id: string }) {
         ) : list.length === 0 ? (
           <p className="c-muted text-sm">まだ タスクが ありません。下から 足してください。</p>
         ) : (
-          <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
-            {list.map((t) => (
-              <li key={t.id}>
-                <TaskLine
-                  task={t}
-                  showAssignee={isParty}
-                  trailing={
-                    <button
-                      type="button"
-                      onClick={() => confirmRemove(t)}
-                      className="c-muted shrink-0 px-1 py-1 text-xs hover:underline"
-                      aria-label={`「${t.title}」を 消す`}
-                    >
-                      消す
-                    </button>
-                  }
-                />
-              </li>
-            ))}
-          </ul>
+          <>
+            {openTasks.length > 0 ? (
+              renderTasks(openTasks)
+            ) : (
+              <p className="c-muted py-2 text-sm">のこりの タスクは ありません。</p>
+            )}
+            {doneTasks.length > 0 && (
+              <div className="c-dashed-top mt-2 pt-2">
+                <button
+                  type="button"
+                  aria-expanded={showDone}
+                  onClick={() => setShowDone(!showDone)}
+                  className="c-muted flex h-10 w-full items-center justify-between text-sm"
+                >
+                  <span>おわった タスク {doneTasks.length}こ</span>
+                  <span className="text-xs" aria-hidden>
+                    {showDone ? "▲" : "▼"}
+                  </span>
+                </button>
+                {showDone && renderTasks(doneTasks)}
+              </div>
+            )}
+          </>
         )}
-        {project.status === "active" && (
-          <AddTaskForm projectId={project.id} memberIds={isParty ? [project.owner_id, ...project.member_ids] : null} />
-        )}
+        {editable && <AddTaskForm projectId={project.id} memberIds={memberIds} />}
       </Window>
 
       {(hasSteps || (isOwner && project.status === "active")) && (
@@ -220,83 +226,3 @@ export function ProjectDetail({ id }: { id: string }) {
   );
 }
 
-function AddTaskForm({ projectId, memberIds }: { projectId: string; memberIds: string[] | null }) {
-  const [title, setTitle] = useState("");
-  const [start, setStart] = useState("");
-  const [due, setDue] = useState("");
-  const [assignee, setAssignee] = useState(ME_ID);
-  const [error, setError] = useState("");
-
-  const options = (memberIds ?? []).map((pid) => ({
-    value: pid,
-    label: pid === ME_ID ? "自分" : `${getProfile(pid)?.display_name ?? ""}さん`,
-  }));
-
-  return (
-    <form
-      noValidate
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (title.trim() === "") {
-          setError("タスクの なまえを 入れてください");
-          return;
-        }
-        if (due !== "" && due < TODAY) {
-          setError("しめきりは きょう以降の日にしてください");
-          return;
-        }
-        if (start !== "" && due !== "" && due < start) {
-          setError("しめきりは はじめる日より あとにしてください");
-          return;
-        }
-        addTask(projectId, {
-          title: title.trim(),
-          start_date: start || null,
-          due_date: due || null,
-          // パーティでは「きまっていない」も選べる。本人だけなら担当は持ち主
-          assignee_id: memberIds ? assignee || null : null,
-        });
-        setTitle("");
-        setStart("");
-        setDue("");
-        setError("");
-      }}
-      className="c-dashed-top mt-5 space-y-3 pt-5"
-    >
-      <p className="text-[15px] tracking-wider">タスクを 足す</p>
-      <TextInput
-        value={title}
-        onChange={setTitle}
-        max={TASK_TITLE_MAX}
-        label="タスクの なまえ"
-        placeholder="例：画像を 用意する"
-      />
-      <div className="grid grid-cols-2 gap-3">
-        <div className="min-w-0">
-          <p className="c-muted mb-1 text-xs">はじめる日（空でも可）</p>
-          <DateInput value={start} onChange={setStart} label="はじめる日" />
-        </div>
-        <div className="min-w-0">
-          <p className="c-muted mb-1 text-xs">しめきり（空でも可）</p>
-          <DateInput value={due} onChange={setDue} label="しめきり" />
-        </div>
-      </div>
-      {memberIds && (
-        <div>
-          <p className="c-muted mb-1 text-xs">たんとう</p>
-          <Select
-            value={assignee}
-            onChange={setAssignee}
-            options={options}
-            label="たんとう"
-            placeholder="きまっていない"
-          />
-        </div>
-      )}
-      {error && <p className="text-xs text-[#c62828]">{error}</p>}
-      <button type="submit" className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
-        ▶ 足す
-      </button>
-    </form>
-  );
-}
