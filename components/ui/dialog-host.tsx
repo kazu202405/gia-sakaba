@@ -36,8 +36,9 @@ export function UiDialogHost() {
     <>
       {current && <DialogCard key={current.id} request={current} />}
 
-      {/* トースト：ヘッダーの下・中央。押さなくても消える */}
-      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-2 pointer-events-none w-max max-w-[92vw]">
+      {/* トースト：画面の下・中央（親指の届く所。「もどす」を押しやすい）。押さなくても消える。
+          下に固定メニューがある画面は --ui-toast-bottom でその上に逃がす（例：酒場は guild-theme.css） */}
+      <div className="fixed bottom-[calc(var(--ui-toast-bottom,1.5rem)+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[110] flex flex-col items-center gap-2 pointer-events-none w-max max-w-[92vw]">
         {toasts.map((t) => {
           const className =
             "pointer-events-auto rounded-full px-4 py-2.5 text-[13px] leading-snug text-white shadow-lg whitespace-pre-line " +

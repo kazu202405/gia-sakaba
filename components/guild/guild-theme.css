@@ -340,6 +340,15 @@ body:has(.guild-theme) [data-ui-dialog-cancel] {
 body:has(.guild-theme) [data-ui-dialog-close] {
   border-radius: 0 !important;
 }
+/* トーストは スマホの下のメニュー（高さ約44px）の すぐ上に出す。パソコン幅はメニューが無いので 下のまま */
+body:has(.guild-theme) {
+  --ui-toast-bottom: 4.25rem;
+}
+@media (min-width: 1024px) {
+  body:has(.guild-theme) {
+    --ui-toast-bottom: 1.5rem;
+  }
+}
 body:has(.guild-theme) [data-ui-toast] {
   border-radius: 0 !important;
   background: #1b2a41 !important;
