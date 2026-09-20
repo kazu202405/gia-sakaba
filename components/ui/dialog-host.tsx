@@ -60,6 +60,16 @@ export function UiDialogHost() {
                 >
                   {action.label}
                 </button>
+                {/* ボタン付きは 枠を押しても消えないので、閉じる所を別に出す（出しっぱなしが気になる人用） */}
+                <button
+                  type="button"
+                  data-ui-toast-close
+                  aria-label="この知らせを 閉じる"
+                  onClick={() => dismissToast(t.id)}
+                  className="-mr-3 -my-3 shrink-0 px-3 py-3 text-lg leading-none opacity-70"
+                >
+                  ×
+                </button>
               </div>
             );
           }
