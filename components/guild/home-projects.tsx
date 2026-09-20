@@ -18,6 +18,10 @@ export function HomeProjects() {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const active = visibleProjects(state.projects, ME_ID).filter((p) => p.status === "active");
   const upcoming = upcomingItems(state, ME_ID, TODAY, UPCOMING_DAYS);
+  // タスク（その場で おわりにできる）と あいてごとの よてい（押すとプロジェクトへ移る）は
+  // できることが違うので、□と◇を並べず 見出しで分ける
+  const tasks = upcoming.filter((i) => i.kind === "task");
+  const steps = upcoming.filter((i) => i.kind === "step");
 
   return (
     <div className="grid gap-11 md:grid-cols-2">
@@ -44,24 +48,36 @@ export function HomeProjects() {
         {upcoming.length === 0 ? (
           <p className="c-muted text-sm">{UPCOMING_DAYS}日いないに しめきりや 予定は ありません。</p>
         ) : (
-          <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
-            {upcoming.map((item) => (
-              <li key={item.kind === "task" ? item.task.id : `${item.contact.id}-${item.step.id}`}>
-                {item.kind === "task" ? (
-                  <TaskLine
-                    task={item.task}
-                    showAssignee={false}
-                    projectTitle={{
-                      id: item.project.id,
-                      title: item.project.title,
-                    }}
-                  />
-                ) : (
-                  <StepLine item={item} />
-                )}
-              </li>
-            ))}
-          </ul>
+          <div className="space-y-5">
+            {tasks.length > 0 && (
+              <div>
+                <p className="c-label text-xs">タスク（□を押すと おわり）</p>
+                <ul className="mt-1 divide-y-2 divide-dashed divide-[#1b2a41]/15">
+                  {tasks.map((item) => (
+                    <li key={item.task.id}>
+                      <TaskLine
+                        task={item.task}
+                        showAssignee={false}
+                        projectTitle={{ id: item.project.id, title: item.project.title }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {steps.length > 0 && (
+              <div className={tasks.length > 0 ? "c-dashed-top pt-4" : undefined}>
+                <p className="c-label text-xs">あいてごとの よてい（押すと ひらく）</p>
+                <ul className="mt-1 divide-y-2 divide-dashed divide-[#1b2a41]/15">
+                  {steps.map((item) => (
+                    <li key={`${item.contact.id}-${item.step.id}`}>
+                      <StepLine item={item} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
       </Window>
     </div>
@@ -73,10 +89,8 @@ function StepLine({ item }: { item: Extract<UpcomingItem, { kind: "step" }> }) {
   const due = dueLabel(item.date, TODAY);
   return (
     <Link href={`/guild/projects/${item.project.id}#people`} className="rpg-cursor-row flex items-start gap-3 py-2.5">
-      {/* タスクの□と頭をそろえる */}
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-sm" aria-hidden>
-        ◇
-      </span>
+      {/* ここでは おわりにできないので、□ではなく 移動の目印（▶）にする */}
+      <span className="rpg-cursor mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-sm">▶</span>
       <span className="min-w-0 flex-1">
         <span className="block text-[15px] leading-relaxed break-words">
           {item.contact.label}：{item.step.name}
