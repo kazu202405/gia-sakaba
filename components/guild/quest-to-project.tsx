@@ -16,9 +16,7 @@ import {
   subscribeProjects,
 } from "@/lib/guild/project-store";
 import { canMakeProject, partyCandidates, projectOfQuest } from "@/lib/guild/projects";
-import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
-import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { CheckBox, TextInput } from "./form-parts";
 
 const TITLE_MAX = 40;
@@ -26,7 +24,6 @@ const TITLE_MAX = 40;
 export function QuestToProject({ quest }: { quest: Quest }) {
   const { projects } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const [open, setOpen] = useState(false);
-  const { isPaid } = useMembership();
 
   if (!canMakeProject(quest, ME_ID)) return null;
   const existing = projectOfQuest(projects, quest.id);
@@ -40,10 +37,6 @@ export function QuestToProject({ quest }: { quest: Quest }) {
           <Link href={`/guild/projects/${existing.id}`} className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
             ▶ プロジェクトを 見る
           </Link>
-        </div>
-      ) : !canActivateProject(projects, ME_ID, isPaid) ? (
-        <div className="mt-2">
-          <ProjectLimitNotice compact />
         </div>
       ) : open ? (
         <QuestToProjectForm quest={quest} onCancel={() => setOpen(false)} />

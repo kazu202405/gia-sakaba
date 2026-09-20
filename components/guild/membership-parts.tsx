@@ -35,11 +35,12 @@ export function ProjectLimitNotice({ compact = false }: { compact?: boolean }) {
   return (
     <div className={cn("c-card space-y-3", compact ? "p-3" : "p-4 sm:p-5")}>
       <p className="text-[15px] leading-relaxed">
-        無料では、すすめている プロジェクトは{" "}
+        無料では、自分で つくって すすめている プロジェクトは{" "}
         <span className="inline-block">{FREE_ACTIVE_PROJECT_LIMIT}つまで です。</span>
       </p>
       <p className="c-muted text-xs leading-relaxed">
-        1つ おわりにすると、また つくれます。有料会員（{ENTRY_PLAN_PRICE_LABEL}）なら いくつでも すすめられます。
+        1つ おわりにすると、また つくれます。{guild.terms.quest}から作った ものは 数に入りません。 有料会員（
+        {ENTRY_PLAN_PRICE_LABEL}）なら いくつでも すすめられます。
         {"今ある プロジェクトは そのまま 見られます。"}
       </p>
       <PlanButton />

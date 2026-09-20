@@ -39,17 +39,24 @@ const project = (id: string, patch: Partial<Project> = {}): Project => ({
   ...patch,
 });
 
-describe("プロジェクトの数（無料は すすめている数で2つまで）", () => {
+describe("プロジェクトの数（無料は 自分でつくって すすめている数で2つまで）", () => {
   const items = [
     project("a"),
     project("b"),
     project("done", { status: "done" }),
     project("joined", { owner_id: "other", member_ids: ["me"] }),
+    project("fromQuest", { source_quest_id: "q1" }),
   ];
 
-  it("数えるのは 持ち主として すすめているものだけ", () => {
+  it("数えるのは 持ち主として すすめている、自分でつくったものだけ", () => {
     expect(FREE_ACTIVE_PROJECT_LIMIT).toBe(2);
     expect(activeOwnedProjectCount(items, "me")).toBe(2);
+  });
+
+  it("クエストから作ったものは 数に入れず、いくつでも すすめられる", () => {
+    expect(canActivateProject(items, "me", false, true)).toBe(true);
+    const many = [...items, project("fromQuest2", { source_quest_id: "q2" })];
+    expect(activeOwnedProjectCount(many, "me")).toBe(2);
   });
 
   it("無料は3つ目を すすめられない。1つ おわらせれば また すすめられる。有料は いくつでも", () => {

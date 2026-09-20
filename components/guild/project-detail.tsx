@@ -206,10 +206,10 @@ export function ProjectDetail({ id }: { id: string }) {
               type="button"
               className="c-button-sub h-11 w-full text-sm sm:w-auto sm:px-5"
               onClick={async () => {
-                if (!canActivateProject(state.projects, ME_ID, isPaid)) {
+                if (!canActivateProject(state.projects, ME_ID, isPaid, project.source_quest_id !== null)) {
                   await uiAlert({
                     title: "もどせません",
-                    message: `無料では、すすめている プロジェクトは ${FREE_ACTIVE_PROJECT_LIMIT}つまで です。ほかの プロジェクトを 1つ おわりにするか、有料会員（${ENTRY_PLAN_PRICE_LABEL}）なら もどせます。`,
+                    message: `無料では、自分で つくって すすめている プロジェクトは ${FREE_ACTIVE_PROJECT_LIMIT}つまで です。ほかの プロジェクトを 1つ おわりにするか、有料会員（${ENTRY_PLAN_PRICE_LABEL}）なら もどせます。`,
                   });
                   return;
                 }
