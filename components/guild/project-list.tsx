@@ -8,7 +8,7 @@ import Link from "next/link";
 import { filterProjects, projectFilterLabel, type ProjectFilter } from "@/lib/guild/filters";
 import { formatDate } from "@/lib/guild/labels";
 import { FREE_ACTIVE_PROJECT_LIMIT, activeOwnedProjectCount } from "@/lib/guild/membership";
-import { ME_ID, guild } from "@/lib/guild/mock-data";
+import { ME_ID } from "@/lib/guild/mock-data";
 import { getInitialProjectState, getProjectState, subscribeProjects } from "@/lib/guild/project-store";
 import { visibleProjects } from "@/lib/guild/projects";
 import { Window } from "./cards";
@@ -36,7 +36,7 @@ export function ProjectList() {
         <p className="c-muted text-xs tabular-nums">
           {isPaid
             ? "有料会員：いくつでも すすめられます"
-            : `自分で つくった プロジェクト ${activeOwnedProjectCount(state.projects, ME_ID)} / ${FREE_ACTIVE_PROJECT_LIMIT}（無料。おわったものも 数えます。${guild.terms.quest}から作ったものは 数えません）`}
+            : `自分の プロジェクト ${activeOwnedProjectCount(state.projects, ME_ID)} / ${FREE_ACTIVE_PROJECT_LIMIT}（無料。おわったものも 数えます。パーティで 参加しているものは 数えません）`}
         </p>
       </div>
 

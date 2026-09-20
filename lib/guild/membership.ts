@@ -26,26 +26,26 @@ export function strengthError(text: string): string | null {
 }
 
 /**
- * 無料の数に入るプロジェクトか。自分が持ち主で、自分でつくったもの。
+ * 無料の数に入るプロジェクトか。持ち主が自分なら、つくり方は問わない。
+ * - クエストから作ったものも 数える。作れるのは クエストを出した本人だけなので、
+ *   持ち主＝仕事を お願いする側。仕事を受ける側は パーティ参加なので ここに入らない
  * - おわったものも 数える。空けたいときは 消してもらう（使わない記録を 置き続けない）
- * - クエストから作ったものは 数に入れない（ギルドが運んできた仕事の入口を 課金で止めないため）
  */
 export function countsTowardFreeLimit(p: Project, userId: string): boolean {
-  return p.owner_id === userId && p.source_quest_id === null;
+  return p.owner_id === userId;
 }
 
-/** 数に入る分だけ数える（パーティ参加・クエストから作ったものは数えない） */
+/** 数に入る分だけ数える（パーティで参加しているだけのものは数えない） */
 export function activeOwnedProjectCount(items: Project[], userId: string): number {
   return items.filter((p) => countsTowardFreeLimit(p, userId)).length;
 }
 
 /**
  * 新しく つくれるか。有料が切れても、今あるものは消さない・見られる。
- * fromQuest（クエストから作る）は 数に入らないので いつでもできる。
  * おわりにしても 数は減らない（減らすのは 消したときだけ）ので、「もどす」は ここを通さない。
  */
-export function canActivateProject(items: Project[], userId: string, isPaid: boolean, fromQuest = false): boolean {
-  return isPaid || fromQuest || activeOwnedProjectCount(items, userId) < FREE_ACTIVE_PROJECT_LIMIT;
+export function canActivateProject(items: Project[], userId: string, isPaid: boolean): boolean {
+  return isPaid || activeOwnedProjectCount(items, userId) < FREE_ACTIVE_PROJECT_LIMIT;
 }
 
 /** 限定の集まりの くわしい内容と参加は、有料会員だけ。出したギルドマスター本人は見られる */

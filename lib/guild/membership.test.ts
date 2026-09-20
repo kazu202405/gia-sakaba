@@ -39,15 +39,14 @@ const project = (id: string, patch: Partial<Project> = {}): Project => ({
   ...patch,
 });
 
-describe("プロジェクトの数（無料は 自分でつくったものを 2つまで 持てる）", () => {
+describe("プロジェクトの数（無料は 自分が持ち主のものを 2つまで 持てる）", () => {
   const items = [
     project("a"),
     project("b"),
     project("joined", { owner_id: "other", member_ids: ["me"] }),
-    project("fromQuest", { source_quest_id: "q1" }),
   ];
 
-  it("数えるのは 自分が持ち主で 自分でつくったものだけ", () => {
+  it("数えるのは 自分が持ち主のものだけ", () => {
     expect(FREE_ACTIVE_PROJECT_LIMIT).toBe(2);
     expect(activeOwnedProjectCount(items, "me")).toBe(2);
   });
@@ -68,10 +67,10 @@ describe("プロジェクトの数（無料は 自分でつくったものを 2�
     expect(canActivateProject(items, "me", true)).toBe(true);
   });
 
-  it("クエストから作ったものは 数に入れず、いくつでも 作れる", () => {
-    expect(canActivateProject(items, "me", false, true)).toBe(true);
-    const many = [...items, project("fromQuest2", { source_quest_id: "q2" })];
-    expect(activeOwnedProjectCount(many, "me")).toBe(2);
+  it("クエストから作ったものも 数に入れる（作れるのは クエストを出した本人＝持ち主だけ）", () => {
+    const withQuestProject = [project("a"), project("fromQuest", { source_quest_id: "q1" })];
+    expect(activeOwnedProjectCount(withQuestProject, "me")).toBe(2);
+    expect(canActivateProject(withQuestProject, "me", false)).toBe(false);
   });
 
   it("パーティで参加しているだけの人は 上限に数えない", () => {

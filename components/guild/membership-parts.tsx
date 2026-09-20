@@ -40,8 +40,8 @@ export function ProjectLimitNotice({ compact = false }: { compact?: boolean }) {
       </p>
       <p className="c-muted text-xs leading-relaxed">
         おわったものも 数えます。いらない プロジェクトを 消すと、また つくれます（タスクと あいての きろくも 消えます）。
-        {guild.terms.quest}から作った ものは 数に入りません。 有料会員（{ENTRY_PLAN_PRICE_LABEL}）なら
-        いくつでも 持てて、記録も 残せます。
+        パーティで 参加している ものは 数に入りません。 有料会員（{ENTRY_PLAN_PRICE_LABEL}）なら いくつでも
+        持てて、記録も 残せます。
       </p>
       <PlanButton />
     </div>
