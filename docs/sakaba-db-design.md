@@ -66,10 +66,11 @@
 
 1. `0077_sakaba_core_schema.sql`: テーブル、制約、索引、RLS有効化。
 2. `0078_sakaba_access.sql`: 読み取りRPC、RLSポリシー、権限ヘルパー。
-3. `0079_sakaba_commands.sql`: 入会、申込、紹介、プロジェクト更新RPCと通知。
-4. 読み取り画面をモックからDBへ差し替える。
-5. 書き込み操作をRPCへ差し替える。
-6. シードデータ、E2Eテスト、プレゼン版との差分確認。
+3. `0079_sakaba_member_quest_commands.sql`: 入会、プロフィール、クエスト、通知の更新RPC。
+4. `0080_sakaba_intro_project_commands.sql`: 紹介と非公開プロジェクトの更新RPC。
+5. 読み取り画面をモックからDBへ差し替える。
+6. 書き込み操作をRPCへ差し替える。
+7. シードデータ、E2Eテスト、プレゼン版との差分確認。
 
 ## 6. デモの固定先
 
