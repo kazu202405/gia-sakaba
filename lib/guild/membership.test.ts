@@ -39,31 +39,39 @@ const project = (id: string, patch: Partial<Project> = {}): Project => ({
   ...patch,
 });
 
-describe("プロジェクトの数（無料は 自分でつくって すすめている数で2つまで）", () => {
+describe("プロジェクトの数（無料は 自分でつくったものを 2つまで 持てる）", () => {
   const items = [
     project("a"),
     project("b"),
-    project("done", { status: "done" }),
     project("joined", { owner_id: "other", member_ids: ["me"] }),
     project("fromQuest", { source_quest_id: "q1" }),
   ];
 
-  it("数えるのは 持ち主として すすめている、自分でつくったものだけ", () => {
+  it("数えるのは 自分が持ち主で 自分でつくったものだけ", () => {
     expect(FREE_ACTIVE_PROJECT_LIMIT).toBe(2);
     expect(activeOwnedProjectCount(items, "me")).toBe(2);
   });
 
-  it("クエストから作ったものは 数に入れず、いくつでも すすめられる", () => {
+  it("おわりにしても 数は減らない（枠を空けるのは 消したときだけ）", () => {
+    const finished = items.map((p) => (p.id === "b" ? { ...p, status: "done" as const } : p));
+    expect(activeOwnedProjectCount(finished, "me")).toBe(2);
+    expect(canActivateProject(finished, "me", false)).toBe(false);
+  });
+
+  it("消すと また つくれる", () => {
+    const deleted = items.filter((p) => p.id !== "b");
+    expect(canActivateProject(deleted, "me", false)).toBe(true);
+  });
+
+  it("無料は3つ目を つくれない。有料は いくつでも", () => {
+    expect(canActivateProject(items, "me", false)).toBe(false);
+    expect(canActivateProject(items, "me", true)).toBe(true);
+  });
+
+  it("クエストから作ったものは 数に入れず、いくつでも 作れる", () => {
     expect(canActivateProject(items, "me", false, true)).toBe(true);
     const many = [...items, project("fromQuest2", { source_quest_id: "q2" })];
     expect(activeOwnedProjectCount(many, "me")).toBe(2);
-  });
-
-  it("無料は3つ目を すすめられない。1つ おわらせれば また すすめられる。有料は いくつでも", () => {
-    expect(canActivateProject(items, "me", false)).toBe(false);
-    expect(canActivateProject(items, "me", true)).toBe(true);
-    const oneFinished = items.map((p) => (p.id === "b" ? { ...p, status: "done" as const } : p));
-    expect(canActivateProject(oneFinished, "me", false)).toBe(true);
   });
 
   it("パーティで参加しているだけの人は 上限に数えない", () => {

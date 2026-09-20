@@ -6,15 +6,28 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/guild/labels";
 import { ME_ID, getProfile } from "@/lib/guild/mock-data";
-import { getInitialProjectState, getProjectState, setProjectStatus, subscribeProjects } from "@/lib/guild/project-store";
-import { canSeeProject, isPrivateProject, projectProgress, splitTasks, stepsOf, tasksOf } from "@/lib/guild/projects";
-import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT, canActivateProject } from "@/lib/guild/membership";
-import { uiAlert, uiConfirm, uiToast } from "@/lib/ui-dialog";
+import {
+  getInitialProjectState,
+  getProjectState,
+  removeProject,
+  setProjectStatus,
+  subscribeProjects,
+} from "@/lib/guild/project-store";
+import {
+  canSeeProject,
+  contactsOf,
+  isPrivateProject,
+  projectProgress,
+  splitTasks,
+  stepsOf,
+  tasksOf,
+} from "@/lib/guild/projects";
+import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { BackLink, Window } from "./cards";
-import { useMembership } from "./membership-parts";
 import { ProjectGantt } from "./project-gantt";
 import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, VisibilityChip } from "./project-parts";
 import { ProjectParty } from "./project-party";
@@ -25,10 +38,10 @@ type TaskView = "list" | "gantt";
 
 export function ProjectDetail({ id }: { id: string }) {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
+  const router = useRouter();
   const [view, setView] = useState<TaskView>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showDone, setShowDone] = useState(false);
-  const { isPaid } = useMembership();
   const project = state.projects.find((p) => p.id === id);
 
   // 見えないプロジェクトは「ない」と同じに見せる（あることも伝えない）
@@ -205,14 +218,8 @@ export function ProjectDetail({ id }: { id: string }) {
             <button
               type="button"
               className="c-button-sub h-11 w-full text-sm sm:w-auto sm:px-5"
-              onClick={async () => {
-                if (!canActivateProject(state.projects, ME_ID, isPaid, project.source_quest_id !== null)) {
-                  await uiAlert({
-                    title: "もどせません",
-                    message: `無料では、自分で つくって すすめている プロジェクトは ${FREE_ACTIVE_PROJECT_LIMIT}つまで です。ほかの プロジェクトを 1つ おわりにするか、有料会員（${ENTRY_PLAN_PRICE_LABEL}）なら もどせます。`,
-                  });
-                  return;
-                }
+              onClick={() => {
+                // おわりにしても 数は減らないので、もどすのに 上限の確かめは いらない
                 setProjectStatus(project.id, "active");
                 uiToast("すすめている プロジェクトに もどしました");
               }}
@@ -220,6 +227,28 @@ export function ProjectDetail({ id }: { id: string }) {
               ▶ すすめている に もどす
             </button>
           )}
+          <button
+            type="button"
+            className="c-muted mt-4 h-11 px-2 text-xs underline underline-offset-4"
+            onClick={async () => {
+              const contactCount = contactsOf(state.contacts, project.id).length;
+              const parts = [`タスク ${list.length}こ`];
+              if (contactCount > 0) parts.push(`あいて ${contactCount}人ぶんの きろく`);
+              const partyNote = isParty ? "パーティの人からも 見えなくなります。" : "";
+              const ok = await uiConfirm({
+                title: "プロジェクトを 消します",
+                message: `「${project.title}」と、${parts.join("・")}を 消します。もとに もどせません。${partyNote}`,
+                okLabel: "消す",
+                danger: true,
+              });
+              if (!ok) return;
+              removeProject(project.id);
+              uiToast("プロジェクトを 消しました");
+              router.push("/guild/projects");
+            }}
+          >
+            このプロジェクトを 消す
+          </button>
         </div>
       )}
     </div>

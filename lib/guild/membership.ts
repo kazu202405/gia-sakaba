@@ -6,7 +6,7 @@
 
 import type { IntroRequest, Party, Profile, Project, Quest, QuestApplication } from "./types";
 
-/** 無料で「すすめている」状態にしておける、自分でつくったプロジェクトの数 */
+/** 無料で 持っておける、自分でつくったプロジェクトの数（おわったものも 数える。消すと空く） */
 export const FREE_ACTIVE_PROJECT_LIMIT = 2;
 
 /** 入口の段。金額は予定（Stripe商品は見本を触って確定してから作る） */
@@ -26,21 +26,23 @@ export function strengthError(text: string): string | null {
 }
 
 /**
- * 無料の数に入るプロジェクトか。自分が持ち主で、すすめていて、自分でつくったもの。
- * クエストから作ったものは 数に入れない（ギルドが運んできた仕事の入口を 課金で止めないため）。
+ * 無料の数に入るプロジェクトか。自分が持ち主で、自分でつくったもの。
+ * - おわったものも 数える。空けたいときは 消してもらう（使わない記録を 置き続けない）
+ * - クエストから作ったものは 数に入れない（ギルドが運んできた仕事の入口を 課金で止めないため）
  */
 export function countsTowardFreeLimit(p: Project, userId: string): boolean {
-  return p.owner_id === userId && p.status === "active" && p.source_quest_id === null;
+  return p.owner_id === userId && p.source_quest_id === null;
 }
 
-/** 数に入る分だけ数える（パーティ参加・おわったもの・クエストから作ったものは数えない） */
+/** 数に入る分だけ数える（パーティ参加・クエストから作ったものは数えない） */
 export function activeOwnedProjectCount(items: Project[], userId: string): number {
   return items.filter((p) => countsTowardFreeLimit(p, userId)).length;
 }
 
 /**
- * 新しく すすめる（作る・もどす）ことができるか。有料が切れても、今あるものは消さない・見られる。
- * fromQuest（クエストから作る／クエストから作ったものを もどす）は 数に入らないので いつでもできる。
+ * 新しく つくれるか。有料が切れても、今あるものは消さない・見られる。
+ * fromQuest（クエストから作る）は 数に入らないので いつでもできる。
+ * おわりにしても 数は減らない（減らすのは 消したときだけ）ので、「もどす」は ここを通さない。
  */
 export function canActivateProject(items: Project[], userId: string, isPaid: boolean, fromQuest = false): boolean {
   return isPaid || fromQuest || activeOwnedProjectCount(items, userId) < FREE_ACTIVE_PROJECT_LIMIT;

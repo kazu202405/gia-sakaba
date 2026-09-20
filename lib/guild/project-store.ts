@@ -115,6 +115,21 @@ export function createProjectFromQuest(
   return id;
 }
 
+/**
+ * プロジェクトを 中身ごと 消す。タスク・工程・あいて・その記録も いっしょに消す
+ * （どれか残すと、持ち主のいない行が たまる）。もとに もどせない。
+ */
+export function removeProject(projectId: string): void {
+  const contactIds = new Set(state.contacts.filter((c) => c.project_id === projectId).map((c) => c.id));
+  set({
+    projects: state.projects.filter((p) => p.id !== projectId),
+    tasks: state.tasks.filter((t) => t.project_id !== projectId),
+    steps: state.steps.filter((s) => s.project_id !== projectId),
+    contacts: state.contacts.filter((c) => c.project_id !== projectId),
+    records: state.records.filter((r) => !contactIds.has(r.contact_id)),
+  });
+}
+
 export function updateProject(projectId: string, input: ProjectInput): void {
   set({ projects: state.projects.map((p) => (p.id === projectId ? { ...p, ...input } : p)) });
 }
