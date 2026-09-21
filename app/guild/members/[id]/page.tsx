@@ -55,6 +55,14 @@ export default async function MemberStatusPage({ params }: Props) {
               <dd>{p.industry}</dd>
               <dt className="c-label">ちいき</dt>
               <dd>{p.region}</dd>
+              {p.email && <>
+                <dt className="c-label">メール</dt>
+                <dd className="min-w-0 break-all"><a href={`mailto:${encodeURIComponent(p.email)}`} className="underline underline-offset-2">{p.email}</a></dd>
+              </>}
+              {p.line_url && <>
+                <dt className="c-label">LINE</dt>
+                <dd className="min-w-0 break-all"><a href={p.line_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">LINEを開く ↗</a></dd>
+              </>}
               {p.website_url && <>
                 <dt className="c-label">ウェブサイト</dt>
                 <dd className="min-w-0 break-all"><a href={p.website_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">サイトを開く ↗</a></dd>
@@ -78,7 +86,7 @@ export default async function MemberStatusPage({ params }: Props) {
         <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
           {isMe
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
-            : "メールとLINEは公開されません。しょうかい機能は実運用への接続を準備中です。"}
+            : "連絡先は本人がメンバー向けに公開したものだけ表示しています。しょうかい機能は準備中です。"}
         </p>
       </Window>
 

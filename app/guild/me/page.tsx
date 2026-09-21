@@ -49,7 +49,7 @@ export default async function MyPage() {
           <span className="c-muted text-xs">{me.visible_groups.includes(group) ? "公開中" : "非公開"}</span>
         </li>)}
         <li className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>しょうかいの受け付け</span><span className="c-muted text-xs">{me.accept_intro ? "受付中" : "お休み中"}</span></li>
-        <li className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>ウェブサイト</span><span className="c-muted text-xs">{me.website_visibility === "members" ? "メンバーに公開" : "非公開（紹介機能は準備中）"}</span></li>
+        {([['email', 'メール'], ['line', 'LINE'], ['website', 'ウェブサイト']] as const).map(([kind, label]) => <li key={kind} className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>{label}</span><span className="c-muted text-xs">{me.contact_visibility[kind] === "members" ? "メンバーに公開" : "非公開（紹介機能は準備中）"}</span></li>)}
       </ul>
       <Link href="/guild/me/status#visibility" className="c-muted mt-3 inline-block text-xs underline">公開範囲をなおす</Link>
     </Window>

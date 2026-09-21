@@ -18,17 +18,23 @@ export type GuildQuest = Quest & {
 
 export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
+export type ContactVisibility = "members" | "approved";
+export type ContactKind = "email" | "line" | "website";
 export type MyGuildProfile = Profile & {
   show_achievements: boolean;
-  website_visibility: "members" | "approved";
+  contact_visibility: Record<ContactKind, ContactVisibility>;
   contact: { email: string; line_url: string; website_url: string };
 };
 
 type ProfileExtra = {
   id: string;
   name_kana: string;
+  email: string;
+  line_url: string;
   website_url: string;
-  website_visibility: "members" | "approved" | null;
+  email_visibility: ContactVisibility | null;
+  line_visibility: ContactVisibility | null;
+  website_visibility: ContactVisibility | null;
 };
 
 async function getProfileExtras(): Promise<ProfileExtra[]> {
@@ -64,6 +70,8 @@ export async function listGuildMembers(): Promise<Profile[]> {
   return Array.isArray(data) ? (data as Profile[]).map((member) => ({
     ...member,
     name_kana: byId.get(member.id)?.name_kana ?? "",
+    email: byId.get(member.id)?.email ?? "",
+    line_url: byId.get(member.id)?.line_url ?? "",
     website_url: byId.get(member.id)?.website_url ?? "",
   })) : [];
 }
@@ -100,7 +108,11 @@ export async function getMyGuildProfile(): Promise<MyGuildProfile> {
     ...profile,
     name_kana: extra?.name_kana ?? "",
     website_url: extra?.website_url ?? "",
-    website_visibility: extra?.website_visibility ?? "approved",
+    contact_visibility: {
+      email: extra?.email_visibility ?? "approved",
+      line: extra?.line_visibility ?? "approved",
+      website: extra?.website_visibility ?? "approved",
+    },
   };
 }
 

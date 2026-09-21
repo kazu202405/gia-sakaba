@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { MyGuildProfile } from "@/lib/guild/server-data";
+import type { ContactKind, ContactVisibility, MyGuildProfile } from "@/lib/guild/server-data";
 import type { JobIconKey, Position, VisibleGroup } from "@/lib/guild/types";
 import { groupLabel, jobIconLabel, positionLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
@@ -11,7 +11,24 @@ import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 
 const GROUPS: VisibleGroup[] = ["work", "values", "connect"];
+const CONTACT_LABEL: Record<ContactKind, string> = { email: "メール", line: "LINE URL", website: "ウェブサイト" };
 type Snapshot = { draft: MyGuildProfile; keywords: string };
+
+function ContactVisibilityChoice({ kind, value, saving, onChange }: {
+  kind: ContactKind;
+  value: ContactVisibility;
+  saving: boolean;
+  onChange: (visibility: ContactVisibility) => void;
+}) {
+  return <fieldset className="mt-3">
+    <legend className="c-muted text-xs">{CONTACT_LABEL[kind]}を見せる相手</legend>
+    <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+      <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={`${kind}-visibility`} checked={value === "members"} disabled={saving} onChange={() => onChange("members")} className="accent-[#1b2a41]" />メンバーに表示</label>
+      <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={`${kind}-visibility`} checked={value === "approved"} disabled={saving} onChange={() => onChange("approved")} className="accent-[#1b2a41]" />紹介の承諾後のみ</label>
+    </div>
+    {saving && <p role="status" className="c-muted mt-1 text-xs">公開設定を変更中…</p>}
+  </fieldset>;
+}
 
 function validationError({ draft }: Snapshot, isPaid: boolean): string | null {
   if (!draft.display_name.trim() || !draft.company_name.trim()) return "お名前と会社名を入力すると自動保存されます。";
@@ -65,7 +82,8 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
   const [keywords, setKeywords] = useState(initial.keywords.join("、"));
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");
   const [leaving, setLeaving] = useState(false);
-  const [websiteSaving, setWebsiteSaving] = useState(false);
+  const [visibilitySaving, setVisibilitySaving] = useState<ContactKind | null>(null);
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
   const latestRef = useRef<Snapshot>({ draft: initial, keywords: initial.keywords.join("、") });
@@ -127,36 +145,44 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
       : [...draft.visible_groups, group]);
   };
 
-  async function changeWebsiteVisibility(visibility: "members" | "approved") {
-    if (websiteSaving || visibility === draft.website_visibility) return;
-    const previous = draft.website_visibility;
-    const website = draft.contact.website_url.trim();
-    if (visibility === "members" && website && !/^https?:\/\//.test(website)) {
-      setError("ウェブサイトは https:// から入力してください。");
+  async function changeContactVisibility(kind: ContactKind, visibility: ContactVisibility) {
+    if (visibilitySaving || visibility === draft.contact_visibility[kind]) return;
+    const previous = draft.contact_visibility[kind];
+    const contactKey = kind === "line" ? "line_url" : kind === "website" ? "website_url" : "email";
+    const value = draft.contact[contactKey].trim();
+    if (visibility === "members" && kind === "email" && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setError("メールアドレスの形式を確認してください。");
       return;
     }
-    set("website_visibility", visibility);
-    setWebsiteSaving(true);
+    if (visibility === "members" && kind !== "email" && value && !/^https?:\/\//.test(value)) {
+      setError(`${CONTACT_LABEL[kind]}は https:// から入力してください。`);
+      return;
+    }
+    set("contact_visibility", { ...draft.contact_visibility, [kind]: visibility });
+    setVisibilitySaving(kind);
     try {
-      const { error: rpcError } = await createClient().rpc("sakaba_update_profile_extras", {
+      const { error: rpcError } = await createClient().rpc("sakaba_update_contact_visibility", {
         p_guild_slug: "gia",
-        p_website_visibility: visibility,
-        p_website_url: visibility === "members" ? website : undefined,
+        p_kind: kind,
+        p_visibility: visibility,
+        p_value: visibility === "members" ? value : undefined,
       });
       if (rpcError) throw rpcError;
-      uiToast(visibility === "members" ? "ウェブサイトをメンバーに公開しました" : "ウェブサイトを非公開にしました");
+      uiToast(`${CONTACT_LABEL[kind]}を${visibility === "members" ? "メンバーに公開しました" : "非公開にしました"}`);
     } catch {
-      setDraft((current) => current.website_visibility === visibility ? { ...current, website_visibility: previous } : current);
-      setError("ウェブサイトの公開設定を変更できませんでした。もう一度お試しください。");
+      setDraft((current) => current.contact_visibility[kind] === visibility ? {
+        ...current, contact_visibility: { ...current.contact_visibility, [kind]: previous },
+      } : current);
+      setError(`${CONTACT_LABEL[kind]}の公開設定を変更できませんでした。もう一度お試しください。`);
       setSaveState("error");
     } finally {
-      setWebsiteSaving(false);
+      setVisibilitySaving(null);
     }
   }
 
   async function saveAndLeave(event?: React.FormEvent) {
     event?.preventDefault();
-    if (leaving || websiteSaving) return;
+    if (leaving || visibilitySaving) return;
     setLeaving(true);
     const saved = await saveCurrent("manual");
     if (saved) { router.push("/guild/me"); router.refresh(); }
@@ -164,7 +190,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
   }
 
   return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || websiteSaving} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
+    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || Boolean(visibilitySaving)} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
     <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="c-muted mt-2 text-sm">入力が止まってから約2秒で自動保存します。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
     <form onSubmit={saveAndLeave} className="space-y-7">
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
@@ -179,16 +205,21 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
         </div>
         <Field label="職業" hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
         <Field label="プロフィールのアイコン" hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
-          <div role="group" aria-label="プロフィールのアイコン" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          <button type="button" aria-expanded={iconPickerOpen} aria-controls="profile-icon-options" onClick={() => setIconPickerOpen((open) => !open)} className="c-input flex min-h-16 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41]">
+            <JobAvatar icon={draft.job_icon} name={jobIconLabel[draft.job_icon]} size="sm" />
+            <span className="flex-1 text-sm">{jobIconLabel[draft.job_icon]}</span>
+            <span className="c-muted text-xs">{iconPickerOpen ? "閉じる ▲" : "アイコンを選ぶ ▼"}</span>
+          </button>
+          {iconPickerOpen && <div id="profile-icon-options" role="group" aria-label="プロフィールのアイコン候補" className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
             {(Object.keys(jobIconLabel) as JobIconKey[]).map((key) => <button
-              key={key} type="button" onClick={() => set("job_icon", key)}
+              key={key} type="button" onClick={() => { set("job_icon", key); setIconPickerOpen(false); }}
               aria-pressed={draft.job_icon === key}
               className={`flex min-h-24 flex-col items-center justify-center gap-2 border-2 p-2 text-center text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41] ${draft.job_icon === key ? "border-[#1b2a41] bg-[#e8cf8e]" : "border-[#1b2a41]/25 bg-[#fffdf6] hover:border-[#1b2a41]"}`}
             >
               <JobAvatar icon={key} name={jobIconLabel[key]} size="sm" />
               <span>{jobIconLabel[key]}</span>
             </button>)}
-          </div>
+          </div>}
         </Field>
         <Field label="かいしゃ" required><TextInput value={draft.company_name} onChange={(value) => set("company_name", value)} max={60} label="かいしゃ" /></Field>
         <Field label="役職"><Select value={draft.position} onChange={(value) => set("position", value as Position)} label="役職" options={(Object.keys(positionLabel) as Position[]).map((key) => ({ value: key, label: positionLabel[key] }))} /></Field>
@@ -219,16 +250,10 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">れんらく先</span>
-        <p className="c-muted text-xs">メールとLINEは名鑑に表示しません。紹介機能は準備中です。</p>
-        <Field label="メール"><TextInput value={draft.contact.email} onChange={(value) => setContact("email", value)} max={200} type="email" label="メール" /></Field>
-        <Field label="LINE URL"><TextInput value={draft.contact.line_url} onChange={(value) => setContact("line_url", value)} max={300} label="LINE URL" /></Field>
-        <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" placeholder="https://example.com" /></Field>
-        <fieldset className="space-y-2">
-          <legend className="text-sm">ウェブサイトを見せる相手</legend>
-          <label className="flex cursor-pointer items-start gap-2 text-sm"><input type="radio" name="website-visibility" value="members" checked={draft.website_visibility === "members"} disabled={websiteSaving} onChange={() => void changeWebsiteVisibility("members")} className="mt-1 accent-[#1b2a41]" /><span>ギルドのメンバーに表示する<span className="c-muted block text-xs">メンバー名鑑から開けます</span></span></label>
-          <label className="flex cursor-pointer items-start gap-2 text-sm"><input type="radio" name="website-visibility" value="approved" checked={draft.website_visibility === "approved"} disabled={websiteSaving} onChange={() => void changeWebsiteVisibility("approved")} className="mt-1 accent-[#1b2a41]" /><span>紹介が承諾された相手にだけ表示する<span className="c-muted block text-xs">今は非公開です。紹介機能の開始後に利用できます</span></span></label>
-          <p role="status" aria-live="polite" className="c-muted text-xs">{websiteSaving ? "公開設定を変更中…" : ""}</p>
-        </fieldset>
+        <p className="c-muted text-xs">「メンバーに表示」はログイン中のギルド会員だけ。「紹介の承諾後のみ」は、紹介機能の開始まで非公開です。</p>
+        <Field label="メール"><TextInput value={draft.contact.email} onChange={(value) => setContact("email", value)} max={200} type="email" label="メール" /><ContactVisibilityChoice kind="email" value={draft.contact_visibility.email} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("email", value)} /></Field>
+        <Field label="LINE URL"><TextInput value={draft.contact.line_url} onChange={(value) => setContact("line_url", value)} max={300} label="LINE URL" /><ContactVisibilityChoice kind="line" value={draft.contact_visibility.line} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("line", value)} /></Field>
+        <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" placeholder="https://example.com" /><ContactVisibilityChoice kind="website" value={draft.contact_visibility.website} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("website", value)} /></Field>
       </section>
 
       <section id="visibility" className="c-window scroll-mt-24 space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
@@ -239,7 +264,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
       </section>
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving || websiteSaving} aria-busy={leaving || websiteSaving} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || websiteSaving ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={leaving || Boolean(visibilitySaving)} aria-busy={leaving || Boolean(visibilitySaving)} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || visibilitySaving ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
     </form>
   </div>;
 }
