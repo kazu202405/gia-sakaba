@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { ProjectDetail } from "@/components/guild/project-detail";
+import { notFound } from "next/navigation";
+import { LiveProjectDetail } from "@/components/guild/live-project-detail";
+import { getAuthenticatedUserId, listGuildProjects } from "@/lib/guild/server-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -8,5 +10,8 @@ export const metadata: Metadata = { title: "プロジェクト" };
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { id } = await params;
-  return <ProjectDetail id={id} />;
+  const [projects, userId] = await Promise.all([listGuildProjects(), getAuthenticatedUserId()]);
+  const project = projects.find((item) => item.id === id);
+  if (!project) notFound();
+  return <LiveProjectDetail project={project} canEdit={project.owner_id === userId} />;
 }

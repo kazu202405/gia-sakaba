@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { ProjectForm } from "@/components/guild/project-form";
+import { notFound } from "next/navigation";
+import { LiveProjectForm } from "@/components/guild/live-project-form";
+import { getAuthenticatedUserId, listGuildProjects } from "@/lib/guild/server-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -8,5 +10,8 @@ export const metadata: Metadata = { title: "プロジェクトを なおす" };
 
 export default async function EditProjectPage({ params }: Props) {
   const { id } = await params;
-  return <ProjectForm projectId={id} />;
+  const [projects, userId] = await Promise.all([listGuildProjects(), getAuthenticatedUserId()]);
+  const project = projects.find((item) => item.id === id && item.owner_id === userId);
+  if (!project) notFound();
+  return <LiveProjectForm project={project} />;
 }
