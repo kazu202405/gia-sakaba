@@ -22,7 +22,8 @@ function validationError({ draft }: Snapshot, isPaid: boolean): string | null {
 }
 
 async function persist({ draft, keywords }: Snapshot) {
-  return createClient().rpc("sakaba_update_my_profile", {
+  const supabase = createClient();
+  const profileResult = await supabase.rpc("sakaba_update_my_profile", {
     p_guild_slug: "gia",
     p_display_name: draft.display_name.trim(),
     p_photo_url: draft.photo_url ?? "",
@@ -51,6 +52,11 @@ async function persist({ draft, keywords }: Snapshot) {
     p_industry: draft.industry.trim(),
     p_keywords: keywords.split(/[、,\n]/).map((item) => item.trim()).filter(Boolean).slice(0, 5),
   });
+  if (profileResult.error) return profileResult;
+  return supabase.rpc("sakaba_update_profile_extras", {
+    p_guild_slug: "gia",
+    p_name_kana: draft.name_kana?.trim() ?? "",
+  });
 }
 
 export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; isPaid: boolean }) {
@@ -59,6 +65,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
   const [keywords, setKeywords] = useState(initial.keywords.join("、"));
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");
   const [leaving, setLeaving] = useState(false);
+  const [websiteSaving, setWebsiteSaving] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
   const latestRef = useRef<Snapshot>({ draft: initial, keywords: initial.keywords.join("、") });
@@ -120,9 +127,36 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
       : [...draft.visible_groups, group]);
   };
 
+  async function changeWebsiteVisibility(visibility: "members" | "approved") {
+    if (websiteSaving || visibility === draft.website_visibility) return;
+    const previous = draft.website_visibility;
+    const website = draft.contact.website_url.trim();
+    if (visibility === "members" && website && !/^https?:\/\//.test(website)) {
+      setError("ウェブサイトは https:// から入力してください。");
+      return;
+    }
+    set("website_visibility", visibility);
+    setWebsiteSaving(true);
+    try {
+      const { error: rpcError } = await createClient().rpc("sakaba_update_profile_extras", {
+        p_guild_slug: "gia",
+        p_website_visibility: visibility,
+        p_website_url: visibility === "members" ? website : undefined,
+      });
+      if (rpcError) throw rpcError;
+      uiToast(visibility === "members" ? "ウェブサイトをメンバーに公開しました" : "ウェブサイトを非公開にしました");
+    } catch {
+      setDraft((current) => current.website_visibility === visibility ? { ...current, website_visibility: previous } : current);
+      setError("ウェブサイトの公開設定を変更できませんでした。もう一度お試しください。");
+      setSaveState("error");
+    } finally {
+      setWebsiteSaving(false);
+    }
+  }
+
   async function saveAndLeave(event?: React.FormEvent) {
     event?.preventDefault();
-    if (leaving) return;
+    if (leaving || websiteSaving) return;
     setLeaving(true);
     const saved = await saveCurrent("manual");
     if (saved) { router.push("/guild/me"); router.refresh(); }
@@ -130,22 +164,32 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
   }
 
   return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
+    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || websiteSaving} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
     <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="c-muted mt-2 text-sm">入力が止まってから約2秒で自動保存します。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
     <form onSubmit={saveAndLeave} className="space-y-7">
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">きほん</span>
         <div className="flex items-center gap-4"><JobAvatar icon={draft.job_icon} photoUrl={draft.photo_url} name={draft.display_name} /><p className="c-muted text-xs">写真の変更は、この画面ではまだできません。現在の写真は保存しても残ります。</p></div>
         <Field label="おなまえ" required><TextInput value={draft.display_name} onChange={(value) => set("display_name", value)} max={30} label="おなまえ" /></Field>
+        <Field label="ふりがな" hint="任意。名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
         <Field label="ひとこと"><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="業種"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" /></Field>
+          <Field label="業種" hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>
           <Field label="地域"><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="職業"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" /></Field>
-          <Field label="職業アイコン"><Select value={draft.job_icon} onChange={(value) => set("job_icon", value as JobIconKey)} label="職業アイコン" options={(Object.keys(jobIconLabel) as JobIconKey[]).map((key) => ({ value: key, label: jobIconLabel[key] }))} /></Field>
-        </div>
+        <Field label="職業" hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
+        <Field label="プロフィールのアイコン" hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
+          <div role="group" aria-label="プロフィールのアイコン" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+            {(Object.keys(jobIconLabel) as JobIconKey[]).map((key) => <button
+              key={key} type="button" onClick={() => set("job_icon", key)}
+              aria-pressed={draft.job_icon === key}
+              className={`flex min-h-24 flex-col items-center justify-center gap-2 border-2 p-2 text-center text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41] ${draft.job_icon === key ? "border-[#1b2a41] bg-[#e8cf8e]" : "border-[#1b2a41]/25 bg-[#fffdf6] hover:border-[#1b2a41]"}`}
+            >
+              <JobAvatar icon={key} name={jobIconLabel[key]} size="sm" />
+              <span>{jobIconLabel[key]}</span>
+            </button>)}
+          </div>
+        </Field>
         <Field label="かいしゃ" required><TextInput value={draft.company_name} onChange={(value) => set("company_name", value)} max={60} label="かいしゃ" /></Field>
         <Field label="役職"><Select value={draft.position} onChange={(value) => set("position", value as Position)} label="役職" options={(Object.keys(positionLabel) as Position[]).map((key) => ({ value: key, label: positionLabel[key] }))} /></Field>
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>会社名と役職を名鑑に表示する</CheckBox>
@@ -175,10 +219,16 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">れんらく先</span>
-        <p className="c-muted text-xs">名鑑には出ません。紹介が承諾された相手にだけ見せる情報です。</p>
+        <p className="c-muted text-xs">メールとLINEは名鑑に表示しません。紹介機能は準備中です。</p>
         <Field label="メール"><TextInput value={draft.contact.email} onChange={(value) => setContact("email", value)} max={200} type="email" label="メール" /></Field>
         <Field label="LINE URL"><TextInput value={draft.contact.line_url} onChange={(value) => setContact("line_url", value)} max={300} label="LINE URL" /></Field>
-        <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" /></Field>
+        <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" placeholder="https://example.com" /></Field>
+        <fieldset className="space-y-2">
+          <legend className="text-sm">ウェブサイトを見せる相手</legend>
+          <label className="flex cursor-pointer items-start gap-2 text-sm"><input type="radio" name="website-visibility" value="members" checked={draft.website_visibility === "members"} disabled={websiteSaving} onChange={() => void changeWebsiteVisibility("members")} className="mt-1 accent-[#1b2a41]" /><span>ギルドのメンバーに表示する<span className="c-muted block text-xs">メンバー名鑑から開けます</span></span></label>
+          <label className="flex cursor-pointer items-start gap-2 text-sm"><input type="radio" name="website-visibility" value="approved" checked={draft.website_visibility === "approved"} disabled={websiteSaving} onChange={() => void changeWebsiteVisibility("approved")} className="mt-1 accent-[#1b2a41]" /><span>紹介が承諾された相手にだけ表示する<span className="c-muted block text-xs">今は非公開です。紹介機能の開始後に利用できます</span></span></label>
+          <p role="status" aria-live="polite" className="c-muted text-xs">{websiteSaving ? "公開設定を変更中…" : ""}</p>
+        </fieldset>
       </section>
 
       <section id="visibility" className="c-window scroll-mt-24 space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
@@ -189,7 +239,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
       </section>
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving} aria-busy={leaving} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={leaving || websiteSaving} aria-busy={leaving || websiteSaving} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || websiteSaving ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
     </form>
   </div>;
 }

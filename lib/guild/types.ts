@@ -53,6 +53,10 @@ export type VisibleGroup = "work" | "values" | "connect";
 export type Profile = {
   id: string;
   display_name: string;
+  /** 任意。まだ入力していない既存会員は空欄 */
+  name_kana?: string;
+  /** 会員向け公開を本人が選んだ場合だけ名鑑に含まれる */
+  website_url?: string;
   photo_url: string | null;
   headline: string;
   industry: string;

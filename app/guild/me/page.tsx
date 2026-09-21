@@ -25,6 +25,7 @@ export default async function MyPage() {
         <JobAvatar icon={me.job_icon} photoUrl={me.photo_url} name={me.job || me.display_name} size="lg" />
         <div className="min-w-0 flex-1">
           <h1 className="break-words text-2xl tracking-[0.12em]">{me.display_name}</h1>
+          {me.name_kana && <p className="c-muted mt-1 text-xs">{me.name_kana}</p>}
           <p className="mt-1 break-words text-[15px]">{me.headline || "ひとことはまだありません"}</p>
           <p className="c-muted mt-2 text-xs">{me.company_name} · {me.job || "職業未設定"} · {me.region || "地域未設定"}</p>
           <div className="mt-4">
@@ -48,6 +49,7 @@ export default async function MyPage() {
           <span className="c-muted text-xs">{me.visible_groups.includes(group) ? "公開中" : "非公開"}</span>
         </li>)}
         <li className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>しょうかいの受け付け</span><span className="c-muted text-xs">{me.accept_intro ? "受付中" : "お休み中"}</span></li>
+        <li className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>ウェブサイト</span><span className="c-muted text-xs">{me.website_visibility === "members" ? "メンバーに公開" : "非公開（紹介機能は準備中）"}</span></li>
       </ul>
       <Link href="/guild/me/status#visibility" className="c-muted mt-3 inline-block text-xs underline">公開範囲をなおす</Link>
     </Window>

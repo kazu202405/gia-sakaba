@@ -31,6 +31,7 @@ export default async function MemberStatusPage({ params }: Props) {
           <JobAvatar icon={p.job_icon} photoUrl={p.photo_url} name={p.job} size="lg" />
           <div className="min-w-0 flex-1">
             <h1 className="text-3xl tracking-[0.15em]">{p.display_name}</h1>
+            {p.name_kana && <p className="c-muted mt-1 text-xs">{p.name_kana}</p>}
             <p className="mt-2 text-[15px] break-words">{p.headline}</p>
             {p.strengths && (
               <p className="c-card mt-3 px-3 py-2 text-sm leading-relaxed break-words">
@@ -54,6 +55,10 @@ export default async function MemberStatusPage({ params }: Props) {
               <dd>{p.industry}</dd>
               <dt className="c-label">ちいき</dt>
               <dd>{p.region}</dd>
+              {p.website_url && <>
+                <dt className="c-label">ウェブサイト</dt>
+                <dd className="min-w-0 break-all"><a href={p.website_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">サイトを開く ↗</a></dd>
+              </>}
               {p.role === "owner" && (
                 <>
                   <dt className="c-label">やくわり</dt>
@@ -73,7 +78,7 @@ export default async function MemberStatusPage({ params }: Props) {
         <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
           {isMe
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
-            : "れんらく先は公開されません。しょうかい機能は実運用への接続を準備中です。"}
+            : "メールとLINEは公開されません。しょうかい機能は実運用への接続を準備中です。"}
         </p>
       </Window>
 

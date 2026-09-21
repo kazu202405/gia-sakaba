@@ -20,8 +20,23 @@ export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
 export type MyGuildProfile = Profile & {
   show_achievements: boolean;
+  website_visibility: "members" | "approved";
   contact: { email: string; line_url: string; website_url: string };
 };
+
+type ProfileExtra = {
+  id: string;
+  name_kana: string;
+  website_url: string;
+  website_visibility: "members" | "approved" | null;
+};
+
+async function getProfileExtras(): Promise<ProfileExtra[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_profile_extras", { p_guild_slug: "gia" });
+  if (error) throw rpcError("プロフィールの公開設定を取得できませんでした", error.message);
+  return Array.isArray(data) ? data as ProfileExtra[] : [];
+}
 
 function rpcError(message: string, detail?: string): Error {
   return new Error(detail ? `${message}: ${detail}` : message);
@@ -39,12 +54,18 @@ export async function getGuildContext(): Promise<GuildContext> {
 
 export async function listGuildMembers(): Promise<Profile[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_members", {
-    p_guild_slug: "gia",
-  });
+  const [{ data, error }, extras] = await Promise.all([
+    supabase.rpc("sakaba_list_members", { p_guild_slug: "gia" }),
+    getProfileExtras(),
+  ]);
 
   if (error) throw rpcError("メンバー名鑑を取得できませんでした", error.message);
-  return Array.isArray(data) ? (data as Profile[]) : [];
+  const byId = new Map(extras.map((extra) => [extra.id, extra]));
+  return Array.isArray(data) ? (data as Profile[]).map((member) => ({
+    ...member,
+    name_kana: byId.get(member.id)?.name_kana ?? "",
+    website_url: byId.get(member.id)?.website_url ?? "",
+  })) : [];
 }
 
 export async function listGuildQuests(): Promise<GuildQuest[]> {
@@ -68,11 +89,19 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
 
 export async function getMyGuildProfile(): Promise<MyGuildProfile> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_get_my_profile", {
-    p_guild_slug: "gia",
-  });
+  const [{ data, error }, extras] = await Promise.all([
+    supabase.rpc("sakaba_get_my_profile", { p_guild_slug: "gia" }),
+    getProfileExtras(),
+  ]);
   if (error) throw rpcError("マイページを取得できませんでした", error.message);
-  return data as MyGuildProfile;
+  const profile = data as MyGuildProfile;
+  const extra = extras.find((item) => item.id === profile.id);
+  return {
+    ...profile,
+    name_kana: extra?.name_kana ?? "",
+    website_url: extra?.website_url ?? "",
+    website_visibility: extra?.website_visibility ?? "approved",
+  };
 }
 
 export async function getGuildProjectPipeline(projectId: string): Promise<GuildProjectPipeline> {
