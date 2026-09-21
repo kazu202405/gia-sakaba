@@ -13,7 +13,7 @@ export default async function MasterPage() {
   return (
     <div>
       <PageTitle
-        title="しょうかいの しれいしつ"
+        title="ギルドマスター"
         lead="届いた紹介依頼を見て、相手に打診するか、見送るかを決めます。"
       />
       <LiveMasterConsole initial={requests} members={members} />

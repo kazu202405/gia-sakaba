@@ -18,6 +18,7 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
+  { href: "/guild", label: "ギルド", short: "ギルド", exact: true },
   { href: "/guild/members", label: "メンバー", short: "メンバー", also: ["/guild/requests"] },
   { href: "/guild/quests", label: "クエスト", short: "クエスト" },
   { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
@@ -41,7 +42,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
     <div className="guild-theme min-h-screen">
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/guild/members" className="text-lg tracking-[0.2em]">
+          <Link href="/guild" className="text-lg tracking-[0.2em]">
             GIAの酒場
           </Link>
           <div className="flex items-center gap-4">
@@ -69,7 +70,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
 
       {/* スマホ：下のコマンド */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden"
         aria-label="メニュー"
       >
         {NAV.map((item) => {
