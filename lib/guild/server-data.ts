@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Guild, Profile } from "@/lib/guild/types";
+import type { Guild, Profile, Quest, QuestApplication } from "@/lib/guild/types";
 
 type GuildContext = {
   guild: Guild;
@@ -9,6 +9,11 @@ type GuildContext = {
     role: "owner" | "master" | "member";
   };
   is_paid: boolean;
+};
+
+export type GuildQuest = Quest & {
+  applicant_count: number;
+  my_application: QuestApplication | null;
 };
 
 function rpcError(message: string, detail?: string): Error {
@@ -33,6 +38,16 @@ export async function listGuildMembers(): Promise<Profile[]> {
 
   if (error) throw rpcError("メンバー名鑑を取得できませんでした", error.message);
   return Array.isArray(data) ? (data as Profile[]) : [];
+}
+
+export async function listGuildQuests(): Promise<GuildQuest[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_quests", {
+    p_guild_slug: "gia",
+  });
+
+  if (error) throw rpcError("クエストを取得できませんでした", error.message);
+  return Array.isArray(data) ? (data as GuildQuest[]) : [];
 }
 
 export async function getAuthenticatedUserId(): Promise<string> {

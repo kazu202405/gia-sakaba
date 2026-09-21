@@ -46,6 +46,13 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const isLiveGuildRoute =
+    pathname === "/guild/members" ||
+    pathname.startsWith("/guild/members/") ||
+    pathname === "/guild/quests" ||
+    /^\/guild\/quests\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      pathname,
+    );
 
   // /admin/login だけは未ログインでも通す
   if (pathname.startsWith("/admin") && pathname !== "/admin/login" && !user) {
@@ -67,8 +74,7 @@ export async function updateSession(request: NextRequest) {
     user &&
     pathname.startsWith("/guild") &&
     pathname !== "/guild/login" &&
-    pathname !== "/guild/members" &&
-    !pathname.startsWith("/guild/members/")
+    !isLiveGuildRoute
   ) {
     const url = request.nextUrl.clone();
     url.pathname = "/guild/members";
