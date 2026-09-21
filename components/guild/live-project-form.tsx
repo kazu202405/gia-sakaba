@@ -46,7 +46,7 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
         const { error: stepsError } = await createClient().rpc("sakaba_enable_project_steps", { p_project_id: data });
         if (stepsError) {
           setCreatedId(data);
-          setError("プロジェクトは作成されましたが、あいてごとの状況を始められませんでした。詳細画面からもう一度お試しください。");
+          setError("プロジェクトは作成されましたが、あいてごとの じょうきょうを記録できませんでした。詳細画面からもう一度お試しください。");
           setSaving(false);
           return;
         }
@@ -69,7 +69,7 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
         <Field label="期限（任意）"><DateInput value={dueDate} onChange={setDueDate} label="期限" min={startDate} /></Field>
       </div>
       {!project && <CheckBox checked={withSteps} onChange={setWithSteps}>
-        <span className="block text-[15px]">あいてごとの じょうきょうも つかう</span>
+        <span className="block text-[15px]">あいてごとの じょうきょうを きろくする</span>
         <span className="c-muted block text-xs leading-relaxed">営業など、同じ手順を何人にも進めるとき。初回アポ／興味付け／提案／契約から始められます。</span>
       </CheckBox>}
       <p className="c-muted text-xs">作成したプロジェクトは、いまは自分だけに表示されます。</p>

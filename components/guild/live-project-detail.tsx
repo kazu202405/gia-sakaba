@@ -74,7 +74,7 @@ export function LiveProjectDetail({ project, pipeline, canEdit }: { project: Gui
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
-      <span className="c-window-title">あいてごとの じょうきょう</span>
+      <span className="c-window-title">あいてごとの じょうきょうを きろくする</span>
       <LiveProjectPeople projectId={project.id} pipeline={pipeline} editable={canEdit && project.status === "active"} />
     </section>
   </div>;

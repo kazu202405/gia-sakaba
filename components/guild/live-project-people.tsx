@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { GuildProjectPipeline } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
+import { uiConfirm } from "@/lib/ui-dialog";
 import { DateInput, TextInput } from "./form-parts";
 
 type Selection = { kind: "contact"; contactId: string } | { kind: "cell"; contactId: string; stepId: string } | null;
@@ -59,6 +60,18 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
     setPlanned(record?.planned_on ?? ""); setDone(record?.done_on ?? ""); setError("");
   }
 
+  async function deleteContact(contactId: string, contactLabel: string) {
+    if (busy) return;
+    const confirmed = await uiConfirm({
+      title: "相手を削除する",
+      message: `「${contactLabel}」と、この人に記録したすべての日付を削除します。元に戻せません。`,
+      okLabel: "削除する",
+      danger: true,
+    });
+    if (!confirmed) return;
+    await run("sakaba_delete_project_contact", { p_contact_id: contactId }, "削除", () => setSelection(null));
+  }
+
   const selectedContact = pipeline.contacts.find((item) => item.id === selection?.contactId);
   const selectedStep = selection?.kind === "cell" ? pipeline.steps.find((item) => item.id === selection.stepId) : undefined;
   const selectedRecord = selection?.kind === "cell" ? pipeline.records.find((item) => item.contact_id === selection.contactId && item.step_id === selection.stepId) : undefined;
@@ -66,7 +79,7 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
   if (pipeline.steps.length === 0) {
     return <div className="space-y-4">
       <p className="c-muted text-sm leading-relaxed">相手を行に、進める手順を列に並べ、予定日と完了日を記録します。呼び名と短いメモだけを扱い、連絡先は保存しません。</p>
-      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub h-11 px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを はじめる"}</button>}
+      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub h-11 px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを きろくする"}</button>}
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     </div>;
   }
@@ -82,7 +95,7 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
         <tbody>{pipeline.contacts.length === 0 ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">まだ相手がいません。下から追加してください。</td></tr> :
           pipeline.contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
-              <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
+              <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}{editable && <span className="c-muted mt-1 block text-[11px] underline">編集</span>}</button>
             </th>
             {pipeline.steps.map((step) => {
               const record = pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
@@ -111,15 +124,15 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
     </div>}
 
     {selection?.kind === "contact" && selectedContact && <form onSubmit={(event) => { event.preventDefault(); run("sakaba_update_project_contact", { p_contact_id: selection.contactId, p_label: editContactLabel.trim(), p_memo: memo.trim() }, "相手の更新"); }} className="c-card space-y-3 p-4">
-      <p className="text-sm">相手をなおす</p>
+      <p className="text-sm">名前とメモを編集</p>
       <div><p className="c-muted mb-1 text-xs">呼び名</p><TextInput value={editContactLabel} onChange={setEditContactLabel} max={30} label="呼び名" /></div>
       <div><p className="c-muted mb-1 text-xs">ひとことメモ（連絡先は書かないでください）</p><TextInput value={memo} onChange={setMemo} max={100} label="ひとことメモ" /></div>
-      <div className="flex gap-3"><button type="submit" disabled={busy || !editContactLabel.trim()} className="rpg-button h-11 px-4 disabled:opacity-50">保存</button><button type="button" onClick={() => setSelection(null)} className="c-muted px-2 text-xs">閉じる</button></div>
+      <div className="flex flex-wrap items-center gap-3"><button type="submit" disabled={busy || !editContactLabel.trim()} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "相手の更新" ? "保存中…" : "保存"}</button><button type="button" disabled={busy} onClick={() => deleteContact(selectedContact.id, selectedContact.label)} className="text-xs text-[#c62828] underline disabled:opacity-50">この人を削除</button><button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button></div>
     </form>}
 
     {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; run("sakaba_add_project_contact", { p_project_id: projectId, p_label: newContactLabel.trim() }, "相手の追加", () => setNewContactLabel("")); }} className="space-y-2">
-      <p className="text-sm">相手を足す</p>
-      <div className="flex gap-2"><div className="min-w-0 flex-1"><TextInput value={newContactLabel} onChange={setNewContactLabel} max={30} label="相手の呼び名" placeholder="例：Dさん（美容室）" /></div><button type="submit" disabled={busy || !newContactLabel.trim()} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">追加</button></div>
+      <p className="text-sm">相手を追加</p>
+      <div className="flex gap-2"><div className="min-w-0 flex-1"><TextInput value={newContactLabel} onChange={setNewContactLabel} max={30} label="相手の呼び名" placeholder="例：Dさん（美容室）" /></div><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={saving === "相手の追加"} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : "追加"}</button></div>
     </form>}
 
     {editable && <div className="c-dashed-top pt-4">
