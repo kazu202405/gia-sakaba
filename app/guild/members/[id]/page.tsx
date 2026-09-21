@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
+import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-button";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
-import { getAuthenticatedUserId, getGuildContext, listGuildMembers } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -11,10 +12,11 @@ export const metadata = { title: "ギルドメンバー" };
 
 export default async function MemberStatusPage({ params }: Props) {
   const { id } = await params;
-  const [context, members, currentUserId] = await Promise.all([
+  const [context, members, currentUserId, requests] = await Promise.all([
     getGuildContext(),
     listGuildMembers(),
     getAuthenticatedUserId(),
+    listGuildIntroRequests(),
   ]);
   const p = members.find((member) => member.id === id);
   if (!p) notFound();
@@ -86,8 +88,9 @@ export default async function MemberStatusPage({ params }: Props) {
         <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
           {isMe
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
-            : "連絡先は本人がメンバー向けに公開したものだけ表示しています。しょうかい機能は準備中です。"}
+            : "連絡先は本人がメンバー向けに公開したものだけ表示しています。承諾後のみの連絡先は、紹介が成立すると当事者に見えます。"}
         </p>
+        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} /></div>}
       </Window>
 
       <div className="grid gap-11 md:grid-cols-3">

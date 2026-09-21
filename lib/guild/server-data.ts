@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Guild, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
+import type { Guild, GuildNotification, IntroRequest, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 
 type GuildContext = {
   guild: Guild;
@@ -14,6 +14,10 @@ type GuildContext = {
 export type GuildQuest = Quest & {
   applicant_count: number;
   my_application: QuestApplication | null;
+};
+
+export type GuildIntroRequest = IntroRequest & {
+  other_contact: { email: string; line_url: string; website_url: string } | null;
 };
 
 export type GuildProject = Project & { tasks: ProjectTask[] };
@@ -84,6 +88,20 @@ export async function listGuildQuests(): Promise<GuildQuest[]> {
 
   if (error) throw rpcError("クエストを取得できませんでした", error.message);
   return Array.isArray(data) ? (data as GuildQuest[]) : [];
+}
+
+export async function listGuildIntroRequests(): Promise<GuildIntroRequest[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_intro_requests", { p_guild_slug: "gia" });
+  if (error) throw rpcError("紹介依頼を取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildIntroRequest[] : [];
+}
+
+export async function listGuildNotifications(): Promise<GuildNotification[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_my_notifications", { p_guild_slug: "gia" });
+  if (error) throw rpcError("おしらせを取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildNotification[] : [];
 }
 
 export async function listGuildProjects(): Promise<GuildProject[]> {

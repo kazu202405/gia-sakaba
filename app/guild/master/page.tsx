@@ -1,27 +1,22 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/guild/cards";
-import { GatheringApprovals } from "@/components/guild/gathering-approvals";
-import { MasterConsole } from "@/components/guild/master-console";
-import { guild, introRequests } from "@/lib/guild/mock-data";
+import { LiveMasterConsole } from "@/components/guild/live-master-console";
+import { getGuildContext, listGuildIntroRequests, listGuildMembers } from "@/lib/guild/server-data";
 
-export const metadata: Metadata = { title: guild.terms.master };
+export const metadata: Metadata = { title: "ギルドマスター" };
 
-// 本番では guild_members.role が owner / master の人だけが開ける（サーバー側で確かめる）
-export default function MasterPage() {
+export default async function MasterPage() {
+  const context = await getGuildContext();
+  if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
+  const [requests, members] = await Promise.all([listGuildIntroRequests(), listGuildMembers()]);
   return (
     <div>
       <PageTitle
         title="しょうかいの しれいしつ"
-        lead="とどいた しょうかい依頼を見て、つなぐ・別の人を提案する・見送るを決めます。"
+        lead="届いた紹介依頼を見て、相手に打診するか、見送るかを決めます。"
       />
-      <MasterConsole initial={introRequests} />
-      <div className="mt-11 space-y-4">
-        <Link href="/guild/master/gathering/new" className="rpg-button h-12 w-full text-base sm:w-auto sm:px-6">
-          ▶ 集まりを ひらく
-        </Link>
-        <GatheringApprovals />
-      </div>
+      <LiveMasterConsole initial={requests} members={members} />
     </div>
   );
 }
