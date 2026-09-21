@@ -4,10 +4,11 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GuildProject, GuildProjectPipeline } from "@/lib/guild/server-data";
+import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
 import { LiveProjectPeople } from "./live-project-people";
 
-export function LiveProjectDetail({ project, pipeline, canEdit }: { project: GuildProject; pipeline: GuildProjectPipeline; canEdit: boolean }) {
+export function LiveProjectDetail({ project, pipeline, members, canEdit }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean }) {
   const router = useRouter();
   const [taskTitle, setTaskTitle] = useState("");
   const [pendingAction, setPendingAction] = useState("");
@@ -75,7 +76,7 @@ export function LiveProjectDetail({ project, pipeline, canEdit }: { project: Gui
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">あいてごとの じょうきょうを きろくする</span>
-      <LiveProjectPeople projectId={project.id} pipeline={pipeline} editable={canEdit && project.status === "active"} />
+      <LiveProjectPeople projectId={project.id} pipeline={pipeline} members={members} editable={canEdit && project.status === "active"} />
     </section>
   </div>;
 }

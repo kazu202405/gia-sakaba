@@ -54,7 +54,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 pt-9 pb-28 sm:px-6 lg:grid-cols-[200px_1fr] lg:pb-14">
         {/* PC：コマンドの窓 */}
-        <nav className="c-window hidden self-start p-4 pt-7 lg:sticky lg:top-24 lg:block" aria-label="メニュー">
+        <nav className="c-window guild-sidebar hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
           <span className="c-window-title">コマンド</span>
           <ul className="space-y-1">
             {NAV.map((item) => (

@@ -2,11 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Trash2, X } from "lucide-react";
 import type { GuildProjectPipeline } from "@/lib/guild/server-data";
+import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
-import { uiConfirm } from "@/lib/ui-dialog";
+import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { DateInput, TextInput } from "./form-parts";
+import { ProjectMemberCombobox } from "./project-member-combobox";
 
 type Selection = { kind: "contact"; contactId: string } | { kind: "cell"; contactId: string; stepId: string } | null;
 
@@ -21,10 +24,11 @@ function shortDate(value: string) {
   return `${Number(month)}/${Number(day)}`;
 }
 
-export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId: string; pipeline: GuildProjectPipeline; editable: boolean }) {
+export function LiveProjectPeople({ projectId, pipeline, members, editable }: { projectId: string; pipeline: GuildProjectPipeline; members: Profile[]; editable: boolean }) {
   const router = useRouter();
   const [selection, setSelection] = useState<Selection>(null);
   const [newContactLabel, setNewContactLabel] = useState("");
+  const [newMemberId, setNewMemberId] = useState<string | null>(null);
   const [editContactLabel, setEditContactLabel] = useState("");
   const [memo, setMemo] = useState("");
   const [stepName, setStepName] = useState("");
@@ -39,13 +43,19 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
   async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
     if (busy) return;
     setSaving(action); setError("");
-    const { error: rpcError } = await createClient().rpc(name, args);
-    if (rpcError) setError(`${action}に失敗しました。もう一度お試しください。`);
-    else {
-      onSuccess?.();
-      startTransition(() => { router.refresh(); });
+    try {
+      const { error: rpcError } = await createClient().rpc(name, args);
+      if (rpcError) setError(rpcError.code === "23505" && name === "sakaba_add_project_contact_v2" ? "このメンバーはすでに追加されています。" : `${action}に失敗しました。もう一度お試しください。`);
+      else {
+        onSuccess?.();
+        if (action === "相手の追加") uiToast("相手を追加しました");
+        startTransition(() => { router.refresh(); });
+      }
+    } catch {
+      setError("通信に失敗しました。接続を確認してもう一度お試しください。");
+    } finally {
+      setSaving("");
     }
-    setSaving("");
   }
 
   function selectContact(contactId: string) {
@@ -97,6 +107,7 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
           pipeline.contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
               <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
+              {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={`/guild/members/${contact.member_user_id}`} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
             </th>
             {pipeline.steps.map((step) => {
               const record = pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
@@ -137,9 +148,9 @@ export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId
       </div>
     </form>}
 
-    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; run("sakaba_add_project_contact", { p_project_id: projectId, p_label: newContactLabel.trim() }, "相手の追加", () => setNewContactLabel("")); }} className="space-y-2">
+    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
       <p className="text-sm">相手を追加</p>
-      <div className="flex gap-2"><div className="min-w-0 flex-1"><TextInput value={newContactLabel} onChange={setNewContactLabel} max={30} label="相手の呼び名" placeholder="例：Dさん（美容室）" /></div><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={saving === "相手の追加"} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : "追加"}</button></div>
+      <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
     </form>}
 
     {editable && <div className="c-dashed-top pt-4">

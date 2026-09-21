@@ -31,6 +31,14 @@
     5px 5px 0 0 rgba(27, 42, 65, 0.18);
 }
 
+/* .c-window の position: relative より優先し、PCのコマンドをスクロールに追従させる */
+@media (min-width: 1024px) {
+  .guild-theme .guild-sidebar {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
 /* 窓の左上に乗る名札 */
 .c-window-title {
   position: absolute;

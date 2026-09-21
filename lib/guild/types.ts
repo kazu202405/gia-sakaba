@@ -268,6 +268,8 @@ export type ProjectContact = {
   project_id: string;
   /** 呼び名だけ（例：Aさん（工務店）） */
   label: string;
+  /** ギルド会員を候補から選んだときだけ。自由入力なら null */
+  member_user_id?: string | null;
   /** ひとことメモ。連絡先は書かない */
   memo: string;
   sort_order: number;
