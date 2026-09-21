@@ -8,15 +8,28 @@ function safeNext(value: string | null): string {
   return value?.startsWith("/guild") && !value.startsWith("//") ? value : "/guild";
 }
 
+const REMEMBER_EMAIL_KEY = "sakaba:remember-email";
+
 export default function GuildLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
+    try {
+      const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberEmail(true);
+      }
+    } catch {
+      // 保存を許可しないブラウザでもログインは続けられる。
+    }
     void (async () => {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
@@ -50,6 +63,13 @@ export default function GuildLoginPage() {
       return;
     }
 
+    try {
+      if (rememberEmail) localStorage.setItem(REMEMBER_EMAIL_KEY, email.trim());
+      else localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    } catch {
+      // メールアドレスの記憶に失敗してもログインは成功とする。
+    }
+
     router.refresh();
     router.replace(safeNext(new URLSearchParams(window.location.search).get("next")));
   }
@@ -69,8 +89,18 @@ export default function GuildLoginPage() {
           </label>
           <label className="block">
             <span className="mb-1 block text-sm">パスワード</span>
-            <input className="c-input h-11" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+            <input className="c-input h-11" type={showPassword ? "text" : "password"} autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required />
           </label>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+            <label className="flex cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} />
+              パスワードを表示
+            </label>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input type="checkbox" checked={rememberEmail} onChange={(event) => setRememberEmail(event.target.checked)} />
+              メールアドレスを覚えておく
+            </label>
+          </div>
           <button type="submit" className="c-button w-full" disabled={busy || !email.trim() || !password}>
             {busy ? "確認中..." : "酒場に入る"}
           </button>
