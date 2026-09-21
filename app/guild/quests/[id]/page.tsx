@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { BackLink, MemberRow, Window, questCategoryMark } from "@/components/guild/cards";
+import { LiveQuestApplication } from "@/components/guild/live-quest-application";
 import { GROUND_RULES } from "@/lib/guild/rules";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import {
@@ -80,9 +81,7 @@ export default async function QuestDetailPage({ params }: Props) {
             {q.summary && <p className="mt-6 text-[15px] leading-relaxed break-words">{q.summary}</p>}
             {q.body && <p className="mt-4 whitespace-pre-line text-[15px] leading-loose break-words">{q.body}</p>}
 
-            <div className="c-dashed-top c-muted mt-8 pt-5 text-xs leading-relaxed">
-              参加・編集などの操作は、実データへの接続を順次進めています。いまは内容の閲覧ができます。
-            </div>
+            <LiveQuestApplication quest={q} currentUserId={currentUserId} />
           </>
         ) : (
           <div className="c-card mt-6 border-dashed px-4 py-5 text-sm leading-relaxed">

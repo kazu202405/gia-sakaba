@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { QuestForm } from "@/components/guild/quest-form";
-import { guild } from "@/lib/guild/mock-data";
+import { LiveQuestForm } from "@/components/guild/live-quest-form";
+import { getGuildContext } from "@/lib/guild/server-data";
 
-export const metadata: Metadata = { title: `${guild.terms.quest}を出す` };
+export const metadata: Metadata = { title: "クエストを出す" };
 
-export default function NewQuestPage() {
-  return <QuestForm />;
+export default async function NewQuestPage() {
+  const context = await getGuildContext();
+  return <LiveQuestForm questTerm={context.guild.terms.quest} />;
 }
