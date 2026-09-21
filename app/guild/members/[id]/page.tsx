@@ -1,35 +1,32 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { BackLink, QuestCard, Window } from "@/components/guild/cards";
-import { IntroRequestButton } from "@/components/guild/intro-request-dialog";
+import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
-import { AchievementsView } from "@/components/guild/membership-parts";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
-import { achievementCounts, badges, canPostMembersOnly } from "@/lib/guild/membership";
-import { ME_ID, getProfile, guild, introRequests, parties, questApplications, quests } from "@/lib/guild/mock-data";
+import { getAuthenticatedUserId, getGuildContext, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
 
-export async function generateMetadata({ params }: Props) {
-  const { id } = await params;
-  return { title: getProfile(id)?.display_name ?? guild.terms.member };
-}
+export const metadata = { title: "ギルドメンバー" };
 
 export default async function MemberStatusPage({ params }: Props) {
   const { id } = await params;
-  const p = getProfile(id);
+  const [context, members, currentUserId] = await Promise.all([
+    getGuildContext(),
+    listGuildMembers(),
+    getAuthenticatedUserId(),
+  ]);
+  const p = members.find((member) => member.id === id);
   if (!p) notFound();
 
-  const isMe = p.id === ME_ID;
-  const theirQuests = quests.filter((q) => q.creator_id === p.id && q.status !== "completed");
-  const achievementData = { profile: p, quests, applications: questApplications, intros: introRequests, parties };
+  const isMe = p.id === currentUserId;
+  const memberTerm = context.guild.terms.member;
 
   return (
     <div className="space-y-11">
-      <BackLink href="/guild/members" label={`${guild.terms.member} めいかん`} />
+      <BackLink href="/guild/members" label={`${memberTerm} めいかん`} />
 
-      <Window title={guild.terms.status}>
+      <Window title={context.guild.terms.status}>
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
           <JobAvatar icon={p.job_icon} photoUrl={p.photo_url} name={p.job} size="lg" />
           <div className="min-w-0 flex-1">
@@ -60,7 +57,7 @@ export default async function MemberStatusPage({ params }: Props) {
               {p.role === "owner" && (
                 <>
                   <dt className="c-label">やくわり</dt>
-                  <dd>{guild.terms.master}</dd>
+                  <dd>{context.guild.terms.master}</dd>
                 </>
               )}
             </dl>
@@ -73,31 +70,11 @@ export default async function MemberStatusPage({ params }: Props) {
           </div>
         </div>
 
-        {/* 人にレベル（段）は付けない。積み上がる数と、集めたバッジだけ */}
-        <div className="c-dashed-top mt-6 pt-5">
-          <AchievementsView
-            counts={achievementCounts(achievementData)}
-            badges={badges(achievementData)}
-            mine={false}
-            isMaster={canPostMembersOnly(p.role)}
-            selfPreview={isMe}
-          />
-        </div>
-
-        <div className="mt-6">
-          {isMe ? (
-            <Link href="/guild/me/status" className="c-button-sub h-12 w-full sm:w-auto">
-              {guild.terms.status}を なおす
-            </Link>
-          ) : (
-            <IntroRequestButton target={p} />
-          )}
-          {!isMe && (
-            <p className="c-muted mt-2 text-xs leading-relaxed">
-              れんらく先は、しょうかいが承諾されたときにだけ見えるようになります。
-            </p>
-          )}
-        </div>
+        <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
+          {isMe
+            ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
+            : "れんらく先は公開されません。しょうかい機能は実運用への接続を準備中です。"}
+        </p>
       </Window>
 
       <div className="grid gap-11 md:grid-cols-3">
@@ -125,15 +102,6 @@ export default async function MemberStatusPage({ params }: Props) {
         </GroupBlock>
       </div>
 
-      {theirQuests.length > 0 && (
-        <Window title={`${p.display_name}さんの ${guild.terms.quest}`}>
-          <div className="grid gap-4 md:grid-cols-2">
-            {theirQuests.map((q) => (
-              <QuestCard key={q.id} quest={q} />
-            ))}
-          </div>
-        </Window>
-      )}
     </div>
   );
 }

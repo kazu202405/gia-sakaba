@@ -2,7 +2,7 @@
 // 役割：
 //   1. 全リクエストで session を refresh（cookie の有効期限を伸ばす）
 //   2. /admin/* 配下で未ログインなら /admin/login にリダイレクト
-//      （/admin/login 自体は除外）
+//   3. /guild/* 配下で未ログインなら /guild/login にリダイレクト
 //
 // `@supabase/ssr` 公式の Next.js Server-Side Auth パターンに準拠。
 // middleware で cookie を書き換えた場合は必ず supabaseResponse 経由で返す
@@ -52,6 +52,27 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     url.searchParams.set("from", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname.startsWith("/guild") && pathname !== "/guild/login" && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/guild/login";
+    url.search = "";
+    url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    user &&
+    pathname.startsWith("/guild") &&
+    pathname !== "/guild/login" &&
+    pathname !== "/guild/members" &&
+    !pathname.startsWith("/guild/members/")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/guild/members";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

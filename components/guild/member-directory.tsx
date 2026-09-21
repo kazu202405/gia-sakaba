@@ -3,12 +3,11 @@
 // 仲間名鑑の絞り込み。AIで選ばず、条件で絞るだけ（なぜその人が出たか説明できるように）。
 
 import { useMemo, useState } from "react";
-import { guild } from "@/lib/guild/mock-data";
 import type { Profile } from "@/lib/guild/types";
 import { MemberCard, Window } from "./cards";
 import { CheckBox } from "./form-parts";
 
-export function MemberDirectory({ members }: { members: Profile[] }) {
+export function MemberDirectory({ members, memberTerm = "ギルドメンバー" }: { members: Profile[]; memberTerm?: string }) {
   const [keyword, setKeyword] = useState("");
   const [industry, setIndustry] = useState("");
   const [region, setRegion] = useState("");
@@ -95,7 +94,7 @@ export function MemberDirectory({ members }: { members: Profile[] }) {
 
       {filtered.length === 0 ? (
         <p className="c-card border-dashed px-4 py-10 text-center text-sm leading-relaxed">
-          じょうけんに合う {guild.terms.member}が 見つかりませんでした。
+          じょうけんに合う {memberTerm}が 見つかりませんでした。
           <br />
           <span className="c-muted">ギルドマスターに「こういう人いない？」と相談することもできます。</span>
         </p>
