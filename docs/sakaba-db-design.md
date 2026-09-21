@@ -57,6 +57,8 @@
 - 紹介相手は `accept_intro = true` のメンバーに限る。
 - 連絡先は紹介状態が `accepted` / `introduced` の当事者だけ取得できる。
 - 無料会員が所有できるプロジェクトは2件。完了済みも数え、削除したときだけ枠が空く。
+- 酒場の月480円契約は `public.applicants.plan` と分離し、`guild_members.billing_status` で管理する。
+- `owner` / `master` は `billing_status = exempt` とし、酒場用Stripe契約なしで有料機能を使える。
 - クエスト起点のプロジェクトは1クエストにつき1件。
 - プロジェクトからメンバーを外すと、その人の担当タスクは未割当へ戻す。
 - プロジェクト削除時はタスク、工程、相手、工程記録、メンバーも連鎖削除する。
@@ -67,10 +69,11 @@
 1. `0077_sakaba_core_schema.sql`: テーブル、制約、索引、RLS有効化。
 2. `0078_sakaba_access.sql`: 読み取りRPC、RLSポリシー、権限ヘルパー。
 3. `0079_sakaba_member_quest_commands.sql`: 入会、プロフィール、クエスト、通知の更新RPC。
-4. `0080_sakaba_intro_project_commands.sql`: 紹介と非公開プロジェクトの更新RPC。
-5. 読み取り画面をモックからDBへ差し替える。
-6. 書き込み操作をRPCへ差し替える。
-7. シードデータ、E2Eテスト、プレゼン版との差分確認。
+4. `0080_sakaba_billing_and_owner.sql`: 酒場専用課金状態と初期オーナー設定。
+5. `0081_sakaba_intro_project_commands.sql`: 紹介と非公開プロジェクトの更新RPC。
+6. 読み取り画面をモックからDBへ差し替える。
+7. 書き込み操作をRPCへ差し替える。
+8. シードデータ、E2Eテスト、プレゼン版との差分確認。
 
 ## 6. デモの固定先
 
