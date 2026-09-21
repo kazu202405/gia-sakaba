@@ -21,6 +21,7 @@ const NAV: NavItem[] = [
   { href: "/guild/members", label: "メンバー", short: "メンバー" },
   { href: "/guild/quests", label: "クエスト", short: "クエスト" },
   { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
+  { href: "/guild/me", label: "マイページ", short: "マイページ" },
 ];
 
 function isUnder(pathname: string, href: string) {
@@ -67,7 +68,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
 
       {/* スマホ：下のコマンド */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-3 border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden"
         aria-label="メニュー"
       >
         {NAV.map((item) => {

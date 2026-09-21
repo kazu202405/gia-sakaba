@@ -18,6 +18,10 @@ export type GuildQuest = Quest & {
 
 export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
+export type MyGuildProfile = Profile & {
+  show_achievements: boolean;
+  contact: { email: string; line_url: string; website_url: string };
+};
 
 function rpcError(message: string, detail?: string): Error {
   return new Error(detail ? `${message}: ${detail}` : message);
@@ -60,6 +64,15 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
   });
   if (error) throw rpcError("プロジェクトを取得できませんでした", error.message);
   return Array.isArray(data) ? (data as GuildProject[]) : [];
+}
+
+export async function getMyGuildProfile(): Promise<MyGuildProfile> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_my_profile", {
+    p_guild_slug: "gia",
+  });
+  if (error) throw rpcError("マイページを取得できませんでした", error.message);
+  return data as MyGuildProfile;
 }
 
 export async function getGuildProjectPipeline(projectId: string): Promise<GuildProjectPipeline> {
