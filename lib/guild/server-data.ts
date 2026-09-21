@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Guild, Profile, Project, ProjectTask, Quest, QuestApplication } from "@/lib/guild/types";
+import type { Guild, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 
 type GuildContext = {
   guild: Guild;
@@ -17,6 +17,7 @@ export type GuildQuest = Quest & {
 };
 
 export type GuildProject = Project & { tasks: ProjectTask[] };
+export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
 
 function rpcError(message: string, detail?: string): Error {
   return new Error(detail ? `${message}: ${detail}` : message);
@@ -59,6 +60,15 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
   });
   if (error) throw rpcError("プロジェクトを取得できませんでした", error.message);
   return Array.isArray(data) ? (data as GuildProject[]) : [];
+}
+
+export async function getGuildProjectPipeline(projectId: string): Promise<GuildProjectPipeline> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_project_pipeline", {
+    p_project_id: projectId,
+  });
+  if (error) throw rpcError("あいてごとの状況を取得できませんでした", error.message);
+  return data as GuildProjectPipeline;
 }
 
 export async function getAuthenticatedUserId(): Promise<string> {

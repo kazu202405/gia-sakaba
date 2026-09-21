@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GuildProject } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
-import { DateInput, Field, TextArea, TextInput } from "./form-parts";
+import { CheckBox, DateInput, Field, TextArea, TextInput } from "./form-parts";
 
 function todayInJapan() {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -20,12 +20,14 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
   const [memo, setMemo] = useState(project?.memo ?? "");
   const [startDate, setStartDate] = useState(project?.start_date ?? todayInJapan());
   const [dueDate, setDueDate] = useState(project?.due_date ?? "");
+  const [withSteps, setWithSteps] = useState(false);
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (saving || !canCreate) return;
+    if (saving || !canCreate || createdId) return;
     if (!title.trim() || !startDate || (dueDate && dueDate < startDate)) {
       setError("タイトルと日付を確認してください。");
       return;
@@ -40,6 +42,15 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
     } else {
       const { data, error: rpcError } = await createClient().rpc("sakaba_create_project", { p_guild_slug: "gia", ...fields });
       if (rpcError || typeof data !== "string") { setError("作成できませんでした。入力内容や作成枠を確認してください。"); setSaving(false); return; }
+      if (withSteps) {
+        const { error: stepsError } = await createClient().rpc("sakaba_enable_project_steps", { p_project_id: data });
+        if (stepsError) {
+          setCreatedId(data);
+          setError("プロジェクトは作成されましたが、あいてごとの状況を始められませんでした。詳細画面からもう一度お試しください。");
+          setSaving(false);
+          return;
+        }
+      }
       router.push(`/guild/projects/${data}`);
     }
     router.refresh();
@@ -55,11 +66,15 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
       <Field label="メモ"><TextArea value={memo} onChange={setMemo} max={500} rows={4} label="メモ" /></Field>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="開始日" required><DateInput value={startDate} onChange={setStartDate} label="開始日" /></Field>
-        <Field label="期限" hint="任意"><DateInput value={dueDate} onChange={setDueDate} label="期限" min={startDate} /></Field>
+        <Field label="期限（任意）"><DateInput value={dueDate} onChange={setDueDate} label="期限" min={startDate} /></Field>
       </div>
+      {!project && <CheckBox checked={withSteps} onChange={setWithSteps}>
+        <span className="block text-[15px]">あいてごとの じょうきょうも つかう</span>
+        <span className="c-muted block text-xs leading-relaxed">営業など、同じ手順を何人にも進めるとき。初回アポ／興味付け／提案／契約から始められます。</span>
+      </CheckBox>}
       <p className="c-muted text-xs">作成したプロジェクトは、いまは自分だけに表示されます。</p>
-      {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <button type="submit" disabled={saving || !canCreate} className="rpg-button w-full px-6 py-3 disabled:opacity-50 sm:w-auto">{saving ? "保存中..." : project ? "▶ 保存する" : "▶ 作成する"}</button>
+      {error && <p role="alert" className="text-sm text-[#c62828]">{error}{createdId && <Link href={`/guild/projects/${createdId}`} className="ml-2 underline">詳細へ進む</Link>}</p>}
+      <button type="submit" disabled={saving || !canCreate || !!createdId} aria-busy={saving} className="rpg-button w-full px-6 py-3 disabled:opacity-50 sm:w-auto">{saving ? project ? "保存中…" : "作成中…" : project ? "▶ 保存する" : "▶ 作成する"}</button>
     </form>
   </div>;
 }

@@ -1,0 +1,145 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { GuildProjectPipeline } from "@/lib/guild/server-data";
+import { createClient } from "@/lib/supabase/client";
+import { DateInput, TextInput } from "./form-parts";
+
+type Selection = { kind: "contact"; contactId: string } | { kind: "cell"; contactId: string; stepId: string } | null;
+
+function todayInJapan() {
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const part = (type: string) => parts.find((item) => item.type === type)?.value ?? "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function shortDate(value: string) {
+  const [, month, day] = value.split("-");
+  return `${Number(month)}/${Number(day)}`;
+}
+
+export function LiveProjectPeople({ projectId, pipeline, editable }: { projectId: string; pipeline: GuildProjectPipeline; editable: boolean }) {
+  const router = useRouter();
+  const [selection, setSelection] = useState<Selection>(null);
+  const [newContactLabel, setNewContactLabel] = useState("");
+  const [editContactLabel, setEditContactLabel] = useState("");
+  const [memo, setMemo] = useState("");
+  const [stepName, setStepName] = useState("");
+  const [planned, setPlanned] = useState("");
+  const [done, setDone] = useState("");
+  const [editingSteps, setEditingSteps] = useState(false);
+  const [saving, setSaving] = useState("");
+  const [error, setError] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const busy = !!saving || isPending;
+
+  async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
+    if (busy) return;
+    setSaving(action); setError("");
+    const { error: rpcError } = await createClient().rpc(name, args);
+    if (rpcError) setError(`${action}に失敗しました。もう一度お試しください。`);
+    else {
+      onSuccess?.();
+      startTransition(() => { router.refresh(); });
+    }
+    setSaving("");
+  }
+
+  function selectContact(contactId: string) {
+    const contact = pipeline.contacts.find((item) => item.id === contactId);
+    if (!contact) return;
+    setSelection({ kind: "contact", contactId });
+    setEditContactLabel(contact.label); setMemo(contact.memo); setError("");
+  }
+
+  function selectCell(contactId: string, stepId: string) {
+    const record = pipeline.records.find((item) => item.contact_id === contactId && item.step_id === stepId);
+    setSelection({ kind: "cell", contactId, stepId });
+    setPlanned(record?.planned_on ?? ""); setDone(record?.done_on ?? ""); setError("");
+  }
+
+  const selectedContact = pipeline.contacts.find((item) => item.id === selection?.contactId);
+  const selectedStep = selection?.kind === "cell" ? pipeline.steps.find((item) => item.id === selection.stepId) : undefined;
+  const selectedRecord = selection?.kind === "cell" ? pipeline.records.find((item) => item.contact_id === selection.contactId && item.step_id === selection.stepId) : undefined;
+
+  if (pipeline.steps.length === 0) {
+    return <div className="space-y-4">
+      <p className="c-muted text-sm leading-relaxed">相手を行に、進める手順を列に並べ、予定日と完了日を記録します。呼び名と短いメモだけを扱い、連絡先は保存しません。</p>
+      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub h-11 px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを はじめる"}</button>}
+      {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
+    </div>;
+  }
+
+  return <div className="space-y-5">
+    <p className="c-muted text-xs leading-relaxed">行＝相手、列＝手順。ます目を選ぶと予定日と完了日を記録できます。</p>
+    <div className="overflow-x-auto border-2 border-[#1b2a41]">
+      <table className="w-full min-w-max border-collapse text-sm">
+        <thead><tr className="bg-[#f3ecd9]">
+          <th scope="col" className="sticky left-0 z-10 min-w-28 bg-[#f3ecd9] px-3 py-2 text-left text-xs font-normal">相手</th>
+          {pipeline.steps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
+        </tr></thead>
+        <tbody>{pipeline.contacts.length === 0 ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">まだ相手がいません。下から追加してください。</td></tr> :
+          pipeline.contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
+            <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
+              <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
+            </th>
+            {pipeline.steps.map((step) => {
+              const record = pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
+              return <td key={step.id} className="p-1 text-center">
+                <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
+                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? <span className="c-muted">{shortDate(record.planned_on)} 予定</span> : <span className="c-muted">―</span>}
+                </button>
+              </td>;
+            })}
+          </tr>)}</tbody>
+      </table>
+    </div>
+
+    {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
+      <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div><p className="c-muted mb-1 text-xs">予定日</p><DateInput value={planned} onChange={setPlanned} label="予定日" /></div>
+        <div><p className="c-muted mb-1 text-xs">おわった日</p><DateInput value={done} onChange={setDone} label="おわった日" /></div>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={busy} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: planned || null, p_done_on: todayInJapan() }, "記録")} className="rpg-button h-11 px-4 disabled:opacity-50">今日おわった</button>
+        <button type="button" disabled={busy || (!planned && !done)} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: planned || null, p_done_on: done || null }, "保存")} className="c-button-sub h-11 px-4 disabled:opacity-50">日付を保存</button>
+        {selectedRecord && <button type="button" disabled={busy} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: null, p_done_on: null }, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付を消す</button>}
+        <button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button>
+      </div>
+    </div>}
+
+    {selection?.kind === "contact" && selectedContact && <form onSubmit={(event) => { event.preventDefault(); run("sakaba_update_project_contact", { p_contact_id: selection.contactId, p_label: editContactLabel.trim(), p_memo: memo.trim() }, "相手の更新"); }} className="c-card space-y-3 p-4">
+      <p className="text-sm">相手をなおす</p>
+      <div><p className="c-muted mb-1 text-xs">呼び名</p><TextInput value={editContactLabel} onChange={setEditContactLabel} max={30} label="呼び名" /></div>
+      <div><p className="c-muted mb-1 text-xs">ひとことメモ（連絡先は書かないでください）</p><TextInput value={memo} onChange={setMemo} max={100} label="ひとことメモ" /></div>
+      <div className="flex gap-3"><button type="submit" disabled={busy || !editContactLabel.trim()} className="rpg-button h-11 px-4 disabled:opacity-50">保存</button><button type="button" onClick={() => setSelection(null)} className="c-muted px-2 text-xs">閉じる</button></div>
+    </form>}
+
+    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; run("sakaba_add_project_contact", { p_project_id: projectId, p_label: newContactLabel.trim() }, "相手の追加", () => setNewContactLabel("")); }} className="space-y-2">
+      <p className="text-sm">相手を足す</p>
+      <div className="flex gap-2"><div className="min-w-0 flex-1"><TextInput value={newContactLabel} onChange={setNewContactLabel} max={30} label="相手の呼び名" placeholder="例：Dさん（美容室）" /></div><button type="submit" disabled={busy || !newContactLabel.trim()} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">追加</button></div>
+    </form>}
+
+    {editable && <div className="c-dashed-top pt-4">
+      <button type="button" onClick={() => setEditingSteps(!editingSteps)} className="c-muted text-xs underline">{editingSteps ? "手順の編集を閉じる" : "手順（列）をなおす"}</button>
+      {editingSteps && <div className="mt-4 space-y-3">
+        {pipeline.steps.map((step) => <StepNameEditor key={step.id} step={step} busy={busy} run={run} />)}
+        <form onSubmit={(event) => { event.preventDefault(); if (!stepName.trim()) return; run("sakaba_add_project_step", { p_project_id: projectId, p_name: stepName.trim() }, "手順の追加", () => setStepName("")); }} className="flex gap-2">
+          <div className="min-w-0 flex-1"><TextInput value={stepName} onChange={setStepName} max={12} label="新しい手順" placeholder="例：見積" /></div>
+          <button type="submit" disabled={busy || !stepName.trim() || pipeline.steps.length >= 12} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">右に足す</button>
+        </form>
+      </div>}
+    </div>}
+    <p role="status" aria-live="polite" className="c-muted min-h-4 text-xs">{saving ? `${saving}中…` : isPending ? "読み込み中…" : ""}</p>
+    {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
+  </div>;
+}
+
+function StepNameEditor({ step, busy, run }: { step: GuildProjectPipeline["steps"][number]; busy: boolean; run: (name: string, args: Record<string, unknown>, action: string) => Promise<void> }) {
+  const [name, setName] = useState(step.name);
+  return <div className="flex gap-2"><div className="min-w-0 flex-1"><TextInput value={name} onChange={setName} max={12} label={`${step.name}の名前`} /></div>
+    <button type="button" disabled={busy || !name.trim() || name.trim() === step.name} onClick={() => run("sakaba_rename_project_step", { p_step_id: step.id, p_name: name.trim() }, "手順の更新")} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">なおす</button>
+  </div>;
+}
