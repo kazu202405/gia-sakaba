@@ -16,6 +16,14 @@ export type GuildQuest = Quest & {
   my_application: QuestApplication | null;
 };
 
+export type GuildQuestApplicant = {
+  user_id: string;
+  message: string;
+  created_at: string;
+  intro_request_id: string | null;
+  intro_status: IntroRequest["status"] | null;
+};
+
 export type GuildIntroRequest = IntroRequest & {
   other_contact: { email: string; line_url: string; website_url: string } | null;
 };
@@ -100,6 +108,13 @@ export async function listGuildQuests(): Promise<GuildQuest[]> {
 
   if (error) throw rpcError("クエストを取得できませんでした", error.message);
   return Array.isArray(data) ? (data as GuildQuest[]) : [];
+}
+
+export async function listGuildQuestApplicants(questId: string): Promise<GuildQuestApplicant[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_quest_applicants", { p_quest_id: questId });
+  if (error) throw rpcError("参加希望者を取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildQuestApplicant[] : [];
 }
 
 export async function listGuildIntroRequests(): Promise<GuildIntroRequest[]> {

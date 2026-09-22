@@ -46,7 +46,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     <div className="flex flex-wrap items-center gap-3">
       <Link href={`/guild/quests/${questId}/edit`} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">内容をなおす</Link>
-      {!gathering && <span className="c-muted text-xs">参加希望 {applicantCount}人・確認画面は準備中</span>}
+      {!gathering && <Link href={`/guild/quests/${questId}/applicants`} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">参加希望者を見る（{applicantCount}人）</Link>}
       <button type="button" onClick={() => void withdraw()} disabled={busy} className="c-muted ml-auto text-xs underline underline-offset-4 disabled:opacity-50">{busy ? "取り下げ中…" : `この${questTerm}を取り下げる`}</button>
     </div>
   </div>;
