@@ -12,13 +12,13 @@ type NavItem = {
   label: string;
   short: string;
   exact?: boolean;
-  /** この道の下も「ここにいる」とみなす（マイページから入る画面） */
+  /** この道の下も「ここにいる」とみなす */
   also?: string[];
 };
 
 const NAV: NavItem[] = [
-  { href: "/guild", label: "ギルド", short: "ギルド", exact: true },
-  { href: "/guild/members", label: "メンバー", short: "メンバー", also: ["/guild/requests"] },
+  { href: "/guild", label: "ホーム", short: "ホーム", exact: true },
+  { href: "/guild/members", label: "ギルド", short: "ギルド", also: ["/guild/requests"] },
   { href: "/guild/quests", label: "クエスト", short: "クエスト" },
   { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
   { href: "/guild/me", label: "マイページ", short: "マイページ" },
@@ -38,7 +38,7 @@ function isActive(pathname: string, item: NavItem) {
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
   if (pathname === "/guild/login") return <>{children}</>;
-  const nav = isMaster ? [...NAV, MASTER_NAV] : NAV;
+  const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
 
   return (
     <div className="guild-theme min-h-screen">
@@ -59,12 +59,16 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
         <nav className="c-window guild-sidebar hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
           <span className="c-window-title">コマンド</span>
           <ul className="space-y-1">
-            {nav.map((item) => (
+            {NAV.map((item) => (
               <li key={item.href}>
                 <CommandLink item={item} active={isActive(pathname, item)} />
               </li>
             ))}
           </ul>
+          {isMaster && <div className="c-dashed-top mt-4 pt-3">
+            <p className="c-muted mb-1 text-[11px]">マスターのみ</p>
+            <CommandLink item={MASTER_NAV} active={isActive(pathname, MASTER_NAV)} />
+          </div>}
         </nav>
 
         <main className="min-w-0">{children}</main>
@@ -78,7 +82,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
         )}
         aria-label="メニュー"
       >
-        {nav.map((item) => {
+        {mobileNav.map((item) => {
           const active = isActive(pathname, item);
           return (
             <Link
