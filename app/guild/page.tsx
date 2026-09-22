@@ -3,7 +3,6 @@ import Link from "next/link";
 import { MoreLink, Window } from "@/components/guild/cards";
 import { dueLabel, upcomingTasks } from "@/lib/guild/projects";
 import {
-  getGuildContext,
   getMyGuildProfile,
   listGuildNotifications,
   listGuildProjects,
@@ -12,8 +11,7 @@ import {
 export const metadata: Metadata = { title: { absolute: "GIAの酒場" } };
 
 export default async function GuildHomePage() {
-  const [context, me, notifications, projects] = await Promise.all([
-    getGuildContext(),
+  const [me, notifications, projects] = await Promise.all([
     getMyGuildProfile(),
     listGuildNotifications(),
     listGuildProjects(),
@@ -22,7 +20,6 @@ export default async function GuildHomePage() {
   const active = projects.filter((project) => project.status === "active");
   const upcoming = upcomingTasks(projects, projects.flatMap((project) => project.tasks), me.id, today);
   const unread = notifications.filter((item) => item.read_at === null).length;
-  const isMaster = context.membership.role === "owner" || context.membership.role === "master";
 
   return <div className="space-y-10">
     <Window title="おしらせ">
@@ -31,7 +28,6 @@ export default async function GuildHomePage() {
         {unread > 0 ? <>まだ読んでいない おしらせが <span className="text-xl tabular-nums">{unread}</span>件あります。</> : "新しい おしらせはありません。"}
       </p>
       <Link href="/guild/notifications" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>
-      {isMaster && <Link href="/guild/master" className="c-button-sub mt-4 flex min-h-11 w-fit items-center px-4 text-sm">ギルドマスターの画面へ ▶</Link>}
     </Window>
 
     <div className="grid gap-10 md:grid-cols-2">

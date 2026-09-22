@@ -1,7 +1,6 @@
 "use client";
 
 // 酒場の外枠（C案）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
-// ギルドマスター画面はスマホの下に入りきらないので、ヘッダー右から行けるようにする。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +24,8 @@ const NAV: NavItem[] = [
   { href: "/guild/me", label: "マイページ", short: "マイページ" },
 ];
 
+const MASTER_NAV: NavItem = { href: "/guild/master", label: "ギルドマスター", short: "マスター" };
+
 function isUnder(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
 }
@@ -34,9 +35,10 @@ function isActive(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
 }
 
-export function GuildShell({ children }: { children: React.ReactNode }) {
+export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
   if (pathname === "/guild/login") return <>{children}</>;
+  const nav = isMaster ? [...NAV, MASTER_NAV] : NAV;
 
   return (
     <div className="guild-theme min-h-screen">
@@ -57,7 +59,7 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
         <nav className="c-window guild-sidebar hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
           <span className="c-window-title">コマンド</span>
           <ul className="space-y-1">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <li key={item.href}>
                 <CommandLink item={item} active={isActive(pathname, item)} />
               </li>
@@ -70,10 +72,13 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
 
       {/* スマホ：下のコマンド */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-30 grid border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden",
+          isMaster ? "grid-cols-6" : "grid-cols-5",
+        )}
         aria-label="メニュー"
       >
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = isActive(pathname, item);
           return (
             <Link
@@ -81,7 +86,8 @@ export function GuildShell({ children }: { children: React.ReactNode }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative py-3 text-center text-[10px] tracking-normal",
+                "relative min-w-0 py-3 text-center tracking-normal",
+                isMaster ? "text-[9px] max-[359px]:text-[8px]" : "text-[10px]",
                 active ? "text-[#1b2a41]" : "text-[#1b2a41]/50",
               )}
             >

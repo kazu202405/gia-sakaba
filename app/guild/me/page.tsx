@@ -20,7 +20,6 @@ export default async function MyPage() {
 
   return <div className="space-y-9">
     <PageTitle title="マイページ" lead="自分のステータスと、酒場で進めていることを確認できます。" />
-    {(context.membership.role === "owner" || context.membership.role === "master") && <Link href="/guild/master" className="c-button-sub inline-flex h-11 items-center px-4 text-sm">▶ しょうかいの しれいしつ</Link>}
     <Window title={context.guild.terms.status}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <JobAvatar icon={me.job_icon} photoUrl={me.photo_url} name={me.job || me.display_name} size="lg" />
