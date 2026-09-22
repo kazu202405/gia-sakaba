@@ -40,6 +40,18 @@ export type GuildPendingGatheringApplication = {
   created_at: string;
 };
 
+export type GuildMasterInvite = {
+  id: string;
+  code: string;
+  created_at: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+  used_count: number;
+  max_uses: number;
+  created_by_name: string;
+  members: { user_id: string; display_name: string; joined_at: string; suspended: boolean }[];
+};
+
 export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
 export type ContactVisibility = "members" | "approved";
@@ -129,6 +141,13 @@ export async function listPendingGatheringApplications(): Promise<GuildPendingGa
   const { data, error } = await supabase.rpc("sakaba_list_pending_gathering_applications", { p_guild_slug: "gia" });
   if (error) throw rpcError("集まりの承認待ちを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildPendingGatheringApplication[] : [];
+}
+
+export async function listGuildMasterInvites(): Promise<GuildMasterInvite[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
+  if (error) throw rpcError("招待リンクを取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildMasterInvite[] : [];
 }
 
 export async function listGuildNotifications(): Promise<GuildNotification[]> {
