@@ -1,29 +1,38 @@
 import type { Metadata } from "next";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { JoinForm } from "@/components/guild/join-form";
-import { checkInvite, inviteErrorText } from "@/lib/guild/join";
-import { TODAY, getProfile, guild, invites } from "@/lib/guild/mock-data";
+import { inviteErrorText } from "@/lib/guild/join";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "入会" };
 
 type Props = { searchParams: Promise<{ invite?: string }> };
 
-// 入会は 招待リンク（/guild/join?invite=コード）からだけ。本番は 招待コードの確かめと 使った数の加算を サーバー側で行う
+type InviteResult =
+  | { ok: true; guild: { slug: string; name: string }; inviter_name: string }
+  | { ok: false; reason: keyof typeof inviteErrorText };
+
+// 招待コードの確認はDBで行い、入会時にも利用数と期限を同一トランザクションで再確認する。
 export default async function JoinPage({ searchParams }: Props) {
   const { invite } = await searchParams;
-  const check = checkInvite(invites, invite, TODAY);
+  const code = invite?.trim() ?? "";
+  const { data, error } = code
+    ? await (await createClient()).rpc("sakaba_check_invite", { p_code: code })
+    : { data: { ok: false, reason: "missing" }, error: null };
+  const check = data as InviteResult | null;
+  const valid = !error && check?.ok && check.guild.slug === "gia";
 
   return (
     <div className="space-y-9">
       <PageTitle
-        title={`${guild.name}に 入会する`}
+        title="GIAの酒場に 入会する"
         lead="名前と 会社名だけで はじめられます。くわしい ステータスは あとから 書けます。"
       />
-      {check.ok ? (
-        <JoinForm inviterName={getProfile(check.invite.created_by)?.display_name ?? guild.terms.master} />
+      {valid ? (
+        <JoinForm inviterName={check.inviter_name || "ギルドマスター"} inviteCode={code} />
       ) : (
         <Window title="招待リンク">
-          <p className="text-sm leading-relaxed">{inviteErrorText[check.reason]}</p>
+          <p className="text-sm leading-relaxed">{error ? "招待リンクを確認できませんでした。時間をおいて再度お試しください。" : check && !check.ok ? inviteErrorText[check.reason] : "この招待リンクはGIAの酒場では使えません。招待してくれた人にご確認ください。"}</p>
         </Window>
       )}
     </div>

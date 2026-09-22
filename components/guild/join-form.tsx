@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
 import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/rules";
@@ -16,14 +17,13 @@ import {
   type JoinDraft,
   type JoinErrors,
 } from "@/lib/guild/join";
-import { guild } from "@/lib/guild/mock-data";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
-export function JoinForm({ inviterName }: { inviterName: string }) {
+export function JoinForm({ inviterName, inviteCode }: { inviterName: string; inviteCode: string }) {
   const router = useRouter();
   const [draft, setDraft] = useState<JoinDraft>({
     display_name: "",
@@ -34,6 +34,8 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
     agreed: false,
   });
   const [errors, setErrors] = useState<JoinErrors>({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   const set = <K extends keyof JoinDraft>(key: K, value: JoinDraft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -47,16 +49,35 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
       <form
         noValidate
         className="space-y-7"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
+          if (saving) return;
           const next = validateJoin(draft);
           setErrors(next);
           if (Object.keys(next).length > 0) {
             scrollToFirstError();
             return;
           }
-          uiToast(`${guild.name}に 入会しました（見本のため保存はされません）`);
-          router.push("/guild/me/status?new=1");
+          setSaving(true);
+          setSaveError("");
+          try {
+            const { data, error } = await createClient().rpc("sakaba_join_guild", {
+              p_code: inviteCode,
+              p_display_name: draft.display_name.trim(),
+              p_company_name: draft.company_name.trim(),
+              p_position: draft.position,
+              p_show_company: draft.show_company,
+              p_want_to_solve: draft.want_to_solve.trim(),
+              p_agreed: draft.agreed,
+            });
+            if (error) throw error;
+            uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : "GIAの酒場に入会しました");
+            router.push("/guild/me/status?new=1");
+            router.refresh();
+          } catch {
+            setSaveError("入会できませんでした。招待リンクの期限や利用回数を確認し、再度お試しください。");
+            setSaving(false);
+          }
         }}
       >
         <Field label="お名前" required error={errors.display_name ?? ""}>
@@ -102,7 +123,7 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
         </Field>
 
         <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
-          <span className="block text-[15px]">会社名と役職を {guild.terms.member}めいかんに 出す</span>
+          <span className="block text-[15px]">会社名と役職を メンバーめいかんに 出す</span>
           <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
         </CheckBox>
 
@@ -148,8 +169,9 @@ export function JoinForm({ inviterName }: { inviterName: string }) {
           {errors.agreed && <p className="text-xs text-[#c62828]">{errors.agreed}</p>}
         </div>
 
-        <button type="submit" className="rpg-button h-12 w-full text-base sm:w-auto sm:px-8">
-          ▶ スタート
+        {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
+        <button type="submit" disabled={saving} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
+          {saving ? "入会中…" : "▶ スタート"}
         </button>
       </form>
     </Window>
