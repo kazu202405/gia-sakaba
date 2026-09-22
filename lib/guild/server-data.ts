@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import type { Guild, GuildNotification, IntroRequest, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
+import type { Guild, GuildNotification, IntroRequest, Position, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 
 type GuildContext = {
   guild: Guild;
@@ -18,6 +18,18 @@ export type GuildQuest = Quest & {
 
 export type GuildIntroRequest = IntroRequest & {
   other_contact: { email: string; line_url: string; website_url: string } | null;
+};
+
+export type GuildPendingGatheringApplication = {
+  quest_id: string;
+  quest_title: string;
+  user_id: string;
+  display_name: string;
+  company_name: string;
+  position: Position;
+  want_to_solve: string;
+  message: string;
+  created_at: string;
 };
 
 export type GuildProject = Project & { tasks: ProjectTask[] };
@@ -95,6 +107,13 @@ export async function listGuildIntroRequests(): Promise<GuildIntroRequest[]> {
   const { data, error } = await supabase.rpc("sakaba_list_intro_requests", { p_guild_slug: "gia" });
   if (error) throw rpcError("紹介依頼を取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildIntroRequest[] : [];
+}
+
+export async function listPendingGatheringApplications(): Promise<GuildPendingGatheringApplication[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_pending_gathering_applications", { p_guild_slug: "gia" });
+  if (error) throw rpcError("集まりの承認待ちを取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildPendingGatheringApplication[] : [];
 }
 
 export async function listGuildNotifications(): Promise<GuildNotification[]> {

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { QuestForm } from "@/components/guild/quest-form";
+import { notFound } from "next/navigation";
+import { LiveQuestForm } from "@/components/guild/live-quest-form";
+import { getGuildContext } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "集まりを ひらく" };
 
-// 本番では guild_members.role が owner / master の人だけが開ける（サーバー側で確かめる）。出すときも RPC で役割を確かめる
-export default function NewGatheringPage() {
-  return <QuestForm gathering />;
+export default async function NewGatheringPage() {
+  const context = await getGuildContext();
+  if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
+  return <LiveQuestForm questTerm={context.guild.terms.quest} gathering />;
 }
