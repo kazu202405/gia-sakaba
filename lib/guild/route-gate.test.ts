@@ -5,6 +5,10 @@ const prod = { allowLook: false };
 const dev = { allowLook: true };
 
 describe("guildGate", () => {
+  it("公開LPの / は通す", () => {
+    expect(guildGate("/", prod)).toEqual({ kind: "pass" });
+  });
+
   it("/guild 配下は通す", () => {
     for (const p of ["/guild", "/guild/", "/guild/quests/new", "/guild/members/abc"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });
@@ -23,7 +27,7 @@ describe("guildGate", () => {
   });
 
   it("GIA 本体の画面は /guild へ飛ばす", () => {
-    for (const p of ["/", "/login", "/plans", "/members/app/board", "/clone/x/tasks", "/admin", "/sitemap.xml"]) {
+    for (const p of ["/login", "/plans", "/members/app/board", "/clone/x/tasks", "/admin", "/sitemap.xml"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "redirect", to: "/guild" });
     }
   });

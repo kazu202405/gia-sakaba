@@ -4,7 +4,7 @@
 // （/login・/plans・/clone など）や API まで酒場のドメインで開けてしまう。
 // そこで「通してよい道」だけを並べ、それ以外は閉じる（書き漏れたら閉じる側に倒れる）。
 //
-// - /guild 配下 → 通す
+// - /（公開の酒場案内）と /guild 配下 → 通す
 // - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す
 // - Next.js の内部ファイル・画像など → 通す
 // - /api 配下 → 404（リダイレクトすると外部からの呼び出しが 200 で成功したように見える）
@@ -23,6 +23,7 @@ function isUnder(pathname: string, prefix: string): boolean {
 }
 
 export function guildGate(pathname: string, options: { allowLook: boolean }): GuildGateResult {
+  if (pathname === "/") return { kind: "pass" };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 
