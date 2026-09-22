@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BackLink, MemberRow, Window, questCategoryMark } from "@/components/guild/cards";
 import { LiveQuestApplication } from "@/components/guild/live-quest-application";
+import { LiveQuestOwnerActions } from "@/components/guild/live-quest-owner-actions";
 import { GROUND_RULES } from "@/lib/guild/rules";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import {
@@ -82,6 +83,8 @@ export default async function QuestDetailPage({ params }: Props) {
             {q.body && <p className="mt-4 whitespace-pre-line text-[15px] leading-loose break-words">{q.body}</p>}
 
             <LiveQuestApplication quest={q} currentUserId={currentUserId} />
+            {q.creator_id === currentUserId && (q.status === "open" || q.status === "in_progress") &&
+              <LiveQuestOwnerActions questId={q.id} questTerm={questTerm} applicantCount={q.applicant_count} gathering={q.members_only} />}
           </>
         ) : (
           <div className="c-card mt-6 border-dashed px-4 py-5 text-sm leading-relaxed">
