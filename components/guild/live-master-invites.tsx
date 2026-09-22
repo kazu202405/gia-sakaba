@@ -83,7 +83,7 @@ export function LiveMasterInvites({ initial }: { initial: GuildMasterInvite[] })
   }
 
   return <Window title="招待リンク" action={<span className="c-muted text-xs">発行済み {invites.length}件</span>}>
-    <p className="c-muted mb-4 text-sm leading-relaxed">リンクは1人だけ使用でき、30日で期限切れになります。参加した人は、使ったリンクの下に表示されます。現在はGIAのログインアカウントを持つ人が参加できます。</p>
+    <p className="c-muted mb-4 text-sm leading-relaxed">ここで発行するリンクは1人用・30日間有効です。メンバーがマイページで作った個人リンクも、参加した人と一緒にここへ表示されます。現在はGIAのログインアカウントを持つ人が参加できます。</p>
     <button type="button" disabled={pending !== null} onClick={() => void createInvite()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending === "create" ? "発行中…" : "▶ 招待リンクを発行"}</button>
     {error && <p role="alert" className="mt-4 text-sm text-[#c62828]">{error}</p>}
     {invites.length === 0 ? <p className="c-muted mt-5 text-sm">招待リンクはまだありません。</p> :
@@ -94,7 +94,7 @@ export function LiveMasterInvites({ initial }: { initial: GuildMasterInvite[] })
             <div className="text-sm">{formatDate(invite.created_at)} 発行 <span className="c-muted">{invite.created_by_name && `・${invite.created_by_name}`}</span></div>
             <span className="c-chip text-xs">{status}</span>
           </div>
-          <p className="c-muted mt-1 text-xs">{invite.expires_at ? `${formatDate(invite.expires_at)}まで` : "期限なし"} ・ {invite.used_count}/{invite.max_uses}人が使用</p>
+          <p className="c-muted mt-1 text-xs">{invite.max_uses > 1 ? "メンバーの個人リンク" : "1人用リンク"} ・ {invite.expires_at ? `${formatDate(invite.expires_at)}まで` : "期限なし"} ・ {invite.used_count}人が使用</p>
           {status === "有効" && <div className="mt-3 flex flex-wrap gap-2">
             <button type="button" onClick={() => void copyInvite(invite.code)} className="c-button-sub h-10 px-4 text-sm">リンクをコピー</button>
             <button type="button" disabled={pending !== null} onClick={() => void revokeInvite(invite)} className="c-button-sub h-10 px-4 text-sm disabled:opacity-50">{pending === invite.id ? "無効化中…" : "無効にする"}</button>

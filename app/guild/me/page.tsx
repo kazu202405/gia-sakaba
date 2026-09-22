@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
+import { LiveMyInvite } from "@/components/guild/live-my-invite";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { groupLabel } from "@/lib/guild/labels";
-import { getGuildContext, getMyGuildProfile, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
+import { getGuildContext, getMyGuildProfile, getMyMemberInvite, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 import type { VisibleGroup } from "@/lib/guild/types";
 
 export const metadata: Metadata = { title: "マイページ" };
 
 export default async function MyPage() {
-  const [context, me, quests, projects] = await Promise.all([
-    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(),
+  const [context, me, quests, projects, invite] = await Promise.all([
+    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(),
   ]);
   const fields = [me.bio, me.can_help_with, me.strengths, me.values_text, me.vision, me.looking_for, me.want_to_meet];
   const filled = fields.filter((value) => value.trim()).length + (me.photo_url ? 1 : 0);
@@ -41,6 +42,8 @@ export default async function MyPage() {
         </div>
       </div>
     </Window>
+
+    <LiveMyInvite initial={invite} />
 
     <Window title="こうかい はんい">
       <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">

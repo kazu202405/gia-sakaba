@@ -23,7 +23,7 @@ import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
-export function JoinForm({ inviterName, inviteCode }: { inviterName: string; inviteCode: string }) {
+export function JoinForm({ inviterName, inviteCode, preview = false }: { inviterName: string; inviteCode: string; preview?: boolean }) {
   const router = useRouter();
   const [draft, setDraft] = useState<JoinDraft>({
     display_name: "",
@@ -45,13 +45,14 @@ export function JoinForm({ inviterName, inviteCode }: { inviterName: string; inv
 
   return (
     <Window title="入会">
-      <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待です。</p>
+      {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
+        <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待です。</p>}
       <form
         noValidate
         className="space-y-7"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (saving) return;
+          if (saving || preview) return;
           const next = validateJoin(draft);
           setErrors(next);
           if (Object.keys(next).length > 0) {
@@ -170,8 +171,8 @@ export function JoinForm({ inviterName, inviteCode }: { inviterName: string; inv
         </div>
 
         {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
-        <button type="submit" disabled={saving} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
-          {saving ? "入会中…" : "▶ スタート"}
+        <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
+          {preview ? "プレビュー中（送信できません）" : saving ? "入会中…" : "▶ スタート"}
         </button>
       </form>
     </Window>

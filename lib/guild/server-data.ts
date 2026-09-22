@@ -52,6 +52,21 @@ export type GuildMasterInvite = {
   members: { user_id: string; display_name: string; joined_at: string; suspended: boolean }[];
 };
 
+export type MyMemberInvite = {
+  link: { id: string; code: string; created_at: string } | null;
+  people: { user_id: string; display_name: string; joined_at: string; suspended: boolean }[];
+};
+
+export type GuildInviteNetworkMember = {
+  user_id: string;
+  display_name: string;
+  joined_at: string;
+  role: "owner" | "master" | "member";
+  suspended: boolean;
+  invited_by_user_id: string | null;
+  invited_by_name: string | null;
+};
+
 export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
 export type ContactVisibility = "members" | "approved";
@@ -148,6 +163,20 @@ export async function listGuildMasterInvites(): Promise<GuildMasterInvite[]> {
   const { data, error } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
   if (error) throw rpcError("招待リンクを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildMasterInvite[] : [];
+}
+
+export async function getMyMemberInvite(): Promise<MyMemberInvite> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_my_member_invite", { p_guild_slug: "gia" });
+  if (error) throw rpcError("自分の招待リンクを取得できませんでした", error.message);
+  return data as MyMemberInvite;
+}
+
+export async function listGuildInviteNetwork(): Promise<GuildInviteNetworkMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_invite_network", { p_guild_slug: "gia" });
+  if (error) throw rpcError("招待のつながりを取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildInviteNetworkMember[] : [];
 }
 
 export async function listGuildNotifications(): Promise<GuildNotification[]> {
