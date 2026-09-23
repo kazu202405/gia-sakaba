@@ -101,6 +101,17 @@ export function getMembershipPriceId(plan: MembershipPlan): string {
   return id;
 }
 
+/** GIAの酒場（月480円）の専用 Price ID。既存の会員商品とは共有しない。 */
+export function getSakabaPriceId(): string {
+  const id = pickModeEnv("STRIPE_PRICE_SAKABA");
+  if (!id) {
+    throw new Error(
+      `STRIPE_PRICE_SAKABA_${getStripeMode().toUpperCase()}（または STRIPE_PRICE_SAKABA）が未設定です。`,
+    );
+  }
+  return id;
+}
+
 /** 寺子屋 法人プラン（¥9,980/月）の Price ID を取得（未設定時は明示エラー） */
 export function getTerakoyaCorpPriceId(): string {
   const id = pickModeEnv("STRIPE_PRICE_ID_TERAKOYA_CORP");

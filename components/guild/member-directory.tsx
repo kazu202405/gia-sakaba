@@ -20,15 +20,21 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー" 
     if (industry && m.industry !== industry) return false;
     if (region && m.region !== region) return false;
     if (acceptOnly && !m.accept_intro) return false;
-    const q = keyword.trim();
+    const q = keyword.trim().toLocaleLowerCase("ja");
     if (!q) return true;
-    // 非公開のまとまりの中身では引っかからないようにする（本番はDB側で返さない）
     const haystack = [
       m.display_name,
+      m.name_kana,
       m.headline,
+      m.company_name,
+      m.industry,
       m.job,
-      m.visible_groups.includes("work") ? [m.bio, m.can_help_with, ...m.keywords].join(" ") : "",
-    ].join(" ");
+      m.region,
+      m.bio,
+      m.values_text,
+      m.looking_for,
+      ...m.keywords,
+    ].join(" ").toLocaleLowerCase("ja");
     return haystack.includes(q);
   });
 

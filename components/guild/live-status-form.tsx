@@ -11,7 +11,7 @@ import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 
 const CONTACT_LABEL: Record<ContactKind, string> = { email: "メール", line: "LINE URL", website: "ウェブサイト" };
-type Snapshot = { draft: MyGuildProfile; keywords: string };
+type Snapshot = { draft: MyGuildProfile };
 
 function ContactVisibilityChoice({ kind, value, saving, onChange }: {
   kind: ContactKind;
@@ -36,7 +36,7 @@ function validationError({ draft }: Snapshot): string | null {
   return null;
 }
 
-async function persist({ draft, keywords }: Snapshot) {
+async function persist({ draft }: Snapshot) {
   const supabase = createClient();
   const profileResult = await supabase.rpc("sakaba_update_my_profile_simple", {
     p_guild_slug: "gia",
@@ -60,7 +60,6 @@ async function persist({ draft, keywords }: Snapshot) {
     p_line_url: draft.contact.line_url.trim(),
     p_website_url: draft.contact.website_url.trim(),
     p_industry: draft.industry.trim(),
-    p_keywords: keywords.split(/[、,\n]/).map((item) => item.trim()).filter(Boolean).slice(0, 5),
   });
   if (profileResult.error) return profileResult;
   return supabase.rpc("sakaba_update_profile_extras", {
@@ -72,15 +71,14 @@ async function persist({ draft, keywords }: Snapshot) {
 export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initial);
-  const [keywords, setKeywords] = useState(initial.keywords.join("、"));
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");
   const [leaving, setLeaving] = useState(false);
   const [visibilitySaving, setVisibilitySaving] = useState<ContactKind | null>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
-  const latestRef = useRef<Snapshot>({ draft: initial, keywords: initial.keywords.join("、") });
-  const lastSavedRef = useRef(JSON.stringify({ draft: initial, keywords: initial.keywords.join("、") }));
+  const latestRef = useRef<Snapshot>({ draft: initial });
+  const lastSavedRef = useRef(JSON.stringify({ draft: initial }));
   const queueRef = useRef<Promise<boolean>>(Promise.resolve(true));
 
   const saveCurrent = useCallback((mode: "auto" | "manual"): Promise<boolean> => {
@@ -112,11 +110,11 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   }, []);
 
   useEffect(() => {
-    latestRef.current = { draft, keywords };
+    latestRef.current = { draft };
     if (JSON.stringify(latestRef.current) === lastSavedRef.current) return;
     const timer = window.setTimeout(() => { void saveCurrent("auto"); }, 1800);
     return () => window.clearTimeout(timer);
-  }, [draft, keywords, retryToken, saveCurrent]);
+  }, [draft, retryToken, saveCurrent]);
   const set = <K extends keyof MyGuildProfile>(key: K, value: MyGuildProfile[K]) => {
     setDraft((current) => ({ ...current, [key]: value }));
     setError("");
@@ -124,11 +122,6 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   };
   const setContact = (key: keyof MyGuildProfile["contact"], value: string) => {
     setDraft((current) => ({ ...current, contact: { ...current.contact, [key]: value } }));
-    setError("");
-    setSaveState("editing");
-  };
-  const setKeywordsValue = (value: string) => {
-    setKeywords(value);
     setError("");
     setSaveState("editing");
   };
@@ -216,7 +209,6 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">しごと</span>
         <Field label="仕事内容・できること" hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
-        <Field label="キーワード" hint="読点またはカンマで区切って5つまで"><TextInput value={keywords} onChange={setKeywordsValue} max={150} label="キーワード" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">

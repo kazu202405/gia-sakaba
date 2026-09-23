@@ -56,6 +56,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/guild/projects/new" ||
     pathname === "/guild/me" ||
     pathname === "/guild/me/status" ||
+    pathname === "/guild/plan" ||
     pathname === "/guild/requests" ||
     pathname === "/guild/notifications" ||
     pathname === "/guild/join" ||

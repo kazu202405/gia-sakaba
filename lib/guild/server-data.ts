@@ -57,6 +57,18 @@ export type MyMemberInvite = {
   people: { user_id: string; display_name: string; joined_at: string; suspended: boolean }[];
 };
 
+export type GuildBillingStatus = "free" | "trialing" | "active" | "past_due" | "canceled" | "exempt";
+export type GuildBilling = {
+  guild_id: string;
+  user_id: string;
+  role: "owner" | "master" | "member";
+  billing_status: GuildBillingStatus;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  is_paid: boolean;
+};
+
 export type GuildInviteNetworkMember = {
   user_id: string;
   display_name: string;
@@ -181,6 +193,13 @@ export async function getMyMemberInvite(): Promise<MyMemberInvite> {
   const { data, error } = await supabase.rpc("sakaba_get_my_member_invite", { p_guild_slug: "gia" });
   if (error) throw rpcError("自分の招待リンクを取得できませんでした", error.message);
   return data as MyMemberInvite;
+}
+
+export async function getMyGuildBilling(): Promise<GuildBilling> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_my_billing", { p_guild_slug: "gia" });
+  if (error) throw rpcError("有料会員の状態を取得できませんでした", error.message);
+  return data as GuildBilling;
 }
 
 export async function listGuildInviteNetwork(): Promise<GuildInviteNetworkMember[]> {

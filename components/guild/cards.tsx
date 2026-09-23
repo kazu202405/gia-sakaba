@@ -76,14 +76,7 @@ export function MemberCard({ profile }: { profile: Profile }) {
           </span>
         </p>
         <p className="mt-0.5 text-sm break-words">{profile.headline}</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {profile.keywords.slice(0, 3).map((k) => (
-            <span key={k} className="c-chip">
-              {k}
-            </span>
-          ))}
-          {!profile.accept_intro && <span className="c-muted text-[11px]">しょうかいは お休み中</span>}
-        </div>
+        {!profile.accept_intro && <p className="c-muted mt-2 text-[11px]">しょうかいは お休み中</p>}
       </div>
     </Link>
   );

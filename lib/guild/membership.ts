@@ -10,7 +10,7 @@ import type { IntroRequest, Party, Profile, Project, Quest, QuestApplication } f
 export const FREE_ACTIVE_PROJECT_LIMIT = 2;
 
 /** 入口の段。金額は予定（Stripe商品は見本を触って確定してから作る） */
-export const ENTRY_PLAN_PRICE_LABEL = "月480円（税込・予定）";
+export const ENTRY_PLAN_PRICE_LABEL = "月480円（税込）";
 
 /** 有料会員になるときに 必須の「あなたの つよみ」（ステータスの つよみと 同じ欄。別の列に 持たない） */
 export const STRENGTH_MIN = 20;

@@ -92,15 +92,6 @@ export default async function MemberStatusPage({ params }: Props) {
       <div className="grid gap-11 md:grid-cols-3">
         <GroupBlock profile={p} group="work">
           <Item label="仕事内容・できること" value={p.bio} />
-          {p.keywords.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {p.keywords.map((k) => (
-                <span key={k} className="c-chip">
-                  {k}
-                </span>
-              ))}
-            </div>
-          )}
         </GroupBlock>
         <GroupBlock profile={p} group="values">
           <Item label="おもい" value={p.values_text} />

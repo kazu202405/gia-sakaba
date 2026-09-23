@@ -109,6 +109,50 @@ async function applicantIdFromCustomerId(
   return (data?.id as string | undefined) ?? null;
 }
 
+type SakabaBillingStatus = "trialing" | "active" | "past_due" | "canceled";
+
+function sakabaBillingStatus(status: Stripe.Subscription.Status): SakabaBillingStatus {
+  if (status === "trialing" || status === "active" || status === "past_due") return status;
+  if (status === "canceled" || status === "incomplete_expired") return "canceled";
+  return "past_due";
+}
+
+async function applySakabaBilling(
+  supabase: SupabaseClient,
+  input: {
+    guildId: string;
+    userId: string;
+    status: SakabaBillingStatus;
+    customerId?: string | null;
+    subscriptionId?: string | null;
+    priceId?: string | null;
+  },
+) {
+  const { error } = await supabase.rpc("sakaba_apply_billing_event", {
+    p_guild_id: input.guildId,
+    p_user_id: input.userId,
+    p_billing_status: input.status,
+    p_stripe_customer_id: input.customerId ?? null,
+    p_stripe_subscription_id: input.subscriptionId ?? null,
+    p_stripe_price_id: input.priceId ?? null,
+  });
+  if (error) throw error;
+}
+
+async function subscriptionFromInvoice(
+  stripe: Stripe,
+  invoice: Stripe.Invoice,
+): Promise<Stripe.Subscription | null> {
+  const subscription = invoice.parent?.subscription_details?.subscription ?? null;
+  const id = typeof subscription === "string" ? subscription : subscription?.id ?? null;
+  if (!id) return null;
+  try {
+    return await stripe.subscriptions.retrieve(id);
+  } catch {
+    return null;
+  }
+}
+
 // ─── AI Clone 用ヘルパー ────────────────────────────────────────
 
 /** 衝突しない slug を生成（t-<8桁hex>）。5回リトライで失敗時は例外 */
@@ -292,6 +336,26 @@ export async function POST(req: NextRequest) {
           typeof session.customer === "string"
             ? session.customer
             : (session.customer?.id ?? null);
+
+        // ─ GIAの酒場（月480円）専用 ─
+        if (session.metadata?.purpose === "sakaba") {
+          const userId = session.metadata.user_id;
+          const guildId = session.metadata.guild_id;
+          if (!userId || !guildId || !subscriptionId) {
+            throw new Error("sakaba checkout metadata or subscription is missing");
+          }
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          await applySakabaBilling(supabase, {
+            guildId,
+            userId,
+            status: sakabaBillingStatus(subscription.status),
+            customerId,
+            subscriptionId,
+            priceId: subscription.items.data[0]?.price.id ?? null,
+          });
+          console.info("[stripe.webhook] sakaba membership started", { userId, guildId, subscriptionId });
+          break;
+        }
 
         // ─ AI Clone 用分岐：ai_clone_tenants + tenant_members(owner) 自動作成 ─
         if (session.metadata?.purpose === "ai-clone") {
@@ -562,6 +626,21 @@ export async function POST(req: NextRequest) {
       case "customer.subscription.updated": {
         const sub = event.data.object as Stripe.Subscription;
 
+        if (sub.metadata?.purpose === "sakaba") {
+          const userId = sub.metadata.user_id;
+          const guildId = sub.metadata.guild_id;
+          if (!userId || !guildId) throw new Error("sakaba subscription metadata is missing");
+          await applySakabaBilling(supabase, {
+            guildId,
+            userId,
+            status: sakabaBillingStatus(sub.status),
+            customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+            subscriptionId: sub.id,
+            priceId: sub.items.data[0]?.price.id ?? null,
+          });
+          break;
+        }
+
         // ─ 会員の段：status と段の変更を applicants に反映 ─
         //   段の変更（online→real 等）は subscription の price を差し替えて行う。
         //   その際 metadata.plan も新しい段に更新するので、ここで拾って
@@ -693,6 +772,21 @@ export async function POST(req: NextRequest) {
       // ─── サブスク解約（tier を tentative に戻す） ───────────────
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+
+        if (sub.metadata?.purpose === "sakaba") {
+          const userId = sub.metadata.user_id;
+          const guildId = sub.metadata.guild_id;
+          if (!userId || !guildId) throw new Error("sakaba subscription metadata is missing");
+          await applySakabaBilling(supabase, {
+            guildId,
+            userId,
+            status: "canceled",
+            customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+            subscriptionId: sub.id,
+            priceId: sub.items.data[0]?.price.id ?? null,
+          });
+          break;
+        }
 
         // ─ 会員の段：plan を外し subscription_status='canceled' ─
         //   tier は触らない（登録会員としては残す）。
@@ -826,6 +920,22 @@ export async function POST(req: NextRequest) {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
 
+        const sakabaSubscription = await subscriptionFromInvoice(stripe, invoice);
+        if (sakabaSubscription?.metadata?.purpose === "sakaba") {
+          const userId = sakabaSubscription.metadata.user_id;
+          const guildId = sakabaSubscription.metadata.guild_id;
+          if (!userId || !guildId) throw new Error("sakaba invoice metadata is missing");
+          await applySakabaBilling(supabase, {
+            guildId,
+            userId,
+            status: "active",
+            customerId: typeof sakabaSubscription.customer === "string" ? sakabaSubscription.customer : sakabaSubscription.customer.id,
+            subscriptionId: sakabaSubscription.id,
+            priceId: sakabaSubscription.items.data[0]?.price.id ?? null,
+          });
+          break;
+        }
+
         // ─ AI Clone 用分岐 ─
         const aiCloneTenantId = await aiCloneTenantIdFromInvoice(
           stripe,
@@ -854,6 +964,22 @@ export async function POST(req: NextRequest) {
       // ─── 月次請求失敗 ────────────────────────────────────────
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
+
+        const sakabaSubscription = await subscriptionFromInvoice(stripe, invoice);
+        if (sakabaSubscription?.metadata?.purpose === "sakaba") {
+          const userId = sakabaSubscription.metadata.user_id;
+          const guildId = sakabaSubscription.metadata.guild_id;
+          if (!userId || !guildId) throw new Error("sakaba invoice metadata is missing");
+          await applySakabaBilling(supabase, {
+            guildId,
+            userId,
+            status: "past_due",
+            customerId: typeof sakabaSubscription.customer === "string" ? sakabaSubscription.customer : sakabaSubscription.customer.id,
+            subscriptionId: sakabaSubscription.id,
+            priceId: sakabaSubscription.items.data[0]?.price.id ?? null,
+          });
+          break;
+        }
 
         // ─ AI Clone 用分岐 ─
         const aiCloneTenantId = await aiCloneTenantIdFromInvoice(
@@ -924,6 +1050,8 @@ export async function POST(req: NextRequest) {
       type: event.type,
       err: msg,
     });
+    // 失敗イベントは削除し、Stripeの再送で処理をやり直せるようにする。
+    await supabase.from("stripe_webhook_events").delete().eq("id", event.id);
     // 5xx を返すと Stripe は再送する。冪等テーブルが守るので OK。
     return NextResponse.json(
       { error: `handler failed: ${msg}` },
