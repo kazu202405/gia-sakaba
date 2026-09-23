@@ -34,7 +34,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
 
   return <div className="space-y-9">
     <BackLink href="/guild/me" label="マイページ" />
-    <PageTitle title="有料会員" lead={`${ENTRY_PLAN_PRICE_LABEL}。交流（名鑑・クエスト・しょうかい）は無料のままです。`} />
+    <PageTitle title="有料会員" lead="名鑑・クエスト・しょうかいは、無料のまま使えます。" />
 
     {checkoutResult === "success" && <p role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">決済を受け付けました。会員状態の反映まで少し時間がかかることがあります。</p>}
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
@@ -45,7 +45,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
         <li>▶ 有料会員限定の集まりに申し込める。</li>
       </ul>
       {!exempt && !isPaid && billingStatus !== "past_due" && <>
-        <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額会員です。無料体験期間はありません。</p>
+        <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額制です。無料体験期間はありません。</p>
         <button type="button" disabled={pending !== null} onClick={() => void open("checkout")} className="rpg-button mt-5 h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{pending === "checkout" ? "決済画面を準備中…" : "▶ 有料会員に申し込む"}</button>
         {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void open("portal")} className="c-button-sub mt-3 h-11 w-full px-5 text-sm disabled:opacity-50 sm:ml-3 sm:w-auto">支払い履歴を見る</button>}
       </>}

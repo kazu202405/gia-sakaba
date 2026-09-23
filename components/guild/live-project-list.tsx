@@ -16,13 +16,13 @@ export function LiveProjectList({ projects, userId, isPaid }: { projects: GuildP
       {!canCreate && <>
         <p className="c-muted text-sm">無料プランの作成枠（{FREE_ACTIVE_PROJECT_LIMIT}件）を使い切りました</p>
         <Window title="有料会員">
-          <p className="text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}。交流（名鑑・クエスト・しょうかい）は無料のままです。</p>
+          <p className="text-[15px] leading-relaxed">名鑑・クエスト・しょうかいは、無料のまま使えます。</p>
           <p className="c-label mt-5 text-sm">ないよう</p>
           <ul className="mt-2 space-y-2 text-[15px] leading-relaxed">
             <li>▶ プロジェクトをいくつでも進められる（無料は{FREE_ACTIVE_PROJECT_LIMIT}つまで）</li>
             <li>▶ 有料会員限定の集まりに申し込める。</li>
           </ul>
-          <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額会員です。無料体験期間はありません。</p>
+          <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額制です。無料体験期間はありません。</p>
           <GuildCheckoutButton />
         </Window>
       </>}
