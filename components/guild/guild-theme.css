@@ -156,6 +156,30 @@ a.c-card:hover {
   transform: translateY(2px);
 }
 
+/* 取り消せない操作。周囲のゲーム風ボタンと同じ角張った輪郭で危険を示す */
+.c-button-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: #fff8f5;
+  color: #9d2929;
+  border: 3px solid #9d2929;
+  box-shadow: inset -3px -3px 0 0 #edd1c9;
+  font-family: inherit;
+  cursor: pointer;
+}
+.c-button-danger:hover:not(:disabled) {
+  background: #f9e5df;
+}
+.c-button-danger:focus-visible {
+  outline: 3px solid #1b2a41;
+  outline-offset: 3px;
+}
+.c-button-danger:active:not(:disabled) {
+  transform: translateY(2px);
+}
+
 /* 選ぶボタン（目的・アイコン・件数カードなど）。押されている間は紺に反転 */
 .c-choice {
   border: 2px solid #1b2a41;

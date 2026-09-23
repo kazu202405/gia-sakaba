@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { GuildProject, GuildProjectPipeline } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
@@ -98,8 +99,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
         </button>
       </div>}
       {canEdit && <div className="c-dashed-top mt-5 flex justify-end pt-4">
-        <button type="button" disabled={busy} aria-busy={pendingAction.startsWith("project-delete")} onClick={() => void deleteProject()} className="text-sm text-[#9d2929] underline underline-offset-4 disabled:opacity-50">
-          {pendingAction === "project-delete-confirm" ? "確認中…" : pendingAction === "project-delete" ? "削除中…" : "このプロジェクトを削除"}
+        <button type="button" disabled={busy} aria-busy={pendingAction.startsWith("project-delete")} onClick={() => void deleteProject()} className="c-button-danger h-11 px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50">
+          <Trash2 size={17} aria-hidden="true" />
+          <span>{pendingAction === "project-delete-confirm" ? "確認中…" : pendingAction === "project-delete" ? "削除中…" : "このプロジェクトを削除"}</span>
         </button>
       </div>}
       {projectError && <p role="alert" className="mt-3 text-sm text-[#c62828]">{projectError}</p>}
