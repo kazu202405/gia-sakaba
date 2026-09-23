@@ -9,7 +9,10 @@ export function LiveProjectList({ projects, userId, isPaid }: { projects: GuildP
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="c-muted text-sm">自分と参加中のプロジェクトだけが表示されます。</p>
         {canCreate ? <Link href="/guild/projects/new" className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link> :
-          <span className="c-muted text-sm">無料プランの作成枠（2件）を使い切りました</span>}
+          <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+            <span className="c-muted text-sm">無料プランの作成枠（2件）を使い切りました</span>
+            <Link href="/guild/plan" className="rpg-button px-5 py-2.5">▶ 有料会員を見る</Link>
+          </div>}
       </div>
       {projects.length === 0 ? (
         <div className="c-window p-6 pt-10"><span className="c-window-title">まだありません</span><p className="text-sm">まずは取り組みたいことを登録しましょう。</p></div>

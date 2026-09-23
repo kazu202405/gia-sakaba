@@ -23,11 +23,11 @@ export default async function JoinPage({ searchParams }: Props) {
     if (!user) notFound();
     const context = await getGuildContext();
     if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
-    return <div className="space-y-9">
-      <PageTitle title="冒険者登録の確認" lead="招待状を受け取った人が、酒場の仲間になるまでの画面です。" />
+    return <JoinPageFrame>
+      <PageTitle title="入会フォームの確認" lead="招待状を受け取った人が、GIAのアカウントを作成して入会するまでの画面です。" />
       <InviteSignup inviterName="ギルドマスター" inviteCode="" preview />
       <JoinForm inviterName="ギルドマスター" inviteCode="" preview />
-    </div>;
+    </JoinPageFrame>;
   }
   const code = invite?.trim() ?? "";
   const supabase = await createClient();
@@ -41,10 +41,10 @@ export default async function JoinPage({ searchParams }: Props) {
   const valid = !error && check?.ok && check.guild.slug === "gia";
 
   return (
-    <div className="space-y-9">
+    <JoinPageFrame>
       <PageTitle
-        title="招待状を持って 酒場へ"
-        lead="冒険の準備をして、GIAの酒場の仲間になりましょう。くわしいステータスはあとから書けます。"
+        title="招待リンクから入会"
+        lead="GIAのアカウントでログインし、入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"
       />
       {valid && !authData.user ? (
         <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} />
@@ -59,6 +59,14 @@ export default async function JoinPage({ searchParams }: Props) {
           <p className="text-sm leading-relaxed">{error ? "招待リンクを確認できませんでした。時間をおいて再度お試しください。" : check && !check.ok ? inviteErrorText[check.reason] : "この招待リンクはGIAの酒場では使えません。招待してくれた人にご確認ください。"}</p>
         </Window>
       )}
-    </div>
+    </JoinPageFrame>
+  );
+}
+
+function JoinPageFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="guild-theme min-h-screen px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto max-w-4xl space-y-9">{children}</div>
+    </main>
   );
 }

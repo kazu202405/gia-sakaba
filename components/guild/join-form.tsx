@@ -44,7 +44,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
   };
 
   return (
-    <Window title="冒険の準備">
+    <Window title="入会フォーム">
       {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
         <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
       <form
@@ -130,7 +130,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
 
         <Field
           label="いま、なにを 解決したいですか？"
-          hint="任意。ギルドマスターが だれと つなぐかを 考える手がかりに なります"
+          hint="任意。あとから マイページで 変えられます"
           error={errors.want_to_solve}
         >
           <TextInput
@@ -172,7 +172,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
 
         {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
         <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
-          {preview ? "プレビュー中（送信できません）" : saving ? "仲間に登録中…" : "▶ 酒場の仲間になる"}
+          {preview ? "プレビュー中（送信できません）" : saving ? "入会手続き中…" : "▶ 入会する"}
         </button>
       </form>
     </Window>
