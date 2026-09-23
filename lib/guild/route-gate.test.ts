@@ -32,8 +32,25 @@ describe("guildGate", () => {
     }
   });
 
-  it("API は 404 にする（/apiary のような別の道は巻き込まない）", () => {
-    for (const p of ["/api", "/api/keep-alive", "/api/stripe/webhook", "/api/slack/events"]) {
+  it("酒場の決済APIとStripe Webhookだけを通す", () => {
+    for (const p of [
+      "/api/guild/billing/checkout",
+      "/api/guild/billing/portal",
+      "/api/stripe/webhook",
+    ]) {
+      expect(guildGate(p, prod)).toEqual({ kind: "pass" });
+    }
+  });
+
+  it("その他のAPIは404にする（似た道も巻き込まない）", () => {
+    for (const p of [
+      "/api",
+      "/api/keep-alive",
+      "/api/slack/events",
+      "/api/guild/billing",
+      "/api/guild/billing/checkout/extra",
+      "/api/stripe/webhook/extra",
+    ]) {
       expect(guildGate(p, prod)).toEqual({ kind: "notFound" });
     }
     expect(guildGate("/apiary", prod)).toEqual({ kind: "redirect", to: "/guild" });

@@ -7,7 +7,8 @@
 // - /（公開の酒場案内）と /guild 配下 → 通す
 // - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す
 // - Next.js の内部ファイル・画像など → 通す
-// - /api 配下 → 404（リダイレクトすると外部からの呼び出しが 200 で成功したように見える）
+// - 酒場の決済APIとStripe Webhookだけ通し、その他の /api 配下 → 404
+//   （リダイレクトすると外部からの呼び出しが 200 で成功したように見える）
 // - それ以外 → /guild へ飛ばす
 
 export type GuildGateResult =
@@ -16,6 +17,12 @@ export type GuildGateResult =
   | { kind: "notFound" };
 
 export const GUILD_HOME = "/guild";
+
+const ALLOWED_GUILD_API_PATHS = new Set([
+  "/api/guild/billing/checkout",
+  "/api/guild/billing/portal",
+  "/api/stripe/webhook",
+]);
 
 /** pathname がちょうど prefix か、prefix/ で始まるか（/guildx を /guild と見なさない） */
 function isUnder(pathname: string, prefix: string): boolean {
@@ -32,6 +39,7 @@ export function guildGate(pathname: string, options: { allowLook: boolean }): Gu
   if (isUnder(pathname, "/images")) return { kind: "pass" };
   if (pathname === "/favicon.ico" || pathname === "/robots.txt") return { kind: "pass" };
 
+  if (ALLOWED_GUILD_API_PATHS.has(pathname)) return { kind: "pass" };
   if (isUnder(pathname, "/api")) return { kind: "notFound" };
 
   return { kind: "redirect", to: GUILD_HOME };
