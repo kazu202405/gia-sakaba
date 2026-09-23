@@ -44,7 +44,7 @@ export function LiveIntroRequestButton({ target, existing }: { target: Profile; 
         return;
       }
       setSent(true); setOpen(false);
-      uiToast("紹介を依頼しました");
+      uiToast(`${target.display_name}さんに紹介依頼を送りました`);
       router.refresh();
     } catch {
       setError("通信に失敗しました。接続を確認してください。");
@@ -65,12 +65,12 @@ export function LiveIntroRequestButton({ target, existing }: { target: Profile; 
         <button type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>
         <div className="max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
           <p className="text-base">{target.display_name}さんを紹介してもらう</p>
-          <p className="c-muted mt-2 text-[13px] leading-relaxed">まずギルドマスターに届きます。相手に打診し、承諾されたときにだけ、お互いの連絡先が見えるようになります。</p>
+          <p className="c-muted mt-2 text-[13px] leading-relaxed">依頼は相手に直接届きます。相手が承諾したときにだけ、お互いの連絡先が見えるようになります。</p>
           <fieldset className="mt-5">
             <legend className="text-[15px]">目的 <span className="text-xs text-[#c62828]">必須</span></legend>
             <div className="mt-2 grid grid-cols-2 gap-2">{PURPOSES.map((item, index) => <button key={item} ref={index === 0 ? firstRef : undefined} type="button" aria-pressed={purpose === item} onClick={() => { setPurpose(item); setError(""); }} className="c-choice px-3 py-2.5 text-sm">{purposeLabel[item]}</button>)}</div>
           </fieldset>
-          <label className="mt-5 block"><span className="text-[15px]">ギルドマスターへのひとこと</span><span className="c-muted ml-1 text-xs">任意</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} maxLength={400} className="c-input mt-2" placeholder="例：採用ページの件で一度お話を伺いたいです" /></label>
+          <label className="mt-5 block"><span className="text-[15px]">相手へのひとこと</span><span className="c-muted ml-1 text-xs">任意</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} maxLength={400} className="c-input mt-2" placeholder="例：採用ページの件で一度お話を伺いたいです" /></label>
           {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
           <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" disabled={saving} onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button><button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : "▶ 依頼を送る"}</button></div>
         </div>

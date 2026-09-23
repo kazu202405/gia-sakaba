@@ -1,7 +1,7 @@
 "use client";
 
 // プロジェクトのパーティ。持ち主だけが、あとから人を足す・外す。
-// 足せるのは、ギルドマスター経由の紹介が承諾された・紹介済みでつながっている人だけ。
+// 足せるのは、紹介依頼が承諾された・紹介済みでつながっている人だけ。
 // 足した人にはプロジェクトの中身（タスク・備考・あいてごとの じょうきょう）が見えるので、足す前に確かめる。
 
 import { useState } from "react";
@@ -86,12 +86,12 @@ export function ProjectParty({ project, people, isOwner }: { project: Project; p
           <p className="text-[15px] tracking-wider">人を 足す</p>
           {options.length === 0 ? (
             <p className="c-muted text-xs leading-relaxed">
-              足せる人が いません。足せるのは、{guild.terms.master}の しょうかいが 承諾されて つながった人だけです。
+              足せる人が いません。足せるのは、しょうかい依頼が 承諾されて つながった人だけです。
             </p>
           ) : (
             <>
               <p className="c-muted text-xs leading-relaxed">
-                {guild.terms.master}の しょうかいで つながった人から えらべます。
+                しょうかい依頼が 承諾されて つながった人から えらべます。
               </p>
               <div className="flex gap-2">
                 <div className="min-w-0 flex-1">

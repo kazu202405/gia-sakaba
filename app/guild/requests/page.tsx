@@ -13,7 +13,7 @@ export default async function RequestsPage() {
     <div>
       <PageTitle
         title="しょうかい いらい"
-        lead="しょうかいは すべて ギルドマスターを通ります。相手が承諾したときだけ、おたがいの れんらく先が見えるようになります。"
+        lead="依頼は相手に直接届きます。相手が承諾したときだけ、おたがいの れんらく先が見えるようになります。"
       />
       <LiveRequests initial={requests} members={members} currentUserId={currentUserId} />
     </div>

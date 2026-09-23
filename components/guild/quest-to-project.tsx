@@ -100,7 +100,7 @@ function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () =>
       <fieldset>
         <legend className="text-[15px] tracking-wider">いっしょに すすめる人（{guild.terms.party}）</legend>
         <p className="c-muted mt-0.5 text-xs leading-relaxed">
-          入れられるのは、{guild.terms.master}の しょうかいが 承諾された人だけです。あとから プロジェクトの画面で
+          入れられるのは、しょうかい依頼が 承諾された人だけです。あとから プロジェクトの画面で
           足すこともできます。
         </p>
         {candidates.length === 0 ? (

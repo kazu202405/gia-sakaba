@@ -70,7 +70,7 @@ export default function SakabaLandingPage() {
           <div>
             <h2 className="text-2xl leading-relaxed tracking-wider sm:text-3xl">人と人の間にも、役割がある。</h2>
             <p className="mt-4 max-w-2xl text-sm leading-[2] text-[#fffdf6]/80 sm:text-base" style={{ fontFamily: "var(--font-jp-sans), sans-serif" }}>
-              紹介依頼はギルドマスターが確認し、相手へ打診します。連絡先が開くのは、相手が承諾してから。安心して相談できる流れを大切にしています。
+              紹介依頼は相手に直接届きます。連絡先が開くのは、相手が承諾してから。お互いが自分のペースで判断できる流れを大切にしています。
             </p>
           </div>
         </div>

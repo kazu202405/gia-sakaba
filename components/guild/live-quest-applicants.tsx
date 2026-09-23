@@ -26,7 +26,7 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
     if (pendingId) return;
     const confirmed = await uiConfirm({
       title: `${name}さんを選びます`,
-      message: `ギルドマスターに、この${questTerm}に応募した${name}さんとの紹介を依頼します。相手が承諾するまで連絡先は表示されません。`,
+      message: `この${questTerm}に応募した${name}さんへ、紹介依頼を直接送ります。相手が承諾するまで連絡先は表示されません。`,
       okLabel: "紹介を依頼する",
     });
     if (!confirmed) return;
@@ -39,7 +39,7 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
       });
       if (rpcError) throw rpcError;
       setSent((current) => [...current, applicantId]);
-      uiToast("ギルドマスターに紹介を依頼しました");
+      uiToast(`${name}さんに紹介依頼を送りました`);
       router.refresh();
     } catch {
       setError("紹介を依頼できませんでした。相手の受付状況を確認し、再度お試しください。");

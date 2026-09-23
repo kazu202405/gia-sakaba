@@ -64,11 +64,11 @@ export function LiveRequests({ initial, members, currentUserId }: {
 
   return <div className="space-y-9">
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-    <Window title="あなたへの だしん">
-      {received.length === 0 ? <p className="c-muted text-sm">いまは打診が来ていません。</p> : <div className="space-y-4">{received.map((request) => {
+    <Window title="あなたへの しょうかい依頼">
+      {received.length === 0 ? <p className="c-muted text-sm">いまは紹介依頼が来ていません。</p> : <div className="space-y-4">{received.map((request) => {
         const name = names.get(request.requester_id) ?? "メンバー";
         return <article key={request.id} className="c-card p-4 sm:p-5">
-          <p className="c-label text-xs">ギルドマスターからの紹介</p>
+          <p className="c-label text-xs">{name}さんからの紹介依頼</p>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2"><Link href={`/guild/members/${request.requester_id}`} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
           <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}・{formatDate(request.created_at)}</p>
           {request.message && <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 px-3 py-2 text-sm break-words">{request.message}</p>}
@@ -84,7 +84,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
           <div className="flex flex-wrap items-center justify-between gap-2"><Link href={`/guild/members/${request.target_id}`} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
           <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}・{formatDate(request.created_at)}</p>
           {request.status === "accepted" || request.status === "introduced" ? <LiveContactDetails name={name} contact={request.other_contact} /> : null}
-          {(request.status === "requested" || request.status === "reviewing") && <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "cancel")} className="c-muted mt-4 text-xs underline underline-offset-4 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "依頼を取り下げる"}</button>}
+          {request.status === "proposed" && <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "cancel")} className="c-muted mt-4 text-xs underline underline-offset-4 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "依頼を取り下げる"}</button>}
         </article>;
       })}</div>}
     </Window>

@@ -10,7 +10,7 @@ export default async function NotificationsPage() {
     listGuildNotifications(), listGuildMembers(), listGuildQuests(), listGuildIntroRequests(),
   ]);
   return <div>
-    <PageTitle title="おしらせ" lead="紹介の打診やクエストの変化を、酒場の中で確認できます。メールやLINEには届きません。" />
+    <PageTitle title="おしらせ" lead="紹介依頼やクエストの変化を、酒場の中で確認できます。メールやLINEには届きません。" />
     <LiveNotificationList initial={notifications} members={members} quests={quests} intros={intros} />
   </div>;
 }
