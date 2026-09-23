@@ -3,14 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ContactKind, ContactVisibility, MyGuildProfile } from "@/lib/guild/server-data";
-import type { JobIconKey, Position, VisibleGroup } from "@/lib/guild/types";
-import { groupLabel, jobIconLabel, positionLabel } from "@/lib/guild/labels";
+import type { JobIconKey, Position } from "@/lib/guild/types";
+import { jobIconLabel, positionLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 
-const GROUPS: VisibleGroup[] = ["work", "values", "connect"];
 const CONTACT_LABEL: Record<ContactKind, string> = { email: "メール", line: "LINE URL", website: "ウェブサイト" };
 type Snapshot = { draft: MyGuildProfile; keywords: string };
 
@@ -50,13 +49,13 @@ async function persist({ draft, keywords }: Snapshot) {
     p_bio: draft.bio.trim(),
     p_values_text: draft.values_text.trim(),
     p_looking_for: draft.looking_for.trim(),
-    p_visible_groups: draft.visible_groups,
-    p_accept_intro: draft.accept_intro,
+    p_visible_groups: ["work", "values", "connect"],
+    p_accept_intro: true,
     p_company_name: draft.company_name.trim(),
     p_position: draft.position,
     p_show_company: draft.show_company,
     p_want_to_solve: draft.want_to_solve.trim(),
-    p_show_achievements: draft.show_achievements,
+    p_show_achievements: true,
     p_email: draft.contact.email.trim(),
     p_line_url: draft.contact.line_url.trim(),
     p_website_url: draft.contact.website_url.trim(),
@@ -133,12 +132,6 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
     setError("");
     setSaveState("editing");
   };
-  const toggleGroup = (group: VisibleGroup) => {
-    set("visible_groups", draft.visible_groups.includes(group)
-      ? draft.visible_groups.filter((item) => item !== group)
-      : [...draft.visible_groups, group]);
-  };
-
   async function changeContactVisibility(kind: ContactKind, visibility: ContactVisibility) {
     if (visibilitySaving || visibility === draft.contact_visibility[kind]) return;
     const previous = draft.contact_visibility[kind];
@@ -242,13 +235,6 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
         <Field label="メール"><TextInput value={draft.contact.email} onChange={(value) => setContact("email", value)} max={200} type="email" label="メール" /><ContactVisibilityChoice kind="email" value={draft.contact_visibility.email} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("email", value)} /></Field>
         <Field label="LINE URL"><TextInput value={draft.contact.line_url} onChange={(value) => setContact("line_url", value)} max={300} label="LINE URL" /><ContactVisibilityChoice kind="line" value={draft.contact_visibility.line} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("line", value)} /></Field>
         <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" placeholder="https://example.com" /><ContactVisibilityChoice kind="website" value={draft.contact_visibility.website} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("website", value)} /></Field>
-      </section>
-
-      <section id="visibility" className="c-window scroll-mt-24 space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">こうかい はんい</span>
-        {GROUPS.map((group) => <CheckBox key={group} checked={draft.visible_groups.includes(group)} onChange={() => toggleGroup(group)}><span className="block">{groupLabel[group].title}を公開する</span><span className="c-muted block text-xs">{groupLabel[group].note}</span></CheckBox>)}
-        <CheckBox checked={draft.accept_intro} onChange={(value) => set("accept_intro", value)}>しょうかいを受け付ける</CheckBox>
-        <CheckBox checked={draft.show_achievements} onChange={(value) => set("show_achievements", value)}>じっせきを表示する</CheckBox>
       </section>
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}

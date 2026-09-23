@@ -4,9 +4,7 @@ import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { PageTitle, Window } from "@/components/guild/cards";
-import { groupLabel } from "@/lib/guild/labels";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
-import type { VisibleGroup } from "@/lib/guild/types";
 
 export const metadata: Metadata = { title: "マイページ" };
 
@@ -46,18 +44,6 @@ export default async function MyPage() {
     </Window>
 
     <LiveMyInvite initial={invite} />
-
-    <Window title="こうかい はんい">
-      <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
-        {(["work", "values", "connect"] as VisibleGroup[]).map((group) => <li key={group} className="flex items-center justify-between gap-4 py-2.5 text-sm">
-          <span>{groupLabel[group].title}</span>
-          <span className="c-muted text-xs">{me.visible_groups.includes(group) ? "公開中" : "非公開"}</span>
-        </li>)}
-        <li className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>しょうかいの受け付け</span><span className="c-muted text-xs">{me.accept_intro ? "受付中" : "お休み中"}</span></li>
-        {([['email', 'メール'], ['line', 'LINE'], ['website', 'ウェブサイト']] as const).map(([kind, label]) => <li key={kind} className="flex items-center justify-between gap-4 py-2.5 text-sm"><span>{label}</span><span className="c-muted text-xs">{me.contact_visibility[kind] === "members" ? "メンバーに公開" : "非公開（紹介機能は準備中）"}</span></li>)}
-      </ul>
-      <Link href="/guild/me/status#visibility" className="c-muted mt-3 inline-block text-xs underline">公開範囲をなおす</Link>
-    </Window>
 
     <div className="grid gap-6 md:grid-cols-2">
       <Window title={`出した ${context.guild.terms.quest}`}>

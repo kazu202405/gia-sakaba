@@ -66,7 +66,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
   }
 
   return <Window title="仲間を招く">
-    <p className="c-muted mb-5 text-sm leading-relaxed">あなたから酒場へ招くためのリンクです。リンクから入会した人はここに記録され、ギルドマスターにもつながりが見えます。</p>
+    <p className="c-muted mb-5 text-sm leading-relaxed">あなたから酒場へ招くためのリンクです。</p>
     {invite.link ? <div className="border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#1b2a41]/20 pb-3 text-xs tracking-wider">
         <span>YOUR INVITATION</span><span className="c-muted">{formatDate(invite.link.created_at)} 発行</span>

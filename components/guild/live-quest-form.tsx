@@ -74,7 +74,7 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
   const [saveError, setSaveError] = useState<string | null>(null);
   const today = todayInJapan();
   const isGathering = fixedGathering || draft.category === "gathering";
-  const categories = canCreateGathering && !quest ? [...REGULAR_CATEGORIES, "gathering" as const] : REGULAR_CATEGORIES;
+  const categories = canCreateGathering && !fixedGathering ? [...REGULAR_CATEGORIES, "gathering" as const] : REGULAR_CATEGORIES;
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -120,7 +120,7 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
       p_is_urgent: draft.urgent,
     };
     const { data, error } = quest
-      ? await createClient().rpc("sakaba_update_quest", { p_quest_id: quest.id, ...fields })
+      ? await createClient().rpc("sakaba_update_quest_v2", { p_quest_id: quest.id, ...fields, p_members_only: isGathering })
       : await createClient().rpc("sakaba_create_quest", { p_guild_slug: "gia", ...fields, p_members_only: isGathering });
 
     if (error || (!quest && typeof data !== "string")) {
