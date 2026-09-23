@@ -43,7 +43,7 @@ export default function SakabaLandingPage() {
             仕事の話が、<br /><span className="text-[#8f7337]">次の一歩</span>になる場所。
           </h1>
           <p className="mt-7 max-w-xl text-base leading-[2] sm:text-lg" style={{ fontFamily: "var(--font-jp-sans), sans-serif" }}>
-            GIAの酒場は、仲間を知り、相談を持ち寄り、いっしょに動き出すための場所。名刺交換で終わらないつながりを、ここから育てます。
+            GIAの酒場は、RPGで冒険の仲間を探す酒場のように、仲間を知り、相談を持ち寄り、いっしょに動き出すための場所。名刺交換で終わらないつながりを、ここから育てます。
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/guild/login" className="rpg-button min-h-12 px-6 text-sm sm:text-base">▶ 酒場に入る</Link>
