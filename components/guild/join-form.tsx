@@ -23,10 +23,10 @@ import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
-export function JoinForm({ inviterName, inviteCode, preview = false }: { inviterName: string; inviteCode: string; preview?: boolean }) {
+export function JoinForm({ inviterName, inviteCode, preview = false, initialName = "" }: { inviterName: string; inviteCode: string; preview?: boolean; initialName?: string }) {
   const router = useRouter();
   const [draft, setDraft] = useState<JoinDraft>({
-    display_name: "",
+    display_name: initialName.slice(0, JOIN_NAME_MAX),
     company_name: "",
     position: "",
     show_company: true,

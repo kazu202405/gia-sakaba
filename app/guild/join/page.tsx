@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { JoinForm } from "@/components/guild/join-form";
+import { InviteSignup } from "@/components/guild/invite-signup";
 import { inviteErrorText } from "@/lib/guild/join";
 import { getGuildContext } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
@@ -18,17 +19,24 @@ type InviteResult =
 export default async function JoinPage({ searchParams }: Props) {
   const { invite, preview } = await searchParams;
   if (preview === "1") {
+    const { data: { user } } = await (await createClient()).auth.getUser();
+    if (!user) notFound();
     const context = await getGuildContext();
     if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
     return <div className="space-y-9">
-      <PageTitle title="入会フォームの確認" lead="招待された人が、ログイン後に入力する画面です。" />
+      <PageTitle title="入会フォームの確認" lead="招待された人が見る、アカウント作成と入会情報の入力画面です。" />
+      <InviteSignup inviterName="ギルドマスター" inviteCode="" preview />
       <JoinForm inviterName="ギルドマスター" inviteCode="" preview />
     </div>;
   }
   const code = invite?.trim() ?? "";
-  const { data, error } = code
-    ? await (await createClient()).rpc("sakaba_check_invite", { p_code: code })
-    : { data: { ok: false, reason: "missing" }, error: null };
+  const supabase = await createClient();
+  const [{ data, error }, { data: authData }] = await Promise.all([
+    code
+      ? supabase.rpc("sakaba_check_invite", { p_code: code })
+      : Promise.resolve({ data: { ok: false, reason: "missing" }, error: null }),
+    supabase.auth.getUser(),
+  ]);
   const check = data as InviteResult | null;
   const valid = !error && check?.ok && check.guild.slug === "gia";
 
@@ -38,8 +46,14 @@ export default async function JoinPage({ searchParams }: Props) {
         title="GIAの酒場に 入会する"
         lead="名前と 会社名だけで はじめられます。くわしい ステータスは あとから 書けます。"
       />
-      {valid ? (
-        <JoinForm inviterName={check.inviter_name || "ギルドマスター"} inviteCode={code} />
+      {valid && !authData.user ? (
+        <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} />
+      ) : valid ? (
+        <JoinForm
+          inviterName={check.inviter_name || "ギルドマスター"}
+          inviteCode={code}
+          initialName={typeof authData.user?.user_metadata?.name === "string" ? authData.user.user_metadata.name : ""}
+        />
       ) : (
         <Window title="招待リンク">
           <p className="text-sm leading-relaxed">{error ? "招待リンクを確認できませんでした。時間をおいて再度お試しください。" : check && !check.ok ? inviteErrorText[check.reason] : "この招待リンクはGIAの酒場では使えません。招待してくれた人にご確認ください。"}</p>

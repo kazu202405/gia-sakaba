@@ -74,7 +74,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (pathname.startsWith("/guild") && pathname !== "/guild/login" && !user) {
+  const isPublicGuildRoute = pathname === "/guild/login" || pathname === "/guild/join";
+  if (pathname.startsWith("/guild") && !isPublicGuildRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/guild/login";
     url.search = "";
