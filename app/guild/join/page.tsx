@@ -24,7 +24,7 @@ export default async function JoinPage({ searchParams }: Props) {
     const context = await getGuildContext();
     if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
     return <div className="space-y-9">
-      <PageTitle title="入会フォームの確認" lead="招待された人が見る、アカウント作成と入会情報の入力画面です。" />
+      <PageTitle title="冒険者登録の確認" lead="招待状を受け取った人が、酒場の仲間になるまでの画面です。" />
       <InviteSignup inviterName="ギルドマスター" inviteCode="" preview />
       <JoinForm inviterName="ギルドマスター" inviteCode="" preview />
     </div>;
@@ -43,8 +43,8 @@ export default async function JoinPage({ searchParams }: Props) {
   return (
     <div className="space-y-9">
       <PageTitle
-        title="GIAの酒場に 入会する"
-        lead="名前と 会社名だけで はじめられます。くわしい ステータスは あとから 書けます。"
+        title="招待状を持って 酒場へ"
+        lead="冒険の準備をして、GIAの酒場の仲間になりましょう。くわしいステータスはあとから書けます。"
       />
       {valid && !authData.user ? (
         <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} />

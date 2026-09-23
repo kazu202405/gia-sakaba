@@ -30,9 +30,8 @@ function ContactVisibilityChoice({ kind, value, saving, onChange }: {
   </fieldset>;
 }
 
-function validationError({ draft }: Snapshot, isPaid: boolean): string | null {
+function validationError({ draft }: Snapshot): string | null {
   if (!draft.display_name.trim() || !draft.company_name.trim()) return "お名前と会社名を入力すると自動保存されます。";
-  if (isPaid && draft.strengths.trim().length < 20) return "つよみを20文字以上にすると自動保存されます。";
   if (draft.contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contact.email)) return "メールアドレスの形式を確認してください。";
   if ([draft.contact.line_url, draft.contact.website_url].some((url) => url && !/^https?:\/\//.test(url))) return "URLは https:// から入力してください。";
   return null;
@@ -40,7 +39,7 @@ function validationError({ draft }: Snapshot, isPaid: boolean): string | null {
 
 async function persist({ draft, keywords }: Snapshot) {
   const supabase = createClient();
-  const profileResult = await supabase.rpc("sakaba_update_my_profile", {
+  const profileResult = await supabase.rpc("sakaba_update_my_profile_simple", {
     p_guild_slug: "gia",
     p_display_name: draft.display_name.trim(),
     p_photo_url: draft.photo_url ?? "",
@@ -49,13 +48,8 @@ async function persist({ draft, keywords }: Snapshot) {
     p_job_icon: draft.job_icon,
     p_region: draft.region.trim(),
     p_bio: draft.bio.trim(),
-    p_can_help_with: draft.can_help_with.trim(),
-    p_strengths: draft.strengths.trim(),
     p_values_text: draft.values_text.trim(),
-    p_vision: draft.vision.trim(),
-    p_social_issue: draft.social_issue.trim(),
     p_looking_for: draft.looking_for.trim(),
-    p_want_to_meet: draft.want_to_meet.trim(),
     p_visible_groups: draft.visible_groups,
     p_accept_intro: draft.accept_intro,
     p_company_name: draft.company_name.trim(),
@@ -76,7 +70,7 @@ async function persist({ draft, keywords }: Snapshot) {
   });
 }
 
-export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; isPaid: boolean }) {
+export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initial);
   const [keywords, setKeywords] = useState(initial.keywords.join("、"));
@@ -95,7 +89,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
       const snapshot = latestRef.current;
       const serialized = JSON.stringify(snapshot);
       if (serialized === lastSavedRef.current) return true;
-      const issue = validationError(snapshot, isPaid);
+      const issue = validationError(snapshot);
       if (issue) { setError(issue); setSaveState("error"); return false; }
       setSaveState("saving"); setError("");
       try {
@@ -116,7 +110,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
     });
     queueRef.current = next.catch(() => false);
     return next;
-  }, [isPaid]);
+  }, []);
 
   useEffect(() => {
     latestRef.current = { draft, keywords };
@@ -199,7 +193,7 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
         <Field label="おなまえ" required><TextInput value={draft.display_name} onChange={(value) => set("display_name", value)} max={30} label="おなまえ" /></Field>
         <Field label="ふりがな" hint="任意。名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
         <Field label="ひとこと"><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 sm:items-end">
           <Field label="業種" hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>
           <Field label="地域"><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>
         </div>
@@ -224,28 +218,22 @@ export function LiveStatusForm({ initial, isPaid }: { initial: MyGuildProfile; i
         <Field label="かいしゃ" required><TextInput value={draft.company_name} onChange={(value) => set("company_name", value)} max={60} label="かいしゃ" /></Field>
         <Field label="役職"><Select value={draft.position} onChange={(value) => set("position", value as Position)} label="役職" options={(Object.keys(positionLabel) as Position[]).map((key) => ({ value: key, label: positionLabel[key] }))} /></Field>
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>会社名と役職を名鑑に表示する</CheckBox>
-        <Field label="あなたならではの つよみ" hint={isPaid ? "20文字以上で入力してください" : "有料機能を使うときは20文字以上必要です"}><TextArea value={draft.strengths} onChange={(value) => set("strengths", value)} max={200} rows={3} label="つよみ" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">しごと</span>
-        <Field label="仕事内容"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={800} rows={4} label="仕事内容" /></Field>
-        <Field label="できること"><TextArea value={draft.can_help_with} onChange={(value) => set("can_help_with", value)} max={800} rows={4} label="できること" /></Field>
+        <Field label="仕事内容・できること" hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
         <Field label="キーワード" hint="読点またはカンマで区切って5つまで"><TextInput value={keywords} onChange={setKeywordsValue} max={150} label="キーワード" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">おもい</span>
-        <Field label="だいじにしていること"><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={200} rows={3} label="だいじにしていること" /></Field>
-        <Field label="これから"><TextArea value={draft.vision} onChange={(value) => set("vision", value)} max={200} rows={3} label="これから" /></Field>
-        <Field label="とりくんでいる社会かだい"><TextArea value={draft.social_issue} onChange={(value) => set("social_issue", value)} max={100} rows={2} label="社会かだい" /></Field>
+        <Field label="自由に書いてください" hint="だいじにしていること、これからしようとしていること、とりくんでいる社会課題など"><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={1200} rows={6} label="おもい" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">つながり</span>
-        <Field label="さがしているもの"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={200} rows={3} label="さがしているもの" /></Field>
-        <Field label="であいたい人"><TextArea value={draft.want_to_meet} onChange={(value) => set("want_to_meet", value)} max={200} rows={3} label="であいたい人" /></Field>
-        <Field label="いま解決したいこと"><TextInput value={draft.want_to_solve} onChange={(value) => set("want_to_solve", value)} max={60} label="いま解決したいこと" /></Field>
+        <Field label="さがしているもの・であいたい人" hint="仕事、情報、協力してほしいこと、話してみたい人などを自由に書けます"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={1200} rows={6} label="さがしているもの・であいたい人" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">

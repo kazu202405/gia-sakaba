@@ -44,9 +44,9 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
   };
 
   return (
-    <Window title="入会">
+    <Window title="冒険の準備">
       {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
-        <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待です。</p>}
+        <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
       <form
         noValidate
         className="space-y-7"
@@ -146,7 +146,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         <div data-field-error={errors.agreed ? "true" : undefined} className="c-card space-y-3 p-4">
           <p className="text-[15px] tracking-wider">ギルドの 約束</p>
           {[
-            { title: "しごとの 約束", items: GUILD_PROMISES },
+            { title: "酒場での しごとの約束", items: GUILD_PROMISES },
             { title: "話すときの 約束（グランドルール）", items: GROUND_RULES },
           ].map((group) => (
             <div key={group.title}>
@@ -172,7 +172,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
 
         {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
         <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
-          {preview ? "プレビュー中（送信できません）" : saving ? "入会中…" : "▶ スタート"}
+          {preview ? "プレビュー中（送信できません）" : saving ? "仲間に登録中…" : "▶ 酒場の仲間になる"}
         </button>
       </form>
     </Window>

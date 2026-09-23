@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
+import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { groupLabel } from "@/lib/guild/labels";
-import { getGuildContext, getMyGuildProfile, getMyMemberInvite, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 import type { VisibleGroup } from "@/lib/guild/types";
 
 export const metadata: Metadata = { title: "マイページ" };
 
 export default async function MyPage() {
-  const [context, me, quests, projects, invite] = await Promise.all([
-    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(),
+  const [context, me, quests, projects, invite, currentUserId] = await Promise.all([
+    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(),
   ]);
-  const fields = [me.bio, me.can_help_with, me.strengths, me.values_text, me.vision, me.looking_for, me.want_to_meet];
+  const introductions = await listGuildMemberIntroductions(me.id);
+  const fields = [me.bio, me.values_text, me.looking_for];
   const filled = fields.filter((value) => value.trim()).length + (me.photo_url ? 1 : 0);
   const myQuests = quests.filter((quest) => quest.creator_id === me.id && quest.status !== "withdrawn");
   const joinedQuests = quests.filter((quest) => quest.my_application?.status === "applied");
@@ -30,9 +32,9 @@ export default async function MyPage() {
           <p className="mt-1 break-words text-[15px]">{me.headline || "ひとことはまだありません"}</p>
           <p className="c-muted mt-2 text-xs">{me.company_name} · {me.job || "職業未設定"} · {me.region || "地域未設定"}</p>
           <div className="mt-4">
-            <div className="c-muted flex justify-between text-xs"><span>ステータスの かんせいど</span><span>{filled}/8</span></div>
-            <div className="c-gauge mt-1" aria-label={`8項目中${filled}項目が入力済み`}>
-              {Array.from({ length: 8 }, (_, index) => <span key={index} data-on={index < filled} />)}
+            <div className="c-muted flex justify-between text-xs"><span>ステータスの かんせいど</span><span>{filled}/4</span></div>
+            <div className="c-gauge mt-1" aria-label={`4項目中${filled}項目が入力済み`}>
+              {Array.from({ length: 4 }, (_, index) => <span key={index} data-on={index < filled} />)}
             </div>
           </div>
         </div>
@@ -71,5 +73,6 @@ export default async function MyPage() {
       {myProjects.length === 0 ? <p className="c-muted text-sm">まだありません。<Link href="/guild/projects/new" className="underline">プロジェクトをつくる</Link></p> :
         <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row block break-words text-sm">▶ {project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
     </Window>
+    <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
   </div>;
 }

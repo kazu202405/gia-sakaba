@@ -2,8 +2,9 @@ import { notFound } from "next/navigation";
 import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-button";
+import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
-import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMembers } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -12,11 +13,12 @@ export const metadata = { title: "ギルドメンバー" };
 
 export default async function MemberStatusPage({ params }: Props) {
   const { id } = await params;
-  const [context, members, currentUserId, requests] = await Promise.all([
+  const [context, members, currentUserId, requests, introductions] = await Promise.all([
     getGuildContext(),
     listGuildMembers(),
     getAuthenticatedUserId(),
     listGuildIntroRequests(),
+    listGuildMemberIntroductions(id),
   ]);
   const p = members.find((member) => member.id === id);
   if (!p) notFound();
@@ -35,12 +37,6 @@ export default async function MemberStatusPage({ params }: Props) {
             <h1 className="text-3xl tracking-[0.15em]">{p.display_name}</h1>
             {p.name_kana && <p className="c-muted mt-1 text-xs">{p.name_kana}</p>}
             <p className="mt-2 text-[15px] break-words">{p.headline}</p>
-            {p.strengths && (
-              <p className="c-card mt-3 px-3 py-2 text-sm leading-relaxed break-words">
-                <span className="c-label mr-2 text-xs">つよみ</span>
-                {p.strengths}
-              </p>
-            )}
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px]">
               {/* 会社名と役職は、本人が「出す」を選んだときだけ */}
               {p.show_company && (
@@ -95,8 +91,7 @@ export default async function MemberStatusPage({ params }: Props) {
 
       <div className="grid gap-11 md:grid-cols-3">
         <GroupBlock profile={p} group="work">
-          <Item label="しごとの内容" value={p.bio} />
-          <Item label="できること" value={p.can_help_with} />
+          <Item label="仕事内容・できること" value={p.bio} />
           {p.keywords.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {p.keywords.map((k) => (
@@ -108,15 +103,14 @@ export default async function MemberStatusPage({ params }: Props) {
           )}
         </GroupBlock>
         <GroupBlock profile={p} group="values">
-          <Item label="だいじにしていること" value={p.values_text} />
-          <Item label="これから" value={p.vision} />
-          <Item label="とりくんでいる 社会かだい" value={p.social_issue} />
+          <Item label="おもい" value={p.values_text} />
         </GroupBlock>
         <GroupBlock profile={p} group="connect">
-          <Item label="さがしているもの" value={p.looking_for} />
-          <Item label="であいたい人" value={p.want_to_meet} />
+          <Item label="さがしているもの・であいたい人" value={p.looking_for} />
         </GroupBlock>
       </div>
+
+      <LiveMemberIntroductions targetId={p.id} targetName={p.display_name} currentUserId={currentUserId} initial={introductions} />
 
     </div>
   );

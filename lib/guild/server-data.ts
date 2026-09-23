@@ -67,6 +67,17 @@ export type GuildInviteNetworkMember = {
   invited_by_name: string | null;
 };
 
+export type GuildMemberIntroduction = {
+  id: string;
+  author_id: string;
+  author_name: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  can_edit: boolean;
+  can_delete: boolean;
+};
+
 export type GuildProject = Project & { tasks: ProjectTask[] };
 export type GuildProjectPipeline = { steps: ProjectStep[]; contacts: ProjectContact[]; records: StepRecord[] };
 export type ContactVisibility = "members" | "approved";
@@ -177,6 +188,16 @@ export async function listGuildInviteNetwork(): Promise<GuildInviteNetworkMember
   const { data, error } = await supabase.rpc("sakaba_list_invite_network", { p_guild_slug: "gia" });
   if (error) throw rpcError("招待のつながりを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildInviteNetworkMember[] : [];
+}
+
+export async function listGuildMemberIntroductions(targetId: string): Promise<GuildMemberIntroduction[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_member_introductions", {
+    p_guild_slug: "gia",
+    p_target_id: targetId,
+  });
+  if (error) throw rpcError("仲間からの紹介文を取得できませんでした", error.message);
+  return Array.isArray(data) ? data as GuildMemberIntroduction[] : [];
 }
 
 export async function listGuildNotifications(): Promise<GuildNotification[]> {
