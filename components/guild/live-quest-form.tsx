@@ -22,7 +22,7 @@ type Draft = {
   urgent: boolean;
 };
 
-const CATEGORIES = (Object.keys(questCategoryLabel) as QuestCategory[]).filter(
+const REGULAR_CATEGORIES = (Object.keys(questCategoryLabel) as QuestCategory[]).filter(
   (category) => category !== "gathering",
 );
 const EMPTY: Draft = {
@@ -55,9 +55,9 @@ function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
 
-export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTerm: string; gathering?: boolean; quest?: GuildQuest }) {
+export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering = false, quest }: { questTerm: string; gathering?: boolean; canCreateGathering?: boolean; quest?: GuildQuest }) {
   const router = useRouter();
-  const isGathering = gathering || quest?.members_only === true;
+  const fixedGathering = gathering || quest?.members_only === true;
   const [draft, setDraft] = useState<Draft>(quest ? {
     category: quest.category,
     title: quest.title,
@@ -67,12 +67,14 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
     deadline: quest.deadline ?? "",
     memberLimit: quest.member_limit?.toString() ?? "",
     urgent: quest.is_urgent,
-  } : isGathering ? { ...EMPTY, category: "gathering" } : EMPTY);
+  } : fixedGathering ? { ...EMPTY, category: "gathering" } : EMPTY);
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const today = todayInJapan();
+  const isGathering = fixedGathering || draft.category === "gathering";
+  const categories = canCreateGathering && !quest ? [...REGULAR_CATEGORIES, "gathering" as const] : REGULAR_CATEGORIES;
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -134,7 +136,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : isGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : isGathering ? "ギルドマスター" : `${questTerm} けいじばん`} /></div>
+      <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "ギルドマスター" : `${questTerm} けいじばん`} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : isGathering ? "限定の集まりを開く" : `${questTerm}を出す` : "かくにん"}</span>
         {step === "form" ? (
@@ -142,11 +144,11 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
             <h1 className="text-xl tracking-wider">{quest ? "内容をなおしますか？" : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
             <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : isGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人はギルドマスターの承認が必要です。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
             <div className="mt-7 space-y-6">
-              {isGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label="しゅるい" required error={errors.category}>
+              {fixedGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label="しゅるい" required error={errors.category}>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {CATEGORIES.map((category) => (
+                  {categories.map((category) => (
                     <button key={category} type="button" aria-pressed={draft.category === category}
-                      onClick={() => set("category", category)} className="c-choice px-3 py-2.5 text-left">
+                      onClick={() => { set("category", category); if (category === "gathering") set("urgent", false); }} className="c-choice px-3 py-2.5 text-left">
                       <span className="block text-[15px]">{questCategoryMark[category]} {questCategoryLabel[category]}</span>
                       <span className="block text-[11px] opacity-70">{questCategoryHint[category]}</span>
                     </button>
