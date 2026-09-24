@@ -26,6 +26,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // PWAの設定とService Workerはログイン前にも取得される公開の固定ファイル。
+  if (request.nextUrl.pathname === "/guild-sw.js" || request.nextUrl.pathname === "/guild/manifest.webmanifest") {
+    return NextResponse.next();
+  }
+
   return await updateSession(request);
 }
 
