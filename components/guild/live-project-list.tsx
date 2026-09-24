@@ -24,7 +24,8 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult }: { 
       {!canCreate && checkoutResult !== "success" && <>
         <p className="c-muted text-sm">無料プランの作成枠（{FREE_ACTIVE_PROJECT_LIMIT}件）を使い切りました</p>
         <Window title="有料会員">
-          <p className="text-[15px] leading-relaxed">プロジェクトの保存枠を広げ、酒場の運営を支えるための月額会員です。名鑑・クエスト・しょうかいと、プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件までは無料で使えます。</p>
+          <p className="text-[15px] leading-relaxed">データベースを拡張して<span className="whitespace-nowrap">プロジェクト</span>の保存枠を広げることができます。</p>
+          <p className="mt-2 text-[15px] leading-relaxed">ギルド・クエスト・<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>
           <p className="c-label mt-5 text-sm">ないよう</p>
           <ul className="mt-2 space-y-2 text-[15px] leading-relaxed">
             <li>▶ プロジェクトをいくつでも作って、記録を残せる</li>

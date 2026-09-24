@@ -1,6 +1,7 @@
 // 窓・見出し・仲間カード・クエストカード。サーバー側でもブラウザ側でも使える。
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Profile, Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import { applicantCount, getProfile } from "@/lib/guild/mock-data";
@@ -37,7 +38,7 @@ export function Window({
   );
 }
 
-export function PageTitle({ title, lead }: { title: string; lead?: string }) {
+export function PageTitle({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
     <div className="mb-9">
       <h1 className="text-2xl tracking-[0.12em]">▶ {title}</h1>

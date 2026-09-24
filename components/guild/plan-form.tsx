@@ -35,7 +35,10 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
 
   return <div className="space-y-9">
     <BackLink href="/guild/me" label="マイページ" />
-    <PageTitle title="有料会員" lead={`プロジェクトの保存枠を広げ、酒場の運営を支えるための月額会員です。名鑑・クエスト・しょうかいと、プロジェクト${FREE_ACTIVE_PROJECT_LIMIT}件までは無料で使えます。`} />
+    <PageTitle title="有料会員" lead={<>
+      <span className="block">データベースを拡張して<span className="whitespace-nowrap">プロジェクト</span>の保存枠を広げることができます。</span>
+      <span className="mt-1 block">ギルド・クエスト・<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</span>
+    </>} />
 
     {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">
       <p>お申し込みを受け付けました。会員状態の反映まで少し時間がかかることがあります。プロジェクトは削除されていません。</p>
