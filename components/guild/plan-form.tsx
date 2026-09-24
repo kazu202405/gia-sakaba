@@ -49,7 +49,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
     <Window title="ないよう">
       <ul className="space-y-2 text-[15px] leading-relaxed">
         <li>▶ プロジェクトをいくつでも作って、記録を残せる</li>
-        <li>▶ 不定期開催の有料会員限定の懇親会などに申し込める</li>
+        <li>▶ 有料会員限定（不定期開催）の懇親会などに申し込める</li>
       </ul>
       {!exempt && !isPaid && billingStatus !== "past_due" && <>
         <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額制です。無料体験期間はありません。</p>
