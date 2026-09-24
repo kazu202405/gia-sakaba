@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
+import { GuildBillingPortalButton } from "@/components/guild/guild-billing-portal-button";
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { PageTitle, Window } from "@/components/guild/cards";
-import { getAuthenticatedUserId, getGuildContext, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "マイページ" };
 
 export default async function MyPage() {
-  const [context, me, quests, projects, invite, currentUserId] = await Promise.all([
-    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(),
+  const [context, me, quests, projects, invite, currentUserId, billing] = await Promise.all([
+    getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(), getMyGuildBilling(),
   ]);
   const introductions = await listGuildMemberIntroductions(me.id);
   const fields = [me.bio, me.values_text, me.looking_for];
@@ -60,5 +61,15 @@ export default async function MyPage() {
         <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row block break-words text-sm">▶ {project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
     </Window>
     <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
+    {billing.role === "member" && <Window title="会員・お支払い">
+      <p className="text-sm leading-relaxed">
+        {billing.is_paid ? "現在、有料会員です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : "現在は無料会員です。"}
+      </p>
+      <div className="mt-4">
+        {billing.stripe_customer_id ? <GuildBillingPortalButton label={billing.is_paid ? "支払い方法・解約を管理する" : billing.billing_status === "past_due" ? "お支払いを確認する" : "支払い履歴を見る"} /> :
+          <Link href="/guild/plan" className="c-button-sub h-11 px-5 text-sm">有料会員について見る</Link>}
+      </div>
+      {billing.is_paid && <p className="c-muted mt-3 text-xs">解約はStripeの管理画面で手続きします。このボタンを押すだけでは解約されません。</p>}
+    </Window>}
   </div>;
 }

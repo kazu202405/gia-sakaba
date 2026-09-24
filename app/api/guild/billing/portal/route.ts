@@ -15,9 +15,10 @@ export async function POST(request: NextRequest) {
     if (!billing.stripe_customer_id) {
       return NextResponse.json({ error: "管理できる契約がありません。" }, { status: 404 });
     }
+    const returnPath = request.nextUrl.searchParams.get("from") === "me" ? "/guild/me" : "/guild/plan";
     const session = await getStripeClient().billingPortal.sessions.create({
       customer: billing.stripe_customer_id,
-      return_url: `${request.nextUrl.origin}/guild/plan`,
+      return_url: `${request.nextUrl.origin}${returnPath}`,
       locale: "ja",
     });
     return NextResponse.json({ url: session.url });
