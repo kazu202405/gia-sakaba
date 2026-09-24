@@ -20,8 +20,8 @@ const NAV: NavItem[] = [
   { href: "/guild", label: "ホーム", short: "ホーム", exact: true },
   { href: "/guild/members", label: "ギルド", short: "ギルド", also: ["/guild/requests"] },
   { href: "/guild/quests", label: "クエスト", short: "クエスト" },
-  { href: "/guild/projects", label: "プロジェクト", short: "プロジェクト" },
-  { href: "/guild/me", label: "マイページ", short: "マイページ" },
+  { href: "/guild/projects", label: "プロジェクト", short: "プロ\nジェクト" },
+  { href: "/guild/me", label: "マイページ", short: "マイ\nページ" },
 ];
 
 const MASTER_NAV: NavItem = { href: "/guild/master", label: "ギルドマスター", short: "マスター" };
@@ -88,11 +88,12 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
             <Link
               key={item.href}
               href={item.href}
+              aria-label={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative min-w-0 py-3 text-center tracking-normal",
-                isMaster ? "text-[9px] max-[359px]:text-[8px]" : "text-[10px]",
-                active ? "text-[#1b2a41]" : "text-[#1b2a41]/50",
+                "relative flex min-h-16 min-w-0 items-center justify-center border-r border-[#1b2a41]/15 px-0.5 py-2 text-center leading-tight tracking-normal whitespace-pre-line last:border-r-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[#1b2a41] focus-visible:outline-offset-[-4px]",
+                isMaster ? "text-[11px]" : "text-xs",
+                active ? "bg-[#e8cf8e]/35 text-[#1b2a41]" : "text-[#1b2a41]/70",
               )}
             >
               {/* 「▶」を文字の前に足すと「マイページ」が幅に入りきらないので、いる所は上の線で示す */}
