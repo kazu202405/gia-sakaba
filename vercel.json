@@ -1,3 +1,6 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    { "path": "/api/guild/push/dispatch", "schedule": "0 0 * * *" }
+  ]
 }

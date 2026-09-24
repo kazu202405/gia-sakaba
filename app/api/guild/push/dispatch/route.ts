@@ -10,12 +10,7 @@ type Candidate = { event_key: string; user_id: string; category: "actions" | "de
 type Device = { id: string; user_id: string; created_at: string; subscription: webPush.PushSubscription };
 type Preferences = { user_id: string; actions_enabled: boolean; deadlines_enabled: boolean };
 
-export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return NextResponse.json({ error: "通知の実行キーが未設定です。" }, { status: 503 });
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+async function dispatch(eventKey?: string) {
   const publicKey = process.env.PUSH_VAPID_PUBLIC_KEY;
   const privateKey = process.env.PUSH_VAPID_PRIVATE_KEY;
   const subject = process.env.PUSH_VAPID_SUBJECT;
@@ -28,7 +23,9 @@ export async function GET(request: NextRequest) {
     console.error("[sakaba.push] candidates", error);
     return NextResponse.json({ error: "通知候補を読み込めませんでした。" }, { status: 503 });
   }
-  const candidates = (data ?? []) as Candidate[];
+  const candidates = eventKey
+    ? ((data ?? []) as Candidate[]).filter((candidate) => candidate.event_key === eventKey)
+    : (data ?? []) as Candidate[];
   const userIds = [...new Set(candidates.map((candidate) => candidate.user_id))];
   if (!userIds.length) return NextResponse.json({ candidates: 0, sent: 0 });
   const [devicesResult, preferencesResult] = await Promise.all([
@@ -79,4 +76,31 @@ export async function GET(request: NextRequest) {
     }
   }
   return NextResponse.json({ candidates: candidates.length, sent, failed });
+}
+
+// Daily fallback and deadline reminders. Vercel supplies CRON_SECRET in Authorization.
+export async function GET(request: NextRequest) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) return NextResponse.json({ error: "通知の実行キーが未設定です。" }, { status: 503 });
+  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return dispatch();
+}
+
+// Database Webhook on sakaba.notifications INSERT. Re-read the event from DB;
+// never trust its recipient or text from the HTTP payload.
+export async function POST(request: NextRequest) {
+  const secret = process.env.PUSH_DISPATCH_SECRET;
+  if (!secret) return NextResponse.json({ error: "Webhookの認証キーが未設定です。" }, { status: 503 });
+  if (request.headers.get("x-dispatch-secret") !== secret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const payload = await request.json().catch(() => null);
+  const id = payload?.record?.id;
+  if (payload?.type !== "INSERT" || payload?.schema !== "sakaba" || payload?.table !== "notifications" ||
+    typeof id !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+    return NextResponse.json({ error: "Webhookの内容が正しくありません。" }, { status: 400 });
+  }
+  return dispatch(`notice:${id}`);
 }

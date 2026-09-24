@@ -101,6 +101,22 @@ export function LivePushSettings() {
     finally { setBusy(false); }
   }
 
+  async function testOnThisDevice() {
+    if (busy || !enabled) return;
+    setBusy(true); setError("");
+    try {
+      const registration = await navigator.serviceWorker.getRegistration("/guild");
+      if (!registration) throw new Error("通知の準備ができていません。ページを再読み込みしてください。");
+      await registration.showNotification("GIAの酒場", {
+        body: "この端末で通知を表示できました。",
+        icon: "/gia-logo.png",
+        data: { href: "/guild/notifications" },
+      });
+      uiToast("端末にテスト通知を表示しました");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "テスト通知を表示できませんでした。"); }
+    finally { setBusy(false); }
+  }
+
   async function changePreference(key: "actions_enabled" | "deadlines_enabled", value: boolean) {
     if (!settings || busy) return;
     setBusy(true); setError("");
@@ -122,11 +138,13 @@ export function LivePushSettings() {
           className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">
           {busy ? "変更中…" : enabled ? "この端末の通知をオフにする" : "この端末の通知をオンにする"}
         </button>
+        {enabled && <button type="button" disabled={busy} onClick={() => void testOnThisDevice()}
+          className="c-button-sub ml-2 h-11 px-4 text-sm disabled:opacity-50">この端末で表示テスト</button>}
         {settings && <div className="space-y-3">
           <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-[#1b2a41]" />申込・承認・紹介などのおしらせ</label>
           <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-[#1b2a41]" />担当タスク・参加中のプロジェクト・クエストの締切前日</label>
         </div>}
-        <p className="c-muted text-xs">期限のおしらせは前日の午前9時以降に1回。クエストの期限は申込締切です。端末ごとに通知の許可が必要です。</p>
+        <p className="c-muted text-xs">期限のおしらせは前日の午前9時以降に1回。クエストの期限は申込締切です。表示テストは端末だけの確認で、サーバーからの配信テストではありません。</p>
       </div>}
     {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
   </Window>;
