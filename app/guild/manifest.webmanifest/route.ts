@@ -1,7 +1,7 @@
-import type { MetadataRoute } from "next";
+import { NextResponse } from "next/server";
 
-export default function manifest(): MetadataRoute.Manifest {
-  return {
+export function GET() {
+  return new NextResponse(JSON.stringify({
     id: "/guild",
     name: "GIAの酒場",
     short_name: "GIAの酒場",
@@ -12,5 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#f8f4e8",
     theme_color: "#1b2a41",
     icons: [{ src: "/gia-logo.png", sizes: "500x500", type: "image/png", purpose: "any" }],
-  };
+  }), {
+    headers: { "content-type": "application/manifest+json; charset=utf-8", "cache-control": "public, max-age=3600" },
+  });
 }
