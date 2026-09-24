@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { GuildBillingStatus } from "@/lib/guild/server-data";
 import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/membership";
 import { BackLink, PageTitle, Window } from "./cards";
@@ -36,7 +37,10 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
     <BackLink href="/guild/me" label="マイページ" />
     <PageTitle title="有料会員" lead="名鑑・クエスト・しょうかいは、無料のまま使えます。" />
 
-    {checkoutResult === "success" && <p role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">決済を受け付けました。会員状態の反映まで少し時間がかかることがあります。</p>}
+    {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">
+      <p>お申し込みを受け付けました。会員状態の反映まで少し時間がかかることがあります。プロジェクトは削除されていません。</p>
+      <Link href="/guild/projects" className="c-button-sub mt-3 h-10 px-4">▶ プロジェクト一覧を見る</Link>
+    </div>}
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
 
     <Window title="ないよう">

@@ -4,16 +4,24 @@ import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/m
 import { Window } from "./cards";
 import { GuildCheckoutButton } from "./guild-checkout-button";
 
-export function LiveProjectList({ projects, userId, isPaid }: { projects: GuildProject[]; userId: string; isPaid: boolean }) {
+export function LiveProjectList({ projects, userId, isPaid, checkoutResult }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled" }) {
   const ownedCount = projects.filter((project) => project.owner_id === userId).length;
   const canCreate = isPaid || ownedCount < FREE_ACTIVE_PROJECT_LIMIT;
   return (
     <div className="space-y-5">
+      {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] p-4 text-sm leading-relaxed">
+        <p>{isPaid ? "有料会員の登録が反映されました。プロジェクトは下に表示されています。" : "お申し込みを受け付けました。プロジェクトは下に表示されています。会員状態の反映まで少し時間がかかることがあります。"}</p>
+        {!isPaid && <form action="/guild/projects" method="get" className="mt-3">
+          <input type="hidden" name="checkout" value="success" />
+          <button type="submit" className="c-button-sub h-10 px-4">表示を更新する</button>
+        </form>}
+      </div>}
+      {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed p-4 text-sm">申し込みはキャンセルされました。プロジェクトはそのままです。</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="c-muted text-sm">自分と参加中のプロジェクトだけが表示されます。</p>
         {canCreate && <Link href="/guild/projects/new" className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link>}
       </div>
-      {!canCreate && <>
+      {!canCreate && checkoutResult !== "success" && <>
         <p className="c-muted text-sm">無料プランの作成枠（{FREE_ACTIVE_PROJECT_LIMIT}件）を使い切りました</p>
         <Window title="有料会員">
           <p className="text-[15px] leading-relaxed">名鑑・クエスト・しょうかいは、無料のまま使えます。</p>

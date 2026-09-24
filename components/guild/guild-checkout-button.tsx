@@ -11,7 +11,7 @@ export function GuildCheckoutButton() {
     setPending(true);
     setError("");
     try {
-      const response = await fetch("/api/guild/billing/checkout", { method: "POST" });
+      const response = await fetch("/api/guild/billing/checkout?from=projects", { method: "POST" });
       const result = await response.json() as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || "決済画面を開けませんでした。");
       window.location.assign(result.url);

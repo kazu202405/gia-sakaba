@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
     };
     const origin = request.nextUrl.origin;
+    const returnPath = request.nextUrl.searchParams.get("from") === "projects" ? "/guild/projects" : "/guild/plan";
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
@@ -36,8 +37,8 @@ export async function POST(request: NextRequest) {
       client_reference_id: user.id,
       metadata,
       subscription_data: { metadata },
-      success_url: `${origin}/guild/plan?checkout=success`,
-      cancel_url: `${origin}/guild/plan?checkout=canceled`,
+      success_url: `${origin}${returnPath}?checkout=success`,
+      cancel_url: `${origin}${returnPath}?checkout=canceled`,
       billing_address_collection: "auto",
       locale: "ja",
     });

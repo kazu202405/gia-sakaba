@@ -29,6 +29,7 @@
 - Stripeテスト環境には月480円（税込）・トライアルなしの商品、Webhook、Customer Portalを設定済み。VercelのProduction環境だけにテストモード・Price ID・秘密鍵・Webhook secretを設定済みで、DEMOには設定していない。Checkout、Customer Portal、Webhook反映を追加し、owner/masterは引き続き課金免除。
 - `/guild/plan` は480円の実決済画面へ切り替え、決済API・Webhookを酒場ドメインの許可ルートに追加してcommit `40ca567`で本番デプロイ済み。未ログイン時にCheckout/Portalは401、Webhookは署名なし400、`/guild/plan`はログインへ307となることを確認済み。一般会員でのテスト決済は未実施。
 - migration 0098は本番Supabaseへ適用済み。commit `3cb9e44` を本番デプロイ済みで、プロジェクトの完了・進行中に戻す操作に「更新中…」表示と二重送信防止を追加。作成者本人は確認ダイアログを経てプロジェクトを削除できる。削除時は関連するタスク・相手・進捗記録も消える。削除の実操作は未実施。
+- プロジェクト画面からのStripe申込後に `/guild/plan?checkout=success` へ戻ると、一覧が消えたように見える問題を修正。今後の申込は元のプロジェクト一覧へ戻り、反映待ちの案内と既存プロジェクトを同時に表示する。既に発行された旧Checkout URLへの帰還用にプラン画面にも一覧リンクを追加。ユーザーはCheckoutの成功画面への遷移を確認したが、会員状態・Portal・解約の一連の反映は未確認。
 
 ## 次にやること
 
