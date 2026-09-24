@@ -32,10 +32,12 @@ describe("guildGate", () => {
     }
   });
 
-  it("酒場の決済APIとStripe Webhookだけを通す", () => {
+  it("酒場の決済・通知APIとStripe Webhookだけを通す", () => {
     for (const p of [
       "/api/guild/billing/checkout",
       "/api/guild/billing/portal",
+      "/api/guild/push/subscriptions",
+      "/api/guild/push/dispatch",
       "/api/stripe/webhook",
     ]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });
@@ -57,7 +59,7 @@ describe("guildGate", () => {
   });
 
   it("Next.js の内部ファイルと公開してよい固定ファイルは通す", () => {
-    for (const p of ["/_next/static/chunks/a.js", "/_next/image", "/__nextjs_original-stack-frame", "/images/hero.mp4", "/favicon.ico", "/robots.txt"]) {
+    for (const p of ["/_next/static/chunks/a.js", "/_next/image", "/__nextjs_original-stack-frame", "/images/hero.mp4", "/favicon.ico", "/robots.txt", "/guild-sw.js", "/gia-logo.png"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });
     }
   });

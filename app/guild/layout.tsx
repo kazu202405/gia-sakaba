@@ -6,6 +6,8 @@ import "@/components/guild/guild-theme.css";
 export const metadata: Metadata = {
   // absolute にしないと、親（app/layout.tsx）の「| GIA」が後ろに付く
   title: { absolute: "GIAの酒場", template: "%s | GIAの酒場" },
+  manifest: "/guild/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "GIAの酒場", statusBarStyle: "default" },
   robots: { index: false, follow: false },
 };
 

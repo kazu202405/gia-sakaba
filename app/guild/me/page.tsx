@@ -4,6 +4,7 @@ import { JobAvatar } from "@/components/guild/job-avatar";
 import { GuildBillingPortalButton } from "@/components/guild/guild-billing-portal-button";
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
+import { LivePushSettings } from "@/components/guild/live-push-settings";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 
@@ -61,6 +62,7 @@ export default async function MyPage() {
         <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row block break-words text-sm">▶ {project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
     </Window>
     <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
+    <LivePushSettings />
     {billing.role === "member" && <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">
         {billing.is_paid ? "現在、有料会員です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : "現在は無料会員です。"}
