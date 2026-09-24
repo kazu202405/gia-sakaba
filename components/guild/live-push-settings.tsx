@@ -131,7 +131,10 @@ export function LivePushSettings() {
 
   return <Window title="プッシュ通知">
     <p className="text-sm leading-relaxed">酒場を開いていないときも、関係するおしらせをこの端末へ届けます。通知はいつでもオフにできます。</p>
-    {needsHomeScreen ? <p className="c-muted mt-3 text-sm">iPhoneでは、共有メニューから「ホーム画面に追加」し、そのアイコンで酒場を開いてから通知をオンにしてください。</p> :
+    {needsHomeScreen ? <div className="c-dashed-top mt-4 space-y-2 pt-4 text-sm leading-relaxed">
+      <p>いまはSafariで開いているため、通知をオンにできません。</p>
+      <p className="c-muted">画面下の共有ボタン（□↑）から「ホーム画面に追加」を選び、追加したアイコンから酒場を開いてください。そこで通知をオンにできます。</p>
+    </div> :
       !supported ? <p className="c-muted mt-3 text-sm">このブラウザーはプッシュ通知に対応していません。</p> :
       <div className="mt-4 space-y-4">
         <button type="button" disabled={busy || !settings?.vapidPublicKey} onClick={() => void (enabled ? disable() : enable())}

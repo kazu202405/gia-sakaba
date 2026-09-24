@@ -90,7 +90,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   if (pipeline.steps.length === 0) {
     return <div className="space-y-4">
       <p className="c-muted text-sm leading-relaxed">相手を行に、進める手順を列に並べ、予定日と完了日を記録します。呼び名と短いメモだけを扱い、連絡先は保存しません。</p>
-      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub h-11 px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを きろくする"}</button>}
+      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub c-wrap-button px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを きろくする"}</button>}
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     </div>;
   }

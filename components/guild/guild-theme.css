@@ -52,6 +52,8 @@
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: 0.1em;
+  max-width: calc(100% - 1.8rem);
+  overflow-wrap: anywhere;
 }
 
 .c-card {
@@ -154,6 +156,17 @@ a.c-card:hover {
 }
 .c-button-sub:active {
   transform: translateY(2px);
+}
+
+/* 長い日本語の操作文がスマホ幅からはみ出さないようにする */
+.c-button-sub.c-wrap-button {
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding-block: 0.55rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.6;
 }
 
 /* 取り消せない操作。周囲のゲーム風ボタンと同じ角張った輪郭で危険を示す */
