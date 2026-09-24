@@ -90,6 +90,9 @@ as $$
     join sakaba.projects p on p.id = t.project_id
     cross join tomorrow d
     where t.status = 'todo' and p.status = 'active' and t.due_date = d.day and t.assignee_id is not null
+      and (t.assignee_id = p.owner_id or exists (
+        select 1 from sakaba.project_members pm where pm.project_id = p.id and pm.user_id = t.assignee_id
+      ))
       and extract(hour from now() at time zone 'Asia/Tokyo') >= 9
     union all
     select 'project:' || p.id::text || ':' || d.day::text, p.guild_id, m.user_id, 'deadlines',
