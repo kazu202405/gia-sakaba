@@ -7,6 +7,7 @@ import type { JobIconKey, Position } from "@/lib/guild/types";
 import { jobIconLabel, positionLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
+import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 
@@ -74,6 +75,10 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");
   const [leaving, setLeaving] = useState(false);
   const [visibilitySaving, setVisibilitySaving] = useState<ContactKind | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
@@ -116,7 +121,9 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
     return () => window.clearTimeout(timer);
   }, [draft, retryToken, saveCurrent]);
   const set = <K extends keyof MyGuildProfile>(key: K, value: MyGuildProfile[K]) => {
-    setDraft((current) => ({ ...current, [key]: value }));
+    const next = { ...latestRef.current.draft, [key]: value };
+    latestRef.current = { draft: next };
+    setDraft(next);
     setError("");
     setSaveState("editing");
   };
@@ -162,20 +169,73 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
 
   async function saveAndLeave(event?: React.FormEvent) {
     event?.preventDefault();
-    if (leaving || visibilitySaving) return;
+    if (leaving || visibilitySaving || photoUploading) return;
     setLeaving(true);
     const saved = await saveCurrent("manual");
     if (saved) { router.push("/guild/me"); router.refresh(); }
     else setLeaving(false);
   }
 
+  function closeCropper() {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  }
+
+  function choosePhoto(file?: File) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      setPhotoError("JPEG・PNG・WebPの画像を選んでください。");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setPhotoError("画像は20MBまでです。");
+      return;
+    }
+    setPhotoError("");
+    setCropSrc(URL.createObjectURL(file));
+  }
+
+  async function uploadPhoto(blob: Blob) {
+    closeCropper();
+    setPhotoUploading(true);
+    setPhotoError("");
+    try {
+      const supabase = createClient();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user || user.id !== draft.id) throw new Error("ログイン情報を確認できませんでした。");
+      const path = `${user.id}/sakaba-avatar.jpg`;
+      const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, blob, {
+        upsert: true,
+        contentType: "image/jpeg",
+        cacheControl: "3600",
+      });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("profile-photos").getPublicUrl(path);
+      set("photo_url", `${data.publicUrl}?v=${Date.now()}`);
+      const saved = await saveCurrent("manual");
+      if (!saved) setPhotoError("写真は追加できましたが、プロフィールを保存できませんでした。保存して戻るを押して再試行してください。");
+    } catch {
+      setPhotoError("写真をアップロードできませんでした。もう一度お試しください。");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
   return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || Boolean(visibilitySaving)} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
+    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || Boolean(visibilitySaving) || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
     <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="c-muted mt-2 text-sm">入力が止まってから約2秒で自動保存します。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
     <form onSubmit={saveAndLeave} className="space-y-7">
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">きほん</span>
-        <div className="flex items-center gap-4"><JobAvatar icon={draft.job_icon} photoUrl={draft.photo_url} name={draft.display_name} /><p className="c-muted text-xs">写真の変更は、この画面ではまだできません。現在の写真は保存しても残ります。</p></div>
+        <div className="flex flex-wrap items-center gap-4">
+          <JobAvatar icon={draft.job_icon} photoUrl={draft.photo_url} name={draft.display_name} />
+          <div className="space-y-1">
+            <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="プロフィール写真を選ぶ" onChange={(event) => { choosePhoto(event.target.files?.[0]); event.target.value = ""; }} />
+            <button type="button" disabled={photoUploading} onClick={() => photoInputRef.current?.click()} className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">{photoUploading ? "写真を追加中…" : draft.photo_url ? "写真を変更する" : "写真を追加する"}</button>
+            <p className="c-muted text-xs">JPEG・PNG・WebP／20MBまで</p>
+          </div>
+        </div>
+        {photoError && <p role="alert" className="text-sm text-[#c62828]">{photoError}</p>}
         <Field label="おなまえ" required><TextInput value={draft.display_name} onChange={(value) => set("display_name", value)} max={30} label="おなまえ" /></Field>
         <Field label="ふりがな" hint="任意。名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
         <Field label="ひとこと"><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
@@ -230,7 +290,8 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
       </section>
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving || Boolean(visibilitySaving)} aria-busy={leaving || Boolean(visibilitySaving)} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || visibilitySaving ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={leaving || Boolean(visibilitySaving) || photoUploading} aria-busy={leaving || Boolean(visibilitySaving) || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || visibilitySaving || photoUploading ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
     </form>
+    <ImageCropDialog open={cropSrc !== null} src={cropSrc} onCancel={closeCropper} onConfirm={(blob) => void uploadPhoto(blob)} />
   </div>;
 }
