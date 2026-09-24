@@ -35,7 +35,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
 
   return <div className="space-y-9">
     <BackLink href="/guild/me" label="マイページ" />
-    <PageTitle title="有料会員" lead="名鑑・クエスト・しょうかいは、無料のまま使えます。" />
+    <PageTitle title="有料会員" lead="プロジェクトの記録を保存し、酒場を続けていくための月額会員です。名鑑・クエスト・しょうかいは無料のまま使えます。" />
 
     {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">
       <p>お申し込みを受け付けました。会員状態の反映まで少し時間がかかることがあります。プロジェクトは削除されていません。</p>
@@ -46,7 +46,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, checkoutRes
     <Window title="ないよう">
       <ul className="space-y-2 text-[15px] leading-relaxed">
         <li>▶ プロジェクトをいくつでも進められる（無料は{FREE_ACTIVE_PROJECT_LIMIT}つまで）</li>
-        <li>▶ 有料会員限定の集まりに申し込める。</li>
+        <li>▶ 開催される有料会員限定の懇親会など、集まりに申し込める</li>
       </ul>
       {!exempt && !isPaid && billingStatus !== "past_due" && <>
         <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額制です。無料体験期間はありません。</p>
