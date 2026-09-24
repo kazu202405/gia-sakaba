@@ -65,9 +65,10 @@ export function LivePushSettings() {
     if (!settings?.vapidPublicKey || busy) return;
     setBusy(true); setError("");
     try {
-      await navigator.serviceWorker.register("/guild-sw.js", { scope: "/guild" });
+      // iOS requires the permission prompt to follow the user's tap directly.
       const permission = await Notification.requestPermission();
       if (permission !== "granted") throw new Error("通知が許可されていません。端末の通知設定を確認してください。");
+      await navigator.serviceWorker.register("/guild-sw.js", { scope: "/guild" });
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription() ?? await registration.pushManager.subscribe({
         userVisibleOnly: true, applicationServerKey: decodePublicKey(settings.vapidPublicKey),
@@ -114,8 +115,8 @@ export function LivePushSettings() {
 
   return <Window title="プッシュ通知">
     <p className="text-sm leading-relaxed">酒場を開いていないときも、関係するおしらせをこの端末へ届けます。通知はいつでもオフにできます。</p>
-    {!supported ? <p className="c-muted mt-3 text-sm">このブラウザーはプッシュ通知に対応していません。</p> :
-      needsHomeScreen ? <p className="c-muted mt-3 text-sm">iPhoneでは、共有メニューから「ホーム画面に追加」し、そのアイコンで酒場を開いてから通知をオンにしてください。</p> :
+    {needsHomeScreen ? <p className="c-muted mt-3 text-sm">iPhoneでは、共有メニューから「ホーム画面に追加」し、そのアイコンで酒場を開いてから通知をオンにしてください。</p> :
+      !supported ? <p className="c-muted mt-3 text-sm">このブラウザーはプッシュ通知に対応していません。</p> :
       <div className="mt-4 space-y-4">
         <button type="button" disabled={busy || !settings?.vapidPublicKey} onClick={() => void (enabled ? disable() : enable())}
           className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">
