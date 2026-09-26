@@ -22,9 +22,7 @@ type Draft = {
   urgent: boolean;
 };
 
-const REGULAR_CATEGORIES = (Object.keys(questCategoryLabel) as QuestCategory[]).filter(
-  (category) => category !== "gathering",
-);
+const REGULAR_CATEGORIES = Object.keys(questCategoryLabel) as QuestCategory[];
 const EMPTY: Draft = {
   category: "",
   title: "",
@@ -55,7 +53,7 @@ function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
 
-export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering = false, quest }: { questTerm: string; gathering?: boolean; canCreateGathering?: boolean; quest?: GuildQuest }) {
+export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTerm: string; gathering?: boolean; quest?: GuildQuest }) {
   const router = useRouter();
   const fixedGathering = gathering || quest?.members_only === true;
   const [draft, setDraft] = useState<Draft>(quest ? {
@@ -74,7 +72,8 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
   const [saveError, setSaveError] = useState<string | null>(null);
   const today = todayInJapan();
   const isGathering = fixedGathering || draft.category === "gathering";
-  const categories = canCreateGathering && !fixedGathering ? [...REGULAR_CATEGORIES, "gathering" as const] : REGULAR_CATEGORIES;
+  const isFreeGathering = isGathering && !fixedGathering;
+  const categories = REGULAR_CATEGORIES;
 
   function set<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -120,8 +119,8 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
       p_is_urgent: draft.urgent,
     };
     const { data, error } = quest
-      ? await createClient().rpc("sakaba_update_quest_v2", { p_quest_id: quest.id, ...fields, p_members_only: isGathering })
-      : await createClient().rpc("sakaba_create_quest", { p_guild_slug: "gia", ...fields, p_members_only: isGathering });
+      ? await createClient().rpc("sakaba_update_quest_v2", { p_quest_id: quest.id, ...fields, p_members_only: fixedGathering })
+      : await createClient().rpc("sakaba_create_quest", { p_guild_slug: "gia", ...fields, p_members_only: fixedGathering });
 
     if (error || (!quest && typeof data !== "string")) {
       setSaveError(quest ? "保存できませんでした。内容を確認して再度お試しください。" : "投稿できませんでした。時間をおいて再度お試しください。");
@@ -138,11 +137,11 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
     <div className="mx-auto max-w-2xl">
       <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "ギルドマスター" : `${questTerm} けいじばん`} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : isGathering ? "限定の集まりを開く" : `${questTerm}を出す` : "かくにん"}</span>
+        <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : "かくにん"}</span>
         {step === "form" ? (
           <>
             <h1 className="text-xl tracking-wider">{quest ? "内容をなおしますか？" : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
-            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : isGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人はギルドマスターの承認が必要です。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
+            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : fixedGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人はギルドマスターの承認が必要です。" : isFreeGathering ? "酒場の掲示板には表示されません。作成後に招待URLを作って案内できます。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
             <div className="mt-7 space-y-6">
               {fixedGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label="しゅるい" required error={errors.category}>
                 <div className="grid gap-2 sm:grid-cols-2">
@@ -158,7 +157,7 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
               <Field label="タイトル" required error={errors.title}>
                 <TextInput value={draft.title} onChange={(value) => set("title", value)} max={40} label="タイトル" placeholder={isGathering ? "例：経営者どうしの少人数交流会" : undefined} />
               </Field>
-              <Field label="ひとことで" required hint="掲示板のカードに表示されます" error={errors.summary}>
+              <Field label="ひとことで" required hint={isFreeGathering ? "招待ページに表示されます" : "掲示板のカードに表示されます"} error={errors.summary}>
                 <TextInput value={draft.summary} onChange={(value) => set("summary", value)} max={60} label="ひとことで" />
               </Field>
               <Field label="くわしく" required hint={isGathering ? "開催日時・会場・当日の流れを書いてください" : undefined} error={errors.body}>
@@ -189,9 +188,9 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
           </>
         ) : (
           <>
-            <p className="c-muted text-sm">{quest ? "この内容で保存します。" : isGathering ? "この内容で、有料会員向けの集まりを公開します。" : "この内容で公開します。"}</p>
+            <p className="c-muted text-sm">{quest ? "この内容で保存します。" : fixedGathering ? "この内容で、有料会員向けの集まりを公開します。" : isFreeGathering ? "この内容で集まりを作ります。招待URLは次の画面で作れます。" : "この内容で公開します。"}</p>
             <div className="c-card mt-5 space-y-3 p-4 sm:p-5">
-              <p className="c-label text-xs">{questCategoryMark[draft.category as QuestCategory]} {questCategoryLabel[draft.category as QuestCategory]}{isGathering && <span className="c-chip ml-2">有料会員限定</span>}</p>
+              <p className="c-label text-xs">{questCategoryMark[draft.category as QuestCategory]} {questCategoryLabel[draft.category as QuestCategory]}{fixedGathering && <span className="c-chip ml-2">有料会員限定</span>}</p>
               <h1 className="text-xl break-words">{draft.title.trim()}</h1>
               <p className="c-muted text-sm break-words">{draft.summary.trim()}</p>
               <p className="whitespace-pre-line break-words text-sm leading-relaxed">{draft.body.trim()}</p>
@@ -200,7 +199,7 @@ export function LiveQuestForm({ questTerm, gathering = false, canCreateGathering
             {saveError && <p role="alert" className="mt-5 text-sm text-[#c62828]">{saveError}</p>}
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setStep("form")} disabled={saving} className="c-button-sub h-12">◀ なおす</button>
-              <button type="button" onClick={submit} disabled={saving} className="rpg-button h-12 px-6 text-base">{saving ? quest ? "保存中…" : "公開中…" : quest ? "▶ 保存する" : "▶ 公開する"}</button>
+              <button type="button" onClick={submit} disabled={saving} className="rpg-button h-12 px-6 text-base">{saving ? quest ? "保存中…" : isFreeGathering ? "作成中…" : "公開中…" : quest ? "▶ 保存する" : isFreeGathering ? "▶ 集まりを作る" : "▶ 公開する"}</button>
             </div>
           </>
         )}

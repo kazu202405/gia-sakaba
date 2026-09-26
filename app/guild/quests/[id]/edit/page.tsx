@@ -13,7 +13,5 @@ export default async function EditQuestPage({ params }: Props) {
   ]);
   const quest = quests.find((item) => item.id === id);
   if (!quest || quest.creator_id !== userId || !["open", "in_progress"].includes(quest.status)) notFound();
-  const canCreateGathering = context.membership.role === "owner" || context.membership.role === "master";
-
-  return <LiveQuestForm questTerm={context.guild.terms.quest} quest={quest} canCreateGathering={canCreateGathering} />;
+  return <LiveQuestForm questTerm={context.guild.terms.quest} quest={quest} />;
 }

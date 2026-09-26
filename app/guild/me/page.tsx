@@ -5,6 +5,7 @@ import { GuildBillingPortalButton } from "@/components/guild/guild-billing-porta
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { LivePushSettings } from "@/components/guild/live-push-settings";
+import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 
@@ -44,6 +45,8 @@ export default async function MyPage() {
         </div>
       </div>
     </Window>
+
+    <PersonalProfileWindow profile={me} />
 
     <LiveMyInvite initial={invite} />
 

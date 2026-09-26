@@ -65,6 +65,14 @@ export type Profile = {
   job: string;
   job_icon: JobIconKey;
   region: string;
+  /** 任意の「人となり」。入力した内容は同じギルドの会員に表示する */
+  hometown?: string;
+  hobbies?: string;
+  life_story?: string;
+  /** 誕生月・日は組で入力し、生年だけ省略できる */
+  birth_month?: number | null;
+  birth_day?: number | null;
+  birth_year?: number | null;
   // ② 仕事
   bio: string;
   can_help_with: string;

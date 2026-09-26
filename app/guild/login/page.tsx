@@ -20,6 +20,8 @@ export default function GuildLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberEmail, setRememberEmail] = useState(false);
   const [busy, setBusy] = useState(true);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,6 +82,23 @@ export default function GuildLoginPage() {
     router.replace(safeNext(new URLSearchParams(window.location.search).get("next")));
   }
 
+  async function sendLoginLink() {
+    if (!email.trim() || busy || linkBusy) return;
+    setLinkBusy(true);
+    setError(null);
+    setLinkSent(false);
+    const { error: linkError } = await createClient().auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent("/guild")}`,
+      },
+    });
+    setLinkBusy(false);
+    if (linkError) { setError("ログイン用メールを送れませんでした。少し待って再度お試しください。"); return; }
+    setLinkSent(true);
+  }
+
   return (
     <main className="guild-theme guild-scene grid min-h-screen place-items-center px-4 py-12">
       {/* 見た目だけ：酒場の入口として夜の酒場の絵を敷く */}
@@ -114,6 +133,11 @@ export default function GuildLoginPage() {
             {busy ? "確認中..." : "酒場に入る"}
           </button>
         </form>
+        <div className="c-dashed-top mt-6 pt-5 text-center">
+          <p className="c-muted text-xs leading-relaxed">パスワードを設定していない方は、メールのリンクでもログインできます。</p>
+          <button type="button" disabled={busy || linkBusy || !email.trim()} onClick={() => void sendLoginLink()} className="c-button-sub mt-3 min-h-11 w-full disabled:opacity-50">{linkBusy ? "送信中…" : "▶ メールのリンクでログイン"}</button>
+          {linkSent && <p role="status" className="mt-3 text-sm">ログイン用リンクを送りました。メールから酒場を開いてください。</p>}
+        </div>
         <Link href="/guild/forgot-password" className="mt-5 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">パスワードを忘れた方</Link>
       </section>
     </main>

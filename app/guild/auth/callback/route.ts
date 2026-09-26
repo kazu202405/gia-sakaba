@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 function safeNext(value: string | null): string {
   if (value === "/guild/reset-password") return value;
   if (value?.startsWith("/guild/join?") && !value.startsWith("//")) return value;
+  if (value && /^\/e\/[0-9a-f]{64}$/i.test(value)) return value;
   return "/guild";
 }
 

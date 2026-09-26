@@ -6,6 +6,5 @@ export const metadata: Metadata = { title: "クエストを出す" };
 
 export default async function NewQuestPage() {
   const context = await getGuildContext();
-  const canCreateGathering = context.membership.role === "owner" || context.membership.role === "master";
-  return <LiveQuestForm questTerm={context.guild.terms.quest} canCreateGathering={canCreateGathering} />;
+  return <LiveQuestForm questTerm={context.guild.terms.quest} />;
 }

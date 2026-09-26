@@ -4,6 +4,7 @@ import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-button";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
+import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
 import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
@@ -85,10 +86,12 @@ export default async function MemberStatusPage({ params }: Props) {
         <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
           {isMe
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
-            : "連絡先は本人がメンバー向けに公開したものだけ表示しています。承諾後のみの連絡先は、紹介が成立すると当事者に見えます。"}
+            : "ここには本人がメンバー向けに公開した連絡先だけを表示しています。つながり申請を承諾すると、当事者には登録済みの連絡先が見えます。"}
         </p>
         {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} /></div>}
       </Window>
+
+      <PersonalProfileWindow profile={p} />
 
       <ProfileWindow
         profile={p}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { ContactKind, ContactVisibility, MyGuildProfile } from "@/lib/guild/server-data";
 import type { JobIconKey, Position } from "@/lib/guild/types";
 import { jobIconLabel, positionLabel } from "@/lib/guild/labels";
+import { isValidBirthday } from "@/lib/guild/birthday";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
@@ -24,7 +25,7 @@ function ContactVisibilityChoice({ kind, value, saving, onChange }: {
     <legend className="c-muted text-xs">{CONTACT_LABEL[kind]}を見せる相手</legend>
     <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
       <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={`${kind}-visibility`} checked={value === "members"} disabled={saving} onChange={() => onChange("members")} className="accent-[#1b2a41]" />メンバーに表示</label>
-      <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={`${kind}-visibility`} checked={value === "approved"} disabled={saving} onChange={() => onChange("approved")} className="accent-[#1b2a41]" />紹介の承諾後のみ</label>
+      <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="radio" name={`${kind}-visibility`} checked={value === "approved"} disabled={saving} onChange={() => onChange("approved")} className="accent-[#1b2a41]" />つながり申請の承諾後のみ</label>
     </div>
     {saving && <p role="status" className="c-muted mt-1 text-xs">公開設定を変更中…</p>}
   </fieldset>;
@@ -32,6 +33,7 @@ function ContactVisibilityChoice({ kind, value, saving, onChange }: {
 
 function validationError({ draft }: Snapshot): string | null {
   if (!draft.display_name.trim() || !draft.company_name.trim()) return "お名前と会社名を入力すると自動保存されます。";
+  if (!isValidBirthday(draft.birth_month, draft.birth_day, draft.birth_year)) return "誕生日は正しい月日を選んでください。生年は任意です。";
   if (draft.contact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(draft.contact.email)) return "メールアドレスの形式を確認してください。";
   if ([draft.contact.line_url, draft.contact.website_url].some((url) => url && !/^https?:\/\//.test(url))) return "URLは https:// から入力してください。";
   return null;
@@ -63,14 +65,25 @@ async function persist({ draft }: Snapshot) {
     p_industry: draft.industry.trim(),
   });
   if (profileResult.error) return profileResult;
-  return supabase.rpc("sakaba_update_profile_extras", {
+  const extrasResult = await supabase.rpc("sakaba_update_profile_extras", {
     p_guild_slug: "gia",
     p_name_kana: draft.name_kana?.trim() ?? "",
+  });
+  if (extrasResult.error) return extrasResult;
+  return supabase.rpc("sakaba_update_personal_profile", {
+    p_guild_slug: "gia",
+    p_hometown: draft.hometown?.trim() ?? "",
+    p_hobbies: draft.hobbies?.trim() ?? "",
+    p_life_story: draft.life_story?.trim() ?? "",
+    p_birth_month: draft.birth_month ?? null,
+    p_birth_day: draft.birth_day ?? null,
+    p_birth_year: draft.birth_year ?? null,
   });
 }
 
 export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   const router = useRouter();
+  const currentYear = new Date().getUTCFullYear();
   const [draft, setDraft] = useState(initial);
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");
   const [leaving, setLeaving] = useState(false);
@@ -80,6 +93,7 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [personalOpen, setPersonalOpen] = useState(Boolean(initial.hometown || initial.hobbies || initial.life_story || initial.birth_month));
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
   const latestRef = useRef<Snapshot>({ draft: initial });
@@ -266,6 +280,27 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>会社名と役職を名鑑に表示する</CheckBox>
       </section>
 
+      <details className="c-window p-5 pt-10 sm:p-7 sm:pt-11" open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
+        <span className="c-window-title">人となり</span>
+        <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-[15px] tracking-wider">
+          <span>▶ 出身地・誕生日・趣味などを書く</span>
+          <span className="c-muted text-xs">任意</span>
+        </summary>
+        <div className="mt-5 space-y-5">
+          <p className="c-muted text-xs">書きたい項目だけで大丈夫です。入力した内容はギルドのメンバーに表示されます。</p>
+          <Field label="出身地" hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
+          <Field label="誕生日" hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <label><span className="c-muted mb-1 block text-xs">月</span><Select value={draft.birth_month?.toString() ?? ""} onChange={(value) => { set("birth_month", value ? Number(value) : null); if (!value) { set("birth_day", null); set("birth_year", null); } }} label="誕生月" placeholder="未設定" options={Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}月` }))} /></label>
+              <label><span className="c-muted mb-1 block text-xs">日</span><Select value={draft.birth_day?.toString() ?? ""} onChange={(value) => { set("birth_day", value ? Number(value) : null); if (!value) { set("birth_month", null); set("birth_year", null); } }} label="誕生日" placeholder="未設定" options={Array.from({ length: 31 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}日` }))} /></label>
+              <label className="col-span-2 sm:col-span-1"><span className="c-muted mb-1 block text-xs">生年（任意）</span><Select value={draft.birth_year?.toString() ?? ""} onChange={(value) => set("birth_year", value ? Number(value) : null)} label="生まれた年" placeholder="未設定" options={Array.from({ length: currentYear - 1899 }, (_, index) => ({ value: String(currentYear - index), label: `${currentYear - index}年` }))} /></label>
+            </div>
+          </Field>
+          <Field label="趣味・好きなこと"><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
+          <Field label="これまでの歩み" hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
+        </div>
+      </details>
+
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">しごと</span>
         <Field label="仕事内容・できること" hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
@@ -283,7 +318,7 @@ export function LiveStatusForm({ initial }: { initial: MyGuildProfile }) {
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">れんらく先</span>
-        <p className="c-muted text-xs">「メンバーに表示」はログイン中のギルド会員だけ。「紹介の承諾後のみ」は、紹介機能の開始まで非公開です。</p>
+        <p className="c-muted text-xs">「メンバーに表示」はログイン中のギルド会員に公開。「つながり申請の承諾後のみ」は、申請が承諾されると当事者に表示されます。</p>
         <Field label="メール"><TextInput value={draft.contact.email} onChange={(value) => setContact("email", value)} max={200} type="email" label="メール" /><ContactVisibilityChoice kind="email" value={draft.contact_visibility.email} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("email", value)} /></Field>
         <Field label="LINE URL"><TextInput value={draft.contact.line_url} onChange={(value) => setContact("line_url", value)} max={300} label="LINE URL" /><ContactVisibilityChoice kind="line" value={draft.contact_visibility.line} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("line", value)} /></Field>
         <Field label="ウェブサイト"><TextInput value={draft.contact.website_url} onChange={(value) => setContact("website_url", value)} max={300} label="ウェブサイト" placeholder="https://example.com" /><ContactVisibilityChoice kind="website" value={draft.contact_visibility.website} saving={visibilitySaving !== null} onChange={(value) => void changeContactVisibility("website", value)} /></Field>

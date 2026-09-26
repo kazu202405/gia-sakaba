@@ -9,6 +9,13 @@ describe("guildGate", () => {
     expect(guildGate("/", prod)).toEqual({ kind: "pass" });
   });
 
+  it("招待制の集まりは有効な長いトークンだけ通す", () => {
+    const token = "a".repeat(64);
+    expect(guildGate(`/e/${token}`, prod)).toEqual({ kind: "pass" });
+    expect(guildGate("/e/example", prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate(`/e/${token}/extra`, prod)).toEqual({ kind: "redirect", to: "/guild" });
+  });
+
   it("/guild 配下は通す", () => {
     for (const p of ["/guild", "/guild/", "/guild/quests/new", "/guild/members/abc"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });

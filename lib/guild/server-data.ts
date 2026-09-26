@@ -103,6 +103,12 @@ export type MyGuildProfile = Profile & {
 type ProfileExtra = {
   id: string;
   name_kana: string;
+  hometown: string;
+  hobbies: string;
+  life_story: string;
+  birth_month: number | null;
+  birth_day: number | null;
+  birth_year: number | null;
   email: string;
   line_url: string;
   website_url: string;
@@ -144,6 +150,12 @@ export async function listGuildMembers(): Promise<Profile[]> {
   return Array.isArray(data) ? (data as Profile[]).map((member) => ({
     ...member,
     name_kana: byId.get(member.id)?.name_kana ?? "",
+    hometown: byId.get(member.id)?.hometown ?? "",
+    hobbies: byId.get(member.id)?.hobbies ?? "",
+    life_story: byId.get(member.id)?.life_story ?? "",
+    birth_month: byId.get(member.id)?.birth_month ?? null,
+    birth_day: byId.get(member.id)?.birth_day ?? null,
+    birth_year: byId.get(member.id)?.birth_year ?? null,
     email: byId.get(member.id)?.email ?? "",
     line_url: byId.get(member.id)?.line_url ?? "",
     website_url: byId.get(member.id)?.website_url ?? "",
@@ -247,6 +259,12 @@ export async function getMyGuildProfile(): Promise<MyGuildProfile> {
   return {
     ...profile,
     name_kana: extra?.name_kana ?? "",
+    hometown: extra?.hometown ?? "",
+    hobbies: extra?.hobbies ?? "",
+    life_story: extra?.life_story ?? "",
+    birth_month: extra?.birth_month ?? null,
+    birth_day: extra?.birth_day ?? null,
+    birth_year: extra?.birth_year ?? null,
     website_url: extra?.website_url ?? "",
     contact_visibility: {
       email: extra?.email_visibility ?? "approved",

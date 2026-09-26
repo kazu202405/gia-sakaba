@@ -57,7 +57,7 @@ export const questCategoryHint: Record<QuestCategory, string> = {
   consult: "話を聞いてほしい・知恵を借りたい",
   collab: "いっしょに何かを始めたい",
   info: "知っている人に教えてほしい",
-  gathering: "ギルドマスターが ひらく リアルの集まり",
+  gathering: "飲み会や交流会。招待URLで案内します",
 };
 
 /** 役職。代表・役員・決裁者を「経営者」として 限定の集まりの対象にする */

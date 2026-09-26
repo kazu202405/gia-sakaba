@@ -33,6 +33,8 @@ function isUnder(pathname: string, prefix: string): boolean {
 
 export function guildGate(pathname: string, options: { allowLook: boolean }): GuildGateResult {
   if (pathname === "/") return { kind: "pass" };
+  // 招待制の集まりだけは公開。推測しやすい文字列や余分な下位パスは通さない。
+  if (/^\/e\/[0-9a-f]{64}$/i.test(pathname)) return { kind: "pass" };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 

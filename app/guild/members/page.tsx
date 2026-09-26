@@ -16,10 +16,10 @@ export default async function MembersPage() {
       <MarkSeen list="members" />
       <PageTitle
         title={`${memberTerm} めいかん`}
-        lead="だれが なにをしている人かを 知る場所です。気になる人がいたら、ギルドマスターに しょうかいを頼めます。"
+        lead="だれが なにをしている人かを 知る場所です。気になる人がいたら、つながりの申請をしてみましょう。"
       />
       <Link href="/guild/requests" className="c-button-sub mb-6 inline-flex min-h-11 items-center px-4 text-sm">
-        紹介依頼の状況を見る ▶
+        つながり申請の状況を見る ▶
       </Link>
       <MemberDirectory members={members} memberTerm={memberTerm} />
     </div>

@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import { BackLink, MemberRow, Window, questCategoryMark } from "@/components/guild/cards";
 import { LiveQuestApplication } from "@/components/guild/live-quest-application";
+import { GuestGatheringHost } from "@/components/guild/guest-gathering-host";
 import { LiveQuestOwnerActions } from "@/components/guild/live-quest-owner-actions";
 import { GROUND_RULES } from "@/lib/guild/rules";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
+import type { GuestGatheringHost as GuestGatheringHostData } from "@/lib/guild/guest-gathering";
+import { createClient } from "@/lib/supabase/server";
 import {
   getAuthenticatedUserId,
   getGuildContext,
@@ -29,6 +32,13 @@ export default async function QuestDetailPage({ params }: Props) {
   const creator = members.find((member) => member.id === q.creator_id);
   const questTerm = context.guild.terms.quest;
   const canReadDetails = !q.members_only || context.is_paid || q.creator_id === currentUserId;
+  const canManageGuestLink = q.creator_id === currentUserId && q.category === "gathering" && !q.members_only;
+  const guestLinkResult = canManageGuestLink
+    ? await (await createClient()).rpc("sakaba_get_guest_gathering_host", { p_quest_id: q.id })
+    : null;
+  const guestLink = !guestLinkResult?.error && guestLinkResult?.data
+    ? guestLinkResult.data as GuestGatheringHostData
+    : null;
 
   return (
     <div className="space-y-11">
@@ -92,6 +102,8 @@ export default async function QuestDetailPage({ params }: Props) {
           </div>
         )}
       </Window>
+
+      {guestLink && <GuestGatheringHost questId={q.id} initial={guestLink} />}
 
       {creator && (
         <Window title="出した人">

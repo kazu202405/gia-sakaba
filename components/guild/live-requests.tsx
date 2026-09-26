@@ -42,7 +42,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
     if (action !== "accept") {
       const confirmed = await uiConfirm({
         title: action === "cancel" ? "依頼を取り下げます" : "今回は辞退します",
-        message: action === "cancel" ? "この紹介依頼を取り下げます。" : "依頼者には『今回はご縁がありませんでした』と表示されます。",
+        message: action === "cancel" ? "このつながり申請を取り下げます。" : "申請者には『今回はご縁がありませんでした』と表示されます。",
         okLabel: action === "cancel" ? "取り下げる" : "辞退する",
       });
       if (!confirmed) return;
@@ -53,7 +53,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
         p_request_id: request.id, p_action: action,
       });
       if (rpcError) throw rpcError;
-      uiToast(action === "accept" ? "紹介を承諾しました" : action === "cancel" ? "依頼を取り下げました" : "辞退しました");
+      uiToast(action === "accept" ? "つながり申請を承諾しました" : action === "cancel" ? "申請を取り下げました" : "辞退しました");
       router.refresh();
     } catch {
       setError("更新できませんでした。画面を読み直してもう一度お試しください。");
@@ -64,11 +64,11 @@ export function LiveRequests({ initial, members, currentUserId }: {
 
   return <div className="space-y-9">
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-    <Window title="あなたへの しょうかい依頼">
-      {received.length === 0 ? <p className="c-muted text-sm">いまは紹介依頼が来ていません。</p> : <div className="space-y-4">{received.map((request) => {
+    <Window title="あなたへの つながり申請">
+      {received.length === 0 ? <p className="c-muted text-sm">いまはつながり申請が来ていません。</p> : <div className="space-y-4">{received.map((request) => {
         const name = names.get(request.requester_id) ?? "メンバー";
         return <article key={request.id} className="c-card p-4 sm:p-5">
-          <p className="c-label text-xs">{name}さんからの紹介依頼</p>
+          <p className="c-label text-xs">{name}さんからのつながり申請</p>
           <div className="mt-2 flex flex-wrap items-center justify-between gap-2"><Link href={`/guild/members/${request.requester_id}`} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
           <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}・{formatDate(request.created_at)}</p>
           {request.message && <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 px-3 py-2 text-sm break-words">{request.message}</p>}
@@ -77,7 +77,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
       })}</div>}
     </Window>
     <Window title="あなたが出した いらい">
-      {sent.length === 0 ? <p className="c-muted text-sm">まだ紹介を依頼していません。<Link href="/guild/members" className="underline">メンバー名鑑から探す</Link></p> : <div className="space-y-4">{sent.map((request) => {
+      {sent.length === 0 ? <p className="c-muted text-sm">まだつながり申請を送っていません。<Link href="/guild/members" className="underline">メンバー名鑑から探す</Link></p> : <div className="space-y-4">{sent.map((request) => {
         const name = names.get(request.target_id) ?? "メンバー";
         const closed = closedStatuses.includes(request.status);
         return <article key={request.id} className={`c-card p-4 sm:p-5 ${closed ? "opacity-75" : ""}`}>
