@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { GuestGatheringForm } from "@/components/guild/guest-gathering-form";
+import { GatheringSchedule } from "@/components/guild/gathering-schedule";
 import { PageTitle, Window } from "@/components/guild/cards";
 import type { GuestGathering } from "@/lib/guild/guest-gathering";
+import { formatScheduleLong, type GatheringSchedule as GatheringScheduleData } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
 import "@/components/guild/guild-theme.css";
 
@@ -24,6 +26,10 @@ export default async function GuestGatheringPage({ params }: Props) {
   const { data, error } = await supabase.rpc("sakaba_get_guest_gathering", { p_token: token });
   if (error || !data) notFound();
   const event = data as GuestGathering;
+  // 日程調整（人数の集計と自分の回答だけ）。読めなければ日程の窓を出さず、ほかはいつもどおり見せる
+  const { data: scheduleData } = await supabase.rpc("sakaba_get_guest_gathering_schedule", { p_token: token });
+  const schedule = scheduleData ? scheduleData as GatheringScheduleData : null;
+  const decidedOption = schedule?.options.find((option) => option.id === schedule.decided_option_id) ?? null;
 
   return <main className="guild-theme min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
     <div className="mx-auto max-w-3xl space-y-9">
@@ -37,12 +43,14 @@ export default async function GuestGatheringPage({ params }: Props) {
         <h1 className="mt-3 text-xl leading-snug break-words sm:text-2xl">{event.title}</h1>
         {event.summary && <p className="mt-3 text-sm leading-relaxed break-words">{event.summary}</p>}
         <dl className="mt-5 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+          {decidedOption && <><dt className="c-label">開催日</dt><dd>{formatScheduleLong(decidedOption.starts_at)}</dd></>}
           {event.region && <><dt className="c-label">場所</dt><dd className="break-words">{event.region}</dd></>}
           {event.deadline && <><dt className="c-label">申込期限</dt><dd>{event.deadline}</dd></>}
           {event.member_limit && <><dt className="c-label">定員</dt><dd>{event.member_limit}人</dd></>}
         </dl>
         {event.body && <p className="c-dashed-top mt-5 whitespace-pre-line pt-5 text-sm leading-relaxed break-words">{event.body}</p>}
       </Window>
+      {schedule && <GatheringSchedule mode="guest" token={token} initial={schedule} open={event.status === "open"} signedIn={Boolean(auth.user)} isMember={event.is_member} />}
       <Window title="参加申込者の紹介">
         <p className="c-muted text-xs leading-relaxed">紹介を載せることに同意した人だけ表示しています。このリンクを知っている人には見えます。</p>
         {event.participants.length > 0 ? <div className="mt-4 grid gap-3 sm:grid-cols-2">

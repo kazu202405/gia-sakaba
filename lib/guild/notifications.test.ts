@@ -160,6 +160,13 @@ describe("notificationText", () => {
     expect(toRequester.text).toBe("小松 由佳さんへの しょうかい：相手に打診中");
   });
 
+  it("日にちが決まった知らせは、その集まりへ", () => {
+    expect(notificationText(note({ kind: "schedule_decided" }), ctx)).toEqual({
+      text: "「LPの文章」の 日にちが 決まりました",
+      href: "/guild/quests/q1",
+    });
+  });
+
   it("依頼が見つからなくても落ちない", () => {
     const t = notificationText(
       note({ kind: "intro_progress", intro_request_id: "none", intro_status: "accepted" }),

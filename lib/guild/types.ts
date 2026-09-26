@@ -297,7 +297,9 @@ export type NotificationKind =
   | "intro_progress"
   /** 限定の集まりへの申し込みを ギルドマスターが承認した／見送った */
   | "gathering_approved"
-  | "gathering_declined";
+  | "gathering_declined"
+  /** 答えた集まりの日にちを、主催者が決めた */
+  | "schedule_decided";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。

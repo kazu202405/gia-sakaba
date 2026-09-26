@@ -110,6 +110,8 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       return { text: `「${title}」への 参加が 決まりました`, href: `/guild/quests/${n.quest_id}` };
     case "gathering_declined":
       return { text: `「${title}」への 申し込みは 今回 見送りになりました`, href: `/guild/quests/${n.quest_id}` };
+    case "schedule_decided":
+      return { text: `「${title}」の 日にちが 決まりました`, href: `/guild/quests/${n.quest_id}` };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };

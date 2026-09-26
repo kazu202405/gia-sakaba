@@ -2,10 +2,12 @@ import { notFound } from "next/navigation";
 import { BackLink, MemberRow, Window, questCategoryMark } from "@/components/guild/cards";
 import { LiveQuestApplication } from "@/components/guild/live-quest-application";
 import { GuestGatheringHost } from "@/components/guild/guest-gathering-host";
+import { GatheringSchedule } from "@/components/guild/gathering-schedule";
 import { LiveQuestOwnerActions } from "@/components/guild/live-quest-owner-actions";
 import { GROUND_RULES } from "@/lib/guild/rules";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import type { GuestGatheringHost as GuestGatheringHostData } from "@/lib/guild/guest-gathering";
+import { formatScheduleLong, type GatheringSchedule as GatheringScheduleData } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
 import {
   getAuthenticatedUserId,
@@ -40,6 +42,15 @@ export default async function QuestDetailPage({ params }: Props) {
     ? guestLinkResult.data as GuestGatheringHostData
     : null;
 
+  // 集まりの日程調整（詳しい内容を読める人だけ）。読めなかったときは、空ではなく「読み込めなかった」と出す
+  const scheduleResult = q.category === "gathering" && canReadDetails
+    ? await (await createClient()).rpc("sakaba_get_gathering_schedule", { p_quest_id: q.id })
+    : null;
+  const schedule = scheduleResult && !scheduleResult.error && scheduleResult.data
+    ? scheduleResult.data as GatheringScheduleData
+    : null;
+  const decidedOption = schedule?.options.find((option) => option.id === schedule.decided_option_id) ?? null;
+
   return (
     <div className="space-y-11">
       <BackLink href="/guild/quests" label={`${questTerm} けいじばん`} />
@@ -56,6 +67,12 @@ export default async function QuestDetailPage({ params }: Props) {
         {canReadDetails ? (
           <>
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+              {decidedOption && (
+                <>
+                  <dt className="c-label">かいさい日</dt>
+                  <dd>{formatScheduleLong(decidedOption.starts_at)}</dd>
+                </>
+              )}
               {q.region && (
                 <>
                   <dt className="c-label">ばしょ</dt>
@@ -102,6 +119,13 @@ export default async function QuestDetailPage({ params }: Props) {
           </div>
         )}
       </Window>
+
+      {schedule && <GatheringSchedule mode="member" questId={q.id} initial={schedule} open={q.status === "open"} />}
+      {scheduleResult?.error && (
+        <Window title="日程調整">
+          <p role="alert" className="text-sm text-[#c62828]">日程調整を読み込めませんでした。画面を読み直してください。</p>
+        </Window>
+      )}
 
       {guestLink && <GuestGatheringHost questId={q.id} initial={guestLink} />}
 
