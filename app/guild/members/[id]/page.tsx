@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
@@ -91,6 +92,7 @@ export default async function MemberStatusPage({ params }: Props) {
 
       <ProfileWindow
         profile={p}
+        isMe={isMe}
         sections={[
           { group: "work", label: "仕事内容・できること", value: p.bio },
           { group: "values", label: "だいじにしていること・これから", value: p.values_text },
@@ -105,17 +107,21 @@ export default async function MemberStatusPage({ params }: Props) {
 }
 
 /**
- * しごと・おもい・つながりを1つの窓にまとめる。書かれていない項目は出さない（空の窓が並ばないように）。
+ * しごと・おもい・つながりを1つの窓にまとめる。
+ * ほかの人が見るとき：書かれていない項目は出さない（空の見出しが並ぶと「何も書いていない人」と目立つため）。
+ * 本人が見るとき：空の項目も出して「まだ入力されていません」とステータスをなおす画面へ案内する。
  * 非公開の項目は、その見出しだけ出して「ひこうかい」と書く。1つも出すものがなければ、その旨を1行だけ出す。
  */
 function ProfileWindow({
   profile,
+  isMe,
   sections,
 }: {
   profile: Profile;
+  isMe: boolean;
   sections: { group: VisibleGroup; label: string; value: string }[];
 }) {
-  const shown = sections.filter((section) => !profile.visible_groups.includes(section.group) || section.value.trim());
+  const shown = isMe ? sections : sections.filter((section) => !profile.visible_groups.includes(section.group) || section.value.trim());
   return (
     <Window title="プロフィール">
       {shown.length === 0 ? (
@@ -125,7 +131,12 @@ function ProfileWindow({
           {shown.map((section) => (
             <section key={section.group} className="py-5 first:pt-0 last:pb-0">
               <h2 className="c-label text-sm tracking-[0.12em]">▶ {groupLabel[section.group].title}</h2>
-              {profile.visible_groups.includes(section.group) ? (
+              {profile.visible_groups.includes(section.group) && !section.value.trim() ? (
+                <p className="c-muted mt-1.5 text-sm">
+                  まだ入力されていません。
+                  <Link href="/guild/me/status" className="ml-2 underline underline-offset-4">▶ ステータスをなおす</Link>
+                </p>
+              ) : profile.visible_groups.includes(section.group) ? (
                 <>
                   <p className="c-muted mt-1 text-xs">{section.label}</p>
                   <p className="mt-1.5 text-[15px] leading-relaxed break-words whitespace-pre-line">{section.value}</p>
