@@ -1,8 +1,8 @@
 "use client";
 
 // 酒場の外枠（見た目はE案・2026-09-26）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
-// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）は、夜の酒場の一枚絵を敷いて窓を紺に反転する
-// （guild-theme.css の .guild-scene）。詳細・作成・編集などの画面は明るい帳面のまま。見た目だけの切り替え。
+// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）と、メンバー・クエスト・プロジェクトの中身の画面は、
+// 夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。作成・編集などの画面は明るい帳面のまま。見た目だけの切り替え。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -53,6 +53,16 @@ const SCENE_ART: Record<string, string> = {
 // コマンドを押してから、行き先の画面が届くまで仮の画面を出しておく上限。届かなければ元の画面に戻す
 const PENDING_LIMIT_MS = 15000;
 
+// メンバー・クエスト・プロジェクトの中身の画面は、一覧と同じ場所の絵を使う（作成の /new と、編集などの下の道は除く）
+const DETAIL_ART: Record<string, string> = { members: "guild", quests: "quests", projects: "projects" };
+
+function sceneArtOf(path: string): string | undefined {
+  if (SCENE_ART[path]) return SCENE_ART[path];
+  const detail = /^\/guild\/(members|quests|projects)\/([^/]+)$/.exec(path);
+  if (detail && detail[2] !== "new") return DETAIL_ART[detail[1]];
+  return undefined;
+}
+
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
   // コマンドを押した瞬間に、行き先の背景・いる所の印・仮の窓を先に出す（見た目だけ。移動そのものは Next.js のリンクのまま）。
@@ -77,7 +87,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
   // 仮の画面を出している間は、行き先の道として背景とメニューを描く
   const shownPath = pending ?? pathname;
-  const art = SCENE_ART[shownPath];
+  const art = sceneArtOf(shownPath);
   const scene = art !== undefined;
 
   return (

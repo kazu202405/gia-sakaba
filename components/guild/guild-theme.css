@@ -619,6 +619,13 @@ body:has(.guild-theme) [data-ui-toast-action] {
 .guild-scene main [class*="divide-[#1b2a41]"] > * {
   border-color: rgba(239, 230, 207, 0.18);
 }
+/* 生成り・薄い金の地（担当者の選択肢・人ごとの進み具合など）は、文字が生成りになるので紺の地にする */
+.guild-scene main [class*="bg-[#f3ecd9]"] {
+  background-color: #1b2340;
+}
+.guild-scene main [class*="bg-[#e8cf8e]"] {
+  background-color: rgba(217, 180, 90, 0.28);
+}
 .guild-scene main [class*="text-[#8f7337]"] {
   color: #d9b45a;
 }
