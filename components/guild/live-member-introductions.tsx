@@ -78,9 +78,9 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
     }
   }
 
-  return <Window title="冒険者からの紹介状" action={<span className="c-muted text-xs">{items.length}通</span>}>
+  return <Window title="紹介状" action={<span className="c-muted text-xs">{items.length}通</span>}>
     <p className="c-muted mb-5 text-sm leading-relaxed">酒場で{isMe ? "あなた" : `${targetName}さん`}を知る仲間から見た、人柄や魅力の紹介です。</p>
-    {!isMe && !editing && <button type="button" onClick={() => { setBody(mine?.body ?? ""); setEditing(true); }} className="rpg-button h-11 px-5 text-sm">{mine ? "▶ 自分の紹介文をなおす" : "▶ 紹介文を贈る"}</button>}
+    {!isMe && !editing && <button type="button" onClick={() => { setBody(mine?.body ?? ""); setEditing(true); }} className="rpg-button h-11 px-5 text-sm">{mine ? "▶ 自分の紹介文をなおす" : "▶ 紹介文を書く"}</button>}
     {!isMe && editing && <div className="mb-6 border-2 border-dashed border-[#8f7337] bg-[#fffdf6] p-4">
       <label className="block"><span className="text-sm tracking-wider">{targetName}さんは、どんな仲間？</span>
         <textarea value={body} onChange={(event) => { setBody(event.target.value); setError(""); }} rows={5} maxLength={400} className="c-input mt-2 leading-relaxed" placeholder="話したときの印象や人柄、ほかの仲間に伝えたい魅力を書いてください" /></label>
@@ -94,7 +94,7 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
         <p className="whitespace-pre-line break-words text-sm leading-[1.9]">{item.body}</p>
         <div className="mt-4 flex flex-wrap items-end justify-between gap-2 border-t border-[#1b2a41]/15 pt-3">
           <div><Link href={`/guild/members/${item.author_id}`} className="text-sm underline underline-offset-4">{item.author_name}</Link><p className="c-muted mt-0.5 text-[10px]">{formatDate(item.updated_at)}</p></div>
-          <div className="flex gap-3 text-xs">{item.can_edit && <button type="button" disabled={pending} onClick={() => { setBody(item.body); setEditing(true); }} className="underline underline-offset-4 disabled:opacity-50">編集</button>}{item.can_delete && <button type="button" disabled={pending} onClick={() => void remove(item)} className="text-[#9d2929] underline underline-offset-4 disabled:opacity-50">削除</button>}</div>
+          <div className="flex gap-2 text-xs">{item.can_edit && <button type="button" disabled={pending} onClick={() => { setBody(item.body); setEditing(true); }} className="c-button-sub h-9 px-3 text-xs disabled:opacity-50">編集</button>}{item.can_delete && <button type="button" disabled={pending} onClick={() => void remove(item)} className="c-button-danger h-9 px-3 text-xs disabled:opacity-50">削除</button>}</div>
         </div>
       </li>)}</ul>}
   </Window>;

@@ -1,7 +1,7 @@
 "use client";
 
 // 酒場の外枠（見た目はE案・2026-09-26）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
-// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）と、メンバー・クエスト・プロジェクトの中身の画面は、
+// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）と、メンバー・クエスト・プロジェクトの中身、ステータスをなおす画面は、
 // 夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。作成・編集などの画面は明るい帳面のまま。見た目だけの切り替え。
 
 import Link from "next/link";
@@ -48,6 +48,7 @@ const SCENE_ART: Record<string, string> = {
   "/guild/quests": "quests",
   "/guild/projects": "projects",
   "/guild/me": "me",
+  "/guild/me/status": "me",
 };
 
 // コマンドを押してから、行き先の画面が届くまで仮の画面を出しておく上限。届かなければ元の画面に戻す
@@ -79,9 +80,21 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
     const timer = window.setTimeout(() => setPending(null), PENDING_LIMIT_MS);
     return () => window.clearTimeout(timer);
   }, [pending]);
-  const startMove = (href: string) => {
-    if (href !== pathname) setPending(href);
-  };
+  // 酒場の中のリンク（コマンドも、画面の中の「▶ 〇〇」も）で別の道へ移るときに、仮の画面を先に出す。
+  // Next.js のリンクはアプリ内で移るときだけ既定の動きを止めるので、それを見て判定する（新しいタブで開く・外のサイトは対象外）
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (!event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
+      if (!(anchor instanceof HTMLAnchorElement) || (anchor.target && anchor.target !== "_self")) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin !== window.location.origin || (url.pathname !== "/guild" && !url.pathname.startsWith("/guild/"))) return;
+      if (url.pathname === window.location.pathname) return;
+      setPending(url.pathname);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
 
   if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
@@ -95,11 +108,11 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
       {scene && <GuildSceneArt art={art} dim={shownPath !== "/guild"} />}
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
         <div className="guild-px mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/guild" onNavigate={() => startMove("/guild")} className="text-lg tracking-[0.2em]">
+          <Link href="/guild" className="text-lg tracking-[0.2em]">
             GIAの酒場
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/guild/notifications" onNavigate={() => startMove("/guild/notifications")} className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">おしらせ</Link>
+            <Link href="/guild/notifications" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">おしらせ</Link>
             <LogoutButton redirectTo="/guild/login" showIcon={false} label="ログアウト" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
           </div>
         </div>
@@ -112,13 +125,13 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
           <ul className="space-y-1">
             {NAV.map((item) => (
               <li key={item.href}>
-                <CommandLink item={item} active={isActive(shownPath, item)} onMove={startMove} />
+                <CommandLink item={item} active={isActive(shownPath, item)} />
               </li>
             ))}
           </ul>
           {isMaster && <div className="c-dashed-top mt-4 pt-3">
             <p className="c-muted mb-1 text-[11px]">マスターのみ</p>
-            <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} onMove={startMove} />
+            <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} />
           </div>}
         </nav>
 
@@ -145,7 +158,6 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
             <Link
               key={item.href}
               href={item.href}
-              onNavigate={() => startMove(item.href)}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
@@ -165,11 +177,10 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
   );
 }
 
-function CommandLink({ item, active, onMove }: { item: NavItem; active: boolean; onMove: (href: string) => void }) {
+function CommandLink({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
-      onNavigate={() => onMove(item.href)}
       data-active={active}
       aria-current={active ? "page" : undefined}
       className="rpg-cursor-row flex items-center gap-1.5 py-1.5 text-[15px] tracking-wider"

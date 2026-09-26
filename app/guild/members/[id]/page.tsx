@@ -89,17 +89,14 @@ export default async function MemberStatusPage({ params }: Props) {
         {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} /></div>}
       </Window>
 
-      <div className="grid gap-11 md:grid-cols-3">
-        <GroupBlock profile={p} group="work">
-          <Item label="仕事内容・できること" value={p.bio} />
-        </GroupBlock>
-        <GroupBlock profile={p} group="values">
-          <Item label="おもい" value={p.values_text} />
-        </GroupBlock>
-        <GroupBlock profile={p} group="connect">
-          <Item label="さがしているもの・であいたい人" value={p.looking_for} />
-        </GroupBlock>
-      </div>
+      <ProfileWindow
+        profile={p}
+        sections={[
+          { group: "work", label: "仕事内容・できること", value: p.bio },
+          { group: "values", label: "だいじにしていること・これから", value: p.values_text },
+          { group: "connect", label: "さがしているもの・であいたい人", value: p.looking_for },
+        ]}
+      />
 
       <LiveMemberIntroductions targetId={p.id} targetName={p.display_name} currentUserId={currentUserId} initial={introductions} />
 
@@ -107,33 +104,39 @@ export default async function MemberStatusPage({ params }: Props) {
   );
 }
 
-function GroupBlock({
+/**
+ * しごと・おもい・つながりを1つの窓にまとめる。書かれていない項目は出さない（空の窓が並ばないように）。
+ * 非公開の項目は、その見出しだけ出して「ひこうかい」と書く。1つも出すものがなければ、その旨を1行だけ出す。
+ */
+function ProfileWindow({
   profile,
-  group,
-  children,
+  sections,
 }: {
   profile: Profile;
-  group: VisibleGroup;
-  children: React.ReactNode;
+  sections: { group: VisibleGroup; label: string; value: string }[];
 }) {
-  const visible = profile.visible_groups.includes(group);
+  const shown = sections.filter((section) => !profile.visible_groups.includes(section.group) || section.value.trim());
   return (
-    <Window title={groupLabel[group].title}>
-      {visible ? (
-        <div className="space-y-3">{children}</div>
+    <Window title="プロフィール">
+      {shown.length === 0 ? (
+        <p className="c-muted text-sm">まだ書かれていません。</p>
       ) : (
-        <p className="c-muted text-sm">※ ひこうかいに しています</p>
+        <div className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+          {shown.map((section) => (
+            <section key={section.group} className="py-5 first:pt-0 last:pb-0">
+              <h2 className="c-label text-sm tracking-[0.12em]">▶ {groupLabel[section.group].title}</h2>
+              {profile.visible_groups.includes(section.group) ? (
+                <>
+                  <p className="c-muted mt-1 text-xs">{section.label}</p>
+                  <p className="mt-1.5 text-[15px] leading-relaxed break-words whitespace-pre-line">{section.value}</p>
+                </>
+              ) : (
+                <p className="c-muted mt-1.5 text-sm">※ ひこうかいに しています</p>
+              )}
+            </section>
+          ))}
+        </div>
       )}
     </Window>
-  );
-}
-
-function Item({ label, value }: { label: string; value: string }) {
-  if (!value) return null;
-  return (
-    <div>
-      <p className="c-label text-xs">{label}</p>
-      <p className="mt-0.5 text-[15px] leading-relaxed break-words">{value}</p>
-    </div>
   );
 }

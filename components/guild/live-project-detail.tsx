@@ -19,7 +19,13 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
   const busy = !!pendingAction || isPending;
   const [error, setError] = useState("");
   const [projectError, setProjectError] = useState("");
-  const done = project.tasks.filter((task) => task.status === "done").length;
+  // チェックは押した瞬間に見た目を切り替え、保存は裏で行う（失敗したら元に戻して知らせる）
+  const [statusOverride, setStatusOverride] = useState<Record<string, "todo" | "done">>({});
+  const [savingTasks, setSavingTasks] = useState<string[]>([]);
+  const tasks = project.tasks.map((task) => (statusOverride[task.id] ? { ...task, status: statusOverride[task.id] } : task));
+  const openTasks = tasks.filter((task) => task.status !== "done");
+  const doneTasks = tasks.filter((task) => task.status === "done");
+  const done = doneTasks.length;
 
   async function addTask(event: React.FormEvent) {
     event.preventDefault();
@@ -32,12 +38,30 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
   }
 
   async function setTaskStatus(id: string, status: "todo" | "done") {
-    if (busy || projectActionLock.current) return;
-    setPendingAction("task-status"); setError("");
+    if (projectActionLock.current || savingTasks.includes(id)) return;
+    setError("");
+    setStatusOverride((current) => ({ ...current, [id]: status }));
+    setSavingTasks((current) => [...current, id]);
     const { error: rpcError } = await createClient().rpc("sakaba_set_project_task_status", { p_task_id: id, p_status: status });
-    if (rpcError) setError("タスクを更新できませんでした。");
-    else startTransition(() => router.refresh());
-    setPendingAction("");
+    if (rpcError) {
+      setStatusOverride((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setError("タスクを更新できませんでした。");
+    } else {
+      startTransition(() => router.refresh());
+    }
+    setSavingTasks((current) => current.filter((taskId) => taskId !== id));
+  }
+
+  function taskRow(task: GuildProject["tasks"][number]) {
+    const isDone = task.status === "done";
+    return <li key={task.id} className="c-card flex items-center gap-3 p-3">
+      {canEdit && project.status === "active" ? <input type="checkbox" checked={isDone} disabled={projectActionLock.current || savingTasks.includes(task.id)} onChange={() => void setTaskStatus(task.id, isDone ? "todo" : "done")} aria-label={`${task.title}を${isDone ? "未完了" : "完了"}にする`} /> : <span>{isDone ? "✓" : "□"}</span>}
+      <span className={`break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>{task.title}</span>
+    </li>;
   }
 
   async function setProjectStatus(status: "active" | "done") {
@@ -108,16 +132,19 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">タスク</span>
-      {project.tasks.length === 0 ? <p className="c-muted text-sm">まだタスクはありません。</p> :
-        <ul className="space-y-2">{project.tasks.map((task) => <li key={task.id} className="c-card flex items-center gap-3 p-3">
-          {canEdit && project.status === "active" ? <input type="checkbox" checked={task.status === "done"} disabled={busy} onChange={() => setTaskStatus(task.id, task.status === "done" ? "todo" : "done")} aria-label={`${task.title}を${task.status === "done" ? "未完了" : "完了"}にする`} className="h-5 w-5 shrink-0" /> : <span>{task.status === "done" ? "✓" : "□"}</span>}
-          <span className={`break-words text-sm ${task.status === "done" ? "c-muted line-through" : ""}`}>{task.title}</span>
-        </li>)}</ul>}
+      {tasks.length === 0 ? <p className="c-muted text-sm">まだタスクはありません。</p> : <>
+        {openTasks.length === 0 ? <p className="c-muted text-sm">のこっているタスクはありません。</p> : <ul className="space-y-2">{openTasks.map(taskRow)}</ul>}
+        {/* 完了したタスクは下にまとめて、たたんでおく（押すと開く） */}
+        {doneTasks.length > 0 && <details className="c-dashed-top mt-5 pt-4">
+          <summary className="c-muted cursor-pointer text-sm">おわったタスク（{doneTasks.length}件）</summary>
+          <ul className="mt-3 space-y-2">{doneTasks.map(taskRow)}</ul>
+        </details>}
+      </>}
       {canEdit && project.status === "active" && <form onSubmit={addTask} className="mt-5 flex gap-2">
         <input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} maxLength={100} placeholder="次にやること" aria-label="新しいタスク" className="c-input h-11 min-w-0 flex-1" />
         <button type="submit" disabled={busy || !taskTitle.trim()} aria-busy={pendingAction === "task-add"} className="rpg-button shrink-0 px-4 disabled:opacity-50">{pendingAction === "task-add" ? "追加中…" : "追加"}</button>
       </form>}
-      <p role="status" aria-live="polite" className="c-muted mt-2 min-h-4 text-xs">{isPending ? "読み込み中…" : pendingAction === "task-status" ? "タスクを更新中…" : ""}</p>
+      <p role="status" aria-live="polite" className="c-muted mt-2 min-h-4 text-xs">{savingTasks.length > 0 ? "保存中…" : isPending ? "読み込み中…" : ""}</p>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
