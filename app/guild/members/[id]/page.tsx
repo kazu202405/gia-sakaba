@@ -4,6 +4,9 @@ import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-button";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
+import { InvitePathWindow } from "@/components/guild/invite-path";
+import type { InvitePath } from "@/lib/guild/invite-path";
+import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
 import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
@@ -26,6 +29,9 @@ export default async function MemberStatusPage({ params }: Props) {
   if (!p) notFound();
 
   const isMe = p.id === currentUserId;
+  // 入会のつながり（あなた → … → この方）
+  const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: p.id });
+  const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
   const memberTerm = context.guild.terms.member;
 
   return (
@@ -102,6 +108,8 @@ export default async function MemberStatusPage({ params }: Props) {
           { group: "connect", label: "さがしているもの・であいたい人", value: p.looking_for },
         ]}
       />
+
+      <InvitePathWindow path={invitePath} isMe={isMe} failed={Boolean(invitePathResult.error)} />
 
       <LiveMemberIntroductions targetId={p.id} targetName={p.display_name} currentUserId={currentUserId} initial={introductions} />
 

@@ -3,6 +3,10 @@ import Link from "next/link";
 import { JobAvatar } from "@/components/guild/job-avatar";
 import { GuildBillingPortalButton } from "@/components/guild/guild-billing-portal-button";
 import { LiveMyInvite } from "@/components/guild/live-my-invite";
+import { InvitePathChain } from "@/components/guild/invite-path";
+import { InvitePathSetting } from "@/components/guild/invite-path-setting";
+import type { InvitePath } from "@/lib/guild/invite-path";
+import { createClient } from "@/lib/supabase/server";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { LivePushSettings } from "@/components/guild/live-push-settings";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
@@ -16,6 +20,9 @@ export default async function MyPage() {
     getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(), getMyGuildBilling(),
   ]);
   const introductions = await listGuildMemberIntroductions(me.id);
+  // 自分の入会のつながり（根っこ → … → あなた）と、名前を出さない設定
+  const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: me.id });
+  const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
   const fields = [me.bio, me.values_text, me.looking_for];
   const filled = fields.filter((value) => value.trim()).length + (me.photo_url ? 1 : 0);
   const myQuests = quests.filter((quest) => quest.creator_id === me.id && quest.status !== "withdrawn");
@@ -49,6 +56,15 @@ export default async function MyPage() {
     <PersonalProfileWindow profile={me} />
 
     <LiveMyInvite initial={invite} />
+
+    <Window title="入会のつながり">
+      {invitePath && invitePath.status === "ok" && invitePath.nodes.length > 0 ? <>
+        <p className="c-muted mb-3 text-xs leading-relaxed">あなたが、だれの招待で酒場に入ったかのつながりです。ほかの会員のページでは、あなたとその人のつながりが見えます。</p>
+        <InvitePathChain path={invitePath} />
+      </> : invitePath ? <p className="c-muted text-sm">入会のつながりは見つかりませんでした。</p>
+        : <p role="alert" className="text-sm text-[#c62828]">入会のつながりを読み込めませんでした。</p>}
+      {invitePath && <InvitePathSetting initial={Boolean(invitePath.my_hide)} />}
+    </Window>
 
     <div className="grid gap-6 md:grid-cols-2">
       <Window title={`出した ${context.guild.terms.quest}`}>
