@@ -34,21 +34,27 @@ STRIPE_PRICE_SAKABA_TEST=price_1UImFgBRsf0enSjQwbxmCY0u
 STRIPE_WEBHOOK_SECRET_TEST=whsec_...
 ```
 
-本番開始時だけ次を追加して、最後に `STRIPE_MODE=live` へ変更する。
+本番開始時だけ次を追加して、最後に `STRIPE_MODE=live` へ変更する。`STRIPE_SECRET_KEY_LIVE` には酒場専用の制限付きキー（`rk_live_...`）も使用できる。
 
 ```text
-STRIPE_SECRET_KEY_LIVE=sk_live_...
-STRIPE_PRICE_SAKABA_LIVE=price_...
+STRIPE_SECRET_KEY_LIVE=rk_live_...
+STRIPE_PRICE_SAKABA_LIVE=price_1UJseSBRsf0enSjQ5I0tR7sO
 STRIPE_WEBHOOK_SECRET_LIVE=whsec_...
 ```
 
 ## Webhook
 
-既存の `/api/stripe/webhook` と同じStripeアカウント・同じVercelプロジェクトなら、重複するWebhookを増やさず既存エンドポイントを使う。未登録なら本番URLは次。
+同じ送信先・同じ署名シークレットを再利用できる場合だけ既存のWebhookを使う。GIA本体の送信先は別ドメインなので、酒場本番用に次の送信先を作成した。Webhookの署名シークレットは送信先ごとに異なる。
 
 ```text
 https://guild.gia2018.com/api/stripe/webhook
 ```
+
+本番送信先 ID: `we_1UJsq2BRsf0enSjQBBF2nQZC`（Stripe上の名称「GIAの酒場 本番」、上記5イベント、2026-09-26作成）。
+
+本番商品 ID: `prod_VKXj9OtAn7TzSl`。月480円・税込・トライアルなし、商品メタデータ `service=gia-sakaba`。
+
+本番キーはCheckout Sessions=書き込み、Customer Portal=書き込み、Subscriptions=読み取りの3権限だけの制限付きキーで作る。Stripeが発行時に本人確認メールを求める。キーや署名シークレットをチャット・Gitに載せない。
 
 必要なイベント:
 
@@ -69,5 +75,7 @@ Customer Portalでは、支払い方法の更新、請求履歴、サブスク�
 5. `billing_status=active`、限定の集まり、プロジェクト上限、Portal、解約反映を確認する。
 6. 本番商品と本番Webhookを設定する。
 7. 本番キー登録後に `STRIPE_MODE=live` へ変更する。
+
+2026-09-26時点: 本番商品・Price・Webhook送信先は作成済み。Price IDはVercelのProductionへ登録済み。制限付きキー発行のStripe本人確認待ちのため、`STRIPE_MODE` は引き続き `test`。本人確認後、制限付きキーとWebhook署名シークレットをVercelのSecretへ登録し、Productionを再デプロイしてから `live` に切り替える。切替後は一般会員のCheckoutに本物の480円の請求が発生するので、本番でテストカードを使わない。
 
 owner/masterは `billing_status=exempt` のためStripe契約を作らない。
