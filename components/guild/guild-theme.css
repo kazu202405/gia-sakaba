@@ -466,6 +466,41 @@ body:has(.guild-theme) [data-ui-toast-action] {
   font-weight: normal;
 }
 
+/* ---------- 読み込み中の仮の画面（components/guild/page-skeleton.tsx） ---------- */
+
+.guild-skeleton-bar {
+  background: currentColor;
+  opacity: 0.12;
+  animation: guild-skeleton 1.2s steps(2) infinite;
+}
+.guild-skeleton-dots {
+  display: inline-block;
+  min-width: 3em;
+  animation: guild-skeleton-dots 1.2s steps(1) infinite;
+}
+@keyframes guild-skeleton {
+  50% {
+    opacity: 0.24;
+  }
+}
+@keyframes guild-skeleton-dots {
+  0% {
+    clip-path: inset(0 66% 0 0);
+  }
+  33% {
+    clip-path: inset(0 33% 0 0);
+  }
+  66% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guild-skeleton-bar,
+  .guild-skeleton-dots {
+    animation: none;
+  }
+}
+
 /* ---------- 夜の酒場（guild-shell.tsx が下のメニューの5画面で .guild-scene を付ける） ---------- */
 /* 一枚絵を敷き、窓・札・ゲージ・下のメニューを紺に反転する。中身と並び・位置は帳面の画面と同じ */
 
@@ -500,8 +535,8 @@ body:has(.guild-theme) [data-ui-toast-action] {
 .guild-scene-art-dim {
   filter: brightness(0.45);
 }
-.guild-scene main > * > :is(h1, p),
-.guild-scene main > * > div > :is(h1, p) {
+.guild-scene .guild-page > * > :is(h1, p),
+.guild-scene .guild-page > * > div > :is(h1, p) {
   text-shadow: 0 1px 0 #0b0f1f, 0 0 6px #0b0f1f;
 }
 
