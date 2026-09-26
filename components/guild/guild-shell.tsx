@@ -37,7 +37,7 @@ function isActive(pathname: string, item: NavItem) {
 
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
-  if (pathname === "/guild/login" || pathname === "/guild/join") return <>{children}</>;
+  if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
 
   return (

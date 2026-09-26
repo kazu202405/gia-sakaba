@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { AuthLinkError } from "@/components/guild/auth-link-error";
 import { createClient } from "@/lib/supabase/client";
 
 function safeNext(value: string | null): string {
@@ -21,15 +23,18 @@ export default function GuildLoginPage() {
 
   useEffect(() => {
     let active = true;
-    try {
-      const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
-      if (savedEmail) {
-        setEmail(savedEmail);
-        setRememberEmail(true);
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+        if (savedEmail) {
+          setEmail(savedEmail);
+          setRememberEmail(true);
+        }
+      } catch {
+        // 保存を許可しないブラウザでもログインは続けられる。
       }
-    } catch {
-      // 保存を許可しないブラウザでもログインは続けられる。
-    }
+    });
     void (async () => {
       const supabase = createClient();
       const { data } = await supabase.auth.getUser();
@@ -82,6 +87,7 @@ export default function GuildLoginPage() {
         <p className="c-muted mt-2 text-center text-sm">GIAで登録しているメールアドレスとパスワードを入力してください。</p>
 
         <form onSubmit={submit} className="mt-7 space-y-4">
+          <AuthLinkError>メールのリンクを確認できませんでした。期限が切れている場合は、もう一度お試しください。</AuthLinkError>
           {error && <p role="alert" className="border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
           <label className="block">
             <span className="mb-1 block text-sm">メールアドレス</span>
@@ -105,6 +111,7 @@ export default function GuildLoginPage() {
             {busy ? "確認中..." : "酒場に入る"}
           </button>
         </form>
+        <Link href="/guild/forgot-password" className="mt-5 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">パスワードを忘れた方</Link>
       </section>
     </main>
   );

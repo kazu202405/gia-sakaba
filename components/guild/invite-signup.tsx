@@ -44,7 +44,10 @@ export function InviteSignup({ inviteCode, inviterName, preview = false }: { inv
     const { data, error: signupError } = await createClient().auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { name: name.trim() } },
+      options: {
+        data: { name: name.trim() },
+        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(joinPath)}`,
+      },
     });
     if (signupError) {
       const registered = signupError.message.toLowerCase().includes("already") || signupError.message.toLowerCase().includes("registered");
@@ -53,7 +56,7 @@ export function InviteSignup({ inviteCode, inviterName, preview = false }: { inv
       return;
     }
     if (!data.session) {
-      setError("確認メールを送信しました。メール内のリンクを開いてから、同じ招待リンクへ戻ってください。");
+      setError("確認メールを送信しました。メール内のリンクを開くと、この招待状へ戻れます。");
       setBusy(false);
       return;
     }
