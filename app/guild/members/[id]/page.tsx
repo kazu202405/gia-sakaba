@@ -5,6 +5,9 @@ import { JobAvatar } from "@/components/guild/job-avatar";
 import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-button";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { InvitePathWindow } from "@/components/guild/invite-path";
+import { BusinessCardView } from "@/components/guild/business-card-view";
+import type { BusinessCard } from "@/lib/guild/business-card";
+import { signBusinessCards } from "@/lib/guild/business-card-server";
 import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
@@ -30,8 +33,13 @@ export default async function MemberStatusPage({ params }: Props) {
 
   const isMe = p.id === currentUserId;
   // 入会のつながり（あなた → … → この方）
-  const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: p.id });
+  const supabase = await createClient();
+  const invitePathResult = await supabase.rpc("sakaba_get_invite_path", { p_target_id: p.id });
   const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
+  // 名刺（同じギルドの会員だけが見られる）
+  const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: p.id });
+  const card = cardData as BusinessCard | null;
+  const cardUrls = await signBusinessCards(supabase, [card?.front, card?.back]);
   const memberTerm = context.guild.terms.member;
 
   return (
@@ -108,6 +116,8 @@ export default async function MemberStatusPage({ params }: Props) {
           { group: "connect", label: "さがしているもの・であいたい人", value: p.looking_for },
         ]}
       />
+
+      <BusinessCardView card={card} urls={cardUrls} isMe={isMe} />
 
       <InvitePathWindow path={invitePath} isMe={isMe} failed={Boolean(invitePathResult.error)} />
 
