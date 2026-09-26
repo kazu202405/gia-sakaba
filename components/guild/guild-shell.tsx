@@ -40,10 +40,11 @@ function isActive(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
 }
 
-// 5画面それぞれの背景の絵（public/images/sakaba/<名前>_night.png / _day.png）。
-// 今は全部 酒場の仮の絵の写し。Codexの絵が届いたら、同じ名前のファイルを差し替えるだけでよい
+// 各画面の背景の絵（public/images/sakaba/<名前>_night.png / _day.png）。
+// ギルドマスターはホームと同じ酒場の絵を使う。
 const SCENE_ART: Record<string, string> = {
   "/guild": "tavern",
+  "/guild/master": "tavern",
   "/guild/members": "guild",
   "/guild/quests": "quests",
   "/guild/projects": "projects",
