@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { GuildProject, GuildProjectPipeline } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
@@ -147,8 +147,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
       {editable ? <input type="checkbox" checked={isDone} disabled={projectActionLock.current || saving} onChange={() => void setTaskStatus(task.id, isDone ? "todo" : "done")} aria-label={`${task.title}を${isDone ? "未完了" : "完了"}にする`} /> : <span>{isDone ? "✓" : "□"}</span>}
       <span className={`min-w-0 flex-1 break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>{task.title}</span>
       {editable && <span className="flex shrink-0 gap-1.5">
-        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, error: "" })} aria-label={`${task.title}の名前をなおす`} className="c-button-sub h-8 px-2 text-[11px] disabled:opacity-50">なおす</button>
-        <button type="button" disabled={saving} onClick={() => void deleteTask(task)} aria-label={`${task.title}を削除する`} className="c-button-danger h-8 px-2 text-[11px] disabled:opacity-50">消す</button>
+        {/* 文字だと行が詰まるのでアイコンにする。読み上げ用の名前と、マウスを乗せたときの説明は残す */}
+        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, error: "" })} aria-label={`${task.title}の名前をなおす`} title="名前をなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
+        <button type="button" disabled={saving} onClick={() => void deleteTask(task)} aria-label={`${task.title}を削除する`} title="削除する" className="c-button-danger h-9 w-9 disabled:opacity-50"><Trash2 size={15} aria-hidden="true" /></button>
       </span>}
     </li>;
   }
