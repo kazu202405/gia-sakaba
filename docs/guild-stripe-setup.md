@@ -54,6 +54,15 @@ https://guild.gia2018.com/api/stripe/webhook
 
 本番商品 ID: `prod_VKXj9OtAn7TzSl`。月480円・税込・トライアルなし、商品メタデータ `service=gia-sakaba`。
 
+### 880円会員（先に商品・料金のみ準備）
+
+- 本番商品: `prod_VKhoHMNZO8TkNe`（`GIAの酒場 880円会員`）
+- 本番Price: `price_1UK2OcBRsf0enSjQc5O3Sznr`（月880円・内税・トライアルなし）
+- 商品説明: 会食の希望を伝えられる月額会員。会食の開催・成立は保証しない。
+- 明細書表記: `GIA-SAKABA`。商品メタデータ: `service=gia-sakaba`, `tier=880`。
+- Price IDはVercel ProductionのConfig `STRIPE_PRICE_SAKABA_880_LIVE` に保存済み。ただし現行コードはこの変数をまだ参照しないため、880円のCheckout導線・会員権限・480円からの切替は未実装。商品を作っただけで会員に880円は請求されない。
+- 次に実装するときは、480円と880円の権限差（880円は会食の希望を送れるが成立保証なし）、申込・プラン変更・解約、WebhookからのPrice識別と権限反映を一続きで設計・テストする。480円の現行課金を壊さないこと。
+
 本番キーはCheckout Sessions=書き込み、Customer Portal=書き込み、Subscriptions=読み取りの3権限だけの制限付きキーで作る。Stripeが発行時に本人確認メールを求める。キーや署名シークレットをチャット・Gitに載せない。
 
 必要なイベント:
