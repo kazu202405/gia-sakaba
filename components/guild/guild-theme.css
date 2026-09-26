@@ -1,21 +1,28 @@
 /*
- * GIAの酒場の見た目（C案・2026-09-15 五島さん決定）
- * 明るい方眼の背景＋紺の太枠の窓＋文字はすべてドット（DotGothic16）。
- * /guild と /guild-look で読み込む。
+ * GIAの酒場の見た目（E案・2026-09-26 五島さん決定。C案・2026-09-15 の窓を土台にしている）
+ * 作業の画面＝明るい帳面（罫線）＋紺の太枠の窓。本文は普通の字で、ドット（DotGothic16）は見出し・コマンド・数字・ボタンだけ。
+ * ホーム（/guild）だけ＝夜の酒場の一枚絵を敷き、窓を紺に反転して重ねる（下の「ホームだけ」の節）。
+ * /guild・/（酒場の案内）・/guild-look で読み込む。見た目だけで、動きや文言はここでは決めない。
  *
  * 色の役割：紺 #1b2a41＝文字・枠・カーソル／金 #c8a55a＝押すボタン／赤＝「急ぎ」と入力エラーだけ
  */
 
 .guild-theme,
 .look-c {
-  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  font-family: var(--font-jp-sans), system-ui, sans-serif;
   color: #1b2a41;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   background-color: #f3ecd9;
-  background-image:
-    linear-gradient(rgba(27, 42, 65, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(27, 42, 65, 0.05) 1px, transparent 1px);
-  background-size: 8px 8px;
+  /* 帳面の罫線 */
+  background-image: linear-gradient(transparent 27px, rgba(27, 42, 65, 0.07) 27px, rgba(27, 42, 65, 0.07) 28px);
+  background-size: 100% 28px;
+}
+
+/* ドット文字を使う所：見出し・窓の名札・コマンド（.guild-px）・ボタン・札・数字 */
+.guild-theme :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
+.look-c :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
+  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  letter-spacing: 0.06em;
 }
 
 /* ---------- 窓・カード ---------- */
@@ -343,8 +350,8 @@ body:has(.guild-theme) [data-ui-dialog-card] {
     inset 0 0 0 3px #fffdf6,
     inset 0 0 0 4px rgba(27, 42, 65, 0.35),
     5px 5px 0 0 rgba(27, 42, 65, 0.25) !important;
-  font-family: var(--font-pixel-jp), system-ui, sans-serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-jp-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
   color: #1b2a41;
 }
 body:has(.guild-theme) [data-ui-dialog-card] h2,
@@ -352,6 +359,14 @@ body:has(.guild-theme) [data-ui-dialog-card] p,
 body:has(.guild-theme) [data-ui-dialog-card] input {
   font-family: inherit !important;
   color: #1b2a41 !important;
+}
+body:has(.guild-theme) [data-ui-dialog-card] h2 {
+  font-family: var(--font-pixel-jp), system-ui, sans-serif !important;
+  letter-spacing: 0.06em;
+}
+body:has(.guild-theme) [data-ui-dialog-ok],
+body:has(.guild-theme) [data-ui-dialog-cancel] {
+  font-family: var(--font-pixel-jp), system-ui, sans-serif !important;
 }
 body:has(.guild-theme) [data-ui-dialog-card] p.text-red-600 {
   color: #c62828 !important;
@@ -400,8 +415,8 @@ body:has(.guild-theme) [data-ui-toast] {
   color: #fffdf6 !important;
   border: 3px solid #fffdf6;
   box-shadow: 0 0 0 3px #1b2a41 !important;
-  font-family: var(--font-pixel-jp), system-ui, sans-serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-jp-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
 }
 body:has(.guild-theme) [data-ui-toast][data-kind="error"] {
   background: #c62828 !important;
@@ -410,4 +425,139 @@ body:has(.guild-theme) [data-ui-toast][data-kind="error"] {
 body:has(.guild-theme) [data-ui-toast-action] {
   color: #e6c878;
   font-weight: normal;
+}
+
+/* ---------- ホームだけ：夜の酒場（guild-shell.tsx が /guild のときに .guild-scene を付ける） ---------- */
+/* 一枚絵を敷き、窓・札・ゲージ・下のメニューを紺に反転する。中身と並びは他の画面と同じ */
+
+.guild-theme.guild-scene {
+  position: relative;
+  background: #0b0f1f;
+  color: #efe6cf;
+}
+
+/* 絵：スマホは上の約6割（横は中央だけ見える）、PCは画面いっぱいに固定 */
+.guild-scene-art {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  width: 100%;
+  height: 62svh;
+  object-fit: cover;
+  object-position: 50% 40%;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+}
+@media (min-width: 1024px) {
+  .guild-scene-art {
+    position: fixed;
+    inset: 0;
+    height: 100%;
+  }
+}
+
+/* 窓は絵の下のほうに重ねる */
+.guild-scene .guild-main-grid {
+  position: relative;
+  padding-top: 32svh;
+}
+@media (min-width: 1024px) {
+  .guild-scene .guild-main-grid {
+    padding-top: 30vh;
+  }
+}
+
+/* 左上の場所の名札（飾り） */
+.guild-scene-place {
+  position: absolute;
+  top: 4.5rem;
+  left: 1rem;
+  z-index: 1;
+  padding: 0.1rem 0.7rem;
+  background: #0b0f1f;
+  border: 2px solid #efe6cf;
+  box-shadow: 0 0 0 2px #0b0f1f;
+  color: #efe6cf;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+}
+
+.guild-scene header {
+  background: rgba(11, 15, 31, 0.85);
+}
+
+.guild-scene .c-window,
+.guild-scene .c-card {
+  background: #0b0f1f;
+  border-color: #efe6cf;
+  color: #efe6cf;
+  box-shadow:
+    0 0 0 2px #0b0f1f,
+    inset 0 0 0 3px #0b0f1f,
+    inset 0 0 0 4px rgba(239, 230, 207, 0.45);
+}
+.guild-scene .c-window-title {
+  background: #0b0f1f;
+  color: #efe6cf;
+  border: 2px solid #efe6cf;
+}
+.guild-scene .c-muted {
+  color: rgba(239, 230, 207, 0.62);
+}
+.guild-scene .c-label,
+.guild-scene .rpg-cursor {
+  color: #d9b45a;
+}
+.guild-scene .c-dashed-top {
+  border-top-color: rgba(239, 230, 207, 0.25);
+}
+.guild-scene .divide-dashed > * {
+  border-color: rgba(239, 230, 207, 0.18);
+}
+.guild-scene .c-gauge {
+  background: #1b2340;
+  border-color: rgba(239, 230, 207, 0.5);
+}
+.guild-scene .c-gauge > span {
+  background: rgba(239, 230, 207, 0.12);
+}
+.guild-scene .c-gauge > span[data-on="true"] {
+  background: #d9b45a;
+}
+.guild-scene .c-chip {
+  background: transparent;
+  border-color: rgba(239, 230, 207, 0.5);
+}
+/* 期限を過ぎたものなど、強い札はだいだいに */
+.guild-scene .c-chip-strong {
+  background: #e08a3c;
+  border-color: #e08a3c;
+  color: #0b0f1f;
+}
+.guild-scene .c-button-sub {
+  background: #0b0f1f;
+  color: #efe6cf;
+  border-color: #efe6cf;
+  box-shadow: none;
+}
+.guild-scene .c-button-sub:hover {
+  background: #1b2340;
+}
+
+/* スマホの下のメニュー */
+.guild-scene .guild-mobile-nav {
+  background: #0b0f1f;
+  border-top-color: #efe6cf;
+}
+.guild-scene .guild-mobile-nav a {
+  color: rgba(239, 230, 207, 0.7);
+  border-color: rgba(239, 230, 207, 0.15);
+}
+.guild-scene .guild-mobile-nav a[aria-current="page"] {
+  color: #efe6cf;
+  background: rgba(217, 180, 90, 0.18);
+}
+.guild-scene .guild-mobile-nav a[aria-current="page"] > span {
+  background: #d9b45a;
 }

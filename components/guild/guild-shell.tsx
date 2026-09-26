@@ -1,9 +1,11 @@
 "use client";
 
-// 酒場の外枠（C案）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
+// 酒場の外枠（見た目はE案・2026-09-26）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
+// ホーム（/guild）だけ、夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。見た目だけの切り替え。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 
@@ -35,15 +37,40 @@ function isActive(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
 }
 
+// 絵は日本時間の 6〜18時は開店前、それ以外は夜。サーバーでは夜で描き、ブラウザで時刻に合わせる
+function sceneOfClock(): "night" | "day" {
+  const hour = Number(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo", hour: "numeric", hour12: false }));
+  return hour >= 6 && hour < 18 ? "day" : "night";
+}
+const noSubscribe = () => () => {};
+
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
+  const clock = useSyncExternalStore(noSubscribe, sceneOfClock, () => "night" as const);
   if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
+  const scene = pathname === "/guild";
 
   return (
-    <div className="guild-theme min-h-screen">
+    <div className={cn("guild-theme min-h-screen", scene && "guild-scene")}>
+      {scene && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element -- ドット絵は拡大時にぼかさないため img をそのまま使う */}
+          <img
+            src={clock === "night" ? "/images/sakaba/tavern_night.png" : "/images/sakaba/tavern_day.png"}
+            alt=""
+            aria-hidden
+            width={256}
+            height={192}
+            className="guild-scene-art"
+          />
+          <span className="guild-scene-place guild-px" aria-hidden>
+            酒場
+          </span>
+        </>
+      )}
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="guild-px mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/guild" className="text-lg tracking-[0.2em]">
             GIAの酒場
           </Link>
@@ -54,9 +81,9 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 pt-9 pb-28 sm:px-6 lg:grid-cols-[200px_1fr] lg:pb-14">
+      <div className="guild-main-grid relative mx-auto grid max-w-6xl gap-8 px-4 pt-9 pb-28 sm:px-6 lg:grid-cols-[200px_1fr] lg:pb-14">
         {/* PC：コマンドの窓 */}
-        <nav className="c-window guild-sidebar hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
+        <nav className="c-window guild-sidebar guild-px hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
           <span className="c-window-title">コマンド</span>
           <ul className="space-y-1">
             {NAV.map((item) => (
@@ -77,7 +104,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
       {/* スマホ：下のコマンド */}
       <nav
         className={cn(
-          "fixed inset-x-0 bottom-0 z-30 grid border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden",
+          "guild-mobile-nav guild-px fixed inset-x-0 bottom-0 z-30 grid border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden",
           isMaster ? "grid-cols-6" : "grid-cols-5",
         )}
         aria-label="メニュー"
