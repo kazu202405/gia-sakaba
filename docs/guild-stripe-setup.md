@@ -76,6 +76,6 @@ Customer Portalでは、支払い方法の更新、請求履歴、サブスク�
 6. 本番商品と本番Webhookを設定する。
 7. 本番キーとWebhook署名シークレットを登録し、再デプロイした後に `SAKABA_STRIPE_MODE=live` を設定して再デプロイする。`STRIPE_MODE` は変更しない。
 
-2026-09-26時点: 本番商品・Price・Webhook送信先は作成済み。Price IDはVercelのProductionへ登録済み。制限付きキー発行のStripe本人確認待ちのため、酒場は引き続きテストモード。本人確認後、制限付きキーとWebhook署名シークレットをVercelのSecretへ登録し、最後に `SAKABA_STRIPE_MODE=live` で再デプロイする。切替後は一般会員のCheckoutに本物の480円の請求が発生するので、本番でテストカードを使わない。
+2026-09-27時点: 本番商品・Price・Webhook送信先を作成し、酒場専用の制限付きキーとWebhook署名シークレットをVercelのProduction Secretへ登録済み。`SAKABA_STRIPE_MODE=live` で本番再デプロイがReadyになった。`STRIPE_MODE=test` は維持し、Company Noteを含む他サービスの決済設定は変更していない。一般会員のCheckoutには本物の480円の請求が発生する。本番でテストカードを使わない。実カード決済・Webhook反映・解約の一連の本番動作は未確認。
 
 owner/masterは `billing_status=exempt` のためStripe契約を作らない。

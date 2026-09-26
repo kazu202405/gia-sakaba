@@ -1,5 +1,11 @@
 # GIAの酒場 — 続きからの作業メモ
 
+## 2026-09-26 引き継ぎ（最新）
+
+- 飲み会向けの日程調整機能はClaude Code側で実装済み（commit `d42e41a`、会員・招待ゲストの候補日回答）。この作業では変更しない。DB適用と本番動作の確認状況は別途点検する。
+- 酒場の月480円本番Stripe商品・Price・Webhookは作成済み。2026-09-27に酒場専用の制限付きキーをローテーションし、本番キーとWebhook署名キーをVercelのProduction Secretへ保存した。`SAKABA_STRIPE_MODE=live` を酒場だけに設定し、最新の本番デプロイはReady。共通の `STRIPE_MODE=test` は変更していない。実カードの決済とWebhook反映は未確認。Company Noteは別サービス、右腕AIは今回対象外。
+- 酒場とCompany Noteの決済後「ありがとうございました」画面はコード実装・push済み。詳細は `docs/guild-stripe-setup.md` を参照。
+
 更新日: 2026-09-23（個人招待リンクと入会フォーム確認を追加中）
 
 ## 現在地
