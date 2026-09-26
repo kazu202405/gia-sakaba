@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       client_reference_id: user.id,
       metadata,
       subscription_data: { metadata },
-      success_url: `${origin}${returnPath}?checkout=success`,
+      success_url: `${origin}/guild/thanks?session_id={CHECKOUT_SESSION_ID}${returnPath === "/guild/projects" ? "&from=projects" : ""}`,
       cancel_url: `${origin}${returnPath}?checkout=canceled`,
       billing_address_collection: "auto",
       locale: "ja",

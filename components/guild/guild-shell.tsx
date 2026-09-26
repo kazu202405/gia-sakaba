@@ -45,6 +45,7 @@ function isActive(pathname: string, item: NavItem) {
 const SCENE_ART: Record<string, string> = {
   "/guild": "tavern",
   "/guild/master": "tavern",
+  "/guild/thanks": "tavern",
   "/guild/members": "guild",
   "/guild/quests": "quests",
   "/guild/projects": "projects",
