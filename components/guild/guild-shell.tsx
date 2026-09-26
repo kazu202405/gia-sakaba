@@ -1,8 +1,9 @@
 "use client";
 
 // 酒場の外枠（見た目はE案・2026-09-26）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
-// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）と、メンバー・クエスト・プロジェクトの中身、ステータスをなおす画面は、
-// 夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。作成・編集などの画面は明るい帳面のまま。見た目だけの切り替え。
+// 酒場の中の画面はすべて、夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。
+// 絵は場所ごと：ホーム・マスター＝酒場／ギルド・紹介依頼＝広間／クエスト＝掲示板／プロジェクト＝作戦室／マイページ・おしらせ・有料会員＝宿の個室。
+// 2026-09-26 に作成・編集の画面も夜にそろえた（それまでは明るい帳面）。見た目だけの切り替え。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { GuildPageSkeleton } from "@/components/guild/page-skeleton";
+import { sceneArtOf } from "@/lib/guild/scene-art";
 
 type NavItem = {
   href: string;
@@ -40,31 +42,10 @@ function isActive(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
 }
 
-// 各画面の背景の絵（public/images/sakaba/<名前>_night.png / _day.png）。
-// ギルドマスターはホームと同じ酒場の絵を使う。
-const SCENE_ART: Record<string, string> = {
-  "/guild": "tavern",
-  "/guild/master": "tavern",
-  "/guild/thanks": "tavern",
-  "/guild/members": "guild",
-  "/guild/quests": "quests",
-  "/guild/projects": "projects",
-  "/guild/me": "me",
-  "/guild/me/status": "me",
-};
 
 // コマンドを押してから、行き先の画面が届くまで仮の画面を出しておく上限。届かなければ元の画面に戻す
 const PENDING_LIMIT_MS = 15000;
 
-// メンバー・クエスト・プロジェクトの中身の画面は、一覧と同じ場所の絵を使う（作成の /new と、編集などの下の道は除く）
-const DETAIL_ART: Record<string, string> = { members: "guild", quests: "quests", projects: "projects" };
-
-function sceneArtOf(path: string): string | undefined {
-  if (SCENE_ART[path]) return SCENE_ART[path];
-  const detail = /^\/guild\/(members|quests|projects)\/([^/]+)$/.exec(path);
-  if (detail && detail[2] !== "new") return DETAIL_ART[detail[1]];
-  return undefined;
-}
 
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
