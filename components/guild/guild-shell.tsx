@@ -6,9 +6,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 
 type NavItem = {
   href: string;
@@ -38,13 +38,6 @@ function isActive(pathname: string, item: NavItem) {
   return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
 }
 
-// 絵は日本時間の 6〜18時は開店前、それ以外は夜。サーバーでは夜で描き、ブラウザで時刻に合わせる
-function sceneOfClock(): "night" | "day" {
-  const hour = Number(new Date().toLocaleString("en-US", { timeZone: "Asia/Tokyo", hour: "numeric", hour12: false }));
-  return hour >= 6 && hour < 18 ? "day" : "night";
-}
-const noSubscribe = () => () => {};
-
 // 5画面それぞれの背景の絵（public/images/sakaba/<名前>_night.png / _day.png）。
 // 今は全部 酒場の仮の絵の写し。Codexの絵が届いたら、同じ名前のファイルを差し替えるだけでよい
 const SCENE_ART: Record<string, string> = {
@@ -57,7 +50,6 @@ const SCENE_ART: Record<string, string> = {
 
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
-  const clock = useSyncExternalStore(noSubscribe, sceneOfClock, () => "night" as const);
   if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
   const art = SCENE_ART[pathname];
@@ -65,19 +57,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
 
   return (
     <div className={cn("guild-theme min-h-screen", scene && "guild-scene")}>
-      {scene && (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element -- ドット絵は拡大時にぼかさないため img をそのまま使う */}
-          <img
-            src={`/images/sakaba/${art}_${clock}.png`}
-            alt=""
-            aria-hidden
-            width={256}
-            height={192}
-            className={cn("guild-scene-art", pathname !== "/guild" && "guild-scene-art-dim")}
-          />
-        </>
-      )}
+      {scene && <GuildSceneArt art={art} dim={pathname !== "/guild"} />}
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
         <div className="guild-px mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href="/guild" className="text-lg tracking-[0.2em]">

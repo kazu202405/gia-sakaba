@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -38,7 +39,9 @@ export default function ResetPasswordPage() {
     setPasswordAgain("");
   }
 
-  return <main className="guild-theme grid min-h-screen place-items-center px-4 py-12">
+  return <main className="guild-theme guild-scene grid min-h-screen place-items-center px-4 py-12">
+    {/* 見た目だけ：酒場の入口として夜の酒場の絵を敷く */}
+    <GuildSceneArt art="tavern" />
     <section className="c-window w-full max-w-md p-6 pt-10 sm:p-8 sm:pt-11">
       <h1 className="c-window-title">GIAの酒場</h1>
       <p className="text-center text-xl tracking-[0.08em]">新しいパスワード</p>

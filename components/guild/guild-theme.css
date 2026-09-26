@@ -19,8 +19,8 @@
 }
 
 /* ドット文字を使う所：見出し・窓の名札・コマンド（.guild-px）・ボタン・札・数字 */
-.guild-theme :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
-.look-c :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
+.guild-theme :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
+.look-c :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
   font-family: var(--font-pixel-jp), system-ui, sans-serif;
   letter-spacing: 0.06em;
 }
@@ -141,6 +141,45 @@ a.c-card:hover {
   box-shadow:
     inset 3px 3px 0 0 #8f7337,
     inset -3px -3px 0 0 #e8cf8e;
+}
+
+/* ログイン・パスワード再設定の決定ボタン。.rpg-button と同じ金のドットボタンで、頭に▶を付ける */
+.c-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.6rem 1.2rem;
+  background: #c8a55a;
+  color: #1b2a41;
+  border: 3px solid #1b2a41;
+  box-shadow:
+    0 0 0 2px #efe6cf,
+    inset -3px -3px 0 0 #8f7337,
+    inset 3px 3px 0 0 #e8cf8e;
+  font-family: inherit;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+.c-button::before {
+  content: "▶";
+  font-size: 0.8em;
+}
+.c-button:hover:not(:disabled) {
+  background: #d4b46a;
+}
+.c-button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow:
+    0 0 0 2px #efe6cf,
+    inset 3px 3px 0 0 #8f7337,
+    inset -3px -3px 0 0 #e8cf8e;
+}
+.c-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* 控えめなボタン（戻る・キャンセル・別の人を提案 など） */
@@ -525,6 +564,10 @@ body:has(.guild-theme) [data-ui-toast-action] {
   box-shadow: none;
 }
 .guild-scene .c-button-sub:hover {
+  background: #1b2340;
+}
+/* 押せるカードにマウスを乗せたとき：帳面の画面は白くなるが、夜の画面では文字が生成りなので、紺を少し明るくするだけにする */
+.guild-scene a.c-card:hover {
   background: #1b2340;
 }
 
