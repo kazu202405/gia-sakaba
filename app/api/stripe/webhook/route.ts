@@ -34,7 +34,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { invoiceSubscriptionId } from "@/lib/stripe/invoice-subscription";
 import {
+  getSakabaStripeClient,
+  getSakabaStripeMode,
+  getSakabaWebhookSecret,
   getStripeClient,
   getWebhookSecret,
   isMembershipPlan,
@@ -143,14 +147,28 @@ async function subscriptionFromInvoice(
   stripe: Stripe,
   invoice: Stripe.Invoice,
 ): Promise<Stripe.Subscription | null> {
-  const subscription = invoice.parent?.subscription_details?.subscription ?? null;
-  const id = typeof subscription === "string" ? subscription : subscription?.id ?? null;
+  const id = invoiceSubscriptionId(invoice);
   if (!id) return null;
   try {
     return await stripe.subscriptions.retrieve(id);
   } catch {
     return null;
   }
+}
+
+/** 酒場専用の本番Webhookには、同じStripeアカウントの他サービスのイベントも届く。 */
+async function isSakabaEvent(stripe: Stripe, event: Stripe.Event): Promise<boolean> {
+  if (event.type === "checkout.session.completed") {
+    return (event.data.object as Stripe.Checkout.Session).metadata?.purpose === "sakaba";
+  }
+  if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+    return (event.data.object as Stripe.Subscription).metadata?.purpose === "sakaba";
+  }
+  if (event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+    const sub = await subscriptionFromInvoice(stripe, event.data.object as Stripe.Invoice);
+    return sub?.metadata?.purpose === "sakaba";
+  }
+  return false;
 }
 
 // ─── AI Clone 用ヘルパー ────────────────────────────────────────
@@ -273,7 +291,6 @@ async function grantCommunityPro(
 }
 
 export async function POST(req: NextRequest) {
-  const stripe = getStripeClient();
   const sig = req.headers.get("stripe-signature");
   if (!sig) {
     return NextResponse.json({ error: "signature missing" }, { status: 400 });
@@ -281,15 +298,25 @@ export async function POST(req: NextRequest) {
 
   const body = await req.text();
   let event: Stripe.Event;
+  let stripe: Stripe;
+  let sakabaLiveEvent = false;
   try {
+    stripe = getStripeClient();
     event = stripe.webhooks.constructEvent(body, sig, getWebhookSecret());
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : "unknown";
-    console.error("[stripe.webhook] signature verification failed", { msg });
-    return NextResponse.json(
-      { error: `signature verification failed: ${msg}` },
-      { status: 400 },
-    );
+  } catch {
+    try {
+      if (getSakabaStripeMode() !== "live") throw new Error("Sakaba live webhook is disabled");
+      stripe = getSakabaStripeClient();
+      event = stripe.webhooks.constructEvent(body, sig, getSakabaWebhookSecret());
+      sakabaLiveEvent = true;
+    } catch {
+      console.error("[stripe.webhook] signature verification failed");
+      return NextResponse.json({ error: "signature verification failed" }, { status: 400 });
+    }
+  }
+
+  if (sakabaLiveEvent && !(await isSakabaEvent(stripe, event))) {
+    return NextResponse.json({ received: true, ignored: true });
   }
 
   const supabase = adminSupabase();

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
-import { getSakabaPriceId, getStripeClient } from "@/lib/stripe/client";
+import { getSakabaPriceId, getSakabaStripeClient } from "@/lib/stripe/client";
 
 export const runtime = "nodejs";
 
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "すでに契約があります。支払い管理を開いてください。" }, { status: 409 });
     }
 
-    const stripe = getStripeClient();
+    const stripe = getSakabaStripeClient();
     const priceId = getSakabaPriceId();
     const metadata = {
       purpose: "sakaba",

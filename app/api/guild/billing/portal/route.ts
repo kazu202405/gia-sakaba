@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
-import { getStripeClient } from "@/lib/stripe/client";
+import { getSakabaStripeClient } from "@/lib/stripe/client";
 
 export const runtime = "nodejs";
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "管理できる契約がありません。" }, { status: 404 });
     }
     const returnPath = request.nextUrl.searchParams.get("from") === "me" ? "/guild/me" : "/guild/plan";
-    const session = await getStripeClient().billingPortal.sessions.create({
+    const session = await getSakabaStripeClient().billingPortal.sessions.create({
       customer: billing.stripe_customer_id,
       return_url: `${request.nextUrl.origin}${returnPath}`,
       locale: "ja",

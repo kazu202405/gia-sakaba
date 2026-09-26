@@ -5,7 +5,7 @@ import { PageTitle, Window } from "@/components/guild/cards";
 import { isCheckoutSessionId, isConfirmedSakabaCheckout } from "@/lib/guild/checkout-return";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
-import { getStripeClient } from "@/lib/stripe/client";
+import { getSakabaStripeClient } from "@/lib/stripe/client";
 
 export const metadata: Metadata = { title: "お申し込みありがとうございます" };
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function GuildThanksPage({ searchParams }: Props) {
   let confirmed = false;
   let unavailable = false;
   try {
-    const session = await getStripeClient().checkout.sessions.retrieve(sessionId);
+    const session = await getSakabaStripeClient().checkout.sessions.retrieve(sessionId);
     confirmed = isConfirmedSakabaCheckout(session, user.id);
   } catch {
     unavailable = true;

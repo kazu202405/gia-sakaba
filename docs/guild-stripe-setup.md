@@ -34,7 +34,7 @@ STRIPE_PRICE_SAKABA_TEST=price_1UImFgBRsf0enSjQwbxmCY0u
 STRIPE_WEBHOOK_SECRET_TEST=whsec_...
 ```
 
-本番開始時だけ次を追加して、最後に `STRIPE_MODE=live` へ変更する。`STRIPE_SECRET_KEY_LIVE` には酒場専用の制限付きキー（`rk_live_...`）も使用できる。
+本番開始時だけ次を追加して、最後に `SAKABA_STRIPE_MODE=live` を設定する。共通GIA機能の `STRIPE_MODE=test` は変更しない。`STRIPE_SECRET_KEY_LIVE` には酒場専用の制限付きキー（`rk_live_...`）を使用できる。
 
 ```text
 STRIPE_SECRET_KEY_LIVE=rk_live_...
@@ -74,8 +74,8 @@ Customer Portalでは、支払い方法の更新、請求履歴、サブスク�
 4. コードを本番へデプロイし、テスト用一般会員でCheckoutを開いてStripeのテストカードで決済する。
 5. `billing_status=active`、限定の集まり、プロジェクト上限、Portal、解約反映を確認する。
 6. 本番商品と本番Webhookを設定する。
-7. 本番キー登録後に `STRIPE_MODE=live` へ変更する。
+7. 本番キーとWebhook署名シークレットを登録し、再デプロイした後に `SAKABA_STRIPE_MODE=live` を設定して再デプロイする。`STRIPE_MODE` は変更しない。
 
-2026-09-26時点: 本番商品・Price・Webhook送信先は作成済み。Price IDはVercelのProductionへ登録済み。制限付きキー発行のStripe本人確認待ちのため、`STRIPE_MODE` は引き続き `test`。本人確認後、制限付きキーとWebhook署名シークレットをVercelのSecretへ登録し、Productionを再デプロイしてから `live` に切り替える。切替後は一般会員のCheckoutに本物の480円の請求が発生するので、本番でテストカードを使わない。
+2026-09-26時点: 本番商品・Price・Webhook送信先は作成済み。Price IDはVercelのProductionへ登録済み。制限付きキー発行のStripe本人確認待ちのため、酒場は引き続きテストモード。本人確認後、制限付きキーとWebhook署名シークレットをVercelのSecretへ登録し、最後に `SAKABA_STRIPE_MODE=live` で再デプロイする。切替後は一般会員のCheckoutに本物の480円の請求が発生するので、本番でテストカードを使わない。
 
 owner/masterは `billing_status=exempt` のためStripe契約を作らない。

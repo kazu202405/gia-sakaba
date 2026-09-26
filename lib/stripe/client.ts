@@ -21,10 +21,17 @@ import Stripe from "stripe";
 
 let cachedClient: Stripe | null = null;
 let cachedMode: "test" | "live" | null = null;
+let cachedSakabaClient: Stripe | null = null;
+let cachedSakabaMode: "test" | "live" | null = null;
 
 /** 現在の Stripe モード（live 明示時のみ live、それ以外は test）。 */
 export function getStripeMode(): "test" | "live" {
   return process.env.STRIPE_MODE === "live" ? "live" : "test";
+}
+
+/** 酒場だけを本番にできるよう、共通GIA決済とは独立させる。 */
+export function getSakabaStripeMode(): "test" | "live" {
+  return process.env.SAKABA_STRIPE_MODE === "live" ? "live" : "test";
 }
 
 /** モードに応じて base の *_TEST / *_LIVE を選ぶ。無ければ base（単一名）にフォールバック。 */
@@ -54,6 +61,19 @@ export function getStripeClient(): Stripe {
   });
   cachedMode = mode;
   return cachedClient;
+}
+
+export function getSakabaStripeClient(): Stripe {
+  const mode = getSakabaStripeMode();
+  if (cachedSakabaClient && cachedSakabaMode === mode) return cachedSakabaClient;
+  // 本番は必ず本番専用キーを要求する。単一envへのフォールバックは誤課金防止のためしない。
+  const key = mode === "live"
+    ? process.env.STRIPE_SECRET_KEY_LIVE
+    : process.env.STRIPE_SECRET_KEY_TEST ?? process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error(`STRIPE_SECRET_KEY_${mode.toUpperCase()} が未設定です。`);
+  cachedSakabaClient = new Stripe(key, { typescript: true });
+  cachedSakabaMode = mode;
+  return cachedSakabaClient;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -103,13 +123,25 @@ export function getMembershipPriceId(plan: MembershipPlan): string {
 
 /** GIAの酒場（月480円）の専用 Price ID。既存の会員商品とは共有しない。 */
 export function getSakabaPriceId(): string {
-  const id = pickModeEnv("STRIPE_PRICE_SAKABA");
+  const mode = getSakabaStripeMode();
+  const id = mode === "live"
+    ? process.env.STRIPE_PRICE_SAKABA_LIVE
+    : process.env.STRIPE_PRICE_SAKABA_TEST ?? process.env.STRIPE_PRICE_SAKABA;
   if (!id) {
     throw new Error(
-      `STRIPE_PRICE_SAKABA_${getStripeMode().toUpperCase()}（または STRIPE_PRICE_SAKABA）が未設定です。`,
+      `STRIPE_PRICE_SAKABA_${mode.toUpperCase()} が未設定です。`,
     );
   }
   return id;
+}
+
+export function getSakabaWebhookSecret(): string {
+  const mode = getSakabaStripeMode();
+  const secret = mode === "live"
+    ? process.env.STRIPE_WEBHOOK_SECRET_LIVE
+    : process.env.STRIPE_WEBHOOK_SECRET_TEST ?? process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) throw new Error(`STRIPE_WEBHOOK_SECRET_${mode.toUpperCase()} が未設定です。`);
+  return secret;
 }
 
 /** 寺子屋 法人プラン（¥9,980/月）の Price ID を取得（未設定時は明示エラー） */
