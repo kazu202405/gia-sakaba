@@ -50,6 +50,11 @@ export default async function QuestDetailPage({ params }: Props) {
     ? scheduleResult.data as GatheringScheduleData
     : null;
   const decidedOption = schedule?.options.find((option) => option.id === schedule.decided_option_id) ?? null;
+  // 誰でも参加できる集まりで、自分がゲストにプロフィールを見せる設定か（まだ選んでいなければ null）
+  const visibilityResult = q.category === "gathering" && !q.members_only
+    ? await (await createClient()).rpc("sakaba_get_my_gathering_guest_visibility", { p_quest_id: q.id })
+    : null;
+  const guestVisible = visibilityResult && !visibilityResult.error ? (visibilityResult.data as boolean | null) : null;
 
   return (
     <div className="space-y-11">
@@ -109,7 +114,7 @@ export default async function QuestDetailPage({ params }: Props) {
             {q.summary && <p className="mt-6 text-[15px] leading-relaxed break-words">{q.summary}</p>}
             {q.body && <p className="mt-4 whitespace-pre-line text-[15px] leading-loose break-words">{q.body}</p>}
 
-            <LiveQuestApplication quest={q} currentUserId={currentUserId} />
+            <LiveQuestApplication quest={q} currentUserId={currentUserId} guestVisible={guestVisible} />
             {q.creator_id === currentUserId && (q.status === "open" || q.status === "in_progress") &&
               <LiveQuestOwnerActions questId={q.id} questTerm={questTerm} applicantCount={q.applicant_count} gathering={q.members_only} />}
           </>
@@ -127,7 +132,7 @@ export default async function QuestDetailPage({ params }: Props) {
         </Window>
       )}
 
-      {guestLink && <GuestGatheringHost questId={q.id} initial={guestLink} />}
+      {guestLink && <GuestGatheringHost questId={q.id} initial={guestLink} hostVisible={guestVisible} />}
 
       {creator && (
         <Window title="出した人">

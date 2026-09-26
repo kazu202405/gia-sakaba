@@ -7,8 +7,14 @@ import type { GuestGatheringHost as GuestGatheringHostData } from "@/lib/guild/g
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { GatheringGuestVisibility } from "./gathering-guest-visibility";
 
-export function GuestGatheringHost({ questId, initial }: { questId: string; initial: GuestGatheringHostData }) {
+export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
+  questId: string;
+  initial: GuestGatheringHostData;
+  /** 主催者のプロフィールを、申し込んだゲストに見せる設定か（まだ選んでいなければ null） */
+  hostVisible?: boolean | null;
+}) {
   const router = useRouter();
   const [localToken, setLocalToken] = useState<{ baseline: string | null; value: string } | null>(null);
   const token = localToken?.baseline === initial.token ? localToken.value : initial.token;
@@ -55,6 +61,9 @@ export function GuestGatheringHost({ questId, initial }: { questId: string; init
       </div>
     </div>}
     {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
+    <div className="c-dashed-top mt-6 pt-5">
+      <GatheringGuestVisibility questId={questId} initial={hostVisible ?? false} host />
+    </div>
     {initial.guests.length > 0 && <div className="c-dashed-top mt-6 pt-5">
       <h3 className="text-base">ゲスト申込 {initial.guests.length}人</h3>
       <p className="c-muted mt-1 text-xs">メールアドレスは主催者だけに表示します。参加者向けページには出ません。</p>

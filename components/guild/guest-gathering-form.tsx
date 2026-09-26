@@ -123,7 +123,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
         </div>
       </form> : <p className="text-sm">募集は終了しました。</p>}
     </Window>
-    {applied && !event.is_member && <Window title="GIAの酒場にも参加する">
+    {applied && !event.is_member && <div id="join-guild" className="scroll-mt-6"><Window title="GIAの酒場にも参加する">
       <p className="text-sm leading-relaxed">酒場への参加は無料です。参加すると、メンバーのステータスやクエストを見られます。飲み会への申込だけでは入会しません。</p>
       <div className="c-card mt-5 px-4 py-3 text-sm">
         <p className="c-label mb-2">酒場の約束</p>
@@ -133,6 +133,6 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
       <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "登録中…" : "▶ 酒場に無料で参加する"}</button>
       <p className="c-muted mt-3 text-xs leading-relaxed">会社名・役職は後からステータス画面で追加できます。登録時は公開されません。</p>
-    </Window>}
+    </Window></div>}
   </div>;
 }

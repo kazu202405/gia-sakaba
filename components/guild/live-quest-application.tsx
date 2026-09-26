@@ -4,14 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { GuildQuest } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
-import { TextArea } from "./form-parts";
+import { CheckBox, TextArea } from "./form-parts";
+import { GUEST_VISIBILITY_NOTE, GatheringGuestVisibility } from "./gathering-guest-visibility";
 
 export function LiveQuestApplication({
   quest,
   currentUserId,
+  guestVisible = null,
 }: {
   quest: GuildQuest;
   currentUserId: string;
+  /** 誰でも参加できる集まりで、自分がゲストにプロフィールを見せる設定か（まだ選んでいなければ null） */
+  guestVisible?: boolean | null;
 }) {
   const router = useRouter();
   const [localApplication, setLocalApplication] = useState<{
@@ -26,6 +30,9 @@ export function LiveQuestApplication({
   const [confirmWithdraw, setConfirmWithdraw] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // ゲストを招ける集まり（誰でも参加できる集まり）だけ、ゲストへのプロフィール表示を選べる
+  const guestCapable = quest.category === "gathering" && !quest.members_only;
+  const [showToGuests, setShowToGuests] = useState(true);
 
   if (quest.creator_id === currentUserId) {
     return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みはギルドマスター画面で確認できます。" : "あなたが出したクエストです。参加希望者の確認機能は準備中です。"}</p>;
@@ -63,6 +70,13 @@ export function LiveQuestApplication({
       approved_at: (data as { approved_at?: string | null } | null)?.approved_at ?? null,
       created_at: new Date().toISOString(),
     });
+    if (guestCapable) {
+      const { error: visibilityError } = await createClient().rpc("sakaba_set_gathering_guest_visibility", {
+        p_quest_id: quest.id,
+        p_show: showToGuests,
+      });
+      if (visibilityError) setError("申し込みは完了しました。ゲストへの表示の設定だけ保存できなかったので、下で選び直してください。");
+    }
     setWriting(false);
     setBusy(false);
     router.refresh();
@@ -94,6 +108,7 @@ export function LiveQuestApplication({
         <div className="space-y-3">
           <p className="text-base">▶ {quest.members_only ? application.approved_at ? "参加が決まりました" : "申込中（承認待ち）" : "参加したいと伝えました"}</p>
           {application.message && <p className="c-card whitespace-pre-line break-words px-4 py-3 text-sm">{application.message}</p>}
+          {guestCapable && <GatheringGuestVisibility questId={quest.id} initial={guestVisible ?? showToGuests} />}
           {confirmWithdraw ? (
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <span>{quest.members_only ? "申し込みを取り消しますか？" : "参加希望を取り消しますか？"}</span>
@@ -111,6 +126,12 @@ export function LiveQuestApplication({
           <p className="text-sm">{quest.members_only ? "ギルドマスターへのひとこと" : "出した人へのひとこと"}（任意・200文字以内）</p>
           <TextArea value={message} onChange={setMessage} rows={3} max={200} label="ひとこと" />
           <p className="c-muted text-xs">このひとことは、出した人とギルドマスターだけが見られます。</p>
+          {guestCapable && (
+            <CheckBox checked={showToGuests} onChange={setShowToGuests}>
+              <span className="text-sm">ゲストにも自分のプロフィールを見せる</span>
+              <span className="c-muted block text-xs leading-relaxed">{GUEST_VISIBILITY_NOTE}</span>
+            </CheckBox>
+          )}
           <div className="flex flex-wrap justify-end gap-3">
             <button type="button" onClick={() => setWriting(false)} disabled={busy} className="c-button-sub h-11">やめる</button>
             <button type="button" onClick={apply} disabled={busy} className="rpg-button h-11">{busy ? "申込中…" : quest.members_only ? "▶ 申し込む" : "▶ 参加したいと伝える"}</button>
