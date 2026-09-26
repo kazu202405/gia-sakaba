@@ -26,6 +26,10 @@ export type GuildQuestApplicant = {
 
 export type GuildIntroRequest = IntroRequest & {
   other_contact: { email: string; line_url: string; website_url: string } | null;
+  /** お返事の期限（0106）。過ぎると申請した人には「取り下げ」に見える */
+  expires_at?: string | null;
+  /** 承諾するときに添えたひとこと（承諾後に当事者2人だけ） */
+  accept_message?: string;
 };
 
 export type GuildPendingGatheringApplication = {

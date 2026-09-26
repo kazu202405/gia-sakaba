@@ -99,7 +99,7 @@ export const introStatusLabel: Record<IntroStatus, { master: string; requester: 
   introduced: { master: "紹介済み", requester: "紹介済み" },
   declined_by_master: { master: "見送り", requester: "今回は見送りになりました" },
   declined_by_target: { master: "相手が辞退", requester: "今回はご縁がありませんでした" },
-  expired: { master: "期限切れ（依頼者には「取り下げ」）", requester: "取り下げました" },
+  expired: { master: "期限切れ（依頼者には「取り下げ」）", requester: "お返事の期限が過ぎたので取り下げました" },
   redirected: { master: "別の人を提案", requester: "別の方をご提案しました" },
   cancelled: { master: "依頼者が取り下げ", requester: "取り下げました" },
 };
@@ -116,6 +116,12 @@ export const closedStatuses: IntroStatus[] = [
 ];
 
 /** "2026-09-12" → "9月12日"。サーバーとブラウザで同じ結果になるよう Date を使わない */
+/** 日時（タイムゾーン付き）を、日本時間の日付「10月3日」にする。formatDate は先頭10文字を切るだけなので日時には使わない */
+export function formatJstDate(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
+  return `${d.getUTCMonth() + 1}月${d.getUTCDate()}日`;
+}
+
 export function formatDate(iso: string): string {
   const [, m, d] = iso.slice(0, 10).split("-");
   return `${Number(m)}月${Number(d)}日`;
