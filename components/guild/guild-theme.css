@@ -427,8 +427,8 @@ body:has(.guild-theme) [data-ui-toast-action] {
   font-weight: normal;
 }
 
-/* ---------- ホームだけ：夜の酒場（guild-shell.tsx が /guild のときに .guild-scene を付ける） ---------- */
-/* 一枚絵を敷き、窓・札・ゲージ・下のメニューを紺に反転する。中身と並びは他の画面と同じ */
+/* ---------- 夜の酒場（guild-shell.tsx が下のメニューの5画面で .guild-scene を付ける） ---------- */
+/* 一枚絵を敷き、窓・札・ゲージ・下のメニューを紺に反転する。中身と並び・位置は帳面の画面と同じ */
 
 .guild-theme.guild-scene {
   position: relative;
@@ -457,30 +457,13 @@ body:has(.guild-theme) [data-ui-toast-action] {
   }
 }
 
-/* 窓は絵の下のほうに重ねる */
-.guild-scene .guild-main-grid {
-  position: relative;
-  padding-top: 32svh;
+/* ホーム以外は、窓の外に見出しや説明文が絵の上にじかに乗るので、絵を暗くして読みやすくする */
+.guild-scene-art-dim {
+  filter: brightness(0.45);
 }
-@media (min-width: 1024px) {
-  .guild-scene .guild-main-grid {
-    padding-top: 30vh;
-  }
-}
-
-/* 左上の場所の名札（飾り） */
-.guild-scene-place {
-  position: absolute;
-  top: 4.5rem;
-  left: 1rem;
-  z-index: 1;
-  padding: 0.1rem 0.7rem;
-  background: #0b0f1f;
-  border: 2px solid #efe6cf;
-  box-shadow: 0 0 0 2px #0b0f1f;
-  color: #efe6cf;
-  font-size: 0.85rem;
-  letter-spacing: 0.12em;
+.guild-scene main > * > :is(h1, p),
+.guild-scene main > * > div > :is(h1, p) {
+  text-shadow: 0 1px 0 #0b0f1f, 0 0 6px #0b0f1f;
 }
 
 .guild-scene header {
@@ -543,6 +526,37 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 .guild-scene .c-button-sub:hover {
   background: #1b2340;
+}
+
+/* 部品に直接書いてある紺・生成りの色を、夜の画面の中身（main）だけ入れ替える（部品のファイルは触らない。上の帯と下のメニューは別に指定） */
+.guild-scene main [class*="text-[#1b2a41]"] {
+  color: #efe6cf;
+}
+.guild-scene main [class*="bg-[#fffdf6]"] {
+  background-color: #0b0f1f;
+}
+.guild-scene main [class*="border-[#1b2a41]"] {
+  border-color: rgba(239, 230, 207, 0.55);
+}
+.guild-scene main [class*="divide-[#1b2a41]"] > * {
+  border-color: rgba(239, 230, 207, 0.18);
+}
+.guild-scene main [class*="text-[#8f7337]"] {
+  color: #d9b45a;
+}
+.guild-scene main :is([class*="text-[#c62828]"], [class*="text-[#9d2929]"], .text-red-600) {
+  color: #f4a09a;
+}
+/* 並び替えなどの切り替えボタン：選ばれている方を金にして、紺の中でも見分けられるようにする */
+.guild-scene main [class*="bg-[#1b2a41]"][class*="text-[#fffdf6]"] {
+  background-color: #d9b45a;
+  color: #0b0f1f;
+}
+.guild-scene main .c-switch {
+  border-color: #efe6cf;
+}
+.guild-scene main .c-choice {
+  border-color: #efe6cf;
 }
 
 /* スマホの下のメニュー */

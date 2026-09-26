@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MoreLink, Window } from "@/components/guild/cards";
+import { TypeLines } from "@/components/guild/type-lines";
 import { dueLabel, upcomingTasks } from "@/lib/guild/projects";
 import {
   getMyGuildProfile,
@@ -23,10 +24,18 @@ export default async function GuildHomePage() {
 
   return <div className="space-y-10">
     <Window title="おしらせ">
-      <p className="text-[17px] leading-loose">おかえりなさい、{me.display_name}さん。</p>
-      <p className="mt-1 text-sm leading-relaxed">
-        {unread > 0 ? <>まだ読んでいない おしらせが <span className="text-xl tabular-nums">{unread}</span>件あります。</> : "新しい おしらせはありません。"}
-      </p>
+      {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
+      <TypeLines
+        lines={[
+          { className: "text-[17px] leading-loose", segments: [{ text: `おかえりなさい、${me.display_name}さん。` }] },
+          {
+            className: "mt-1 text-sm leading-relaxed",
+            segments: unread > 0
+              ? [{ text: "まだ読んでいない おしらせが " }, { text: String(unread), className: "text-xl tabular-nums" }, { text: "件あります。" }]
+              : [{ text: "新しい おしらせはありません。" }],
+          },
+        ]}
+      />
       <Link href="/guild/notifications" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>
     </Window>
 

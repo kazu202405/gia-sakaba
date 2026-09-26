@@ -1,7 +1,8 @@
 "use client";
 
 // 酒場の外枠（見た目はE案・2026-09-26）。PCは左の「コマンド」の窓、スマホは上のヘッダーと下のコマンド。
-// ホーム（/guild）だけ、夜の酒場の一枚絵を敷いて窓を紺に反転する（guild-theme.css の .guild-scene）。見た目だけの切り替え。
+// 下のメニューの5画面（ホーム・ギルド・クエスト・プロジェクト・マイページ）は、夜の酒場の一枚絵を敷いて窓を紺に反転する
+// （guild-theme.css の .guild-scene）。詳細・作成・編集などの画面は明るい帳面のまま。見た目だけの切り替え。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -44,12 +45,23 @@ function sceneOfClock(): "night" | "day" {
 }
 const noSubscribe = () => () => {};
 
+// 5画面それぞれの背景の絵（public/images/sakaba/<名前>_night.png / _day.png）。
+// 今は全部 酒場の仮の絵の写し。Codexの絵が届いたら、同じ名前のファイルを差し替えるだけでよい
+const SCENE_ART: Record<string, string> = {
+  "/guild": "tavern",
+  "/guild/members": "guild",
+  "/guild/quests": "quests",
+  "/guild/projects": "projects",
+  "/guild/me": "me",
+};
+
 export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
   const pathname = usePathname();
   const clock = useSyncExternalStore(noSubscribe, sceneOfClock, () => "night" as const);
   if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
   const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
-  const scene = pathname === "/guild";
+  const art = SCENE_ART[pathname];
+  const scene = art !== undefined;
 
   return (
     <div className={cn("guild-theme min-h-screen", scene && "guild-scene")}>
@@ -57,16 +69,13 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
         <>
           {/* eslint-disable-next-line @next/next/no-img-element -- ドット絵は拡大時にぼかさないため img をそのまま使う */}
           <img
-            src={clock === "night" ? "/images/sakaba/tavern_night.png" : "/images/sakaba/tavern_day.png"}
+            src={`/images/sakaba/${art}_${clock}.png`}
             alt=""
             aria-hidden
             width={256}
             height={192}
-            className="guild-scene-art"
+            className={cn("guild-scene-art", pathname !== "/guild" && "guild-scene-art-dim")}
           />
-          <span className="guild-scene-place guild-px" aria-hidden>
-            酒場
-          </span>
         </>
       )}
       <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
