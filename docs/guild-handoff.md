@@ -2,6 +2,8 @@
 
 ## 2026-09-26 引き継ぎ（最新）
 
+- 2026-09-27: 無料・480円・880円の比較、880円Checkout、会食の希望（本人の登録・編集・削除／マスター閲覧）を実装中。880円は会食を確約しない。機能は `SAKABA_880_ENABLED` が `true` になるまで閉じている。migration 0108と酒場専用Stripe Customer Portal設定が必要。詳細は `docs/guild-stripe-setup.md`。本番公開・実決済の確認状況はこの行では保証しない。
+
 - 飲み会向けの日程調整機能はClaude Code側で実装済み（commit `d42e41a`、会員・招待ゲストの候補日回答）。この作業では変更しない。DB適用と本番動作の確認状況は別途点検する。
 - 酒場の月480円本番Stripe商品・Price・Webhookは作成済み。2026-09-27に酒場専用の制限付きキーをローテーションし、本番キーとWebhook署名キーをVercelのProduction Secretへ保存した。`SAKABA_STRIPE_MODE=live` を酒場だけに設定し、最新の本番デプロイはReady。共通の `STRIPE_MODE=test` は変更していない。実カードの決済とWebhook反映は未確認。Company Noteは別サービス、右腕AIは今回対象外。
 - 月880円の別商品・月額Priceを本番Stripeに作成し、Price IDをVercel Productionへ保存済み。会食の希望を出せるが成立保証はしない想定。現行アプリには880円の申込・権限切替はまだないため、請求は始まらない。詳細IDと残作業は `docs/guild-stripe-setup.md` を参照。

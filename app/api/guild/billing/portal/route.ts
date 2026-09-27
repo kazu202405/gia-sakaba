@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
+import { resolveSakabaPlan } from "@/lib/guild/billing-plans";
 import { createClient } from "@/lib/supabase/server";
-import { getSakabaStripeClient } from "@/lib/stripe/client";
+import { getConfiguredSakabaPrices, getSakabaStripeClient, getSakabaStripeMode } from "@/lib/stripe/client";
 
 export const runtime = "nodejs";
 
@@ -15,9 +16,22 @@ export async function POST(request: NextRequest) {
     if (!billing.stripe_customer_id) {
       return NextResponse.json({ error: "管理できる契約がありません。" }, { status: 404 });
     }
+    const switching = request.nextUrl.searchParams.get("switch") === "1";
+    const configName = getSakabaStripeMode() === "live" ? "STRIPE_PORTAL_SAKABA_CONFIG_LIVE" : "STRIPE_PORTAL_SAKABA_CONFIG_TEST";
+    const configuration = process.env[configName];
+    if (switching && (process.env.SAKABA_880_ENABLED !== "true" || !configuration)) {
+      return NextResponse.json({ error: "プラン変更は準備中です。" }, { status: 503 });
+    }
+    if (switching && (!["standard", "dining"].includes(resolveSakabaPlan(billing, getConfiguredSakabaPrices())) || !billing.stripe_subscription_id)) {
+      return NextResponse.json({ error: "変更できる契約がありません。" }, { status: 409 });
+    }
     const returnPath = request.nextUrl.searchParams.get("from") === "me" ? "/guild/me" : "/guild/plan";
     const session = await getSakabaStripeClient().billingPortal.sessions.create({
       customer: billing.stripe_customer_id,
+      ...(switching && configuration ? { configuration } : {}),
+      ...(switching && billing.stripe_subscription_id ? {
+        flow_data: { type: "subscription_update" as const, subscription_update: { subscription: billing.stripe_subscription_id } },
+      } : {}),
       return_url: `${request.nextUrl.origin}${returnPath}`,
       locale: "ja",
     });

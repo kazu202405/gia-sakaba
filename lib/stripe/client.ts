@@ -122,17 +122,25 @@ export function getMembershipPriceId(plan: MembershipPlan): string {
 }
 
 /** GIAの酒場（月480円）の専用 Price ID。既存の会員商品とは共有しない。 */
-export function getSakabaPriceId(): string {
+export function getSakabaPriceId(plan: "standard" | "dining" = "standard"): string {
   const mode = getSakabaStripeMode();
+  const base = plan === "dining" ? "STRIPE_PRICE_SAKABA_880" : "STRIPE_PRICE_SAKABA";
   const id = mode === "live"
-    ? process.env.STRIPE_PRICE_SAKABA_LIVE
-    : process.env.STRIPE_PRICE_SAKABA_TEST ?? process.env.STRIPE_PRICE_SAKABA;
+    ? process.env[`${base}_LIVE`]
+    : process.env[`${base}_TEST`] ?? (plan === "standard" ? process.env.STRIPE_PRICE_SAKABA : undefined);
   if (!id) {
     throw new Error(
-      `STRIPE_PRICE_SAKABA_${mode.toUpperCase()} が未設定です。`,
+      `${base}_${mode.toUpperCase()} が未設定です。`,
     );
   }
   return id;
+}
+
+export function getConfiguredSakabaPrices(): { standard: string | undefined; dining: string | undefined } {
+  const mode = getSakabaStripeMode();
+  return mode === "live"
+    ? { standard: process.env.STRIPE_PRICE_SAKABA_LIVE, dining: process.env.STRIPE_PRICE_SAKABA_880_LIVE }
+    : { standard: process.env.STRIPE_PRICE_SAKABA_TEST ?? process.env.STRIPE_PRICE_SAKABA, dining: process.env.STRIPE_PRICE_SAKABA_880_TEST };
 }
 
 export function getSakabaWebhookSecret(): string {

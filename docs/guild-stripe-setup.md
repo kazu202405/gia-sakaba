@@ -54,14 +54,18 @@ https://guild.gia2018.com/api/stripe/webhook
 
 本番商品 ID: `prod_VKXj9OtAn7TzSl`。月480円・税込・トライアルなし、商品メタデータ `service=gia-sakaba`。
 
-### 880円会員（先に商品・料金のみ準備）
+### 880円会員
 
 - 本番商品: `prod_VKhoHMNZO8TkNe`（`GIAの酒場 880円会員`）
 - 本番Price: `price_1UK2OcBRsf0enSjQc5O3Sznr`（月880円・内税・トライアルなし）
 - 商品説明: 会食の希望を伝えられる月額会員。会食の開催・成立は保証しない。
 - 明細書表記: `GIA-SAKABA`。商品メタデータ: `service=gia-sakaba`, `tier=880`。
-- Price IDはVercel ProductionのConfig `STRIPE_PRICE_SAKABA_880_LIVE` に保存済み。ただし現行コードはこの変数をまだ参照しないため、880円のCheckout導線・会員権限・480円からの切替は未実装。商品を作っただけで会員に880円は請求されない。
-- 次に実装するときは、480円と880円の権限差（880円は会食の希望を送れるが成立保証なし）、申込・プラン変更・解約、WebhookからのPrice識別と権限反映を一続きで設計・テストする。480円の現行課金を壊さないこと。
+- Price IDはVercel ProductionのConfig `STRIPE_PRICE_SAKABA_880_LIVE` に保存済み。
+- アプリには無料・480円・880円の比較、880円Checkout、会食の希望の登録・編集・削除、ギルドマスターの閲覧を追加した。Stripe Webhookが保存する実際のPrice IDと契約状態で権限を判定し、UI表示だけで権限を与えない。
+- 880円の公開は `SAKABA_880_ENABLED=true` で制御する。フラグがない間は880円の申込・会食希望保存API・プラン変更を利用できない。
+- 480円↔880円の変更には酒場専用Customer Portal configurationを作り、そのIDを `STRIPE_PORTAL_SAKABA_CONFIG_LIVE` に設定する。共通の既定ポータルはCompany Note等が使うため変更しない。プラン変更の請求差額はStripe側で表示・確定する。
+- DB migration `0108_sakaba_meal_wishes.sql` が必要。既存データは削除しない。直接クライアントには公開せず、サーバー経由で本人とギルドマスターにだけ表示する。
+- 公開順: migration 0108適用 → 専用Portal configuration作成・環境変数設定 → コード本番デプロイ → `SAKABA_880_ENABLED=true` 設定・再デプロイ → 880円の申込・プラン変更・Webhook反映を実決済で確認。最後の実決済はユーザーが行う。
 
 本番キーはCheckout Sessions=書き込み、Customer Portal=書き込み、Subscriptions=読み取りの3権限だけの制限付きキーで作る。Stripeが発行時に本人確認メールを求める。キーや署名シークレットをチャット・Gitに載せない。
 

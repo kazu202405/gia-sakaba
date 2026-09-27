@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
+import { isPaidSakabaPlan } from "@/lib/guild/billing-plans";
 import { createClient } from "@/lib/supabase/server";
 import { getSakabaPriceId, getSakabaStripeClient } from "@/lib/stripe/client";
 
@@ -11,6 +12,14 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
 
   try {
+    const body = await request.json().catch(() => ({})) as { plan?: unknown };
+    const plan = body.plan === undefined ? "standard" : body.plan;
+    if (!isPaidSakabaPlan(plan)) {
+      return NextResponse.json({ error: "プランを選び直してください。" }, { status: 400 });
+    }
+    if (plan === "dining" && process.env.SAKABA_880_ENABLED !== "true") {
+      return NextResponse.json({ error: "880円プランは準備中です。" }, { status: 503 });
+    }
     const billing = await getMyGuildBilling();
     if (billing.role !== "member" || billing.billing_status === "exempt") {
       return NextResponse.json({ error: "管理者は申し込み不要です。" }, { status: 409 });
@@ -20,11 +29,12 @@ export async function POST(request: NextRequest) {
     }
 
     const stripe = getSakabaStripeClient();
-    const priceId = getSakabaPriceId();
+    const priceId = getSakabaPriceId(plan);
     const metadata = {
       purpose: "sakaba",
       guild_id: billing.guild_id,
       user_id: user.id,
+      tier: plan,
     };
     const origin = request.nextUrl.origin;
     const returnPath = request.nextUrl.searchParams.get("from") === "projects" ? "/guild/projects" : "/guild/plan";

@@ -11,6 +11,8 @@ import { LiveMemberIntroductions } from "@/components/guild/live-member-introduc
 import { LivePushSettings } from "@/components/guild/live-push-settings";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { PageTitle, Window } from "@/components/guild/cards";
+import { canSendMealWish, resolveSakabaPlan } from "@/lib/guild/billing-plans";
+import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "マイページ" };
@@ -28,6 +30,7 @@ export default async function MyPage() {
   const myQuests = quests.filter((quest) => quest.creator_id === me.id && quest.status !== "withdrawn");
   const joinedQuests = quests.filter((quest) => quest.my_application?.status === "applied");
   const myProjects = projects.filter((project) => project.owner_id === me.id);
+  const currentPlan = resolveSakabaPlan(billing, getConfiguredSakabaPrices());
 
   return <div className="space-y-9">
     <PageTitle title="マイページ" lead="自分のステータスと、酒場で進めていることを確認できます。" />
@@ -81,15 +84,20 @@ export default async function MyPage() {
         <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row block break-words text-sm">▶ {project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
     </Window>
     <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
+    {process.env.SAKABA_880_ENABLED === "true" && canSendMealWish(currentPlan) && <Window title="会食の希望">
+      <p className="text-sm leading-relaxed">会って話したい人やテーマを、ギルドマスターに伝えられます。</p>
+      <Link href="/guild/me/wish" className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm">希望を見る・書き直す</Link>
+    </Window>}
     <LivePushSettings />
     {billing.role === "member" && <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">
-        {billing.is_paid ? "現在、有料会員です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : "現在は無料会員です。"}
+        {billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在、480円会員です。" : currentPlan === "dining" ? "現在、880円会員です。" : billing.is_paid ? "現在、有料会員です。" : "現在は無料会員です。"}
       </p>
       <div className="mt-4">
         {billing.stripe_customer_id ? <GuildBillingPortalButton label={billing.is_paid ? "支払い方法・解約を管理する" : billing.billing_status === "past_due" ? "お支払いを確認する" : "支払い履歴を見る"} /> :
           <Link href="/guild/plan" className="c-button-sub h-11 px-5 text-sm">有料会員について見る</Link>}
       </div>
+      <Link href="/guild/plan" className="c-muted mt-3 inline-block text-sm underline underline-offset-4">無料・480円・880円をくらべる</Link>
       {billing.is_paid && <p className="c-muted mt-3 text-xs">解約はStripeの管理画面で手続きします。このボタンを押すだけでは解約されません。</p>}
     </Window>}
   </div>;
