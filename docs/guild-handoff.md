@@ -6,6 +6,7 @@
 - 見られるのは本人とギルドマスターだけ。マスター画面では希望文と空き日時を会員別にまとめる。会員同士は互いの空き日時を見られない。会食の自動確定や開催保証はしない。
 - DBは `supabase/migrations/0110_sakaba_meal_availability.sql`。テーブルの直接アクセスはservice roleに限定し、APIでもログイン・880円相当の資格・本人IDを確認する。
 - 本番公開は、0110をGIA用Supabaseで適用した後、Vercel Productionに `SAKABA_AVAILABILITY_ENABLED=true` を設定して再デプロイする。未設定なら画面・APIは閉じたままなので、先にコードがデプロイされても既存機能は動く。
+- 2026-09-27: ユーザーが0110をGIA用Supabaseで実行済みと報告。`SAKABA_AVAILABILITY_ENABLED=true` をVercel Productionに保存した。次の本番デプロイから有効になる。
 
 ## 2026-09-26 引き継ぎ（最新）
 

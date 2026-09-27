@@ -8,8 +8,9 @@
 .headerNav a:last-child { color: #e8cf8e; }
 .headerNav a:hover { text-decoration: underline; text-underline-offset: .3em; }
 
-.hero { position: relative; isolation: isolate; min-height: min(48rem, 88svh); display: flex; align-items: center; overflow: hidden; border-bottom: 2px solid #d9b45a; }
-.heroArt { position: absolute; z-index: -2; inset: 0; background-image: url('/images/sakaba/tavern_night.png'); background-size: cover; background-position: center 44%; image-rendering: pixelated; }
+.hero { position: relative; isolation: isolate; min-height: min(48rem, 88svh); display: flex; align-items: center; clip-path: inset(0); border-bottom: 2px solid #d9b45a; }
+/* ヒーローの中だけ見せながら、絵そのものは画面に固定する。iPhoneでも background-attachment に依存しない。 */
+.heroArt { position: fixed; z-index: -2; inset: 0; width: 100%; height: 100svh; background-image: url('/images/sakaba/tavern_night.png'); background-size: cover; background-position: center 44%; image-rendering: pixelated; }
 .hero::before { content: ''; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgba(7,10,23,.97) 0%, rgba(7,10,23,.91) 31%, rgba(7,10,23,.54) 66%, rgba(7,10,23,.2) 100%), linear-gradient(0deg, #0b0f1f 0%, transparent 38%); }
 .heroInner { padding-block: 5rem 6.5rem; }
 .eyebrow, .kicker, .sectionHeading > p, .scrollMark { font-family: var(--font-pixel-jp), system-ui, sans-serif; letter-spacing: .12em; color: #d9b45a; }
@@ -66,4 +67,8 @@
   .featureNumber { margin-bottom: .5rem; }
   .entryWindow { display: block; padding: 2.5rem 1.4rem 1.5rem; }
   .entryWindow > a { margin-top: 1.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroArt { position: absolute; height: 100%; }
 }
