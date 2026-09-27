@@ -15,6 +15,7 @@ type Props = {
   currentPlan: SakabaPlan;
   companyNoteBenefit: boolean;
   diningEnabled: boolean;
+  availabilityEnabled: boolean;
   checkoutResult?: "success" | "canceled";
 };
 
@@ -24,7 +25,7 @@ const plans = [
   { key: "dining", label: "880円会員", price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["480円会員の内容すべて", "会食の希望をギルドマスターへ送れる"] },
 ] as const;
 
-export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, checkoutResult }: Props) {
+export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, availabilityEnabled, checkoutResult }: Props) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState("");
   const exempt = role === "owner" || role === "master" || billingStatus === "exempt";
@@ -98,6 +99,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         <p className="mt-4 min-h-14 text-sm leading-relaxed">{plan.lead}</p>
         <ul className="mt-4 flex-1 space-y-3 border-t border-[#1b2a41]/25 pt-4 text-sm leading-relaxed">
           {plan.features.map((feature) => <li key={feature} className="flex gap-2"><span aria-hidden="true">▶</span><span>{feature}</span></li>)}
+          {plan.key === "dining" && availabilityEnabled && <li className="flex gap-2"><span aria-hidden="true">▶</span><span>会食に空いている日時を非公開で登録できる</span></li>}
         </ul>
         <div className="mt-6 min-h-12">{actionFor(plan.key)}</div>
       </div>)}

@@ -22,6 +22,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     currentPlan={currentPlan}
     companyNoteBenefit={billing.company_note_benefit}
     diningEnabled={diningEnabled}
+    availabilityEnabled={process.env.SAKABA_AVAILABILITY_ENABLED === "true"}
     checkoutResult={checkoutResult}
   />;
 }
