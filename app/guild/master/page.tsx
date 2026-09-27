@@ -32,7 +32,7 @@ export default async function MasterPage() {
     <div className="space-y-9">
       <PageTitle
         title="ギルドマスター"
-        lead="限定の集まりと、酒場への招待のつながりを管理します。"
+        lead="限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
       />
       <nav aria-label="管理項目" className="flex flex-wrap gap-3 text-sm">
         <a href="#master-gatherings-title" className="c-button-sub inline-flex h-10 items-center px-4">限定の集まり</a>
