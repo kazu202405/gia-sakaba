@@ -43,6 +43,8 @@ describe("guildGate", () => {
     for (const p of [
       "/api/guild/billing/checkout",
       "/api/guild/billing/portal",
+      "/api/guild/meal-wish",
+      "/api/guild/meal-availability",
       "/api/guild/push/subscriptions",
       "/api/guild/push/dispatch",
       "/api/stripe/webhook",

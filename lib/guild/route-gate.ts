@@ -21,6 +21,8 @@ export const GUILD_HOME = "/guild";
 const ALLOWED_GUILD_API_PATHS = new Set([
   "/api/guild/billing/checkout",
   "/api/guild/billing/portal",
+  "/api/guild/meal-wish",
+  "/api/guild/meal-availability",
   "/api/guild/push/subscriptions",
   "/api/guild/push/dispatch",
   "/api/stripe/webhook",
