@@ -20,7 +20,7 @@ function inviteUrl(code: string) {
   return `${window.location.origin}/guild/join?invite=${encodeURIComponent(code)}`;
 }
 
-export function LiveMasterInvites({ initial }: { initial: GuildMasterInvite[] }) {
+export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: GuildMasterInvite[]; excludedIds?: string[] }) {
   const router = useRouter();
   const [invites, setInvites] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function LiveMasterInvites({ initial }: { initial: GuildMasterInvite[] })
       if (rpcError) throw rpcError;
       const { data: list, error: listError } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
       if (listError) throw listError;
-      setInvites(Array.isArray(list) ? list as GuildMasterInvite[] : []);
+      setInvites(Array.isArray(list) ? (list as GuildMasterInvite[]).filter((invite) => !excludedIds.includes(invite.id)) : []);
       try {
         await navigator.clipboard.writeText(inviteUrl(data.code));
         uiToast("招待リンクを発行してコピーしました");

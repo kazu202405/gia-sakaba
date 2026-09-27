@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
+import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/rules";
 import {
   JOIN_COMPANY_MAX,
@@ -23,12 +24,12 @@ import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
-export function JoinForm({ inviterName, inviteCode, preview = false, initialName = "" }: { inviterName: string; inviteCode: string; preview?: boolean; initialName?: string }) {
+export function JoinForm({ inviterName, inviteCode, preview = false, initialName = "", prepared = null }: { inviterName: string; inviteCode: string; preview?: boolean; initialName?: string; prepared?: PreparedInvite | null }) {
   const router = useRouter();
   const [draft, setDraft] = useState<JoinDraft>({
     display_name: initialName.slice(0, JOIN_NAME_MAX),
-    company_name: "",
-    position: "",
+    company_name: prepared?.company_name ?? "",
+    position: prepared?.position ?? "",
     show_company: true,
     want_to_solve: "",
     agreed: false,
@@ -36,6 +37,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
   const [errors, setErrors] = useState<JoinErrors>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [acceptIntroduction, setAcceptIntroduction] = useState(false);
 
   const set = <K extends keyof JoinDraft>(key: K, value: JoinDraft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -47,6 +49,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
     <Window title="入会フォーム">
       {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
         <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
+      {prepared && <p className="c-card mb-6 px-4 py-3 text-sm leading-relaxed">招待した人が、お名前などを下書きしました。内容を確認し、違うところは直してください。入会するまでは名鑑に表示されません。</p>}
       <form
         noValidate
         className="space-y-7"
@@ -62,7 +65,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
           setSaving(true);
           setSaveError("");
           try {
-            const { data, error } = await createClient().rpc("sakaba_join_guild", {
+            const { data, error } = await createClient().rpc(prepared ? "sakaba_join_prepared_guild" : "sakaba_join_guild", {
               p_code: inviteCode,
               p_display_name: draft.display_name.trim(),
               p_company_name: draft.company_name.trim(),
@@ -70,6 +73,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
               p_show_company: draft.show_company,
               p_want_to_solve: draft.want_to_solve.trim(),
               p_agreed: draft.agreed,
+              ...(prepared ? { p_accept_introduction: acceptIntroduction } : {}),
             });
             if (error) throw error;
             uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : "GIAの酒場に入会しました");
@@ -141,6 +145,15 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             placeholder="例：若い職人が 入ってこない"
           />
         </Field>
+
+        {prepared?.introduction && <div className="c-card space-y-3 p-4">
+          <p className="c-label text-xs">{inviterName}さんから見た、あなたの紹介</p>
+          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{prepared.introduction}</p>
+          <CheckBox checked={acceptIntroduction} onChange={setAcceptIntroduction}>
+            <span className="block text-sm">入会後、この文章を紹介状に掲載する</span>
+            <span className="c-muted block text-xs">チェックしなければ掲載されません。掲載後も自分で削除できます。</span>
+          </CheckBox>
+        </div>}
 
         {/* 儲かるなら何でもいい、ではない。入会の前に 約束に同意してもらう */}
         <div data-field-error={errors.agreed ? "true" : undefined} className="c-card space-y-3 p-4">

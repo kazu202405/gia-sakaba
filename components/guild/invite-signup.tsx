@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
 
-export function InviteSignup({ inviteCode, inviterName, preview = false }: { inviteCode: string; inviterName: string; preview?: boolean }) {
+export function InviteSignup({ inviteCode, inviterName, preview = false, initialName = "" }: { inviteCode: string; inviterName: string; preview?: boolean; initialName?: string }) {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialName);
   const [email, setEmail] = useState("");
   const [emailAgain, setEmailAgain] = useState("");
   const [password, setPassword] = useState("");
@@ -67,6 +67,7 @@ export function InviteSignup({ inviteCode, inviterName, preview = false }: { inv
     <Window title="新規登録">
       {preview && <p className="mb-4 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">新規アカウント作成画面のプレビューです。送信はできません。</p>}
       <p className="mb-5 text-sm leading-relaxed"><span className="tracking-wider">{inviterName || "酒場のメンバー"}さんから招待状が届いています。</span><br /><span className="c-muted">GIAのアカウントを作成して、入会フォームへ進みます。</span></p>
+      {initialName && <p className="c-card mb-5 px-3 py-2 text-sm">お名前は招待した人が入力済みです。違う場合は下で直してください。</p>}
       <form onSubmit={submit} className="space-y-4">
         {error && <p role="alert" className="border border-[#c62828]/40 bg-red-50 p-3 text-sm text-[#c62828]">{error}</p>}
         <label className="block"><span className="mb-1 block text-sm">お名前 <span className="text-[#c62828]">必須</span></span>

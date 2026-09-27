@@ -4,6 +4,7 @@ import { PageTitle, Window } from "@/components/guild/cards";
 import { JoinForm } from "@/components/guild/join-form";
 import { InviteSignup } from "@/components/guild/invite-signup";
 import { inviteErrorText } from "@/lib/guild/join";
+import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { getGuildContext } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,26 +40,40 @@ export default async function JoinPage({ searchParams }: Props) {
   ]);
   const check = data as InviteResult | null;
   const valid = !error && check?.ok && check.guild.slug === "gia";
+  const { data: preparedData, error: preparedError } = valid && process.env.SAKABA_PREJOIN_ENABLED === "true"
+    ? await supabase.rpc("sakaba_get_prepared_invite", { p_code: code })
+    : { data: null, error: null };
+  const prepared = preparedData as PreparedInvite | null;
 
   return (
     <JoinPageFrame>
       <PageTitle
-        title="招待リンクから入会"
-        lead="GIAのアカウントでログインし、入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"
+        title={prepared ? "あなたへの招待状" : "招待リンクから入会"}
+        lead="GIAのアカウントを作成、またはログインして入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"
       />
-      {valid && !authData.user ? (
-        <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} />
+      {valid && prepared?.introduction && !authData.user && <Window title={`${check.inviter_name || "招待した人"}さんからの紹介`}>
+        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{prepared.introduction}</p>
+        <p className="c-muted mt-3 text-xs">この紹介文はまだ公開されていません。入会時に掲載するか自分で選べます。</p>
+      </Window>}
+      {preparedError ? <Window title="招待状"><p className="text-sm">招待状の下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>
+      : valid && !authData.user ? (
+        <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} initialName={prepared?.display_name ?? ""} />
       ) : valid ? (
         <JoinForm
           inviterName={check.inviter_name || "ギルドマスター"}
           inviteCode={code}
-          initialName={typeof authData.user?.user_metadata?.name === "string" ? authData.user.user_metadata.name : ""}
+          initialName={typeof authData.user?.user_metadata?.name === "string" && authData.user.user_metadata.name.trim()
+            ? authData.user.user_metadata.name : prepared?.display_name ?? ""}
+          prepared={prepared}
         />
       ) : (
         <Window title="招待リンク">
           <p className="text-sm leading-relaxed">{error ? "招待リンクを確認できませんでした。時間をおいて再度お試しください。" : check && !check.ok ? inviteErrorText[check.reason] : "この招待リンクはGIAの酒場では使えません。招待してくれた人にご確認ください。"}</p>
         </Window>
       )}
+      {valid && prepared && <Window title="入会後に選べること">
+        <p className="text-sm leading-relaxed">まずはフリー（0円）で入会できます。ギルド・クエストとプロジェクト2件まで利用できます。必要になったら、プラス（月480円）でプロジェクトの作成枠を広げたり、会食（月880円）で会食の希望を伝えたりできます。入会時に有料プランを選ぶ必要はありません。</p>
+      </Window>}
     </JoinPageFrame>
   );
 }
