@@ -64,8 +64,9 @@ https://guild.gia2018.com/api/stripe/webhook
 - アプリには無料・480円・880円の比較、880円Checkout、会食の希望の登録・編集・削除、ギルドマスターの閲覧を追加した。Stripe Webhookが保存する実際のPrice IDと契約状態で権限を判定し、UI表示だけで権限を与えない。
 - 880円の公開は `SAKABA_880_ENABLED=true` で制御する。フラグがない間は880円の申込・会食希望保存API・プラン変更を利用できない。
 - 480円↔880円の変更には酒場専用Customer Portal configurationを作り、そのIDを `STRIPE_PORTAL_SAKABA_CONFIG_LIVE` に設定する。共通の既定ポータルはCompany Note等が使うため変更しない。プラン変更の請求差額はStripe側で表示・確定する。
-- DB migration `0108_sakaba_meal_wishes.sql` が必要。既存データは削除しない。直接クライアントには公開せず、サーバー経由で本人とギルドマスターにだけ表示する。
+- DB migration `0108_sakaba_meal_wishes.sql` は2026-09-27にGIA本番Supabase SQL Editorで実行し、`Success. No rows returned` を確認済み。既存データは削除しない。直接クライアントには公開せず、サーバー経由で本人とギルドマスターにだけ表示する。
 - 公開順: migration 0108適用 → 専用Portal configuration作成・環境変数設定 → コード本番デプロイ → `SAKABA_880_ENABLED=true` 設定・再デプロイ → 880円の申込・プラン変更・Webhook反映を実決済で確認。最後の実決済はユーザーが行う。
+- 3プラン比較と880円をフラグで閉じたコード `e020d8a` は2026-09-27に本番デプロイReadyを確認済み。`SAKABA_880_ENABLED` と `STRIPE_PORTAL_SAKABA_CONFIG_LIVE` はまだ未設定で、880円の新規決済は受け付けない。
 
 本番キーはCheckout Sessions=書き込み、Customer Portal=書き込み、Subscriptions=読み取りの3権限だけの制限付きキーで作る。Stripeが発行時に本人確認メールを求める。キーや署名シークレットをチャット・Gitに載せない。
 
