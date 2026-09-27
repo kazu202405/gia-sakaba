@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { GuildBillingStatus } from "@/lib/guild/server-data";
-import type { PaidSakabaPlan, SakabaPlan } from "@/lib/guild/billing-plans";
+import { SAKABA_PLAN_NAMES, type PaidSakabaPlan, type SakabaPlan } from "@/lib/guild/billing-plans";
 import { FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/membership";
 import { BackLink, PageTitle, Window } from "./cards";
 
@@ -20,9 +20,9 @@ type Props = {
 };
 
 const plans = [
-  { key: "free", label: "無料", price: "0円", lead: "仲間を知り、相談や集まりを見つける。", features: ["ギルド・クエストを使える", `プロジェクトは${FREE_ACTIVE_PROJECT_LIMIT}件まで`] },
-  { key: "standard", label: "480円会員", price: "月480円", lead: "プロジェクトの記録を、数を気にせず残す。", features: ["無料プランの内容すべて", "プロジェクトをいくつでも作れる", "有料会員限定の集まりに申し込める"] },
-  { key: "dining", label: "880円会員", price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["480円会員の内容すべて", "会食の希望をギルドマスターへ送れる"] },
+  { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "仲間を知り、相談や集まりを見つける。", features: ["ギルド・クエストを使える", `プロジェクトは${FREE_ACTIVE_PROJECT_LIMIT}件まで`] },
+  { key: "standard", label: SAKABA_PLAN_NAMES.standard, price: "月480円", lead: "プロジェクトの記録を、数を気にせず残す。", features: ["フリーの内容すべて", "プロジェクトをいくつでも作れる", "有料会員限定の集まりに申し込める"] },
+  { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["プラスの内容すべて", "会食の希望をギルドマスターへ送れる"] },
 ] as const;
 
 export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, availabilityEnabled, checkoutResult }: Props) {
@@ -64,21 +64,21 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
   }
 
   function actionFor(plan: "free" | PaidSakabaPlan) {
-    if (exempt) return <span className="c-chip">管理者は全機能を利用できます</span>;
+    if (exempt) return <span className="c-chip">管理者枠で利用可</span>;
     if (companyNoteBenefit) return plan === "dining" ? <span className="c-chip">Company Note特典で利用中</span> : null;
     if (currentPlan === plan) return <span className="c-chip">現在のプラン</span>;
-    if (plan === "free") return <span className="c-muted text-xs">無料への変更は支払い管理から解約できます</span>;
+    if (plan === "free") return <span className="c-muted text-xs">フリーに戻す場合は支払い管理から解約できます</span>;
     if (plan === "dining" && !diningEnabled) return <span className="c-muted text-sm">申し込みは準備中です</span>;
     if (billingStatus === "past_due") return <span className="c-muted text-sm">支払い方法を確認してから変更できます</span>;
     if (hasActiveContract) {
       if (!diningEnabled || (currentPlan !== "standard" && currentPlan !== "dining")) return null;
       return <button type="button" disabled={pending !== null} onClick={() => void openPortal(true)} className="c-button-sub inline-flex min-h-11 items-center px-4 text-sm disabled:opacity-50">
-        {pending === "switch" ? "開いています…" : `${plan === "dining" ? "880円" : "480円"}へ変更する`}
+        {pending === "switch" ? "開いています…" : `${SAKABA_PLAN_NAMES[plan]}（月${plan === "dining" ? "880" : "480"}円）へ変更する`}
       </button>;
     }
     if (isPaid) return null;
     return <button type="button" disabled={pending !== null} onClick={() => void openCheckout(plan)} className="rpg-button inline-flex min-h-11 items-center px-4 text-sm disabled:opacity-50">
-      {pending === `checkout-${plan}` ? "決済画面を準備中…" : `▶ ${plan === "dining" ? "880円" : "480円"}会員に申し込む`}
+      {pending === `checkout-${plan}` ? "決済画面を準備中…" : `▶ ${SAKABA_PLAN_NAMES[plan]}（月${plan === "dining" ? "880" : "480"}円）に申し込む`}
     </button>;
   }
 
@@ -105,18 +105,21 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       </div>)}
     </section>
 
-    <p className="c-muted text-sm leading-relaxed">480円・880円は月額制で、無料体験はありません。限定の集まりは不定期開催で、申し込み後に承認が必要な場合があります。880円では会食の希望を送れますが、開催・参加・希望どおりの出会いは保証されません。プラン変更時の請求額はStripeの確認画面でお確かめください。</p>
+    <p className="c-muted text-sm leading-relaxed">プラス・会食は月額制で、無料体験はありません。有料会員向けの集まりは不定期開催で、申し込み後に承認が必要な場合があります。会食の開催・参加・希望どおりの出会いは保証されません。今後は会食プラン限定の交流会も予定しています（開催時期未定）。プラン変更時の請求額はStripeの確認画面でお確かめください。</p>
 
-    {exempt ? <Window title="会員の状態"><p className="text-[15px] leading-relaxed">ギルドの管理者は、料金なしですべての機能を利用できます。Stripeへの申し込みは必要ありません。</p></Window>
+    {exempt ? <Window title="会員の状態">
+        <p className="text-[15px] leading-relaxed">現在は管理者枠です。料金なしですべての機能を利用でき、Stripeへの申し込みは必要ありません。</p>
+        {hasCustomer && <><p className="mt-3 text-sm leading-relaxed">過去の酒場の契約・支払い履歴がある場合は、支払い管理で確認できます。継続中の契約は管理者枠に変わっても自動解約されません。</p><button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button></>}
+      </Window>
       : companyNoteBenefit ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場の880円会員の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
+        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場の会食プラン（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
         {hasActiveContract && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は継続中です。特典が付いても自動解約されず、請求も止まりません。不要な場合は下のボタンから解約してください。</p>}
         {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button>}
       </Window>
       : (isPaid || billingStatus === "past_due" || hasCustomer) ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在、480円会員です。" : currentPlan === "dining" ? "現在、880円会員です。" : isPaid ? "現在、有料会員です。" : "現在は無料会員です。"}</p>
-        <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "支払い方法・解約を管理する"}</button>
-      </Window> : null}
+        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラス（月480円）です。" : currentPlan === "dining" ? "現在は会食（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリーです。"}</p>
+        <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : (hasActiveContract || billingStatus === "past_due") ? "支払い方法・解約を管理する" : "支払い履歴を見る"}</button>
+      </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリーです。上の比較から、いつでもプラス・会食への申し込みを選べます。</p></Window>}
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;
 }

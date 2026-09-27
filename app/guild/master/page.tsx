@@ -46,7 +46,7 @@ export default async function MasterPage() {
       </section>
       {diningEnabled && <section aria-labelledby="master-meal-wishes-title" className="space-y-4 border-t-2 border-dashed border-[#1b2a41]/25 pt-8">
         <h2 id="master-meal-wishes-title" className="text-xl tracking-wider">会食の希望{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "・空き日時" : ""}</h2>
-        <p className="c-muted text-sm">880円会員から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
+        <p className="c-muted text-sm">会食プラン相当の利用者から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
         {mealUserIds.length === 0 ? <p className="c-card p-5 text-sm">まだ希望は届いていません。</p> : <div className="grid gap-4 md:grid-cols-2">
           {mealUserIds.map((userId) => {
             const wish = mealWishes.find((item) => item.user_id === userId);
