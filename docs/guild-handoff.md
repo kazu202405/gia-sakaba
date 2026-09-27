@@ -5,6 +5,7 @@
 - ギルドマスターが名前、任意の会社名・役職・紹介文を下書きして、1人用・30日有効の招待URLを作る。入会前にはアカウント・名鑑プロフィールを作らず、候補者自身がフォームで確認・修正してから無料で入会する。
 - 紹介文は招待URLを開いた本人に先に見せるが、公開名鑑の「紹介状」への掲載は入会フォームの別チェックに本人が同意した場合だけ。入会後は本人が削除できる。480円・880円は入会時の必須選択ではなく、将来選べるプランとして案内する。
 - DB migration は `supabase/migrations/0111_sakaba_prepared_member_invites.sql`。GIA本番Supabaseへ適用し、Vercel Productionに `SAKABA_PREJOIN_ENABLED=true` を設定して再デプロイするまでは画面を閉じる。招待コードを持つ人だけが下書きを読め、一覧・作成・編集はowner/masterのみ。
+- 2026-09-28: ユーザーが0111を実行済み。SQL Editorの成功表示を確認し、Vercel Productionへ `SAKABA_PREJOIN_ENABLED=true` を追加。commit `20ea40f` の再デプロイ `92eLE8TszCoXcbGhrhCyeYSfM3CV` はReady、本番 `/guild/master` に仮登録フォームと空の一覧が表示されることを確認。実際の招待状作成・受取人の入会は未実施（架空の本番レコードは作らない）。
 
 ## 2026-09-27 会員プラン表示の整理
 
