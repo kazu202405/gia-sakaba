@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSendMealWish, isPaidSakabaPlan, resolveSakabaPlan } from "./billing-plans";
+import { canSendMealWish, isPaidSakabaPlan, resolveSakabaAccessPlan, resolveSakabaPlan } from "./billing-plans";
 
 const prices = { standard: "price_480", dining: "price_880" };
 
@@ -25,5 +25,16 @@ describe("Sakaba billing plans", () => {
     expect(isPaidSakabaPlan("dining")).toBe(true);
     expect(isPaidSakabaPlan("free")).toBe(false);
     expect(isPaidSakabaPlan("price_arbitrary")).toBe(false);
+  });
+
+  it("grants 880 access through Company Note without changing the Sakaba contract", () => {
+    const freeWithBenefit = { role: "member" as const, billing_status: "free", stripe_price_id: null, company_note_benefit: true };
+    const standardWithBenefit = { role: "member" as const, billing_status: "active", stripe_price_id: "price_480", company_note_benefit: true };
+    expect(resolveSakabaPlan(freeWithBenefit, prices)).toBe("free");
+    expect(resolveSakabaAccessPlan(freeWithBenefit, prices)).toBe("dining");
+    expect(resolveSakabaPlan(standardWithBenefit, prices)).toBe("standard");
+    expect(resolveSakabaAccessPlan(standardWithBenefit, prices)).toBe("dining");
+    expect(resolveSakabaAccessPlan({ ...freeWithBenefit, company_note_benefit: false }, prices)).toBe("free");
+    expect(resolveSakabaAccessPlan({ ...freeWithBenefit, role: "owner" }, prices)).toBe("exempt");
   });
 });

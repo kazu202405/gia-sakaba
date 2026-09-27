@@ -13,6 +13,7 @@ type Props = {
   isPaid: boolean;
   hasCustomer: boolean;
   currentPlan: SakabaPlan;
+  companyNoteBenefit: boolean;
   diningEnabled: boolean;
   checkoutResult?: "success" | "canceled";
 };
@@ -23,7 +24,7 @@ const plans = [
   { key: "dining", label: "880円会員", price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["480円会員の内容すべて", "会食の希望をギルドマスターへ送れる"] },
 ] as const;
 
-export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, diningEnabled, checkoutResult }: Props) {
+export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, checkoutResult }: Props) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState("");
   const exempt = role === "owner" || role === "master" || billingStatus === "exempt";
@@ -63,6 +64,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
 
   function actionFor(plan: "free" | PaidSakabaPlan) {
     if (exempt) return <span className="c-chip">管理者は全機能を利用できます</span>;
+    if (companyNoteBenefit) return plan === "dining" ? <span className="c-chip">Company Note特典で利用中</span> : null;
     if (currentPlan === plan) return <span className="c-chip">現在のプラン</span>;
     if (plan === "free") return <span className="c-muted text-xs">無料への変更は支払い管理から解約できます</span>;
     if (plan === "dining" && !diningEnabled) return <span className="c-muted text-sm">申し込みは準備中です</span>;
@@ -90,7 +92,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
 
     <section aria-label="3つの会員プラン" className="grid gap-4 lg:grid-cols-3">
-      {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${plan.key === "dining" ? "border-[#8f7337]" : ""}`}>
+      {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${plan.key === "dining" ? "border-[#8f7337]" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
         <p className="c-label w-fit text-xs">{plan.label}</p>
         <p className="mt-5 text-[28px] leading-none tracking-wide">{plan.price}<span className="ml-1 text-xs">{plan.key !== "free" && "（税込）"}</span></p>
         <p className="mt-4 min-h-14 text-sm leading-relaxed">{plan.lead}</p>
@@ -104,6 +106,11 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     <p className="c-muted text-sm leading-relaxed">480円・880円は月額制で、無料体験はありません。限定の集まりは不定期開催で、申し込み後に承認が必要な場合があります。880円では会食の希望を送れますが、開催・参加・希望どおりの出会いは保証されません。プラン変更時の請求額はStripeの確認画面でお確かめください。</p>
 
     {exempt ? <Window title="会員の状態"><p className="text-[15px] leading-relaxed">ギルドの管理者は、料金なしですべての機能を利用できます。Stripeへの申し込みは必要ありません。</p></Window>
+      : companyNoteBenefit ? <Window title="会員の状態">
+        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場の880円会員の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
+        {hasActiveContract && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は継続中です。特典が付いても自動解約されず、請求も止まりません。不要な場合は下のボタンから解約してください。</p>}
+        {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button>}
+      </Window>
       : (isPaid || billingStatus === "past_due" || hasCustomer) ? <Window title="会員の状態">
         <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在、480円会員です。" : currentPlan === "dining" ? "現在、880円会員です。" : isPaid ? "現在、有料会員です。" : "現在は無料会員です。"}</p>
         <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "支払い方法・解約を管理する"}</button>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { BackLink, PageTitle, Window } from "@/components/guild/cards";
 import { MealWishEditor } from "@/components/guild/meal-wish-editor";
-import { canSendMealWish, resolveSakabaPlan } from "@/lib/guild/billing-plans";
+import { canSendMealWish, resolveSakabaAccessPlan } from "@/lib/guild/billing-plans";
 import { getMealWish } from "@/lib/guild/meal-wishes-server";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "会食の希望" };
 
 export default async function MealWishPage() {
   const billing = await getMyGuildBilling();
-  const eligible = canSendMealWish(resolveSakabaPlan(billing, getConfiguredSakabaPrices()));
+  const eligible = canSendMealWish(resolveSakabaAccessPlan(billing, getConfiguredSakabaPrices()));
   const enabled = process.env.SAKABA_880_ENABLED === "true";
   const wish = eligible && enabled ? await getMealWish(billing.guild_id, billing.user_id) : null;
 

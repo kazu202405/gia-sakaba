@@ -17,6 +17,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "管理できる契約がありません。" }, { status: 404 });
     }
     const switching = request.nextUrl.searchParams.get("switch") === "1";
+    if (switching && billing.company_note_benefit) {
+      return NextResponse.json({ error: "Company Note会員特典を利用中です。酒場の別契約は支払い管理から確認・解約できます。" }, { status: 409 });
+    }
     const configName = getSakabaStripeMode() === "live" ? "STRIPE_PORTAL_SAKABA_CONFIG_LIVE" : "STRIPE_PORTAL_SAKABA_CONFIG_TEST";
     const configuration = process.env[configName];
     if (switching && (process.env.SAKABA_880_ENABLED !== "true" || !configuration)) {

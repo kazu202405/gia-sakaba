@@ -24,6 +24,9 @@ export async function POST(request: NextRequest) {
     if (billing.role !== "member" || billing.billing_status === "exempt") {
       return NextResponse.json({ error: "管理者は申し込み不要です。" }, { status: 409 });
     }
+    if (billing.company_note_benefit) {
+      return NextResponse.json({ error: "Company Note会員特典で880円会員の機能を利用できます。酒場での追加申込は不要です。" }, { status: 409 });
+    }
     if (["active", "trialing", "past_due"].includes(billing.billing_status)) {
       return NextResponse.json({ error: "すでに契約があります。支払い管理を開いてください。" }, { status: 409 });
     }

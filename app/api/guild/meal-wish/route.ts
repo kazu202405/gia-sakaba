@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { canSendMealWish, resolveSakabaPlan } from "@/lib/guild/billing-plans";
+import { canSendMealWish, resolveSakabaAccessPlan } from "@/lib/guild/billing-plans";
 import { normalizeMealWish } from "@/lib/guild/meal-wishes";
 import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,7 +15,7 @@ async function authorizedMember() {
   if (process.env.SAKABA_880_ENABLED !== "true") return { error: NextResponse.json({ error: "会食の希望は準備中です。" }, { status: 503 }) };
   const billing = await getMyGuildBilling();
   if (billing.user_id !== user.id) return { error: NextResponse.json({ error: "利用できません。" }, { status: 403 }) };
-  if (!canSendMealWish(resolveSakabaPlan(billing, getConfiguredSakabaPrices()))) {
+  if (!canSendMealWish(resolveSakabaAccessPlan(billing, getConfiguredSakabaPrices()))) {
     return { error: NextResponse.json({ error: "880円会員のみ利用できます。" }, { status: 403 }) };
   }
   return { guildId: billing.guild_id, userId: user.id };

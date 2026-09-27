@@ -71,6 +71,7 @@ export type GuildBilling = {
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
   is_paid: boolean;
+  company_note_benefit: boolean;
 };
 
 export type GuildInviteNetworkMember = {

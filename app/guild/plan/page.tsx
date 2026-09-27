@@ -20,6 +20,7 @@ export default async function PlanPage({ searchParams }: { searchParams: Promise
     isPaid={billing.is_paid}
     hasCustomer={Boolean(billing.stripe_customer_id)}
     currentPlan={currentPlan}
+    companyNoteBenefit={billing.company_note_benefit}
     diningEnabled={diningEnabled}
     checkoutResult={checkoutResult}
   />;
