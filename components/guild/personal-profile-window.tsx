@@ -15,7 +15,7 @@ export function PersonalProfileWindow({ profile }: { profile: Profile }) {
   return <Window title="人となり">
     <dl className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
       {items.map((item) => <div key={item.label} className="py-4 first:pt-0 last:pb-0">
-        <dt className="c-label text-[15px]">{item.label}</dt>
+        <dt className="c-label text-base">{item.label}</dt>
         <dd className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed">{item.value}</dd>
       </div>)}
     </dl>

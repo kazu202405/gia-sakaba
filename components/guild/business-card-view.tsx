@@ -19,7 +19,7 @@ export function BusinessCardView({ card, urls, isMe }: { card: BusinessCard | nu
       {sides.map(({ label, path }) => {
         const url = path ? urls[path] : undefined;
         return <div key={label}>
-          <p className="c-label text-xs">{label}</p>
+          <p className="c-label text-base">{label}</p>
           {url ? (
             <a href={url} target="_blank" rel="noopener noreferrer" className="c-card mt-1 block aspect-[91/55] overflow-hidden" aria-label={`名刺の${label}を大きく見る`}>
               {/* eslint-disable-next-line @next/next/no-img-element -- 期限つきの署名URLの画像なので next/image を通さない */}

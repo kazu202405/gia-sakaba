@@ -63,17 +63,17 @@ export default async function MemberStatusPage({ params }: Props) {
               {/* 会社名と役職は、本人が「出す」を選んだときだけ */}
               {p.show_company && (
                 <>
-                  <dt className="c-label">かいしゃ</dt>
+                  <dt className="c-label text-base">かいしゃ</dt>
                   <dd className="break-words">
                     {p.company_name}（{positionLabel[p.position]}）
                   </dd>
                 </>
               )}
-              <dt className="c-label">しょくぎょう</dt>
+              <dt className="c-label text-base">しょくぎょう</dt>
               <dd>{p.job}</dd>
-              <dt className="c-label">ぎょうしゅ</dt>
+              <dt className="c-label text-base">ぎょうしゅ</dt>
               <dd>{p.industry}</dd>
-              <dt className="c-label">ちいき</dt>
+              <dt className="c-label text-base">ちいき</dt>
               <dd>{p.region}</dd>
             </dl>
             {contactError
@@ -81,7 +81,7 @@ export default async function MemberStatusPage({ params }: Props) {
               : <ContactItemsView items={contactItems} className="c-dashed-top mt-4 pt-4" />}
             {p.want_to_solve && (
               <p className="c-card mt-4 px-3 py-2 text-sm leading-relaxed break-words">
-                <span className="c-label mr-2">いま かいけつしたいこと</span>
+                <span className="c-label mr-2 text-base">いま かいけつしたいこと</span>
                 {p.want_to_solve}
               </p>
             )}
@@ -142,7 +142,7 @@ function ProfileWindow({
         <div className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
           {shown.map((section) => (
             <section key={section.group} className="py-5 first:pt-0 last:pb-0">
-              <h2 className="c-label text-sm tracking-[0.12em]">▶ {groupLabel[section.group].title}</h2>
+              <h2 className="c-label text-base tracking-[0.12em]">▶ {groupLabel[section.group].title}</h2>
               {profile.visible_groups.includes(section.group) && !section.value.trim() ? (
                 <p className="c-muted mt-1.5 text-sm">
                   まだ入力されていません。
