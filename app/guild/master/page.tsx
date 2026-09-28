@@ -54,54 +54,50 @@ export default async function MasterPage() {
         {unmappedError
           ? <p className="text-sm">料金の段の状態を読み込めませんでした。migration 0114 が適用済みか確認してください。</p>
           : <>
-            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。</p>
+            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。ページの下の「料金IDの登録」のSQLを流してください。</p>
             <ul className="mt-3 space-y-1 text-sm">{unmapped.map((row) => <li key={row.price_id} className="break-all"><code>{row.price_id}</code>：{row.members}人</li>)}</ul>
-            {registerSql && <>
-              <p className="c-muted mt-4 text-xs">Supabase の SQL Editor で次を流すと、この環境の料金ID（プラス・ビジネス）を登録できます。</p>
-              <pre className="c-card mt-2 overflow-x-auto p-3 text-xs whitespace-pre">{registerSql}</pre>
-            </>}
           </>}
       </section>}
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
         <span className="c-window-title">管理コマンド</span>
         <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
-          {introductionsEnabled && <li className="border-b border-[#1b2a41]/20">
+          {introductionsEnabled && <li>
             <a href="#master-introductions-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               人をつなぐ
             </a>
           </li>}
-          <li className="border-b border-[#1b2a41]/20">
+          <li>
             <a href="#master-gatherings-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               限定の集まり
             </a>
           </li>
-          {diningEnabled && <li className="border-b border-[#1b2a41]/20">
+          {diningEnabled && <li>
             <a href="#master-meal-wishes-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               会食の希望
             </a>
           </li>}
-          <li className="border-b border-[#1b2a41]/20">
+          <li>
             <a href="#master-invites-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               招待リンク
             </a>
           </li>
-          {preparedEnabled && <li className="border-b border-[#1b2a41]/20">
+          {preparedEnabled && <li>
             <a href="#master-prepared-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               メンバーの仮登録
             </a>
           </li>}
-          <li className="border-b border-[#1b2a41]/20">
+          <li>
             <a href="#master-network-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               招待のつながり
             </a>
           </li>
-          <li className="border-b border-[#1b2a41]/20">
+          <li>
             <Link href="/guild/join?preview=1" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               入会フォームを見る
@@ -150,6 +146,13 @@ export default async function MasterPage() {
         <h2 id="master-network-title" className="text-xl tracking-wider">招待のつながり</h2>
         <InviteNetwork members={network} />
       </section>
+      <details className="c-window p-5 sm:p-6">
+        <summary className="guild-px cursor-pointer text-sm">料金IDの登録（SQL）</summary>
+        {registerSql ? <>
+          <p className="c-muted mt-3 text-xs leading-relaxed">この環境のプラス・ビジネスの料金IDを、段としてDBに登録します。Supabase の SQL Editor で流してください。何度流しても同じ結果です。料金IDを変えたときも流し直します。</p>
+          <pre className="c-card mt-2 overflow-x-auto p-3 text-xs whitespace-pre">{registerSql}</pre>
+        </> : <p className="c-muted mt-3 text-xs">この環境には料金IDの環境変数が設定されていません。</p>}
+      </details>
     </div>
   );
 }

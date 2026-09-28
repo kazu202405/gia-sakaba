@@ -81,7 +81,7 @@ export default async function MemberStatusPage({ params }: Props) {
               : <ContactItemsView items={contactItems} className="c-dashed-top mt-4 pt-4" />}
             {p.want_to_solve && (
               <p className="c-card mt-4 px-3 py-2 text-sm leading-relaxed break-words">
-                <span className="c-label mr-2 text-xs">いま 解決したいこと</span>
+                <span className="c-label mr-2">いま かいけつしたいこと</span>
                 {p.want_to_solve}
               </p>
             )}

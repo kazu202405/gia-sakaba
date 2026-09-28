@@ -10,7 +10,7 @@ export function ContactItemsView({ items, className }: { items: ViewContactItem[
       const label = contactItemLabel(item);
       const href = item.locked ? null : safeContactHref(item);
       return <li key={`${item.kind}-${index}`} className="flex min-w-0 flex-wrap items-baseline gap-x-3">
-        <span className="c-label shrink-0 text-xs">{label}</span>
+        <span className="c-label shrink-0 text-sm">{label}</span>
         {item.locked
           ? <span className="c-muted text-xs">🔒 つながった人にだけ表示</span>
           : href

@@ -229,16 +229,16 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
         </summary>
         <div className="mt-5 space-y-5">
           <p className="c-muted text-xs">書きたい項目だけで大丈夫です。入力した内容はギルドのメンバーに表示されます。</p>
-          <Field label="出身地" hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
-          <Field label="誕生日" hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
+          <Field label="しゅっしんち" hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
+          <Field label="たんじょうび" hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="col-span-2 sm:col-span-1"><span className="c-muted mb-1 block text-xs">生年（任意）</span><Select value={draft.birth_year?.toString() ?? ""} onChange={(value) => set("birth_year", value ? Number(value) : null)} label="生まれた年" placeholder="未設定" options={Array.from({ length: currentYear - 1899 }, (_, index) => ({ value: String(currentYear - index), label: `${currentYear - index}年` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">月</span><Select value={draft.birth_month?.toString() ?? ""} onChange={(value) => { set("birth_month", value ? Number(value) : null); if (!value) { set("birth_day", null); set("birth_year", null); } }} label="誕生月" placeholder="未設定" options={Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}月` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">日</span><Select value={draft.birth_day?.toString() ?? ""} onChange={(value) => { set("birth_day", value ? Number(value) : null); if (!value) { set("birth_month", null); set("birth_year", null); } }} label="誕生日" placeholder="未設定" options={Array.from({ length: 31 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}日` }))} /></label>
             </div>
           </Field>
-          <Field label="趣味・好きなこと"><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
-          <Field label="これまでの歩み" hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
+          <Field label="しゅみ・すきなこと"><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
+          <Field label="これまでの あゆみ" hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
         </div>
       </details>
 
