@@ -11,6 +11,7 @@ import { LiveMemberIntroductions } from "@/components/guild/live-member-introduc
 import { LivePushSettings } from "@/components/guild/live-push-settings";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { PageTitle, Window } from "@/components/guild/cards";
+import { FeedbackButton } from "@/components/guild/feedback-button";
 import { canSendMealWish, resolveSakabaAccessPlan, resolveSakabaPlan } from "@/lib/guild/billing-plans";
 import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
@@ -90,6 +91,10 @@ export default async function MyPage() {
       <Link href="/guild/me/wish" className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm">希望{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "・空き日時" : ""}を見る</Link>
     </Window>}
     <LivePushSettings />
+    <Window title="ご意見・不具合">
+      <p className="text-sm leading-relaxed">おかしな動きや「こうだったら使いやすい」を、管理者に送れます。画面上の「ご意見」からも、いつでも送れます。</p>
+      <FeedbackButton label="▶ 送る" className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm" />
+    </Window>
     <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">
         {billing.role !== "member" || billing.billing_status === "exempt" ? "現在は管理者枠です。料金なしで全機能を利用できます。" : billing.company_note_benefit ? "Company Noteの11,000円会員特典で、ビジネスプラン（月880円）の機能を利用中です。酒場への追加申込は不要です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : billing.is_paid ? "現在、有料会員です。" : "現在はフリープランです。"}

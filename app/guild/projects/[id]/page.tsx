@@ -14,5 +14,5 @@ export default async function ProjectDetailPage({ params }: Props) {
   const project = projects.find((item) => item.id === id);
   if (!project) notFound();
   const [pipeline, members] = await Promise.all([getGuildProjectPipeline(id), listGuildMembers()]);
-  return <LiveProjectDetail key={`${project.id}:${project.status}`} project={project} pipeline={pipeline} members={members} canEdit={project.owner_id === userId} />;
+  return <LiveProjectDetail key={`${project.id}:${project.status}`} project={project} pipeline={pipeline} members={members} canEdit={project.owner_id === userId} today={new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })} />;
 }

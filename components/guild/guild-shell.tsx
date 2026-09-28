@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
+import { FeedbackButton } from "@/components/guild/feedback-button";
 import { GuildPageSkeleton } from "@/components/guild/page-skeleton";
 import { sceneArtOf } from "@/lib/guild/scene-art";
 
@@ -95,6 +96,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
             GIAの酒場
           </Link>
           <div className="flex items-center gap-4">
+            <FeedbackButton label="ご意見" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
             <Link href="/guild/notifications" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">おしらせ</Link>
             <LogoutButton redirectTo="/guild/login" showIcon={false} label="ログアウト" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
           </div>

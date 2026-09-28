@@ -114,6 +114,8 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       return { text: `「${title}」の 日にちが 決まりました`, href: `/guild/quests/${n.quest_id}` };
     case "consult_request":
       return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}エンタープライズの相談が 届きました`, href: "/guild/master#master-consults-title" };
+    case "feedback_report":
+      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}ご意見・不具合の報告が 届きました`, href: "/guild/master#master-feedback-title" };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };

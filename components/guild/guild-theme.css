@@ -133,10 +133,15 @@ a.c-card:hover {
   cursor: pointer;
   white-space: nowrap;
 }
-.rpg-button:hover {
+.rpg-button:hover:not(:disabled) {
   background: #d4b46a;
 }
-.rpg-button:active {
+/* 押せないときは、色を抜いて へこみも出さない（押せるように見えたままだと、2度押しや「効いていない？」の元になる） */
+.rpg-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.rpg-button:active:not(:disabled) {
   transform: translateY(2px);
   box-shadow:
     inset 3px 3px 0 0 #8f7337,

@@ -301,7 +301,9 @@ export type NotificationKind =
   /** 答えた集まりの日にちを、主催者が決めた */
   | "schedule_decided"
   /** エンタープライズの相談が届いた（管理者あて・0116） */
-  | "consult_request";
+  | "consult_request"
+  /** 会員から ご意見・不具合の報告が届いた（管理者あて・0117） */
+  | "feedback_report";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。

@@ -8,11 +8,16 @@ import type { GuildProject, GuildProjectPipeline } from "@/lib/guild/server-data
 import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { dueLabel } from "@/lib/guild/projects";
+import { DateInput } from "./form-parts";
 import { LiveProjectPeople } from "./live-project-people";
 
-export function LiveProjectDetail({ project, pipeline, members, canEdit }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean }) {
+export function LiveProjectDetail({ project, pipeline, members, canEdit, today }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean; today: string }) {
   const router = useRouter();
   const [taskTitle, setTaskTitle] = useState("");
+  const [taskDue, setTaskDue] = useState("");
+  // 追加は、押した瞬間に錠をかける（state の反映を待つと、すばやい2度押しで2件できる）
+  const addLock = useRef(false);
   const [pendingAction, setPendingAction] = useState("");
   const [isPending, startTransition] = useTransition();
   const projectActionLock = useRef(false);
@@ -25,26 +30,40 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
   // なおした名前・消したタスクも、保存を待たずに画面へ反映する
   const [titleOverride, setTitleOverride] = useState<Record<string, string>>({});
   const [removedTasks, setRemovedTasks] = useState<string[]>([]);
-  const [editingTask, setEditingTask] = useState<{ id: string; title: string; error: string } | null>(null);
+  const [editingTask, setEditingTask] = useState<{ id: string; title: string; due: string; error: string } | null>(null);
+  const [dueOverride, setDueOverride] = useState<Record<string, string | null>>({});
   const tasks = project.tasks
     .filter((task) => !removedTasks.includes(task.id))
     .map((task) => ({
       ...task,
       ...(statusOverride[task.id] ? { status: statusOverride[task.id] } : {}),
       ...(titleOverride[task.id] !== undefined ? { title: titleOverride[task.id] } : {}),
+      ...(dueOverride[task.id] !== undefined ? { due_date: dueOverride[task.id] } : {}),
     }));
-  const openTasks = tasks.filter((task) => task.status !== "done");
+  // のこっているタスクは しめきりが近い順（しめきり無しは あとに、入れた順のまま）
+  const openTasks = tasks.filter((task) => task.status !== "done")
+    .sort((a, b) => a.due_date && b.due_date ? a.due_date.localeCompare(b.due_date) : a.due_date ? -1 : b.due_date ? 1 : 0);
   const doneTasks = tasks.filter((task) => task.status === "done");
   const done = doneTasks.length;
 
   async function addTask(event: React.FormEvent) {
     event.preventDefault();
-    if (busy || projectActionLock.current || !taskTitle.trim()) return;
+    if (addLock.current || busy || projectActionLock.current || !taskTitle.trim()) return;
+    addLock.current = true;
     setPendingAction("task-add"); setError("");
-    const { error: rpcError } = await createClient().rpc("sakaba_add_project_task", { p_project_id: project.id, p_title: taskTitle.trim() });
-    if (rpcError) setError("タスクを追加できませんでした。");
-    else { setTaskTitle(""); startTransition(() => router.refresh()); }
-    setPendingAction("");
+    try {
+      const { error: rpcError } = await createClient().rpc("sakaba_add_project_task", { p_project_id: project.id, p_title: taskTitle.trim(), p_due_date: taskDue || null });
+      if (rpcError) { setError("タスクを追加できませんでした。"); return; }
+      // 入れた欄は すぐ空にして、一覧に出るまで（読み込み中）は ボタンを押せないままにする
+      setTaskTitle(""); setTaskDue("");
+      uiToast("タスクを追加しました");
+      startTransition(() => router.refresh());
+    } catch {
+      setError("通信に失敗しました。接続を確認してください。");
+    } finally {
+      setPendingAction("");
+      addLock.current = false;
+    }
   }
 
   async function setTaskStatus(id: string, status: "todo" | "done") {
@@ -73,20 +92,28 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
     if (!title) { setEditingTask({ ...editingTask, error: "タスクの名前を入力してください。" }); return; }
     if (title.length > 100) { setEditingTask({ ...editingTask, error: "100文字以内で入力してください。" }); return; }
     const { id } = editingTask;
-    const before = project.tasks.find((task) => task.id === id)?.title;
-    if (title === (titleOverride[id] ?? before)) { setEditingTask(null); return; }
+    const due = editingTask.due || null;
+    const shown = tasks.find((task) => task.id === id);
+    if (shown && title === shown.title && due === shown.due_date) { setEditingTask(null); return; }
+    if (due && shown?.start_date && due < shown.start_date) { setEditingTask({ ...editingTask, error: `しめきりは、はじめる日（${shown.start_date}）より後にしてください。` }); return; }
     setError("");
     setTitleOverride((current) => ({ ...current, [id]: title }));
+    setDueOverride((current) => ({ ...current, [id]: due }));
     setEditingTask(null);
     setSavingTasks((current) => [...current, id]);
-    const { error: rpcError } = await createClient().rpc("sakaba_update_project_task", { p_task_id: id, p_title: title });
+    const { error: rpcError } = await createClient().rpc("sakaba_update_project_task", { p_task_id: id, p_title: title, p_due_date: due });
     if (rpcError) {
       setTitleOverride((current) => {
         const next = { ...current };
         delete next[id];
         return next;
       });
-      setError("タスクの名前をなおせませんでした。");
+      setDueOverride((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setError("タスクをなおせませんでした。");
     } else {
       startTransition(() => router.refresh());
     }
@@ -136,6 +163,11 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
             className="c-input h-11"
           />
         </label>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="c-muted text-xs">しめきり（空でも可）</span>
+          <div className="w-44"><DateInput value={editingTask.due} onChange={(due) => setEditingTask({ ...editingTask, due, error: "" })} label="しめきり" /></div>
+          {editingTask.due && <button type="button" onClick={() => setEditingTask({ ...editingTask, due: "", error: "" })} className="c-muted h-9 px-1 text-xs underline underline-offset-4">しめきりを消す</button>}
+        </div>
         {editingTask.error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{editingTask.error}</p>}
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" onClick={() => setEditingTask(null)} className="c-button-sub h-9 px-3 text-xs">やめる</button>
@@ -145,10 +177,13 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
     }
     return <li key={task.id} className="c-card flex items-center gap-3 p-3">
       {editable ? <input type="checkbox" checked={isDone} disabled={projectActionLock.current || saving} onChange={() => void setTaskStatus(task.id, isDone ? "todo" : "done")} aria-label={`${task.title}を${isDone ? "未完了" : "完了"}にする`} /> : <span>{isDone ? "✓" : "□"}</span>}
-      <span className={`min-w-0 flex-1 break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>{task.title}</span>
+      <span className="min-w-0 flex-1">
+        <span className={`block break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>{task.title}</span>
+        {task.due_date && !isDone && <DueText due={task.due_date} today={today} />}
+      </span>
       {editable && <span className="flex shrink-0 gap-1.5">
         {/* 文字だと行が詰まるのでアイコンにする。読み上げ用の名前と、マウスを乗せたときの説明は残す */}
-        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, error: "" })} aria-label={`${task.title}の名前をなおす`} title="名前をなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
+        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, due: task.due_date ?? "", error: "" })} aria-label={`${task.title}をなおす`} title="名前・しめきりをなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
         <button type="button" disabled={saving} onClick={() => void deleteTask(task)} aria-label={`${task.title}を削除する`} title="削除する" className="c-button-danger h-9 w-9 disabled:opacity-50"><Trash2 size={15} aria-hidden="true" /></button>
       </span>}
     </li>;
@@ -230,9 +265,16 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
           <ul className="mt-3 space-y-2">{doneTasks.map(taskRow)}</ul>
         </details>}
       </>}
-      {canEdit && project.status === "active" && <form onSubmit={addTask} className="mt-5 flex gap-2">
-        <input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} maxLength={100} placeholder="次にやること" aria-label="新しいタスク" className="c-input h-11 min-w-0 flex-1" />
-        <button type="submit" disabled={busy || !taskTitle.trim()} aria-busy={pendingAction === "task-add"} className="rpg-button shrink-0 px-4 disabled:opacity-50">{pendingAction === "task-add" ? "追加中…" : "追加"}</button>
+      {canEdit && project.status === "active" && <form onSubmit={addTask} className="mt-5 space-y-2">
+        <div className="flex gap-2">
+          <input value={taskTitle} onChange={(event) => setTaskTitle(event.target.value)} maxLength={100} placeholder="次にやること" aria-label="新しいタスク" readOnly={pendingAction === "task-add"} className="c-input h-11 min-w-0 flex-1" />
+          <button type="submit" disabled={busy || !taskTitle.trim()} aria-busy={pendingAction === "task-add"} className="rpg-button shrink-0 px-4">{pendingAction === "task-add" ? "追加中…" : "追加"}</button>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="c-muted text-xs">しめきり（空でも可）</span>
+          <div className="w-44"><DateInput value={taskDue} onChange={setTaskDue} label="新しいタスクのしめきり" /></div>
+          {taskDue && <button type="button" onClick={() => setTaskDue("")} className="c-muted h-9 px-1 text-xs underline underline-offset-4">消す</button>}
+        </div>
       </form>}
       <p role="status" aria-live="polite" className="c-muted mt-2 min-h-4 text-xs">{savingTasks.length > 0 ? "保存中…" : isPending ? "読み込み中…" : ""}</p>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
@@ -242,4 +284,11 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit }: { pro
       <LiveProjectPeople projectId={project.id} pipeline={pipeline} members={members} editable={canEdit && project.status === "active"} />
     </section>
   </div>;
+}
+
+/** タスクの行に出す しめきり。すぎたものだけ赤（赤は「急ぎ・エラー」だけに使う決まり） */
+function DueText({ due, today }: { due: string; today: string }) {
+  const label = dueLabel(due, today);
+  const [, m, d] = due.split("-");
+  return <span className={`mt-0.5 block text-xs ${label.overdue ? "text-[#c62828]" : "c-muted"}`}>しめきり {Number(m)}/{Number(d)}・{label.text}</span>;
 }

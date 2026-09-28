@@ -163,6 +163,8 @@ describe("notificationText", () => {
   it("日にちが決まった知らせは、その集まりへ", () => {
     expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/master#master-consults-title");
     expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).text).toContain("エンタープライズの相談");
+    expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/master#master-feedback-title");
+    expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).text).toContain("ご意見・不具合");
     expect(notificationText(note({ kind: "schedule_decided" }), ctx)).toEqual({
       text: "「LPの文章」の 日にちが 決まりました",
       href: "/guild/quests/q1",

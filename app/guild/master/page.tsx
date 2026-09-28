@@ -8,6 +8,8 @@ import { LivePreparedInvites } from "@/components/guild/live-prepared-invites";
 import { LiveMasterIntroductions } from "@/components/guild/live-master-introductions";
 import { InviteNetwork } from "@/components/guild/invite-network";
 import { MasterConsults } from "@/components/guild/master-consults";
+import { MasterFeedback } from "@/components/guild/master-feedback";
+import { parseFeedbackReports } from "@/lib/guild/feedback";
 import { parseConsultRequests } from "@/lib/guild/enterprise";
 import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
@@ -41,6 +43,9 @@ export default async function MasterPage() {
   const { data: consultData, error: consultError } = await supabase.rpc("sakaba_list_consult_requests", { p_guild_slug: "gia" });
   const consults = parseConsultRequests(consultData);
   const newConsults = consults.filter((item) => item.status === "new").length;
+  const { data: feedbackData, error: feedbackError } = await supabase.rpc("sakaba_list_feedback_reports", { p_guild_slug: "gia" });
+  const feedback = parseFeedbackReports(feedbackData);
+  const newFeedback = feedback.filter((item) => item.status === "new").length;
   const unmapped = Array.isArray(unmappedData) ? unmappedData as { price_id: string; members: number }[] : [];
   return (
     <div className="space-y-9">
@@ -70,6 +75,12 @@ export default async function MasterPage() {
             <a href="#master-consults-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
               エンタープライズの相談{newConsults > 0 && <span className="c-chip-strong ml-1 text-xs">未対応 {newConsults}</span>}
+            </a>
+          </li>
+          <li>
+            <a href="#master-feedback-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              ご意見・不具合{newFeedback > 0 && <span className="c-chip-strong ml-1 text-xs">未対応 {newFeedback}</span>}
             </a>
           </li>
           <li>
@@ -118,6 +129,11 @@ export default async function MasterPage() {
         <h2 id="master-consults-title" className="text-xl tracking-wider">エンタープライズの相談</h2>
         <p className="c-muted text-sm">会員プランの画面の「相談する」から届いた内容です。届くのは管理者だけです。</p>
         {consultError ? <p className="c-card p-5 text-sm">相談を読み込めませんでした。migration 0115 が適用済みか確認してください。</p> : <MasterConsults initial={consults} />}
+      </section>
+      <section aria-labelledby="master-feedback-title" className="space-y-4">
+        <h2 id="master-feedback-title" className="text-xl tracking-wider">ご意見・不具合</h2>
+        <p className="c-muted text-sm">会員が画面上の「ご意見」やマイページから送った内容です。送ったときに開いていた画面と端末も載せています。</p>
+        {feedbackError ? <p className="c-card p-5 text-sm">読み込めませんでした。migration 0117 が適用済みか確認してください。</p> : <MasterFeedback initial={feedback} />}
       </section>
       <section aria-labelledby="master-gatherings-title" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
