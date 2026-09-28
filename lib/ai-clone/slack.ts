@@ -1,4 +1,5 @@
 import { WebClient } from "@slack/web-api";
+import type { KnownBlock } from "@slack/types";
 import crypto from "crypto";
 import type { BriefingResult } from "./types";
 import type { EveningBriefingResult } from "./briefing";
@@ -70,7 +71,7 @@ export async function sendEveningBriefing(
 }
 
 function buildEveningBlocks(result: EveningBriefingResult) {
-  const blocks: any[] = [
+  const blocks: KnownBlock[] = [
     {
       type: "header",
       text: {
@@ -319,7 +320,7 @@ export async function sendBriefing(result: BriefingResult): Promise<{
 
 // Slack Block Kit でリッチに表示
 function buildBlocks(result: BriefingResult) {
-  const blocks: any[] = [
+  const blocks: KnownBlock[] = [
     {
       type: "header",
       text: { type: "plain_text", text: `🌅 朝のブリーフィング ${result.date}` },

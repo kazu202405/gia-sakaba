@@ -113,7 +113,7 @@ export function CloneChrome({
 
   // パス変更時に閉じる
   useEffect(() => {
-    setDrawerOpen(false);
+    queueMicrotask(() => setDrawerOpen(false));
   }, [pathname]);
 
   // ナビ項目の描画（desktop / drawer 両方で使う）

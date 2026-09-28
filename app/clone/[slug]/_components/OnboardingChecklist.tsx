@@ -27,11 +27,13 @@ export function OnboardingChecklist({ steps }: { steps: OnboardingStep[] }) {
   // 初期は表示。マウント後に localStorage を読んで「閉じる」が記憶されていれば隠す。
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === "1") setDismissed(true);
-    } catch {
-      /* localStorage 不可環境は表示のまま */
-    }
+    queueMicrotask(() => {
+      try {
+        if (localStorage.getItem(STORAGE_KEY) === "1") setDismissed(true);
+      } catch {
+        /* localStorage 不可環境は表示のまま */
+      }
+    });
   }, []);
 
   if (dismissed) return null;

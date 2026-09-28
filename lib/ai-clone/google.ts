@@ -59,7 +59,7 @@ export async function fetchEventsForDayOffset(
     return [];
   }
 
-  const calendar = google.calendar({ version: "v3", auth: auth as any });
+  const calendar = google.calendar({ version: "v3", auth });
 
   const jstOffsetMs = 9 * 60 * 60 * 1000;
   const now = new Date();
@@ -127,7 +127,7 @@ export async function fetchUpcomingEvents(
     return [];
   }
 
-  const calendar = google.calendar({ version: "v3", auth: auth as any });
+  const calendar = google.calendar({ version: "v3", auth });
 
   const now = new Date();
   const end = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
@@ -175,7 +175,7 @@ export async function searchRelatedDocs(
   const auth = getAuthClient();
   if (!auth) return [];
 
-  const drive = google.drive({ version: "v3", auth: auth as any });
+  const drive = google.drive({ version: "v3", auth });
 
   // タイトルから検索キーワードを抽出（記号除去・短すぎる単語除外）
   const keywords = event.summary

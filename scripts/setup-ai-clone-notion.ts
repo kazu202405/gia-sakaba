@@ -18,7 +18,13 @@
  *   - 親ページに該当インテグレーションが「コネクト」追加済み
  */
 
-import { Client } from "@notionhq/client";
+import {
+  Client,
+  isFullBlock,
+  isFullDatabase,
+  type CreateDatabaseParameters,
+  type UpdateDataSourceParameters,
+} from "@notionhq/client";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -644,8 +650,11 @@ const DBS: DbDef[] = [
 // ============================================================
 // プロパティビルダー
 // ============================================================
-function buildProperties(props: PropDef[]): Record<string, any> {
-  const out: Record<string, any> = {};
+type InitialProperties = NonNullable<NonNullable<CreateDatabaseParameters["initial_data_source"]>["properties"]>;
+type RelationProperties = NonNullable<UpdateDataSourceParameters["properties"]>;
+
+function buildProperties(props: PropDef[]): InitialProperties {
+  const out: InitialProperties = {};
   for (const p of props) {
     switch (p.kind) {
       case "title":
@@ -700,11 +709,11 @@ async function findSubPageIds(): Promise<Record<Layer, string>> {
   const result: Partial<Record<Layer, string>> = {};
   let cursor: string | undefined;
   do {
-    const res: any = await notion.blocks.children.list({
+    const res = await notion.blocks.children.list({
       block_id: PARENT_PAGE_ID,
       start_cursor: cursor,
     });
-    for (const block of res.results) {
+    for (const block of res.results.filter(isFullBlock)) {
       if (block.type === "child_page") {
         const title = block.child_page?.title || "";
         for (const [layer, layerTitle] of Object.entries(LAYER_TITLES)) {
@@ -714,7 +723,7 @@ async function findSubPageIds(): Promise<Record<Layer, string>> {
         }
       }
     }
-    cursor = res.has_more ? res.next_cursor : undefined;
+    cursor = res.has_more ? res.next_cursor || undefined : undefined;
   } while (cursor);
 
   for (const layer of Object.keys(LAYER_TITLES) as Layer[]) {
@@ -746,15 +755,15 @@ async function createDatabases(
   for (const def of DBS) {
     const parentPageId = subpageIds[def.layer];
     try {
-      const created: any = await notion.databases.create({
+      const created = await notion.databases.create({
         parent: { type: "page_id", page_id: parentPageId },
         title: [{ type: "text", text: { content: def.displayName } }],
         initial_data_source: {
           properties: buildProperties(def.properties),
         },
-      } as any);
+      });
       const dbId = created.id;
-      const dsId = created.data_sources?.[0]?.id;
+      const dsId = isFullDatabase(created) ? created.data_sources?.[0]?.id : undefined;
       if (!dsId) {
         throw new Error(
           `data_source_id が取得できませんでした: ${def.displayName}`
@@ -764,8 +773,8 @@ async function createDatabases(
       console.log(
         `  ✓ ${def.displayName} (${def.key}) → db:${dbId.slice(0, 8)}... ds:${dsId.slice(0, 8)}...`
       );
-    } catch (err: any) {
-      console.error(`  ❌ ${def.displayName} 作成失敗:`, err.message || err);
+    } catch (err: unknown) {
+      console.error(`  ❌ ${def.displayName} 作成失敗:`, errorMessage(err));
       throw err;
     }
   }
@@ -783,7 +792,7 @@ async function addRelations(
   for (const def of DBS) {
     if (def.relations.length === 0) continue;
     const myInfo = dbInfo[def.key];
-    const relProps: Record<string, any> = {};
+    const relProps: RelationProperties = {};
     for (const rel of def.relations) {
       const targetInfo = dbInfo[rel.targetKey];
       if (!targetInfo) {
@@ -801,7 +810,7 @@ async function addRelations(
     }
     if (Object.keys(relProps).length === 0) continue;
     try {
-      await (notion as any).dataSources.update({
+      await notion.dataSources.update({
         data_source_id: myInfo.dsId,
         properties: relProps,
       });
@@ -809,15 +818,19 @@ async function addRelations(
       console.log(
         `  ✓ ${def.displayName}: ${Object.keys(relProps).length}本追加`
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(
         `  ❌ ${def.displayName} リレーション設定失敗:`,
-        err.message || err
+        errorMessage(err),
       );
       throw err;
     }
   }
   console.log(`  合計 ${totalRelations} 本のリレーションを設定`);
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 // ============================================================

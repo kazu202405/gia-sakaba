@@ -49,10 +49,12 @@ export function DivinationSaveDialog({ open, onClose, subject, onSaved }: Props)
   // 開いたタイミングで初期化（フォーム名前を検索クエリに、テナント一覧を取得）
   useEffect(() => {
     if (!open) return;
-    setQuery(subject.name.trim());
-    setSelectedId(null);
-    setError(null);
-    setTenantsError(null);
+    queueMicrotask(() => {
+      setQuery(subject.name.trim());
+      setSelectedId(null);
+      setError(null);
+      setTenantsError(null);
+    });
 
     // テナント一覧を取得（毎回。所属変更を取りこぼさないため）
     void (async () => {
@@ -78,10 +80,10 @@ export function DivinationSaveDialog({ open, onClose, subject, onSaved }: Props)
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const q = query.trim();
     if (q.length === 0) {
-      setHits([]);
+      queueMicrotask(() => setHits([]));
       return;
     }
-    setSearching(true);
+    queueMicrotask(() => setSearching(true));
     debounceRef.current = setTimeout(async () => {
       const res = await searchPeopleForDivination(tenantSlug, q);
       if (res.ok) {

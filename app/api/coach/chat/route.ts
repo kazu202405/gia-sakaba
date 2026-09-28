@@ -26,6 +26,10 @@ import { buildCoachTenantContext } from "@/lib/coach/tenant-context";
 import { resolveTenantForOwner } from "@/lib/ai-clone/supabase-db";
 import { appendCoachMessages } from "@/lib/coach/coach-history";
 import { getOpenAIClient, resolveModel } from "@/lib/openai/client";
+import type {
+  ChatCompletionMessageParam,
+  ChatCompletionTool,
+} from "openai/resources/chat/completions";
 
 export const runtime = "nodejs";
 // AI 応答は streaming で 30 秒超になり得るため、関数の最大実行時間を伸ばす。
@@ -128,13 +132,13 @@ export async function POST(req: Request) {
     );
   }
   const encoder = new TextEncoder();
-  const baseMessages: any[] = [
+  const baseMessages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
     ...userMessages.map((m) => ({ role: m.role, content: m.content })),
   ];
 
   // ワークシート項目を磨いて保存するためのツール。ユーザーがOKした時だけ呼ばれる。
-  const tools: any[] = [
+  const tools: ChatCompletionTool[] = [
     {
       type: "function",
       function: {
@@ -161,7 +165,7 @@ export async function POST(req: Request) {
   const readable = new ReadableStream<Uint8Array>({
     async start(controller) {
       try {
-        const messages: any[] = [...baseMessages];
+        const messages: ChatCompletionMessageParam[] = [...baseMessages];
         // 最大2巡：1巡目で tool_call が来たら保存を実行→2巡目で確認文を流す。
         for (let turn = 0; turn < 2; turn++) {
           const stream = await openai.chat.completions.create({

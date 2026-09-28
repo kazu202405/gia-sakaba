@@ -16,11 +16,10 @@ export function KnowledgeApp() {
   const [activeTab, setActiveTab] = useState<KnowledgeTab>("behavioral");
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("knowledge-auth");
-    if (auth === "true") {
-      setAuthenticated(true);
-    }
-    setChecking(false);
+    queueMicrotask(() => {
+      setAuthenticated(sessionStorage.getItem("knowledge-auth") === "true");
+      setChecking(false);
+    });
   }, []);
 
   if (checking) {

@@ -27,7 +27,10 @@ function ToastItem({
   onRemove: (id: string) => void;
 }) {
   const onRemoveRef = useRef(onRemove);
-  onRemoveRef.current = onRemove;
+
+  useEffect(() => {
+    onRemoveRef.current = onRemove;
+  }, [onRemove]);
 
   useEffect(() => {
     const timer = setTimeout(() => onRemoveRef.current(toast.id), 3000);

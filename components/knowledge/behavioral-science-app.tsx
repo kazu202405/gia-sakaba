@@ -11,11 +11,10 @@ export function BehavioralScienceApp() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const auth = sessionStorage.getItem("knowledge-auth");
-    if (auth === "true") {
-      setAuthenticated(true);
-    }
-    setChecking(false);
+    queueMicrotask(() => {
+      setAuthenticated(sessionStorage.getItem("knowledge-auth") === "true");
+      setChecking(false);
+    });
   }, []);
 
   if (checking) {

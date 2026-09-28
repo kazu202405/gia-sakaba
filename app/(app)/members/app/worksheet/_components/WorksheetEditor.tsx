@@ -63,7 +63,7 @@ export function WorksheetEditor({ userId, initialData }: Props) {
       isFirstRender.current = false;
       return;
     }
-    setSaveStatus("saving");
+    queueMicrotask(() => setSaveStatus("saving"));
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const result = await saveWorksheet(supabase, userId, data);
@@ -266,7 +266,7 @@ export function WorksheetEditor({ userId, initialData }: Props) {
       </main>
 
       {/* 保存スナックバー（saved / error の遷移時にだけ画面下部にポップアップ） */}
-      <SaveSnackbar status={saveStatus} />
+      <SaveSnackbar key={saveStatus} status={saveStatus} />
     </div>
   );
 }
@@ -298,12 +298,11 @@ function SheetHeader({ sheet }: { sheet: Worksheet }) {
 // - 既存の SaveBadge（ヘッダー右）は残し、ステータスの常時表示はそのまま
 // - 画面下部固定なので、textarea で書き続けてる人にも視認できる
 function SaveSnackbar({ status }: { status: SaveStatus }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(status === "saved" || status === "error");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (status === "saved" || status === "error") {
-      setVisible(true);
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => setVisible(false), 2000);
     }

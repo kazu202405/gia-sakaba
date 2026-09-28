@@ -179,7 +179,7 @@ export default function ConnectionsPage() {
 
   // localStorageからタグを読み込み（クライアントサイドのみ）
   useEffect(() => {
-    setCustomTags(loadTags());
+    queueMicrotask(() => setCustomTags(loadTags()));
   }, []);
 
   const updateTags = useCallback((tags: string[]) => {

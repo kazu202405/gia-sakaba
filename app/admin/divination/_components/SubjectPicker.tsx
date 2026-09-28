@@ -64,7 +64,7 @@ export function SubjectPicker({
   // クエリ変更で検索（空入力なら全件 20 まで）。
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    setSearching(true);
+    queueMicrotask(() => setSearching(true));
     debounceRef.current = setTimeout(async () => {
       const res = await searchPeopleForDivination(slug, name);
       if (res.ok) {

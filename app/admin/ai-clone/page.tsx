@@ -1,8 +1,6 @@
-// @ts-nocheck
 // GIA Executive AI Clone — Admin Dashboard
 // 【無効化中】2026-05-14 機能は /clone/<slug> 側に集約済みのためルートを停止。
 // 復活させる場合は下記 notFound() を削除する。旧実装はそのまま保持（参照用）。
-// notFound() 以降は unreachable のため @ts-nocheck で型チェック対象外にしている。
 //
 // 旧用途:
 //   ① 営業デモ用（顧客にAI Cloneの動きを見せる）
@@ -32,12 +30,14 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExecClonePage() {
+export default function ExecClonePage() {
   // /admin/ai-clone は /clone/<slug> に集約のため無効化（2026-05-14）。
   // 復活させる場合はこの notFound() を削除する。
   notFound();
+}
 
-  // eslint-disable-next-line @typescript-eslint/no-unreachable
+// 旧ダッシュボードは復活時の参照用として型安全な状態で保持する。
+async function LegacyExecClonePage() {
   const [snapshot, recentDecisions, contextStatus, pipelineCols] =
     await Promise.all([
       getEveningSnapshot().catch(() => null),
@@ -48,6 +48,11 @@ export default async function ExecClonePage() {
         source: "fallback" as const,
       })),
       detectPipelineColumns().catch(() => ({
+        proposal: undefined,
+        join: undefined,
+        pitch: undefined,
+        deal: undefined,
+        amount: undefined,
         available: [] as string[],
       })),
     ]);
@@ -171,10 +176,8 @@ export default async function ExecClonePage() {
           { key: "pitch" as const, label: "アプリ商談系" },
           { key: "deal" as const, label: "アプリ受注系" },
         ];
-        const missing = stages.filter(
-          (s) => !(pipelineCols as any)[s.key]
-        );
-        if (missing.length === 0 && (pipelineCols as any).proposal) {
+        const missing = stages.filter((s) => !pipelineCols[s.key]);
+        if (missing.length === 0 && pipelineCols.proposal) {
           return null;
         }
         if ((pipelineCols.available || []).length === 0) return null;
@@ -188,7 +191,7 @@ export default async function ExecClonePage() {
                 </div>
                 <ul className="space-y-0.5 text-amber-900">
                   {stages.map((s) => {
-                    const detected = (pipelineCols as any)[s.key];
+                    const detected = pipelineCols[s.key];
                     return (
                       <li key={s.key}>
                         {detected ? "✓" : "✗"} {s.label}:{" "}

@@ -36,11 +36,13 @@ export function CoreOsMeter({
   // 初期は表示（open）。マウント後に localStorage を読んで「畳む」が記憶されていれば閉じる。
   const [open, setOpen] = useState(true);
   useEffect(() => {
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === "1") setOpen(false);
-    } catch {
-      /* localStorage 不可環境は表示のまま */
-    }
+    queueMicrotask(() => {
+      try {
+        if (localStorage.getItem(STORAGE_KEY) === "1") setOpen(false);
+      } catch {
+        /* localStorage 不可環境は表示のまま */
+      }
+    });
   }, []);
 
   const toggle = () => {

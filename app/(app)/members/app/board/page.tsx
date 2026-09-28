@@ -247,7 +247,7 @@ export default function BoardPage() {
 
   // localStorage読み込み（クライアントのみ）
   useEffect(() => {
-    setChannels(loadChannels());
+    queueMicrotask(() => setChannels(loadChannels()));
   }, []);
 
   // チャンネル変更時にlocalStorageへ保存
@@ -266,7 +266,7 @@ export default function BoardPage() {
   // アクティブチャンネルが削除された場合、先頭に戻す
   useEffect(() => {
     if (!activeChannelData && channels.length > 0) {
-      setActiveChannel(channels[0].id);
+      queueMicrotask(() => setActiveChannel(channels[0].id));
     }
   }, [activeChannelData, channels]);
 

@@ -67,7 +67,7 @@ export default function AdminLayout({
 
   // パスが変わったらドロワーを閉じる（リンクタップでナビが消える挙動）
   useEffect(() => {
-    setDrawerOpen(false);
+    queueMicrotask(() => setDrawerOpen(false));
   }, [pathname]);
 
   // ドロワー開いてる間は ESC キーで閉じる + body スクロールロック

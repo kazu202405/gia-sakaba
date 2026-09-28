@@ -18,6 +18,23 @@ import { TenantCreateForm } from "./_components/TenantCreateForm";
 
 export const dynamic = "force-dynamic";
 
+interface TenantMemberRow {
+  user_id: string;
+  role: string;
+  slack_user_id: string | null;
+}
+
+interface TenantRow {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string | null;
+  status: string;
+  owner_user_id: string | null;
+  created_at: string;
+  ai_clone_tenant_members: TenantMemberRow[] | null;
+}
+
 export default async function TenantsAdminPage() {
   const supabase = await createClient();
   const {
@@ -68,14 +85,12 @@ export default async function TenantsAdminPage() {
         </header>
         {tenants && tenants.length > 0 ? (
           <ul className="divide-y divide-gray-100">
-            {tenants.map((t: any) => {
+            {(tenants as TenantRow[]).map((t) => {
               const memberCount = Array.isArray(t.ai_clone_tenant_members)
                 ? t.ai_clone_tenant_members.length
                 : 0;
               const linkedSlackCount = Array.isArray(t.ai_clone_tenant_members)
-                ? t.ai_clone_tenant_members.filter(
-                    (m: any) => m.slack_user_id,
-                  ).length
+                  ? t.ai_clone_tenant_members.filter((m) => m.slack_user_id).length
                 : 0;
               return (
                 <li

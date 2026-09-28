@@ -93,7 +93,7 @@ export function MultiSelectDropdown({
       if (showSearch) searchInputRef.current?.focus();
       else firstItemRef.current?.focus();
     } else {
-      setQuery("");
+      queueMicrotask(() => setQuery(""));
     }
   }, [open, showSearch]);
 

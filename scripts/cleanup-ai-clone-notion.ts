@@ -65,12 +65,12 @@ async function main() {
       await notion.databases.update({
         database_id: dbId,
         in_trash: true,
-      } as any);
+      });
       console.log(`  ✓ ${key} (${dbId.slice(0, 8)}...) アーカイブ`);
       success++;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn(
-        `  ⚠ ${key} (${dbId.slice(0, 8)}...) アーカイブ失敗: ${err.message || err}`
+        `  ⚠ ${key} (${dbId.slice(0, 8)}...) アーカイブ失敗: ${err instanceof Error ? err.message : String(err)}`
       );
       failed++;
     }

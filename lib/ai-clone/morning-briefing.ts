@@ -32,6 +32,7 @@ import {
   type ReferralWeeklyKpi,
   searchConversationsForChat,
 } from "./supabase-db";
+import type { KnownBlock } from "@slack/types";
 import {
   // ▼▼ 2026-07-29 売上行動セクション停止中（復活時はこの3つも戻す）▼▼
   // fetchSalesActions,
@@ -233,7 +234,7 @@ async function buildCoachReviewBlocks(
   tenantId: string,
   ownerUserId: string | null,
   date: string,
-): Promise<any[]> {
+): Promise<KnownBlock[]> {
   if (!ownerUserId) return [];
   const supabase = getServiceClient();
   if (!supabase) return [];
@@ -343,7 +344,7 @@ async function deliverToTenant(
   // );
   // ▲▲▲ ここまで ▲▲▲
 
-  const blocks: any[] = [];
+  const blocks: KnownBlock[] = [];
   if (anniversaries.length > 0) {
     blocks.push(...buildAnniversaryBlocks(date, anniversaries));
   }
@@ -374,8 +375,8 @@ async function deliverToTenant(
   // 売上行動セクションを止めたので、以降のセクションは「先頭かもしれない」。
   // 何も無いところに divider を置くと Slack で線だけが浮くため、
   // 既に中身があるときだけ区切りを入れて追記する。
-  let outBlocks: any[] = blocks;
-  const appendSection = (section: any[]) => {
+  let outBlocks: KnownBlock[] = blocks;
+  const appendSection = (section: KnownBlock[]) => {
     if (section.length === 0) return;
     outBlocks =
       outBlocks.length > 0
@@ -454,8 +455,8 @@ function dateLabel(date: string): string {
 function buildActionsMessage(
   date: string,
   actions: SalesActionWithDraft[],
-): any[] {
-  const blocks: any[] = [
+): KnownBlock[] {
+  const blocks: KnownBlock[] = [
     {
       type: "header",
       text: {
@@ -494,7 +495,7 @@ function buildActionsMessage(
   return blocks;
 }
 
-function buildAnniversaryBlocks(date: string, items: DueAnniversary[]): any[] {
+function buildAnniversaryBlocks(date: string, items: DueAnniversary[]): KnownBlock[] {
   const lines = items.map((a) => {
     const ms = a.milestoneMonth ? `（${a.milestoneMonth}ヶ月）` : "";
     const note = a.note ? `  — ${a.note}` : "";
@@ -522,7 +523,7 @@ function buildTaskReminderBlocks(
   date: string,
   tasks: DueTask[],
   slug: string,
-): any[] {
+): KnownBlock[] {
   const recent = tasks.filter((t) => dateDiffDays(date, t.due_date) <= 2);
   const stale = tasks.filter((t) => dateDiffDays(date, t.due_date) >= 3);
 
@@ -581,7 +582,7 @@ function buildTaskReminderBlocks(
 // 隔週の紹介ふりかえり。直近2週間の 頼んだ/与えた/生まれた を映し、
 // 「止まっている方」（頼んだ or 与えた が0）を軽く促す。両方動いていれば急かさず肯定する。
 // 頻度は隔週固定なので、頼んだ・与えた両方を見ても鬱陶しさは増えない（1メッセージが賢くなるだけ）。
-function buildReferralNudgeBlocks(kpi: ReferralWeeklyKpi): any[] {
+function buildReferralNudgeBlocks(kpi: ReferralWeeklyKpi): KnownBlock[] {
   const stat = `この2週間：紹介を頼んだ *${kpi.asked}回* ／ 与えた *${kpi.gave}回* ／ 生まれた *${kpi.born}件*`;
   let line: string;
   if (kpi.asked === 0 && kpi.gave === 0) {
@@ -608,7 +609,7 @@ function buildReferralNudgeBlocks(kpi: ReferralWeeklyKpi): any[] {
   ];
 }
 
-function buildFallbackMessage(date: string, tasks: FallbackTask[]): any[] {
+function buildFallbackMessage(date: string, tasks: FallbackTask[]): KnownBlock[] {
   if (tasks.length === 0) {
     return [
       {
@@ -630,7 +631,7 @@ function buildFallbackMessage(date: string, tasks: FallbackTask[]): any[] {
     ];
   }
 
-  const blocks: any[] = [
+  const blocks: KnownBlock[] = [
     {
       type: "header",
       text: {

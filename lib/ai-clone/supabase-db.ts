@@ -202,9 +202,10 @@ export async function searchPeopleByName(
     return [];
   }
 
-  return (data || []).map((row: any) => {
+  return (data || []).map((row) => {
     // 会社名のヒント優先順位: company マスタ → person.company_name (text) → position
-    const masterCompany = row.ai_clone_company?.name as string | undefined;
+    const company = Array.isArray(row.ai_clone_company) ? row.ai_clone_company[0] : row.ai_clone_company;
+    const masterCompany = company?.name as string | undefined;
     const hint =
       masterCompany || (row.company_name as string | null) || row.position || "";
     return { id: row.id, name: row.name, companyHint: hint || "" };
@@ -537,7 +538,7 @@ export async function findRecentConversationLogs(
     .order("occurred_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({
+  return data.map((r) => ({
     id: r.id,
     summary: r.summary,
     occurredAt: r.occurred_at,
@@ -723,7 +724,7 @@ export async function getConversationLogSnapshot(
     channel: data.channel ?? null,
     nextAction: data.next_action ?? null,
     importance: data.importance ?? null,
-    personIds: (links || []).map((l: any) => l.person_id),
+    personIds: (links || []).map((link) => link.person_id),
   };
 }
 
@@ -889,7 +890,7 @@ export async function findRecentDecisionCases(
     .order("occurred_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({
+  return data.map((r) => ({
     id: r.id,
     event: r.event,
     occurredAt: r.occurred_at,
@@ -1236,7 +1237,7 @@ export async function searchProjectsByName(
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({ id: r.id, name: r.name, status: r.status }));
+  return data.map((r) => ({ id: r.id, name: r.name, status: r.status }));
 }
 
 // 案件の名前・ステータスを更新。
@@ -1298,7 +1299,7 @@ export async function searchServicesByName(
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({ id: r.id, name: r.name }));
+  return data.map((r) => ({ id: r.id, name: r.name }));
 }
 
 // 人物の基本プロフィール（誕生日・会社・重要度など）を1件取得。
@@ -1419,7 +1420,7 @@ export async function listCommunities(
     .select("id, name, name_normalized")
     .eq("tenant_id", tenantId)
     .limit(200);
-  return (data || []).map((r: any) => ({
+  return (data || []).map((r) => ({
     id: r.id,
     name: r.name,
     nameNormalized: r.name_normalized ?? normalizePersonName(r.name),
@@ -1463,9 +1464,9 @@ export async function listCommunityMembers(
     .eq("community_id", comm.id)
     .limit(200);
   const members = (data || [])
-    .map((r: any) => (Array.isArray(r.person) ? r.person[0] : r.person))
+    .map((r) => (Array.isArray(r.person) ? r.person[0] : r.person))
     .filter(Boolean)
-    .map((p: any) => ({
+    .map((p) => ({
       id: p.id,
       name: p.name,
       companyName: p.company_name ?? null,
@@ -2184,9 +2185,9 @@ export async function fetchRecentConversationLogsForPerson(
   }
 
   return (data || [])
-    .map((row: any) => row.log)
-    .filter((l: any) => l)
-    .map((l: any) => ({
+    .map((row) => Array.isArray(row.log) ? row.log[0] : row.log)
+    .filter((l) => l)
+    .map((l) => ({
       id: l.id as string,
       summary: (l.summary as string) || "",
       occurredAt: (l.occurred_at as string) || "",
@@ -2282,7 +2283,7 @@ export async function fetchConversationLogsForDate(
     console.error("[ai-clone] 指定日ConversationLogs取得失敗:", error.message);
     return [];
   }
-  return (data || []).map((l: any) => ({
+  return (data || []).map((l) => ({
     id: l.id,
     summary: l.summary || "",
     nextAction: l.next_action || "",
@@ -2621,7 +2622,7 @@ export async function findRecentReferralActivities(
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({
+  return data.map((r) => ({
     id: r.id,
     activityType: r.activity_type,
     content: r.content,
@@ -2656,7 +2657,7 @@ export async function getReferralActivitySnapshot(
     kind: data.activity_type === "紹介実施" ? "gave" : "asked",
     content: data.content,
     date: data.occurred_date,
-    peopleIds: (links || []).map((l: any) => l.person_id),
+    peopleIds: (links || []).map((link) => link.person_id),
   };
 }
 
@@ -3070,7 +3071,7 @@ export async function fetchRecentNotesForPerson(
       .order("occurred_date", { foreignTable: "ai_clone_activity_log", ascending: false })
       .limit(limit),
     // knowledge_candidate は人物リンクが無い設計のため、ここでは取らない（Hypothesis 独立分のみ knowledge へ行く）
-    Promise.resolve({ data: [], error: null }) as any,
+    Promise.resolve({ data: [], error: null }),
     sb
       .from("ai_clone_person_note")
       .select("id, occurred_at, content")
@@ -3083,8 +3084,8 @@ export async function fetchRecentNotesForPerson(
   type Row = { id: string; title: string; date: string; kind: string; content: string };
   const merged: Row[] = [];
 
-  for (const r of (decisions.data || []) as any[]) {
-    const d = r.decision_log;
+  for (const r of decisions.data || []) {
+    const d = Array.isArray(r.decision_log) ? r.decision_log[0] : r.decision_log;
     if (!d) continue;
     merged.push({
       id: d.id,
@@ -3094,8 +3095,8 @@ export async function fetchRecentNotesForPerson(
       content: d.conclusion || "",
     });
   }
-  for (const r of (tasks.data || []) as any[]) {
-    const t = r.task;
+  for (const r of tasks.data || []) {
+    const t = Array.isArray(r.task) ? r.task[0] : r.task;
     if (!t) continue;
     merged.push({
       id: t.id,
@@ -3105,8 +3106,8 @@ export async function fetchRecentNotesForPerson(
       content: t.origin_log || "",
     });
   }
-  for (const r of (activities.data || []) as any[]) {
-    const a = r.activity;
+  for (const r of activities.data || []) {
+    const a = Array.isArray(r.activity) ? r.activity[0] : r.activity;
     if (!a) continue;
     merged.push({
       id: a.id,
@@ -3116,7 +3117,7 @@ export async function fetchRecentNotesForPerson(
       content: a.content || "",
     });
   }
-  for (const n of (personNotes.data || []) as any[]) {
+  for (const n of personNotes.data || []) {
     merged.push({
       id: n.id,
       title: (n.content || "").split("\n")[0]?.slice(0, 40) || "",
@@ -3221,7 +3222,7 @@ export async function fetchPipelineAggregates(
     return empty;
   }
 
-  for (const row of (data || []) as any[]) {
+  for (const row of data || []) {
     if (row.salon_proposal_date) {
       empty.salonProposal.allTime++;
       if (inThisMonth(row.salon_proposal_date)) empty.salonProposal.thisMonth++;
@@ -3483,7 +3484,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
   const sections: string[] = [];
 
   if (mission.data) {
-    const m = mission.data as any;
+    const m = mission.data;
     const lines: string[] = ["# ミッション・理念"];
     if (m.mission) lines.push(`**ミッション**: ${m.mission}`);
     if (m.values_tags?.length) lines.push(`**価値観**: ${m.values_tags.join(" / ")}`);
@@ -3494,7 +3495,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
   }
 
   if (plan.data) {
-    const p = plan.data as any;
+    const p = plan.data;
     const lines: string[] = ["# 3年計画"];
     if (p.plan_name) lines.push(`**計画名**: ${p.plan_name}`);
     if (p.ideal_state_in_3y) lines.push(`**3年後の理想状態**: ${p.ideal_state_in_3y}`);
@@ -3507,8 +3508,9 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
 
   if (kpi.data && kpi.data.length > 0) {
     // 年度ごとにグループ化して整形（最新年度が先頭）
-    const byYear = new Map<string, any[]>();
-    for (const row of kpi.data as any[]) {
+    type KpiRow = NonNullable<typeof kpi.data>[number];
+    const byYear = new Map<string, KpiRow[]>();
+    for (const row of kpi.data) {
       const y = row.fiscal_year || "未設定";
       const arr = byYear.get(y) ?? [];
       arr.push(row);
@@ -3529,7 +3531,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
 
   if (principles.data && principles.data.length > 0) {
     const lines: string[] = ["# 判断基準"];
-    for (const p of principles.data as any[]) {
+    for (const p of principles.data) {
       const head = `- **${p.name}**${p.priority ? `（優先度:${p.priority}）` : ""}`;
       const detail = p.rule ? `: ${p.rule}` : "";
       const reason = p.reason ? `\n  理由: ${p.reason}` : "";
@@ -3540,7 +3542,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
 
   if (tones.data && tones.data.length > 0) {
     const lines: string[] = ["# 口調・対応ルール"];
-    for (const t of tones.data as any[]) {
+    for (const t of tones.data) {
       lines.push(`- **${t.name}**`);
       if (t.base_tone) lines.push(`  基本の口調: ${t.base_tone}`);
       if (t.ng_expressions) lines.push(`  NG表現: ${t.ng_expressions}`);
@@ -3551,7 +3553,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
 
   if (ngs.data && ngs.data.length > 0) {
     const lines: string[] = ["# NG判断・確認ルール"];
-    for (const n of ngs.data as any[]) {
+    for (const n of ngs.data) {
       lines.push(`- **${n.area_name}**`);
       if (n.reason_not_for_ai) lines.push(`  AIに任せない理由: ${n.reason_not_for_ai}`);
       if (n.escalation_target) lines.push(`  エスカレ先: ${n.escalation_target}`);
@@ -3561,7 +3563,7 @@ export async function fetchExecutiveContext(tenantId: string): Promise<string> {
 
   if (faqs.data && faqs.data.length > 0) {
     const lines: string[] = ["# FAQ"];
-    for (const f of faqs.data as any[]) {
+    for (const f of faqs.data) {
       lines.push(`- Q: ${f.question}`);
       if (f.base_answer) lines.push(`  A: ${f.base_answer}`);
       if (f.caveat) lines.push(`  注意: ${f.caveat}`);
@@ -3741,7 +3743,7 @@ export async function fetchReferredTo(
     console.error("[ai-clone] 紹介先逆引き失敗:", error.message);
     return [];
   }
-  return (data || []).map((r: any) => ({ id: r.id, name: r.name }));
+  return (data || []).map((r) => ({ id: r.id, name: r.name }));
 }
 
 // 「指定人物の紹介元」を 1 件取得（FK 解決の最終確認用）。text fallback は呼び出し側で表示する。
@@ -3760,7 +3762,7 @@ export async function fetchReferrer(
     .maybeSingle();
 
   if (error || !data) return null;
-  const ref: any = (data as any).referrer;
+  const ref = Array.isArray(data.referrer) ? data.referrer[0] : data.referrer;
   if (!ref) return null;
   return { id: ref.id, name: ref.name };
 }
@@ -3799,7 +3801,7 @@ export async function findOpenTasks(
     console.error("[ai-clone] OpenTasks取得失敗:", error.message);
     return [];
   }
-  return (data || []).map((r: any) => ({
+  return (data || []).map((r) => ({
     id: r.id,
     name: r.name,
     dueDate: r.due_date,
@@ -3846,7 +3848,8 @@ export async function searchTasksByName(
   // 一覧コピペ由来の注記（先頭番号・末尾「（未着手）」等）を除去してから照合する。
   const cleaned = stripTaskAnnotations(query);
 
-  const mapRow = (r: any) => ({
+  type SearchRow = NonNullable<typeof data>[number];
+  const mapRow = (r: SearchRow) => ({
     id: r.id,
     name: r.name,
     status: r.status,
@@ -3902,7 +3905,7 @@ export async function searchTasksByName(
   if (allErr || !all) return [];
   const filtered = all
     .filter(
-      (r: any) =>
+      (r) =>
         typeof r.name === "string" && normalizeTaskName(r.name).includes(nq),
     )
     .map(mapRow);
@@ -3925,7 +3928,7 @@ export async function searchTasksByName(
     if (tok.length < 2) continue;
     const hit = all
       .filter(
-        (r: any) =>
+        (r) =>
           typeof r.name === "string" && normalizeTaskName(r.name).includes(tok),
       )
       .map(mapRow);
@@ -4088,7 +4091,7 @@ export async function findRecentDatedReminders(
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error || !data) return [];
-  return data.map((r: any) => ({
+  return data.map((r) => ({
     id: r.id,
     title: r.title,
     baseDate: r.base_date,

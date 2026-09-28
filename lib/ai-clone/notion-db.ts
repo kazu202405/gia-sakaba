@@ -1,4 +1,16 @@
-import { Client } from "@notionhq/client";
+import {
+  Client,
+  isFullDatabase,
+  isFullDataSource,
+  isFullPage,
+  type CreatePageParameters,
+  type PageObjectResponse,
+  type QueryDataSourceParameters,
+  type RichTextItemResponse,
+} from "@notionhq/client";
+
+type PageProperties = NonNullable<CreatePageParameters["properties"]>;
+type PagePropertyMap = PageObjectResponse["properties"];
 
 function getClient(): Client | null {
   const token = process.env.NOTION_TOKEN;
@@ -18,10 +30,10 @@ async function getDataSourceId(
   if (cached) return cached;
 
   try {
-    const db: any = await client.databases.retrieve({
+    const db = await client.databases.retrieve({
       database_id: databaseId,
     });
-    const id = db.data_sources?.[0]?.id || null;
+    const id = isFullDatabase(db) ? db.data_sources?.[0]?.id || null : null;
     if (id) dataSourceCache.set(databaseId, id);
     return id;
   } catch (err) {
@@ -52,22 +64,23 @@ export async function searchPeopleByName(
     });
 
     return await Promise.all(
-      res.results.map(async (page: any) => {
+      res.results.filter(isFullPage).map(async (page) => {
         const titleProp = page.properties?.["名前"];
         const personName =
-          titleProp?.title?.map((t: any) => t.plain_text).join("") || name;
+          titleProp?.type === "title" ? extractText(titleProp.title) || name : name;
 
         // 会社名を識別ヒントとして取得（リレーション先のタイトル）
         let companyHint = "";
-        const companyProp = page.properties?.["会社"];
-        if (companyProp?.relation && companyProp.relation.length > 0) {
+        const companyRelations = propertyRelations(page.properties, "会社");
+        if (companyRelations.length > 0) {
           try {
-            const companyPage: any = await client.pages.retrieve({
-              page_id: companyProp.relation[0].id,
+            const companyPage = await client.pages.retrieve({
+              page_id: companyRelations[0].id,
             });
-            const cTitle = companyPage.properties?.["会社名"];
-            companyHint =
-              cTitle?.title?.map((t: any) => t.plain_text).join("") || "";
+            if (isFullPage(companyPage)) {
+              const cTitle = companyPage.properties["会社名"];
+              companyHint = cTitle?.type === "title" ? extractText(cTitle.title) : "";
+            }
           } catch {
             // 取得失敗時はヒント省略
           }
@@ -75,8 +88,7 @@ export async function searchPeopleByName(
         // 役職もヒントに使う
         if (!companyHint) {
           const roleProp = page.properties?.["役職"];
-          companyHint =
-            roleProp?.rich_text?.map((t: any) => t.plain_text).join("") || "";
+          companyHint = roleProp?.type === "rich_text" ? extractText(roleProp.rich_text) : "";
         }
 
         return { id: page.id, name: personName, companyHint };
@@ -109,7 +121,7 @@ export async function createPerson(name: string): Promise<{
   if (!client || !dbId) return null;
 
   try {
-    const res: any = await client.pages.create({
+    const res = await client.pages.create({
       parent: { database_id: dbId },
       properties: {
         名前: { title: [{ text: { content: name } }] },
@@ -135,7 +147,7 @@ export async function createPersonDetailed(params: {
   const dbId = process.env.NOTION_DB_PEOPLE;
   if (!client || !dbId) return null;
 
-  const properties: any = {
+  const properties: PageProperties = {
     名前: { title: [{ text: { content: params.name } }] },
   };
   if (params.companyId) {
@@ -159,7 +171,7 @@ export async function createPersonDetailed(params: {
   }
 
   try {
-    const res: any = await client.pages.create({
+    const res = await client.pages.create({
       parent: { database_id: dbId },
       properties,
     });
@@ -191,12 +203,11 @@ export async function findPersonByEmail(
       page_size: 1,
     });
 
-    const page: any = res.results[0];
+    const page = res.results.find(isFullPage);
     if (!page) return null;
 
     const titleProp = page.properties?.["名前"];
-    const personName =
-      titleProp?.title?.map((t: any) => t.plain_text).join("") || email;
+    const personName = titleProp?.type === "title" ? extractText(titleProp.title) || email : email;
 
     return { id: page.id, name: personName };
   } catch (err) {
@@ -226,12 +237,11 @@ export async function findCompanyByName(
       page_size: 1,
     });
 
-    const page: any = res.results[0];
+    const page = res.results.find(isFullPage);
     if (!page) return null;
 
     const titleProp = page.properties?.["会社名"];
-    const companyName =
-      titleProp?.title?.map((t: any) => t.plain_text).join("") || name;
+    const companyName = titleProp?.type === "title" ? extractText(titleProp.title) || name : name;
 
     return { id: page.id, name: companyName };
   } catch (err) {
@@ -250,7 +260,7 @@ export async function createCompany(params: {
   const dbId = process.env.NOTION_DB_COMPANIES;
   if (!client || !dbId) return null;
 
-  const properties: any = {
+  const properties: PageProperties = {
     会社名: { title: [{ text: { content: params.name } }] },
   };
   if (params.hp) {
@@ -263,7 +273,7 @@ export async function createCompany(params: {
   }
 
   try {
-    const res: any = await client.pages.create({
+    const res = await client.pages.create({
       parent: { database_id: dbId },
       properties,
     });
@@ -345,7 +355,7 @@ export async function createMeeting(params: {
   const dbId = process.env.NOTION_DB_MEETINGS;
   if (!client || !dbId) return null;
 
-  const properties: any = {
+  const properties: PageProperties = {
     タイトル: { title: [{ text: { content: params.title } }] },
   };
 
@@ -378,7 +388,7 @@ export async function createMeeting(params: {
   }
 
   try {
-    const res: any = await client.pages.create({
+    const res = await client.pages.create({
       parent: { database_id: dbId },
       properties,
     });
@@ -433,16 +443,17 @@ export async function appendMeetingMinutes(
   const client = getClient();
   if (!client) return false;
 
-  const properties: any = {};
+  const properties: PageProperties = {};
 
   // 議題or参加者の更新がある時だけ既存ページを引く
   const needsFetch =
     params.agenda !== undefined ||
     (params.addParticipantIds && params.addParticipantIds.length > 0);
-  let existingPage: any = null;
+  let existingPage: PageObjectResponse | null = null;
   if (needsFetch) {
     try {
-      existingPage = await client.pages.retrieve({ page_id: meetingId });
+      const page = await client.pages.retrieve({ page_id: meetingId });
+      existingPage = isFullPage(page) ? page : null;
     } catch {
       // 取得失敗時は既存値の保護なしで進める
     }
@@ -451,9 +462,7 @@ export async function appendMeetingMinutes(
   if (params.agenda !== undefined) {
     let preservedHeader = "";
     if (existingPage) {
-      const existing = extractText(
-        existingPage.properties?.["議題"]?.rich_text || []
-      );
+      const existing = propertyRichText(existingPage.properties, "議題");
       const venueLines = existing
         .split("\n")
         .map((l) => l.trim())
@@ -486,9 +495,8 @@ export async function appendMeetingMinutes(
   if (params.addParticipantIds && params.addParticipantIds.length > 0) {
     let unioned = params.addParticipantIds;
     if (existingPage) {
-      const existing = (
-        existingPage.properties?.["参加者"]?.relation || []
-      ).map((r: any) => r.id as string);
+      const existing = propertyRelations(existingPage.properties, "参加者")
+        .map((relation) => relation.id);
       unioned = Array.from(new Set([...existing, ...params.addParticipantIds]));
     }
     properties["参加者"] = {
@@ -521,7 +529,7 @@ export async function createNote(params: {
   const dbId = process.env.NOTION_DB_NOTES;
   if (!client || !dbId) return null;
 
-  const properties: any = {
+  const properties: PageProperties = {
     タイトル: { title: [{ text: { content: params.title } }] },
     種別: { select: { name: params.kind } },
     内容: {
@@ -549,7 +557,7 @@ export async function createNote(params: {
   }
 
   try {
-    const res: any = await client.pages.create({
+    const res = await client.pages.create({
       parent: { database_id: dbId },
       properties,
     });
@@ -587,14 +595,14 @@ export async function fetchNotesForDate(date: string): Promise<
       page_size: 50,
     });
 
-    return res.results.map((page: any) => {
+    return res.results.filter(isFullPage).map((page) => {
       const props = page.properties;
       return {
         id: page.id,
-        title: extractText(props["タイトル"]?.title || []),
-        kind: props["種別"]?.select?.name || "",
-        content: extractText(props["内容"]?.rich_text || []),
-        importance: props["重要度"]?.select?.name || "",
+        title: propertyTitle(props, "タイトル"),
+        kind: propertySelect(props, "種別"),
+        content: propertyRichText(props, "内容"),
+        importance: propertySelect(props, "重要度"),
       };
     });
   } catch (err) {
@@ -628,12 +636,12 @@ export async function fetchMeetingsForDate(date: string): Promise<
       page_size: 20,
     });
 
-    return res.results.map((page: any) => {
+    return res.results.filter(isFullPage).map((page) => {
       const props = page.properties;
       return {
         id: page.id,
-        title: extractText(props["タイトル"]?.title || []),
-        nextActions: extractText(props["ネクストアクション"]?.rich_text || []),
+        title: propertyTitle(props, "タイトル"),
+        nextActions: propertyRichText(props, "ネクストアクション"),
       };
     });
   } catch (err) {
@@ -667,9 +675,10 @@ export async function detectPipelineColumns(
       console.warn("[ai-clone] People DBの data_source_id 取得失敗");
       return { available: [] };
     }
-    const ds: any = await client.dataSources.retrieve({
+    const ds = await client.dataSources.retrieve({
       data_source_id: dsId,
     });
+    if (!isFullDataSource(ds)) return { available: [] };
     const props = ds.properties || {};
     const names = Object.keys(props);
 
@@ -755,18 +764,18 @@ export async function fetchPipelineAggregates(
         start_cursor: cursor,
         page_size: 100,
       });
-      for (const page of res.results as any[]) {
+      for (const page of res.results.filter(isFullPage)) {
         const props = page.properties || {};
         const proposalDate = cols.proposal
-          ? props[cols.proposal]?.date?.start || ""
+          ? propertyDate(props, cols.proposal)
           : "";
-        const joinDate = cols.join ? props[cols.join]?.date?.start || "" : "";
+        const joinDate = cols.join ? propertyDate(props, cols.join) : "";
         const pitchDate = cols.pitch
-          ? props[cols.pitch]?.date?.start || ""
+          ? propertyDate(props, cols.pitch)
           : "";
-        const dealDate = cols.deal ? props[cols.deal]?.date?.start || "" : "";
+        const dealDate = cols.deal ? propertyDate(props, cols.deal) : "";
         const dealAmount = cols.amount
-          ? props[cols.amount]?.number || 0
+          ? propertyNumber(props, cols.amount)
           : 0;
 
         if (proposalDate) {
@@ -815,7 +824,7 @@ export async function updatePersonPipeline(
   // 実際のカラム名に書き込む（ゆらぎ吸収）。検出できなかった列は既定名で fallback。
   const cols = await detectPipelineColumns();
 
-  const properties: any = {};
+  const properties: PageProperties = {};
   if (params.salonProposalDate) {
     properties[cols.proposal || "サロン提案日"] = {
       date: { start: params.salonProposalDate },
@@ -876,34 +885,32 @@ export async function fetchRecentNotes(
   const start = new Date(today.getTime() - daysBack * 24 * 60 * 60 * 1000);
   const startStr = formatYMD(start);
 
-  const filters: any[] = [
-    { property: "日付", date: { on_or_after: startStr } },
-  ];
-  if (kinds.length > 0) {
-    filters.push({
+  const dateFilter = { property: "日付", date: { on_or_after: startStr } } as const;
+  const filter: QueryDataSourceParameters["filter"] = kinds.length > 0
+    ? { and: [dateFilter, {
       or: kinds.map((k) => ({
         property: "種別",
         select: { equals: k },
       })),
-    });
-  }
+    }] }
+    : dateFilter;
 
   try {
     const res = await client.dataSources.query({
       data_source_id: dsId,
-      filter: filters.length === 1 ? filters[0] : { and: filters },
+      filter,
       sorts: [{ property: "日付", direction: "descending" }],
       page_size: limit,
     });
 
-    return res.results.map((page: any) => {
+    return res.results.filter(isFullPage).map((page) => {
       const props = page.properties;
       return {
         id: page.id,
-        title: extractText(props["タイトル"]?.title || []),
-        date: props["日付"]?.date?.start || "",
-        kind: props["種別"]?.select?.name || "",
-        content: extractText(props["内容"]?.rich_text || []),
+        title: propertyTitle(props, "タイトル"),
+        date: propertyDate(props, "日付"),
+        kind: propertySelect(props, "種別"),
+        content: propertyRichText(props, "内容"),
       };
     });
   } catch (err) {
@@ -996,7 +1003,9 @@ async function countNotesByKind(
       });
       for (const page of res.results) {
         const kind =
-          (page as any).properties?.["種別"]?.select?.name || "Other";
+          isFullPage(page) && page.properties["種別"]?.type === "select"
+            ? page.properties["種別"].select?.name || "Other"
+            : "Other";
         counts[kind] = (counts[kind] || 0) + 1;
       }
       cursor = res.has_more ? res.next_cursor || undefined : undefined;
@@ -1101,14 +1110,14 @@ export async function fetchRecentMeetingsForPerson(
       page_size: limit,
     });
 
-    return res.results.map((page: any) => {
+    return res.results.filter(isFullPage).map((page) => {
       const props = page.properties;
       return {
         id: page.id,
-        title: extractText(props["タイトル"]?.title || []),
-        date: props["日時"]?.date?.start || "",
-        minutes: extractText(props["議事録"]?.rich_text || []),
-        nextActions: extractText(props["ネクストアクション"]?.rich_text || []),
+        title: propertyTitle(props, "タイトル"),
+        date: propertyDate(props, "日時"),
+        minutes: propertyRichText(props, "議事録"),
+        nextActions: propertyRichText(props, "ネクストアクション"),
       };
     });
   } catch (err) {
@@ -1148,14 +1157,14 @@ export async function fetchRecentNotesForPerson(
       page_size: limit,
     });
 
-    return res.results.map((page: any) => {
+    return res.results.filter(isFullPage).map((page) => {
       const props = page.properties;
       return {
         id: page.id,
-        title: extractText(props["タイトル"]?.title || []),
-        date: props["日付"]?.date?.start || "",
-        kind: props["種別"]?.select?.name || "",
-        content: extractText(props["内容"]?.rich_text || []),
+        title: propertyTitle(props, "タイトル"),
+        date: propertyDate(props, "日付"),
+        kind: propertySelect(props, "種別"),
+        content: propertyRichText(props, "内容"),
       };
     });
   } catch (err) {
@@ -1175,8 +1184,38 @@ function chunkText(text: string, max: number): string[] {
   return chunks;
 }
 
-function extractText(richText: any[]): string {
-  return richText.map((r: any) => r.plain_text || "").join("");
+function extractText(richText: RichTextItemResponse[]): string {
+  return richText.map((item) => item.plain_text || "").join("");
+}
+
+function propertyTitle(properties: PagePropertyMap, name: string): string {
+  const property = properties[name];
+  return property?.type === "title" ? extractText(property.title) : "";
+}
+
+function propertyRichText(properties: PagePropertyMap, name: string): string {
+  const property = properties[name];
+  return property?.type === "rich_text" ? extractText(property.rich_text) : "";
+}
+
+function propertySelect(properties: PagePropertyMap, name: string): string {
+  const property = properties[name];
+  return property?.type === "select" ? property.select?.name || "" : "";
+}
+
+function propertyDate(properties: PagePropertyMap, name: string): string {
+  const property = properties[name];
+  return property?.type === "date" ? property.date?.start || "" : "";
+}
+
+function propertyNumber(properties: PagePropertyMap, name: string): number {
+  const property = properties[name];
+  return property?.type === "number" ? property.number ?? 0 : 0;
+}
+
+function propertyRelations(properties: PagePropertyMap, name: string): Array<{ id: string }> {
+  const property = properties[name];
+  return property?.type === "relation" ? property.relation : [];
 }
 
 function formatYMD(date: Date): string {

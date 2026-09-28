@@ -1508,7 +1508,7 @@ async function handleTranscript(
     }
     const meeting = meetingId ? { id: meetingId } : null;
 
-    const noteJobs: Promise<any>[] = [];
+    const noteJobs: Promise<unknown>[] = [];
     const pushNotes = (
       kind: "Decision" | "Hypothesis" | "Action" | "Learning" | "Event",
       items: { content: string }[],
@@ -1598,25 +1598,30 @@ ${text}
       response_format: { type: "json_object" },
       max_tokens: 3000,
     });
-    const parsed = JSON.parse(res.choices[0]?.message?.content || "{}");
-    if (!Array.isArray(parsed.meetings)) return null;
-    return parsed.meetings.map((m: any) => normalizeMeetingItem(m));
+    const parsed: unknown = JSON.parse(res.choices[0]?.message?.content || "{}");
+    if (!isRecord(parsed) || !Array.isArray(parsed.meetings)) return null;
+    return parsed.meetings.map((m) => normalizeMeetingItem(m));
   } catch (err) {
     console.error("[ai-clone] 議事録抽出失敗:", err);
     return null;
   }
 }
 
-function normalizeMeetingItem(m: any): MeetingItem {
+function normalizeMeetingItem(value: unknown): MeetingItem {
+  const m = isRecord(value) ? value : {};
+  const participants = Array.isArray(m.participants)
+    ? m.participants
+        .filter(isRecord)
+        .filter((participant) => typeof participant.name === "string")
+        .map((participant) => ({ name: participant.name as string }))
+    : [];
   return {
-    meetingTitle: m.meetingTitle || "（タイトル未抽出）",
-    date: m.date || undefined,
-    participants: Array.isArray(m.participants)
-      ? m.participants.filter((p: any) => p?.name)
-      : [],
-    agenda: m.agenda || undefined,
-    summary: m.summary || "",
-    nextActions: m.nextActions || undefined,
+    meetingTitle: typeof m.meetingTitle === "string" ? m.meetingTitle : "（タイトル未抽出）",
+    date: typeof m.date === "string" ? m.date : undefined,
+    participants,
+    agenda: typeof m.agenda === "string" ? m.agenda : undefined,
+    summary: typeof m.summary === "string" ? m.summary : "",
+    nextActions: typeof m.nextActions === "string" ? m.nextActions : undefined,
     decisions: ensureContentArray(m.decisions),
     hypotheses: ensureContentArray(m.hypotheses),
     actions: ensureContentArray(m.actions),
@@ -1680,7 +1685,7 @@ async function handleReflection(
     // 毎晩の超過リマインドのノイズになっていた。振り返りでは ai_clone_task を
     // 一切作らない。明日以降の具体的予定は「リマインド: ○○を△日までに」で
     // 明示登録してもらう運用に切り替える。
-    const sideJobs: Promise<any>[] = [];
+    const sideJobs: Promise<unknown>[] = [];
 
     // ハイライト（その日の核となる Decision/Hypothesis/Learning を最大2件）
     const highlightLabel: Record<
@@ -1803,16 +1808,19 @@ ${text}
       response_format: { type: "json_object" },
       max_tokens: 3000,
     });
-    const parsed = JSON.parse(res.choices[0]?.message?.content || "{}");
-    if (!Array.isArray(parsed.reflections)) return null;
-    return parsed.reflections.map((r: any) => ({
-      date: r.date || todayJST(),
-      summary: r.summary || "",
-      rawText: typeof r.rawText === "string" ? r.rawText : "",
-      actions: ensureContentArray(r.actions),
-      highlights: ensureHighlightArray(r.highlights),
-      personaTraits: ensurePersonaTraitArray(r.personaTraits),
-    }));
+    const parsed: unknown = JSON.parse(res.choices[0]?.message?.content || "{}");
+    if (!isRecord(parsed) || !Array.isArray(parsed.reflections)) return null;
+    return parsed.reflections.map((value) => {
+      const r = isRecord(value) ? value : {};
+      return {
+        date: typeof r.date === "string" ? r.date : todayJST(),
+        summary: typeof r.summary === "string" ? r.summary : "",
+        rawText: typeof r.rawText === "string" ? r.rawText : "",
+        actions: ensureContentArray(r.actions),
+        highlights: ensureHighlightArray(r.highlights),
+        personaTraits: ensurePersonaTraitArray(r.personaTraits),
+      };
+    });
   } catch (err) {
     console.error("[ai-clone] 振り返り抽出失敗:", err);
     return null;
@@ -1821,28 +1829,31 @@ ${text}
 
 // LLM 出力の personaTraits を検証。category は固定リスト内、trait は空でないもののみ。
 // 上限 2 件（プロンプトで「最大 2 件」と指示しているが、念のためコード側でも切る）。
-function ensurePersonaTraitArray(v: any): {
+function ensurePersonaTraitArray(v: unknown): {
   category: PersonaTraitCategory;
   trait: string;
   detail?: string;
 }[] {
   if (!Array.isArray(v)) return [];
   return v
+    .filter(isRecord)
     .filter((x) =>
-      x?.trait
-      && typeof x.trait === "string"
+      typeof x.trait === "string"
       && x.trait.trim().length > 0
       && typeof x.category === "string"
       && (PERSONA_TRAIT_CATEGORIES as readonly string[]).includes(x.category),
     )
     .slice(0, 2)
-    .map((x) => ({
-      category: x.category as PersonaTraitCategory,
-      trait: x.trait.trim(),
-      detail: typeof x.detail === "string" && x.detail.trim().length > 0
-        ? x.detail.trim()
-        : undefined,
-    }));
+    .map((x) => {
+      const trait = x.trait as string;
+      return {
+        category: x.category as PersonaTraitCategory,
+        trait: trait.trim(),
+        detail: typeof x.detail === "string" && x.detail.trim().length > 0
+          ? x.detail.trim()
+          : undefined,
+      };
+    });
 }
 
 // =============================================
@@ -1959,7 +1970,7 @@ ${text}
       title: parsed.title || text.slice(0, 30),
       content: parsed.content || text,
       peopleNames: Array.isArray(parsed.peopleNames)
-        ? parsed.peopleNames.filter((n: any) => typeof n === "string")
+        ? parsed.peopleNames.filter((n: unknown): n is string => typeof n === "string")
         : [],
       kind: validKinds.includes(parsed.kind) ? parsed.kind : "Learning",
     };
@@ -2867,17 +2878,21 @@ function buildAmbiguousWarning(
   return lines.join("\n");
 }
 
-function ensureContentArray(v: any): { content: string }[] {
+function ensureContentArray(v: unknown): { content: string }[] {
   if (!Array.isArray(v)) return [];
-  return v.filter((x) => x?.content).map((x) => ({ content: x.content }));
+  return v
+    .filter(isRecord)
+    .filter((x) => typeof x.content === "string" && x.content.length > 0)
+    .map((x) => ({ content: x.content as string }));
 }
 
-function ensureHighlightArray(v: any): {
+function ensureHighlightArray(v: unknown): {
   kind: "Decision" | "Hypothesis" | "Learning";
   content: string;
 }[] {
   if (!Array.isArray(v)) return [];
   const valid = v
+    .filter(isRecord)
     .filter(
       (x) =>
         x?.content &&
@@ -2889,6 +2904,10 @@ function ensureHighlightArray(v: any): {
       content: x.content as string,
     }));
   return valid.slice(0, 2);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 function formatTime(iso: string): string {

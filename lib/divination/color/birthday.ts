@@ -10,7 +10,7 @@ export interface ColorInfo {
   meaning: string;
 }
 
-export interface MonthColor extends ColorInfo {}
+export type MonthColor = ColorInfo;
 
 export const MONTH_COLORS: Record<number, MonthColor> = {
   1:  { name: "ガーネットレッド", hex: "#9B2335", meaning: "情熱・勇気・新たな始まり" },

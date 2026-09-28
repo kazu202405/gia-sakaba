@@ -51,6 +51,7 @@ import {
   MONTH_BACKGROUND,
   TENCHUU_DAY_NOTE,
 } from "./divination-day-templates";
+import type { KnownBlock } from "@slack/types";
 
 export interface DivinationOwner {
   /** ai_clone_tenants.owner_birthday（'YYYY-MM-DD'）。null なら占術は出さない。 */
@@ -81,7 +82,7 @@ interface DayContext {
 export async function buildDivinationBlocks(
   owner: DivinationOwner,
   date: string,
-): Promise<any[]> {
+): Promise<KnownBlock[]> {
   const birth = parseBirthday(owner.birthday);
   if (!birth) return [];
 
@@ -166,7 +167,7 @@ function buildBlocks(
   yojo: YojoResult,
   ctx: DayContext,
   date: string,
-): any[] {
+): KnownBlock[] {
   const { pillars, balance, personal } = ctx;
   const center = yojo.jintai.center;
 

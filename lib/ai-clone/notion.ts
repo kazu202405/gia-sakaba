@@ -1,5 +1,25 @@
 import { Client } from "@notionhq/client";
 
+type UnknownRecord = Record<string, unknown>;
+type NotionBlock = UnknownRecord & {
+  id: string;
+  type: string;
+  has_children?: boolean;
+  _children?: NotionBlock[];
+};
+type NotionPage = { properties?: Record<string, UnknownRecord> };
+
+function isRecord(value: unknown): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function errorDetail(error: unknown): string {
+  if (!isRecord(error)) return String(error);
+  const code = typeof error.code === "string" ? error.code : "";
+  const message = typeof error.message === "string" ? error.message : "";
+  return code || message || "unknown";
+}
+
 function getClient(): Client | null {
   const token = process.env.NOTION_TOKEN;
   if (!token) return null;
@@ -65,17 +85,17 @@ export async function fetchExecutiveContextWithStatus(): Promise<{
           ok: true as const,
           section: `# ${title}\n\n${text}`,
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(
           `[ai-clone] Notion page${e.slot}(${e.pageId})取得失敗:`,
-          err?.message || err
+          errorDetail(err),
         );
         return {
           slot: e.slot,
           pageId: e.pageId,
           title: "(取得失敗)",
           ok: false as const,
-          error: err?.code || err?.message || "unknown",
+          error: errorDetail(err),
         };
       }
     })
@@ -152,14 +172,17 @@ export async function fetchMethodologyContext(): Promise<string> {
 // ページタイトル取得
 async function fetchPageTitle(client: Client, pageId: string): Promise<string> {
   try {
-    const page: any = await client.pages.retrieve({ page_id: pageId });
+    const page = await client.pages.retrieve({ page_id: pageId }) as unknown as NotionPage;
     // 通常ページは properties.title.title[0].plain_text
     const props = page.properties;
     if (props) {
       for (const key of Object.keys(props)) {
         const prop = props[key];
         if (prop?.type === "title" && Array.isArray(prop.title)) {
-          return prop.title.map((t: any) => t.plain_text || "").join("") || "(無題)";
+          return prop.title
+            .filter(isRecord)
+            .map((item) => typeof item.plain_text === "string" ? item.plain_text : "")
+            .join("") || "(無題)";
         }
       }
     }
@@ -176,8 +199,8 @@ async function fetchFromParentPage(client: Client, parentId: string): Promise<st
     const baseText = blocksToPlainText(blocks);
 
     const childPageIds = blocks
-      .filter((b: any) => b.type === "child_page")
-      .map((b: any) => b.id as string);
+      .filter((block) => block.type === "child_page")
+      .map((block) => block.id);
 
     const childTexts = await Promise.all(
       childPageIds.map(async (id) => {
@@ -199,8 +222,8 @@ async function fetchFromParentPage(client: Client, parentId: string): Promise<st
   }
 }
 
-async function fetchAllBlocks(client: Client, blockId: string): Promise<any[]> {
-  const all: any[] = [];
+async function fetchAllBlocks(client: Client, blockId: string): Promise<NotionBlock[]> {
+  const all: NotionBlock[] = [];
   let cursor: string | undefined;
   do {
     const res = await client.blocks.children.list({
@@ -208,12 +231,12 @@ async function fetchAllBlocks(client: Client, blockId: string): Promise<any[]> {
       start_cursor: cursor,
       page_size: 100,
     });
-    all.push(...res.results);
+    all.push(...res.results as unknown as NotionBlock[]);
     cursor = res.has_more ? res.next_cursor || undefined : undefined;
   } while (cursor);
 
   // table / toggle / column 系は子ブロック（行や中身）を別取得しないと内容が落ちる
-  for (const block of all as any[]) {
+  for (const block of all) {
     if (
       block.has_children &&
       (block.type === "table" ||
@@ -232,7 +255,7 @@ async function fetchAllBlocks(client: Client, blockId: string): Promise<any[]> {
   return all;
 }
 
-function blocksToPlainText(blocks: any[]): string {
+function blocksToPlainText(blocks: NotionBlock[]): string {
   return blocks
     .map((b) => formatBlock(b))
     .filter((s) => s !== null)
@@ -240,13 +263,16 @@ function blocksToPlainText(blocks: any[]): string {
 }
 
 // ブロックタイプごとに整形
-function formatBlock(b: any): string | null {
+function formatBlock(b: NotionBlock): string | null {
   const type = b.type;
-  const data = b[type];
+  const data = isRecord(b[type]) ? b[type] : {};
 
   // rich_text を持つ標準ブロック
-  const richText = (data?.rich_text as any[]) || [];
-  const text = richText.map((r: any) => r.plain_text || "").join("");
+  const richText = Array.isArray(data.rich_text) ? data.rich_text : [];
+  const text = richText
+    .filter(isRecord)
+    .map((item) => typeof item.plain_text === "string" ? item.plain_text : "")
+    .join("");
 
   switch (type) {
     case "heading_1":
@@ -262,13 +288,13 @@ function formatBlock(b: any): string | null {
     case "numbered_list_item":
       return `1. ${text}`;
     case "to_do":
-      return `${data.checked ? "[x]" : "[ ]"} ${text}`;
+      return `${data.checked === true ? "[x]" : "[ ]"} ${text}`;
     case "quote":
       return `> ${text}`;
     case "callout":
       return `💡 ${text}`;
     case "code":
-      return `\`\`\`${data.language || ""}\n${text}\n\`\`\``;
+      return `\`\`\`${typeof data.language === "string" ? data.language : ""}\n${text}\n\`\`\``;
     case "toggle": {
       const inner = formatChildren(b._children);
       return `${text}${inner ? "\n" + inner : ""}`;
@@ -289,15 +315,17 @@ function formatBlock(b: any): string | null {
 }
 
 // table の子（table_row）を Markdown 表に整形
-function formatTable(rows: any[]): string {
+function formatTable(rows: NotionBlock[]): string {
   if (!Array.isArray(rows) || rows.length === 0) return "";
   const cellsArr = rows
-    .filter((r: any) => r.type === "table_row")
-    .map((r: any) =>
-      ((r.table_row?.cells || []) as any[][]).map((cell) =>
-        cell.map((ct: any) => ct.plain_text || "").join("").trim()
-      )
-    );
+    .filter((row) => row.type === "table_row")
+    .map((row) => {
+      const tableRow = isRecord(row.table_row) ? row.table_row : {};
+      const cells = Array.isArray(tableRow.cells) ? tableRow.cells : [];
+      return cells.map((cell) => Array.isArray(cell)
+        ? cell.filter(isRecord).map((item) => typeof item.plain_text === "string" ? item.plain_text : "").join("").trim()
+        : "");
+    });
   if (cellsArr.length === 0) return "";
   const colCount = cellsArr[0].length;
   const lines: string[] = [];
@@ -310,7 +338,7 @@ function formatTable(rows: any[]): string {
 }
 
 // 子ブロックを再帰整形
-function formatChildren(children: any[] | undefined): string | null {
+function formatChildren(children: NotionBlock[] | undefined): string | null {
   if (!Array.isArray(children) || children.length === 0) return null;
   const out = children
     .map((c) => formatBlock(c))

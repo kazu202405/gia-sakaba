@@ -76,7 +76,7 @@ export default function AboutPage() {
                 <br />
                 同じ未来を目指す仲間が集い、
                 <br />
-                次の挑戦へ向かうための"酒場"です。
+                次の挑戦へ向かうための&quot;酒場&quot;です。
               </p>
               <p className="text-slate-500 text-base">
                 GIA は、名刺交換の場ではありません。
