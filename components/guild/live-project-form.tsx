@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { GuildProject } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
+import { isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
+import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { CheckBox, DateInput, Field, TextArea, TextInput } from "./form-parts";
 
 function todayInJapan() {
@@ -13,7 +15,7 @@ function todayInJapan() {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-export function LiveProjectForm({ project, canCreate = true }: { project?: GuildProject; canCreate?: boolean }) {
+export function LiveProjectForm({ project, canCreate = true, quota = null }: { project?: GuildProject; canCreate?: boolean; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const router = useRouter();
   const [title, setTitle] = useState(project?.title ?? "");
   const [goal, setGoal] = useState(project?.goal ?? "");
@@ -41,7 +43,7 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
       router.push(`/guild/projects/${project.id}`);
     } else {
       const { data, error: rpcError } = await createClient().rpc("sakaba_create_project", { p_guild_slug: "gia", ...fields });
-      if (rpcError || typeof data !== "string") { setError("作成できませんでした。入力内容や作成枠を確認してください。"); setSaving(false); return; }
+      if (rpcError || typeof data !== "string") { setError(isPlanLimitError(rpcError) ? "プロジェクトの作成枠を使い切りました。" : "作成できませんでした。入力内容や作成枠を確認してください。"); setSaving(false); return; }
       if (withSteps) {
         const { error: stepsError } = await createClient().rpc("sakaba_enable_project_steps", { p_project_id: data });
         if (stepsError) {
@@ -60,7 +62,8 @@ export function LiveProjectForm({ project, canCreate = true }: { project?: Guild
     <Link href={project ? `/guild/projects/${project.id}` : "/guild/projects"} className="c-muted mb-8 inline-block text-sm">◀ プロジェクトへ戻る</Link>
     <form onSubmit={submit} className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">{project ? "プロジェクトをなおす" : "プロジェクトをつくる"}</span>
-      {!canCreate && <p className="text-sm text-[#c62828]">無料プランではプロジェクトは2件までです。</p>}
+      {!project && !canCreate && (quota ? <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} /> : <p className="text-sm text-[#c62828]">プロジェクトの作成枠を使い切りました。</p>)}
+      {!project && canCreate && quota && <PlanQuotaNote kind="project" plan={quota.plan} slot={quota.slot} />}
       <Field label="タイトル" required><TextInput value={title} onChange={setTitle} max={40} label="タイトル" /></Field>
       <Field label="ゴール" hint="何ができたら終わりか"><TextArea value={goal} onChange={setGoal} max={200} rows={3} label="ゴール" /></Field>
       <Field label="メモ"><TextArea value={memo} onChange={setMemo} max={500} rows={4} label="メモ" /></Field>

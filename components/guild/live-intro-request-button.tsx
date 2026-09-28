@@ -8,10 +8,13 @@ import type { IntroPurpose, Profile } from "@/lib/guild/types";
 import { purposeLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
+import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
+import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
-export function LiveIntroRequestButton({ target, existing }: { target: Profile; existing: GuildIntroRequest | null }) {
+// quota：今月の申請の残り（読めなかったら null。そのときは数を出さず、DBの判定に任せる）
+export function LiveIntroRequestButton({ target, existing, quota = null }: { target: Profile; existing: GuildIntroRequest | null; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
@@ -40,7 +43,9 @@ export function LiveIntroRequestButton({ target, existing }: { target: Profile; 
         p_guild_slug: "gia", p_target_id: target.id, p_purpose: purpose, p_message: message.trim(),
       });
       if (rpcError) {
-        setError(rpcError.code === "23505" ? "この人へのつながり申請は進行中です。" : "申請を送れませんでした。少し待ってもう一度お試しください。");
+        setError(rpcError.code === "23505" ? "この人へのつながり申請は進行中です。"
+          : isPlanLimitError(rpcError) ? "今月のつながり申請の上限に達しました。毎月1日に戻ります。"
+          : "申請を送れませんでした。少し待ってもう一度お試しください。");
         return;
       }
       setSent(true); setOpen(false);
@@ -56,8 +61,11 @@ export function LiveIntroRequestButton({ target, existing }: { target: Profile; 
   if (existing || sent) return <Link href="/guild/requests" className="c-button-sub h-12 w-full sm:w-auto">申請の状況を見る ▶</Link>;
   if (!target.accept_intro) return <p className="c-card border-dashed px-4 py-3 text-sm">{target.display_name}さんは、いまつながり申請を受け付けていません。</p>;
 
+  if (quota && isExhausted(quota.slot)) return <PlanQuotaExhausted kind="intro" plan={quota.plan} slot={quota.slot} />;
+
   return <>
     <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">▶ つながりを申請する</button>
+    {quota && <PlanQuotaNote kind="intro" plan={quota.plan} slot={quota.slot} className="mt-2" />}
     {open && <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="intro-live-title" className="c-window relative w-full pt-9 sm:max-w-lg">

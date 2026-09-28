@@ -14,7 +14,7 @@ import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
-import { getAuthenticatedUserId, getGuildContext, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, getMyPlanUsage, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -23,12 +23,13 @@ export const metadata = { title: "ギルドメンバー" };
 
 export default async function MemberStatusPage({ params }: Props) {
   const { id } = await params;
-  const [context, members, currentUserId, requests, introductions] = await Promise.all([
+  const [context, members, currentUserId, requests, introductions, usage] = await Promise.all([
     getGuildContext(),
     listGuildMembers(),
     getAuthenticatedUserId(),
     listGuildIntroRequests(),
     listGuildMemberIntroductions(id),
+    getMyPlanUsage(),
   ]);
   const p = members.find((member) => member.id === id);
   if (!p) notFound();
@@ -92,7 +93,7 @@ export default async function MemberStatusPage({ params }: Props) {
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
             : "連絡先は、本人が選んだ相手にだけ表示しています。🔒 のものは、つながり申請を承諾し合うと見えるようになります。"}
         </p>
-        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} /></div>}
+        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} /></div>}
       </Window>
 
       <PersonalProfileWindow profile={p} />

@@ -10,6 +10,8 @@ import { InviteNetwork } from "@/components/guild/invite-network";
 import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
+import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
+import { createClient } from "@/lib/supabase/server";
 import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "管理者" };
@@ -32,12 +34,34 @@ export default async function MasterPage() {
   const memberNames = new Map(network.map((person) => [person.user_id, person.display_name]));
   const mealUserIds = [...new Set([...mealWishes.map((wish) => wish.user_id), ...availability.map((slot) => slot.user_id)])];
   const preparedIds = new Set(preparedInvites.map((invite) => invite.id));
+  // 料金の段（0114）：支払い中なのに料金IDの表に無いもの。その人たちはビジネス扱いになっている
+  const supabase = await createClient();
+  const { data: unmappedData, error: unmappedError } = await supabase.rpc("sakaba_list_unmapped_billing_prices", { p_guild_slug: "gia" });
+  const unmapped = Array.isArray(unmappedData) ? unmappedData as { price_id: string; members: number }[] : [];
+  const configured = getConfiguredSakabaPrices();
+  const registerSql = ([["standard", configured.standard], ["dining", configured.dining]] as const)
+    .filter(([, id]) => id && /^price_[A-Za-z0-9]+$/.test(id))
+    .map(([plan, id]) => `insert into sakaba.billing_prices (price_id, plan) values ('${id}', '${plan}') on conflict (price_id) do update set plan = excluded.plan;`)
+    .join("\n");
   return (
     <div className="space-y-9">
       <PageTitle
         title="管理者"
         lead="人の紹介、限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
       />
+      {(unmappedError || unmapped.length > 0) && <section className="c-window p-5 pt-10 sm:p-6 sm:pt-11">
+        <span className="c-window-title">料金IDの登録</span>
+        {unmappedError
+          ? <p className="text-sm">料金の段の状態を読み込めませんでした。migration 0114 が適用済みか確認してください。</p>
+          : <>
+            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。</p>
+            <ul className="mt-3 space-y-1 text-sm">{unmapped.map((row) => <li key={row.price_id} className="break-all"><code>{row.price_id}</code>：{row.members}人</li>)}</ul>
+            {registerSql && <>
+              <p className="c-muted mt-4 text-xs">Supabase の SQL Editor で次を流すと、この環境の料金ID（プラス・ビジネス）を登録できます。</p>
+              <pre className="c-card mt-2 overflow-x-auto p-3 text-xs whitespace-pre">{registerSql}</pre>
+            </>}
+          </>}
+      </section>}
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
         <span className="c-window-title">管理コマンド</span>
         <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
@@ -98,7 +122,7 @@ export default async function MasterPage() {
       </section>
       {diningEnabled && <section aria-labelledby="master-meal-wishes-title" className="space-y-4 border-t-2 border-dashed border-[#1b2a41]/25 pt-8">
         <h2 id="master-meal-wishes-title" className="text-xl tracking-wider">会食の希望{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "・空き日時" : ""}</h2>
-        <p className="c-muted text-sm">会食プラン相当の利用者から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
+        <p className="c-muted text-sm">ビジネス相当の利用者から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
         {mealUserIds.length === 0 ? <p className="c-card p-5 text-sm">まだ希望は届いていません。</p> : <div className="grid gap-4 md:grid-cols-2">
           {mealUserIds.map((userId) => {
             const wish = mealWishes.find((item) => item.user_id === userId);

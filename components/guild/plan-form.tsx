@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import type { GuildBillingStatus } from "@/lib/guild/server-data";
 import { SAKABA_PLAN_NAMES, type PaidSakabaPlan, type SakabaPlan } from "@/lib/guild/billing-plans";
-import { FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/membership";
+import { PLAN_LIMITS } from "@/lib/guild/plan-usage";
 import { BackLink, PageTitle, Window } from "./cards";
 
 type Props = {
@@ -19,10 +19,11 @@ type Props = {
   checkoutResult?: "success" | "canceled";
 };
 
+// 数は PLAN_LIMITS（DBの sakaba.plan_limits と同じかをテストで見張っている）
 const plans = [
-  { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "仲間を知り、相談や集まりを見つける。", features: ["ギルド・クエストを使える", `プロジェクトは${FREE_ACTIVE_PROJECT_LIMIT}件まで`] },
-  { key: "standard", label: SAKABA_PLAN_NAMES.standard, price: "月480円", lead: "プロジェクトの記録を、数を気にせず残す。", features: ["フリーの内容すべて", "プロジェクトをいくつでも作れる", "有料会員限定の集まりに申し込める"] },
-  { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["プラスの内容すべて", "会食の希望を管理者へ送れる"] },
+  { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "まず様子を見る・紹介を待つ", features: [`つながり申請は月${PLAN_LIMITS.free.intro}件`, `クエスト・集まりを出すのは月${PLAN_LIMITS.free.quest}件`, "メンバーを一覧で見られる", `プロジェクトは${PLAN_LIMITS.free.project}つまで`] },
+  { key: "standard", label: SAKABA_PLAN_NAMES.standard, price: "月480円", lead: "月に何人か、自分から会いに行く", features: [`つながり申請は月${PLAN_LIMITS.standard.intro}件`, `クエスト・集まりを出すのは月${PLAN_LIMITS.standard.quest}件`, "業種・地域で絞り込み、「めいし」で並べて探せる", `プロジェクトは${PLAN_LIMITS.standard.project}つまで`, "有料会員限定の集まりに申し込める"] },
+  { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "毎週動いて、仕事を回す", features: [`つながり申請は月${PLAN_LIMITS.dining.intro}件`, "クエスト・集まりは何件でも", "キーワードで本文まで探せる", "プロジェクトはいくつでも", "有料会員限定の集まりに申し込める", "会食の希望を管理者へ送れる"] },
 ] as const;
 
 export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, availabilityEnabled, checkoutResult }: Props) {
@@ -96,7 +97,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${plan.key === "dining" ? "border-[#8f7337]" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
         <p className="c-label w-fit text-xs">{plan.label}</p>
         <p className="mt-5 text-[28px] leading-none tracking-wide">{plan.price}<span className="ml-1 text-xs">{plan.key !== "free" && "（税込）"}</span></p>
-        <p className="mt-4 min-h-14 text-sm leading-relaxed">{plan.lead}</p>
+        <p className="mt-4 min-h-14 text-sm leading-relaxed"><span className="c-label mb-1 block w-fit text-xs">こんな人に</span>{plan.lead}</p>
         <ul className="mt-4 flex-1 space-y-3 border-t border-[#1b2a41]/25 pt-4 text-sm leading-relaxed">
           {plan.features.map((feature) => <li key={feature} className="flex gap-2"><span aria-hidden="true">▶</span><span>{feature}</span></li>)}
           {plan.key === "dining" && availabilityEnabled && <li className="flex gap-2"><span aria-hidden="true">▶</span><span>会食に空いている日時を非公開で登録できる</span></li>}
@@ -105,21 +106,25 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       </div>)}
     </section>
 
-    <p className="c-muted text-sm leading-relaxed">プラス・会食は月額制で、無料体験はありません。有料会員向けの集まりは不定期開催で、申し込み後に承認が必要な場合があります。会食の開催・参加・希望どおりの出会いは保証されません。今後は会食プラン限定の交流会も予定しています（開催時期未定）。プラン変更時の請求額はStripeの確認画面でお確かめください。</p>
+    <div className="c-muted space-y-2 text-sm leading-relaxed">
+      <p>つながり申請を受ける・クエストや集まりに参加する・名刺を載せる・入会のつながりは、どの段でも使えます。</p>
+      <p>回数は毎月1日（日本時間）に戻ります。出した時点で数え、取り下げ・期限切れ・見送りになっても戻りません。クエストの参加希望者へ出すつながり申請は数えません。</p>
+      <p>プラス・ビジネスは月額制で、無料体験はありません。有料会員向けの集まりは不定期開催で、申し込み後に承認が必要な場合があります。会食の開催・参加・希望どおりの出会いは保証されません。今後はビジネス限定の交流会も予定しています（開催時期未定）。プラン変更時の請求額はStripeの確認画面でお確かめください。</p>
+    </div>
 
     {exempt ? <Window title="会員の状態">
         <p className="text-[15px] leading-relaxed">現在は管理者枠です。料金なしですべての機能を利用でき、Stripeへの申し込みは必要ありません。</p>
         {hasCustomer && <><p className="mt-3 text-sm leading-relaxed">過去の酒場の契約・支払い履歴がある場合は、支払い管理で確認できます。継続中の契約は管理者枠に変わっても自動解約されません。</p><button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button></>}
       </Window>
       : companyNoteBenefit ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場の会食プラン（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
+        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場のビジネス（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
         {hasActiveContract && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は継続中です。特典が付いても自動解約されず、請求も止まりません。不要な場合は下のボタンから解約してください。</p>}
         {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button>}
       </Window>
       : (isPaid || billingStatus === "past_due" || hasCustomer) ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラス（月480円）です。" : currentPlan === "dining" ? "現在は会食（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリーです。"}</p>
+        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラス（月480円）です。" : currentPlan === "dining" ? "現在はビジネス（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリーです。"}</p>
         <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : (hasActiveContract || billingStatus === "past_due") ? "支払い方法・解約を管理する" : "支払い履歴を見る"}</button>
-      </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリーです。上の比較から、いつでもプラス・会食への申し込みを選べます。</p></Window>}
+      </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリーです。上の比較から、いつでもプラス・ビジネスへの申し込みを選べます。</p></Window>}
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;
 }

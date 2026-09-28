@@ -4,7 +4,7 @@ export type SakabaPlan = "free" | PaidSakabaPlan | "exempt" | "unknown";
 export const SAKABA_PLAN_NAMES = {
   free: "フリー",
   standard: "プラス",
-  dining: "会食",
+  dining: "ビジネス",
 } as const;
 
 type BillingSnapshot = {

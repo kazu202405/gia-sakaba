@@ -2,11 +2,16 @@ import Link from "next/link";
 import type { GuildProject } from "@/lib/guild/server-data";
 import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/membership";
 import { Window } from "./cards";
+import { isExhausted, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
+import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { GuildCheckoutButton } from "./guild-checkout-button";
 
-export function LiveProjectList({ projects, userId, isPaid, checkoutResult }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled" }) {
+export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const ownedCount = projects.filter((project) => project.owner_id === userId).length;
-  const canCreate = isPaid || ownedCount < FREE_ACTIVE_PROJECT_LIMIT;
+  // 段ごとの上限（0114）。読めなかったときだけ前の判定
+  const canCreate = quota ? !isExhausted(quota.slot) : isPaid || ownedCount < FREE_ACTIVE_PROJECT_LIMIT;
+  // フリーで使い切ったときだけ、プラスの申し込みを出す。プラスで使い切ったら段の比較へ
+  const showFreeUpsell = !canCreate && (!quota || quota.plan === "free");
   return (
     <div className="space-y-5">
       {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] p-4 text-sm leading-relaxed">
@@ -21,8 +26,10 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult }: { 
         <p className="c-muted text-sm">自分と参加中のプロジェクトだけが表示されます。</p>
         {canCreate && <Link href="/guild/projects/new" className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link>}
       </div>
-      {!canCreate && checkoutResult !== "success" && <>
-        <p className="c-muted text-sm">無料プランの作成枠（{FREE_ACTIVE_PROJECT_LIMIT}件）を使い切りました</p>
+      {canCreate && quota && <PlanQuotaNote kind="project" plan={quota.plan} slot={quota.slot} />}
+      {!canCreate && !showFreeUpsell && quota && <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} />}
+      {showFreeUpsell && checkoutResult !== "success" && <>
+        <p className="c-muted text-sm">フリーの作成枠（{quota?.slot.limit ?? FREE_ACTIVE_PROJECT_LIMIT}つ）を使い切りました</p>
         <Window title="有料会員">
           <p className="text-[15px] leading-relaxed">データベースを拡張して<span className="whitespace-nowrap">プロジェクト</span>の保存枠を広げることができます。</p>
           <p className="mt-2 text-[15px] leading-relaxed">ギルド・クエスト・<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>

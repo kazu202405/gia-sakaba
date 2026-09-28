@@ -5,12 +5,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Profile } from "@/lib/guild/types";
+import type { SearchLevel } from "@/lib/guild/plan-usage";
 import { MemberCard, Window } from "./cards";
 import { CheckBox } from "./form-parts";
 
-export function MemberDirectory({ members, memberTerm = "ギルドメンバー", cardUrls = {} }: {
+export function MemberDirectory({ members, memberTerm = "ギルドメンバー", cardUrls = {}, searchLevel = "keyword" }: {
   members: Profile[];
   memberTerm?: string;
+  /** 段で変わる探し方：list＝一覧だけ（フリー）／filter＝絞り込み＋めいし（プラス）／keyword＝＋キーワード（ビジネス） */
+  searchLevel?: SearchLevel;
   /** 人ごとの名刺の表面の署名URL（「めいし」表示で使う） */
   cardUrls?: Record<string, string>;
 }) {
@@ -24,11 +27,14 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
   const industries = useMemo(() => [...new Set(members.map((m) => m.industry))], [members]);
   const regions = useMemo(() => [...new Set(members.map((m) => m.region))], [members]);
 
-  const filtered = members.filter((m) => {
+  const canFilter = searchLevel !== "list";
+  const canKeyword = searchLevel === "keyword";
+
+  const filtered = !canFilter ? members : members.filter((m) => {
     if (industry && m.industry !== industry) return false;
     if (region && m.region !== region) return false;
     if (acceptOnly && !m.accept_intro) return false;
-    const q = keyword.trim().toLocaleLowerCase("ja");
+    const q = canKeyword ? keyword.trim().toLocaleLowerCase("ja") : "";
     if (!q) return true;
     const haystack = [
       m.display_name,
@@ -46,12 +52,13 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
     return haystack.includes(q);
   });
 
-  const hasFilter = keyword || industry || region || acceptOnly;
+  const hasFilter = canFilter && (keyword || industry || region || acceptOnly);
+  const shownView = canFilter ? view : "list";
 
   return (
     <div>
-      <Window title="さがす">
-        <label className="block">
+      {canFilter ? <Window title="さがす">
+        {canKeyword ? <label className="block">
           <span className="sr-only">キーワード</span>
           <input
             value={keyword}
@@ -59,7 +66,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             placeholder="キーワード（れい：採用、決算、ロゴ）"
             className="c-input h-11"
           />
-        </label>
+        </label> : <p className="c-muted text-xs">キーワードで本文まで探すのは、ビジネスからです。<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
         {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="block min-w-0">
@@ -86,7 +93,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             <span className="text-sm">しょうかいを受けつけている人だけ</span>
           </CheckBox>
         </div>
-      </Window>
+      </Window> : <p className="c-card border-dashed px-4 py-3 text-sm leading-relaxed">業種・地域での絞り込みと「めいし」表示は、プラスから使えます。<Link href="/guild/plan" className="ml-1 underline underline-offset-4">▶ 段をくらべる</Link></p>}
 
       <div className="mt-6 mb-3 flex items-center justify-between text-sm">
         <span>{filtered.length}人 見つかりました</span>
@@ -106,13 +113,13 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
         )}
       </div>
 
-      <div className="flex items-center justify-end gap-3 text-sm" role="group" aria-label="表示のしかた">
+      {canFilter && <div className="flex items-center justify-end gap-3 text-sm" role="group" aria-label="表示のしかた">
         {([["list", "いつもの一覧"], ["cards", "めいし"]] as const).map(([mode, label]) => (
           <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={view === mode ? "underline underline-offset-4" : "c-muted"}>
             {label}
           </button>
         ))}
-      </div>
+      </div>}
 
       {filtered.length === 0 ? (
         <p className="c-card border-dashed px-4 py-10 text-center text-sm leading-relaxed">
@@ -121,7 +128,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
           <span className="c-muted">管理者に「こういう人いない？」と相談することもできます。</span>
         </p>
       ) : (
-        view === "cards" ? (
+        shownView === "cards" ? (
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {filtered.map((m) => (
               <li key={m.id}>

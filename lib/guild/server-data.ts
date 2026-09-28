@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Guild, GuildNotification, IntroRequest, Position, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 import type { MasterPreparedInvite } from "@/lib/guild/prepared-invites";
 import type { MasterIntroduction } from "@/lib/guild/master-introductions";
+import { parsePlanUsage, type PlanUsage } from "@/lib/guild/plan-usage";
 
 type GuildContext = {
   guild: Guild;
@@ -226,6 +227,13 @@ export async function getMyMemberInvite(): Promise<MyMemberInvite> {
   const { data, error } = await supabase.rpc("sakaba_get_my_member_invite", { p_guild_slug: "gia" });
   if (error) throw rpcError("自分の招待リンクを取得できませんでした", error.message);
   return data as MyMemberInvite;
+}
+
+/** 段・上限・使った数（0114）。読めなかったら null（画面は数を出さないだけ。止めるのはDB） */
+export async function getMyPlanUsage(): Promise<PlanUsage | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_get_my_plan_usage", { p_guild_slug: "gia" });
+  return error ? null : parsePlanUsage(data);
 }
 
 export async function getMyGuildBilling(): Promise<GuildBilling> {

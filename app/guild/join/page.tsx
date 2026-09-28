@@ -74,7 +74,7 @@ export default async function JoinPage({ searchParams }: Props) {
         </Window>
       )}
       {valid && prepared && <Window title="入会後に選べること">
-        <p className="text-sm leading-relaxed">まずはフリー（0円）で入会できます。ギルド・クエストとプロジェクト2件まで利用できます。必要になったら、プラス（月480円）でプロジェクトの作成枠を広げたり、会食（月880円）で会食の希望を伝えたりできます。入会時に有料プランを選ぶ必要はありません。</p>
+        <p className="text-sm leading-relaxed">まずはフリー（0円）で入会できます。つながり申請とクエストは月1件、プロジェクトは2つまで使えます。自分から動く回数を増やしたくなったら、プラス（月480円）・ビジネス（月880円）を選べます。入会時に有料プランを選ぶ必要はありません。</p>
       </Window>}
     </JoinPageFrame>
   );

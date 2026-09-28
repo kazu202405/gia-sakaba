@@ -8,6 +8,8 @@ import { questCategoryHint, questCategoryLabel } from "@/lib/guild/labels";
 import { PROMISE_NOTE } from "@/lib/guild/rules";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
+import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
+import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { BackLink, questCategoryMark } from "./cards";
 import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 
@@ -53,9 +55,13 @@ function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
 }
 
-export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTerm: string; gathering?: boolean; quest?: GuildQuest }) {
+// quota：新しく出すときだけ渡す（今月の残り）
+export function LiveQuestForm({ questTerm, gathering = false, quest, quota = null }: { questTerm: string; gathering?: boolean; quest?: GuildQuest; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const router = useRouter();
   const fixedGathering = gathering || quest?.members_only === true;
+  // 新しく出すときだけ、今月の残りを見せる（使い切ったら確認に進めない。最後はDBが止める）
+  const showQuota = !quest && quota !== null;
+  const quotaExhausted = showQuota && isExhausted(quota?.slot);
   const [draft, setDraft] = useState<Draft>(quest ? {
     category: quest.category,
     title: quest.title,
@@ -123,7 +129,9 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
       : await createClient().rpc("sakaba_create_quest", { p_guild_slug: "gia", ...fields, p_members_only: fixedGathering });
 
     if (error || (!quest && typeof data !== "string")) {
-      setSaveError(quest ? "保存できませんでした。内容を確認して再度お試しください。" : "投稿できませんでした。時間をおいて再度お試しください。");
+      setSaveError(quest ? "保存できませんでした。内容を確認して再度お試しください。"
+        : isPlanLimitError(error) ? `今月の${questTerm}・集まりの上限に達しました。毎月1日に戻ります。`
+        : "投稿できませんでした。時間をおいて再度お試しください。");
       setSaving(false);
       return;
     }
@@ -138,6 +146,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
       <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : `${questTerm} けいじばん`} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : "かくにん"}</span>
+        {showQuota && quota && step === "form" && (quotaExhausted ? <div className="mb-6"><PlanQuotaExhausted kind="quest" plan={quota.plan} slot={quota.slot} /></div> : <PlanQuotaNote kind="quest" plan={quota.plan} slot={quota.slot} className="mb-5" />)}
         {step === "form" ? (
           <>
             <h1 className="text-xl tracking-wider">{quest ? "内容をなおしますか？" : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
@@ -183,7 +192,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
             </div>
             {!isGathering && <p className="c-muted mt-8 text-xs leading-relaxed">{PROMISE_NOTE}</p>}
             <div className="mt-5 flex justify-end">
-              <button type="button" onClick={() => { if (validate()) setStep("confirm"); }} className="rpg-button h-12 w-full px-6 text-base sm:w-auto">▶ 確認する</button>
+              <button type="button" disabled={quotaExhausted} onClick={() => { if (validate()) setStep("confirm"); }} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">▶ 確認する</button>
             </div>
           </>
         ) : (
