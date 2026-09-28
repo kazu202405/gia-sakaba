@@ -6,7 +6,9 @@ import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-bu
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { InvitePathWindow } from "@/components/guild/invite-path";
 import { BusinessCardView } from "@/components/guild/business-card-view";
+import { ContactItemsView } from "@/components/guild/contact-items-view";
 import type { BusinessCard } from "@/lib/guild/business-card";
+import { parseContactItemsMap } from "@/lib/guild/contact-items";
 import { signBusinessCards } from "@/lib/guild/business-card-server";
 import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
@@ -40,6 +42,9 @@ export default async function MemberStatusPage({ params }: Props) {
   const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: p.id });
   const card = cardData as BusinessCard | null;
   const cardUrls = await signBusinessCards(supabase, [card?.front, card?.back]);
+  // 連絡先（見せてよい分だけDBから来る。「つながった人だけ」でまだのものは種類だけ）
+  const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [p.id] });
+  const contactItems = parseContactItemsMap(contactData)[p.id] ?? [];
   const memberTerm = context.guild.terms.member;
 
   return (
@@ -69,25 +74,10 @@ export default async function MemberStatusPage({ params }: Props) {
               <dd>{p.industry}</dd>
               <dt className="c-label">ちいき</dt>
               <dd>{p.region}</dd>
-              {p.email && <>
-                <dt className="c-label">メール</dt>
-                <dd className="min-w-0 break-all"><a href={`mailto:${encodeURIComponent(p.email)}`} className="underline underline-offset-2">{p.email}</a></dd>
-              </>}
-              {p.line_url && <>
-                <dt className="c-label">LINE</dt>
-                <dd className="min-w-0 break-all"><a href={p.line_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">LINEを開く ↗</a></dd>
-              </>}
-              {p.website_url && <>
-                <dt className="c-label">ウェブサイト</dt>
-                <dd className="min-w-0 break-all"><a href={p.website_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">サイトを開く ↗</a></dd>
-              </>}
-              {p.role === "owner" && (
-                <>
-                  <dt className="c-label">やくわり</dt>
-                  <dd>{context.guild.terms.master}</dd>
-                </>
-              )}
             </dl>
+            {contactError
+              ? <p className="c-muted mt-4 text-xs">連絡先を読み込めませんでした。</p>
+              : <ContactItemsView items={contactItems} className="c-dashed-top mt-4 pt-4" />}
             {p.want_to_solve && (
               <p className="c-card mt-4 px-3 py-2 text-sm leading-relaxed break-words">
                 <span className="c-label mr-2 text-xs">いま 解決したいこと</span>
@@ -100,7 +90,7 @@ export default async function MemberStatusPage({ params }: Props) {
         <p className="c-dashed-top c-muted mt-6 pt-5 text-xs leading-relaxed">
           {isMe
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
-            : "ここには本人がメンバー向けに公開した連絡先だけを表示しています。つながり申請を承諾すると、当事者には登録済みの連絡先が見えます。"}
+            : "連絡先は、本人が選んだ相手にだけ表示しています。🔒 のものは、つながり申請を承諾し合うと見えるようになります。"}
         </p>
         {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} /></div>}
       </Window>

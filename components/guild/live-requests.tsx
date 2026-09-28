@@ -9,26 +9,27 @@ import { closedStatuses, formatDate, formatJstDate, introStatusLabel, purposeLab
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { ContactItemsView } from "./contact-items-view";
+import type { ViewContactItem } from "@/lib/guild/contact-items";
 
-export function LiveContactDetails({ name, contact }: {
+// 承諾し合った相手の連絡先。contacts が null＝読み込めなかった
+export function LiveContactDetails({ name, items }: {
   name: string;
-  contact: GuildIntroRequest["other_contact"];
+  items: ViewContactItem[] | null;
 }) {
-  if (!contact) return null;
   return <div className="mt-4 border-2 border-dashed border-[#8f7337] bg-[#fffdf6] px-3 py-3 text-sm">
     <p className="c-label text-xs">{name}さんの連絡先（承諾済み）</p>
-    {contact.email || contact.line_url || contact.website_url ? <div className="mt-2 space-y-1 break-all">
-      {contact.email && <p>メール：<a href={`mailto:${encodeURIComponent(contact.email)}`} className="underline underline-offset-2">{contact.email}</a></p>}
-      {contact.line_url && <p>LINE：<a href={contact.line_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">開く ↗</a></p>}
-      {contact.website_url && <p>ウェブサイト：<a href={contact.website_url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">開く ↗</a></p>}
-    </div> : <p className="c-muted mt-2 text-xs">まだ登録されていません。</p>}
+    {items === null
+      ? <p className="c-muted mt-2 text-xs">連絡先を読み込めませんでした。ページを開き直してください。</p>
+      : items.length > 0 ? <ContactItemsView items={items} className="mt-2" /> : <p className="c-muted mt-2 text-xs">まだ登録されていません。</p>}
   </div>;
 }
 
-export function LiveRequests({ initial, members, currentUserId }: {
+export function LiveRequests({ initial, members, currentUserId, contacts }: {
   initial: GuildIntroRequest[];
   members: Profile[];
   currentUserId: string;
+  contacts: Record<string, ViewContactItem[]> | null;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -105,7 +106,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
             )
           ) : <>
             {request.accept_message && <p className="c-muted mt-3 text-xs">あなたが添えたひとこと：{request.accept_message}</p>}
-            <LiveContactDetails name={name} contact={request.other_contact} />
+            <LiveContactDetails name={name} items={contacts ? contacts[request.requester_id] ?? [] : null} />
           </>}
         </article>;
       })}</div>}
@@ -120,7 +121,7 @@ export function LiveRequests({ initial, members, currentUserId }: {
           {(request.status === "accepted" || request.status === "introduced") && request.accept_message && (
             <p className="mt-3 border-l-2 border-[#c8a55a] pl-3 text-sm whitespace-pre-line break-words">{name}さんからのひとこと：{request.accept_message}</p>
           )}
-          {request.status === "accepted" || request.status === "introduced" ? <LiveContactDetails name={name} contact={request.other_contact} /> : null}
+          {request.status === "accepted" || request.status === "introduced" ? <LiveContactDetails name={name} items={contacts ? contacts[request.target_id] ?? [] : null} /> : null}
           {request.status === "proposed" && request.expires_at && <p className="c-muted mt-3 text-xs">{formatJstDate(request.expires_at)}までにお返事がなければ、取り下げになります。</p>}
           {request.status === "proposed" && <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "cancel")} className="c-muted mt-4 text-xs underline underline-offset-4 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "依頼を取り下げる"}</button>}
         </article>;
