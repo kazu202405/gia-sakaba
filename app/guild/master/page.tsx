@@ -132,7 +132,7 @@ export default async function MasterPage() {
       </section>
       <section aria-labelledby="master-feedback-title" className="space-y-4">
         <h2 id="master-feedback-title" className="text-xl tracking-wider">ご意見・不具合</h2>
-        <p className="c-muted text-sm">会員が画面上の「ご意見」やマイページから送った内容です。送ったときに開いていた画面と端末も載せています。</p>
+        <p className="c-muted text-sm">会員が画面上の「ご意見」やマイページから送った内容です。送ったときに開いていた画面と端末も載せています（参考。その画面で起きたとは限りません）。</p>
         {feedbackError ? <p className="c-card p-5 text-sm">読み込めませんでした。migration 0117 が適用済みか確認してください。</p> : <MasterFeedback initial={feedback} />}
       </section>
       <section aria-labelledby="master-gatherings-title" className="space-y-4">

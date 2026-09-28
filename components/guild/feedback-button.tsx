@@ -1,7 +1,8 @@
 "use client";
 
 // 「ご意見・不具合」を送る窓（0117）。ヘッダーとマイページに置く。
-// 開いている画面の道（例：/guild/projects/…）と端末の種類を一緒に送り、管理者が「どこで起きたか」を追えるようにする。
+// 開いている画面の道（例：/guild/projects/…）と端末の種類も送る。管理者の参考用なので、会員向けには書かない
+// （その画面で起きたとは限らず、結局は本人に聞くことになるため。2026-09-28 五島さん）。
 // 窓の形はエンタープライズの「相談する」（enterprise-plan.tsx）と同じ。
 // 書いたら一度「この内容で送りますか？」を見せてから送る（押してすぐ送られると不安、と五島さん 2026-09-28）。
 
@@ -75,7 +76,7 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
         <button ref={closeRef} type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>
         <div className="max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
           {step === "edit" ? <>
-            <p className="c-muted text-[13px] leading-relaxed">届くのは管理者だけです。おかしな動きや「こうだったら使いやすい」を、気軽に送ってください。いま開いている画面も一緒に届きます。</p>
+            <p className="c-muted text-[13px] leading-relaxed">届くのは管理者だけです。おかしな動きや「こうだったら使いやすい」を、気軽に送ってください。</p>
             <fieldset className="mt-5">
               <legend className="text-[15px]">どんな内容？ <span className="text-xs text-[#c62828]">必須</span></legend>
               <div className="mt-2 grid gap-2">{FEEDBACK_KINDS.map((item) => <button key={item.key} type="button" aria-pressed={kind === item.key} onClick={() => { setKind(item.key); setError(""); }} className="c-choice px-3 py-2.5 text-left text-sm">{item.title}</button>)}</div>
@@ -94,7 +95,6 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
             <dl className="c-card mt-3 space-y-3 p-4 text-sm">
               <div><dt className="c-muted text-xs">どんな内容？</dt><dd className="mt-1">{FEEDBACK_KINDS.find((item) => item.key === kind)?.title}</dd></div>
               <div><dt className="c-muted text-xs">内容</dt><dd className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{message.trim()}</dd></div>
-              <div><dt className="c-muted text-xs">一緒に届くもの</dt><dd className="mt-1 break-all">いま開いている画面（{pathname}）と、端末の種類</dd></div>
             </dl>
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
