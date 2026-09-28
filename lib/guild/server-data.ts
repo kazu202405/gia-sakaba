@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Guild, GuildNotification, IntroRequest, Position, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 import type { MasterPreparedInvite } from "@/lib/guild/prepared-invites";
+import type { MasterIntroduction } from "@/lib/guild/master-introductions";
 
 type GuildContext = {
   guild: Guild;
@@ -211,6 +212,13 @@ export async function listPreparedInvites(): Promise<MasterPreparedInvite[]> {
   const { data, error } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: "gia" });
   if (error) throw rpcError("仮登録の招待状を取得できませんでした", error.message);
   return Array.isArray(data) ? data as MasterPreparedInvite[] : [];
+}
+
+export async function listMasterIntroductions(): Promise<MasterIntroduction[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_master_introductions", { p_guild_slug: "gia" });
+  if (error) throw rpcError("人をつないだ記録を取得できませんでした", error.message);
+  return Array.isArray(data) ? data as MasterIntroduction[] : [];
 }
 
 export async function getMyMemberInvite(): Promise<MyMemberInvite> {

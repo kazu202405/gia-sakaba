@@ -5,11 +5,12 @@ import { PageTitle } from "@/components/guild/cards";
 import { LiveGatheringApprovals } from "@/components/guild/live-gathering-approvals";
 import { LiveMasterInvites } from "@/components/guild/live-master-invites";
 import { LivePreparedInvites } from "@/components/guild/live-prepared-invites";
+import { LiveMasterIntroductions } from "@/components/guild/live-master-introductions";
 import { InviteNetwork } from "@/components/guild/invite-network";
 import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
-import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
+import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "管理者" };
 
@@ -17,9 +18,12 @@ export default async function MasterPage() {
   const context = await getGuildContext();
   if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
   const preparedEnabled = process.env.SAKABA_PREJOIN_ENABLED === "true";
-  const [pendingGatherings, invites, network, preparedInvites] = await Promise.all([
+  const introductionsEnabled = process.env.SAKABA_MASTER_INTRO_ENABLED === "true";
+  const [pendingGatherings, invites, network, preparedInvites, introductions, introductionMembers] = await Promise.all([
     listPendingGatheringApplications(), listGuildMasterInvites(), listGuildInviteNetwork(),
     preparedEnabled ? listPreparedInvites() : Promise.resolve([]),
+    introductionsEnabled ? listMasterIntroductions() : Promise.resolve([]),
+    introductionsEnabled ? listGuildMembers() : Promise.resolve([]),
   ]);
   const diningEnabled = process.env.SAKABA_880_ENABLED === "true";
   const mealWishes = diningEnabled ? await listMealWishes(context.guild.id) : [];
@@ -32,11 +36,17 @@ export default async function MasterPage() {
     <div className="space-y-9">
       <PageTitle
         title="管理者"
-        lead="限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
+        lead="人の紹介、限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
       />
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
         <span className="c-window-title">管理コマンド</span>
         <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
+          {introductionsEnabled && <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-introductions-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              人をつなぐ
+            </a>
+          </li>}
           <li className="border-b border-[#1b2a41]/20">
             <a href="#master-gatherings-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
@@ -75,6 +85,10 @@ export default async function MasterPage() {
           </li>
         </ul>
       </nav>
+      {introductionsEnabled && <section aria-labelledby="master-introductions-title" className="space-y-4">
+        <h2 id="master-introductions-title" className="text-xl tracking-wider">人をつなぐ</h2>
+        <LiveMasterIntroductions initial={introductions} members={introductionMembers} />
+      </section>}
       <section aria-labelledby="master-gatherings-title" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 id="master-gatherings-title" className="text-xl tracking-wider">限定の集まり</h2>
