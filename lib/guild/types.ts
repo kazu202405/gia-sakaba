@@ -299,7 +299,9 @@ export type NotificationKind =
   | "gathering_approved"
   | "gathering_declined"
   /** 答えた集まりの日にちを、主催者が決めた */
-  | "schedule_decided";
+  | "schedule_decided"
+  /** エンタープライズの相談が届いた（管理者あて・0116） */
+  | "consult_request";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。
