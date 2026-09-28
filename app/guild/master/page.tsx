@@ -7,6 +7,8 @@ import { LiveMasterInvites } from "@/components/guild/live-master-invites";
 import { LivePreparedInvites } from "@/components/guild/live-prepared-invites";
 import { LiveMasterIntroductions } from "@/components/guild/live-master-introductions";
 import { InviteNetwork } from "@/components/guild/invite-network";
+import { MasterConsults } from "@/components/guild/master-consults";
+import { parseConsultRequests } from "@/lib/guild/enterprise";
 import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
@@ -36,6 +38,9 @@ export default async function MasterPage() {
   // 料金の段（0114）：支払い中なのに料金IDの表に無いもの。その人たちはビジネス扱いになっている
   const supabase = await createClient();
   const { data: unmappedData, error: unmappedError } = await supabase.rpc("sakaba_list_unmapped_billing_prices", { p_guild_slug: "gia" });
+  const { data: consultData, error: consultError } = await supabase.rpc("sakaba_list_consult_requests", { p_guild_slug: "gia" });
+  const consults = parseConsultRequests(consultData);
+  const newConsults = consults.filter((item) => item.status === "new").length;
   const unmapped = Array.isArray(unmappedData) ? unmappedData as { price_id: string; members: number }[] : [];
   return (
     <div className="space-y-9">
@@ -61,6 +66,12 @@ export default async function MasterPage() {
               人をつなぐ
             </a>
           </li>}
+          <li>
+            <a href="#master-consults-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              エンタープライズの相談{newConsults > 0 && <span className="c-chip-strong ml-1 text-xs">未対応 {newConsults}</span>}
+            </a>
+          </li>
           <li>
             <a href="#master-gatherings-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
@@ -103,6 +114,11 @@ export default async function MasterPage() {
         <h2 id="master-introductions-title" className="text-xl tracking-wider">人をつなぐ</h2>
         <LiveMasterIntroductions initial={introductions} members={introductionMembers} />
       </section>}
+      <section aria-labelledby="master-consults-title" className="space-y-4">
+        <h2 id="master-consults-title" className="text-xl tracking-wider">エンタープライズの相談</h2>
+        <p className="c-muted text-sm">会員プランの画面の「相談する」から届いた内容です。届くのは管理者だけです。</p>
+        {consultError ? <p className="c-card p-5 text-sm">相談を読み込めませんでした。migration 0115 が適用済みか確認してください。</p> : <MasterConsults initial={consults} />}
+      </section>
       <section aria-labelledby="master-gatherings-title" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 id="master-gatherings-title" className="text-xl tracking-wider">限定の集まり</h2>

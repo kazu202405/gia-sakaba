@@ -7,6 +7,7 @@ import { SAKABA_PLAN_NAMES, type PaidSakabaPlan, type SakabaPlan } from "@/lib/g
 import { PLAN_LIMITS } from "@/lib/guild/plan-usage";
 import { BackLink, PageTitle, Window } from "./cards";
 import { PHRASE_WRAP, Ph } from "./phrase";
+import { EnterprisePlan } from "./enterprise-plan";
 
 type Props = {
   role: "owner" | "master" | "member";
@@ -126,6 +127,8 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         <div className="mt-6 min-h-12">{actionFor(plan.key)}</div>
       </div>)}
     </section>
+
+    <EnterprisePlan isMaster={exempt && role !== "member"} />
 
     <div className={`space-y-5 text-sm leading-relaxed ${PHRASE_WRAP}`}>
       <div className="space-y-2">
