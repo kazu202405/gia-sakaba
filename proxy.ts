@@ -7,6 +7,7 @@
 // matcher：静的アセットや画像最適化エンドポイントは除外して負荷を下げる。
 
 import { guildGate } from "@/lib/guild/route-gate";
+import { guardGuildApiRequest } from "@/lib/guild/request-security";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -24,6 +25,20 @@ export async function proxy(request: NextRequest) {
     url.pathname = gate.to;
     url.search = "";
     return NextResponse.redirect(url);
+  }
+
+  const rejected = guardGuildApiRequest({
+    pathname: request.nextUrl.pathname,
+    method: request.method,
+    requestOrigin: request.nextUrl.origin,
+    originHeader: request.headers.get("origin"),
+    contentLengthHeader: request.headers.get("content-length"),
+  });
+  if (rejected) {
+    return NextResponse.json(
+      { error: rejected.message },
+      { status: rejected.status },
+    );
   }
 
   // PWAの設定とService Workerはログイン前にも取得される公開の固定ファイル。

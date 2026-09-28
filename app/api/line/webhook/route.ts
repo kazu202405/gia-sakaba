@@ -4,6 +4,13 @@ import { verifyLineSignature, replyMessage } from "@/lib/ai-clone/line";
 import { generateReply } from "@/lib/ai-clone/conversation";
 import { resolveTenantByLineUserId } from "@/lib/ai-clone/line-tenant";
 
+type LineWebhookEvent = {
+  type?: string;
+  source?: { userId?: string };
+  replyToken?: string;
+  message?: { type?: string; text?: string };
+};
+
 // LINE Webhook は1分以内に200を返さないとリトライされる。
 // → 即ack + waitUntil で AI 処理を継続させる（Slack 側と同じ構造）。
 // reply token は30分有効なので、背景処理後に replyMessage で1回返せば足りる。
@@ -12,16 +19,18 @@ export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-line-signature") || "";
 
-  // 1) 署名検証（本番のみ厳密チェック。LINE_CHANNEL_SECRET 未設定時はスキップ）
-  if (process.env.LINE_CHANNEL_SECRET) {
-    if (!verifyLineSignature(rawBody, signature)) {
-      return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
-    }
+  // 1) 署名検証。本番で秘密鍵が欠けている場合は、無検証で処理せず閉じる。
+  if (!process.env.LINE_CHANNEL_SECRET && process.env.NODE_ENV === "production") {
+    console.error("[ai-clone line] LINE_CHANNEL_SECRET is missing");
+    return NextResponse.json({ error: "webhook_not_configured" }, { status: 503 });
+  }
+  if (process.env.LINE_CHANNEL_SECRET && !verifyLineSignature(rawBody, signature)) {
+    return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
   }
 
-  let body: any;
+  let body: { events?: unknown };
   try {
-    body = JSON.parse(rawBody);
+    body = JSON.parse(rawBody) as { events?: unknown };
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
@@ -43,7 +52,9 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-async function processLineEvent(event: any): Promise<void> {
+async function processLineEvent(input: unknown): Promise<void> {
+  if (!input || typeof input !== "object") return;
+  const event = input as LineWebhookEvent;
   // 2-a) 友だち追加：line_user_id を本人に返信して連携手順を案内
   if (event?.type === "follow") {
     const lineUserId: string | undefined = event.source?.userId;

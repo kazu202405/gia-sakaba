@@ -4,6 +4,22 @@ import { verifySlackSignature, postReply } from "@/lib/ai-clone/slack";
 import { generateReply } from "@/lib/ai-clone/conversation";
 import { resolveTenantBySlackUserId } from "@/lib/ai-clone/slack-tenant";
 
+type SlackWebhookEvent = {
+  bot_id?: string;
+  subtype?: string;
+  type?: string;
+  channel_type?: string;
+  text?: string;
+  channel?: string;
+  user?: string;
+};
+
+type SlackWebhookBody = {
+  type?: string;
+  challenge?: string;
+  event?: unknown;
+};
+
 // Slackは3秒以内に200を返さないとリトライしてくる
 // → 即ack + waitUntilでAI処理を継続させる（Vercel serverless対応）
 
@@ -14,37 +30,37 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-slack-signature") || "";
   const retryNum = request.headers.get("x-slack-retry-num");
 
-  // 1) URL Verification（Event Subscriptions の初回認証）
-  let body: any;
+  // 1) JSONを解析してから、URL Verificationを含む全イベントの署名を検証する。
+  let body: SlackWebhookBody;
   try {
-    body = JSON.parse(rawBody);
+    body = JSON.parse(rawBody) as SlackWebhookBody;
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  if (body.type === "url_verification") {
+  if (!process.env.SLACK_SIGNING_SECRET && process.env.NODE_ENV === "production") {
+    console.error("[ai-clone slack] SLACK_SIGNING_SECRET is missing");
+    return NextResponse.json({ error: "webhook_not_configured" }, { status: 503 });
+  }
+  if (process.env.SLACK_SIGNING_SECRET && !verifySlackSignature(rawBody, timestamp, signature)) {
+    return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
+  }
+
+  if (body.type === "url_verification" && typeof body.challenge === "string") {
     return NextResponse.json({ challenge: body.challenge });
   }
 
-  // 2) 署名検証（本番のみ厳密チェック。SLACK_SIGNING_SECRET未設定時はスキップ）
-  if (process.env.SLACK_SIGNING_SECRET) {
-    const ok = verifySlackSignature(rawBody, timestamp, signature);
-    if (!ok) {
-      return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
-    }
-  }
-
-  // 3) リトライは即ackして処理しない（重複応答防止）
+  // 2) リトライは即ackして処理しない（重複応答防止）
   if (retryNum) {
     return NextResponse.json({ ok: true, skipped: "retry" });
   }
 
   // 4) event_callback だけ処理
-  if (body.type !== "event_callback" || !body.event) {
+  if (body.type !== "event_callback" || !body.event || typeof body.event !== "object") {
     return NextResponse.json({ ok: true });
   }
 
-  const event = body.event;
+  const event = body.event as SlackWebhookEvent;
 
   // bot自身のメッセージは無視（ループ防止）
   if (event.bot_id || event.subtype === "bot_message") {
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
   }
 
   const userText: string = event.text || "";
-  const channel: string = event.channel;
+  const channel: string = event.channel || "";
   const slackUserId: string = event.user || "";
 
   if (!userText.trim() || !channel || !slackUserId) {
