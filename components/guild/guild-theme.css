@@ -18,9 +18,9 @@
   background-size: 100% 28px;
 }
 
-/* ドット文字を使う所：見出し・窓の名札・コマンド（.guild-px）・ボタン・札・数字 */
-.guild-theme :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
-.look-c :is(h1, h2, h3, .c-window-title, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
+/* ドット文字を使う所：見出し・窓の名札・小見出し（.c-label＝かいしゃ・しょくぎょう・出身地など）・コマンド（.guild-px）・ボタン・札・数字。中身の文章は普通の字 */
+.guild-theme :is(h1, h2, h3, .c-window-title, .c-label, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
+.look-c :is(h1, h2, h3, .c-window-title, .c-label, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
   font-family: var(--font-pixel-jp), system-ui, sans-serif;
   letter-spacing: 0.06em;
 }

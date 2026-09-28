@@ -26,7 +26,8 @@ export function Field({
 }) {
   return (
     <div data-field-error={error ? "true" : undefined}>
-      <p className="text-[15px] tracking-wider">
+      {/* 項目名はドット文字（入力する中身は普通の字） */}
+      <p className="guild-px text-[15px] tracking-wider">
         {label}
         {required && <span className="ml-1.5 text-xs text-[#c62828]">必須</span>}
       </p>
