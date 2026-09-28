@@ -32,7 +32,7 @@ const F = {
   keyword: { title: "キーワード検索", desc: "自己紹介や|さがしているものなど、|本文の言葉まで|探せます。" },
   members: { title: "有料会員限定の集まり", desc: "管理者が開く|会員限定の集まりに|申し込めます。" },
   wish: { title: "会食の希望", desc: "会ってみたい人や|話したいテーマを、|管理者に伝えられます。" },
-  availability: { title: "空いている日時の登録", desc: "会食に行ける日時を|登録できます。|見えるのは|あなたと管理者だけです。" },
+  availability: { title: "会食のマッチング", desc: "空いている日時を|登録しておくと、|日程の合うメンバーが|数名そろったときに、|管理者から|会食のご案内が|届きます。|（登録した日時が|見えるのは、|あなたと管理者|だけです）" },
 } satisfies Record<string, Feature | ((n: number | null) => Feature)>;
 
 const plans = [
