@@ -10,7 +10,6 @@ import { InviteNetwork } from "@/components/guild/invite-network";
 import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
-import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
 import { createClient } from "@/lib/supabase/server";
 import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
 
@@ -38,11 +37,6 @@ export default async function MasterPage() {
   const supabase = await createClient();
   const { data: unmappedData, error: unmappedError } = await supabase.rpc("sakaba_list_unmapped_billing_prices", { p_guild_slug: "gia" });
   const unmapped = Array.isArray(unmappedData) ? unmappedData as { price_id: string; members: number }[] : [];
-  const configured = getConfiguredSakabaPrices();
-  const registerSql = ([["standard", configured.standard], ["dining", configured.dining]] as const)
-    .filter(([, id]) => id && /^price_[A-Za-z0-9]+$/.test(id))
-    .map(([plan, id]) => `insert into sakaba.billing_prices (price_id, plan) values ('${id}', '${plan}') on conflict (price_id) do update set plan = excluded.plan;`)
-    .join("\n");
   return (
     <div className="space-y-9">
       <PageTitle
@@ -54,7 +48,7 @@ export default async function MasterPage() {
         {unmappedError
           ? <p className="text-sm">料金の段の状態を読み込めませんでした。migration 0114 が適用済みか確認してください。</p>
           : <>
-            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。ページの下の「料金IDの登録」のSQLを流してください。</p>
+            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。料金IDと段の対応（sakaba.billing_prices）に登録してください。</p>
             <ul className="mt-3 space-y-1 text-sm">{unmapped.map((row) => <li key={row.price_id} className="break-all"><code>{row.price_id}</code>：{row.members}人</li>)}</ul>
           </>}
       </section>}
@@ -146,13 +140,6 @@ export default async function MasterPage() {
         <h2 id="master-network-title" className="text-xl tracking-wider">招待のつながり</h2>
         <InviteNetwork members={network} />
       </section>
-      <details className="c-window p-5 sm:p-6">
-        <summary className="guild-px cursor-pointer text-sm">料金IDの登録（SQL）</summary>
-        {registerSql ? <>
-          <p className="c-muted mt-3 text-xs leading-relaxed">この環境のプラス・ビジネスの料金IDを、段としてDBに登録します。Supabase の SQL Editor で流してください。何度流しても同じ結果です。料金IDを変えたときも流し直します。</p>
-          <pre className="c-card mt-2 overflow-x-auto p-3 text-xs whitespace-pre">{registerSql}</pre>
-        </> : <p className="c-muted mt-3 text-xs">この環境には料金IDの環境変数が設定されていません。</p>}
-      </details>
     </div>
   );
 }
