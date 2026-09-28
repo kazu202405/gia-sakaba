@@ -83,7 +83,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     if (exempt) return <span className="c-chip">管理者枠で利用可</span>;
     if (companyNoteBenefit) return plan === "dining" ? <span className="c-chip">Company Note特典で利用中</span> : null;
     if (currentPlan === plan) return <span className="c-chip">現在のプラン</span>;
-    if (plan === "free") return <span className="c-muted text-xs">フリーに戻す場合は支払い管理から解約できます</span>;
+    if (plan === "free") return <span className="c-muted text-xs">フリープランに戻す場合は支払い管理から解約できます</span>;
     if (plan === "dining" && !diningEnabled) return <span className="c-muted text-sm">申し込みは準備中です</span>;
     if (billingStatus === "past_due") return <span className="c-muted text-sm">支払い方法を確認してから変更できます</span>;
     if (hasActiveContract) {
@@ -143,10 +143,10 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       <div>
         <p className="c-label text-base">おしはらい について</p>
         <ul className="c-muted mt-2 space-y-1.5">
-          <li>▶ <Ph text="プラス・ビジネスは|月額制で、|無料体験は|ありません。" /></li>
+          <li>▶ <Ph text="プラスプラン・|ビジネスプランは|月額制で、|無料体験は|ありません。" /></li>
           <li>▶ <Ph text="有料会員向けの集まりは|不定期開催で、|申し込み後に|承認が必要な場合が|あります。" /></li>
           <li>▶ <Ph text="会食の開催・参加・|希望どおりの出会いは|保証されません。" /></li>
-          <li>▶ <Ph text="今後はビジネス限定の|交流会も|予定しています|（開催時期未定）。" /></li>
+          <li>▶ <Ph text="今後はビジネスプラン限定の|交流会も|予定しています|（開催時期未定）。" /></li>
           <li>▶ <Ph text="プラン変更時の請求額は、|Stripeの確認画面で|お確かめください。" /></li>
         </ul>
       </div>
@@ -157,14 +157,14 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         {hasCustomer && <><p className="mt-3 text-sm leading-relaxed">過去の酒場の契約・支払い履歴がある場合は、支払い管理で確認できます。継続中の契約は管理者枠に変わっても自動解約されません。</p><button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button></>}
       </Window>
       : companyNoteBenefit ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場のビジネス（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
+        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場のビジネスプラン（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
         {hasActiveContract && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は継続中です。特典が付いても自動解約されず、請求も止まりません。不要な場合は下のボタンから解約してください。</p>}
         {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button>}
       </Window>
       : (isPaid || billingStatus === "past_due" || hasCustomer) ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラス（月480円）です。" : currentPlan === "dining" ? "現在はビジネス（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリーです。"}</p>
+        <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリープランです。"}</p>
         <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : (hasActiveContract || billingStatus === "past_due") ? "支払い方法・解約を管理する" : "支払い履歴を見る"}</button>
-      </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリーです。上の比較から、いつでもプラス・ビジネスへの申し込みを選べます。</p></Window>}
+      </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリープランです。上の比較から、いつでもプラスプラン・ビジネスプランへの申し込みを選べます。</p></Window>}
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;
 }

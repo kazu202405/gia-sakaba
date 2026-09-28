@@ -14,7 +14,7 @@ export const PLAN_LIMITS: Record<Exclude<PlanKey, "exempt">, Record<QuotaKind, n
   dining: { intro: 10, quest: null, project: null },
 };
 
-export const PLAN_LABEL: Record<PlanKey, string> = { free: "フリー", standard: "プラス", dining: "ビジネス", exempt: "管理者" };
+export const PLAN_LABEL: Record<PlanKey, string> = { free: "フリープラン", standard: "プラスプラン", dining: "ビジネスプラン", exempt: "管理者" };
 
 /** DBが上限で断ったときの印（sakaba.assert_within_plan_limit） */
 export const PLAN_LIMIT_ERROR_CODE = "53400";

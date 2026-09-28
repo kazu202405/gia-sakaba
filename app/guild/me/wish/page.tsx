@@ -24,7 +24,7 @@ export default async function MealWishPage() {
     <PageTitle title="会食の希望" lead="会って話したい人やテーマを、管理者に伝えられます。" />
     <Window title="希望を伝える">
       {!enabled ? <p className="text-sm">この機能は準備中です。</p>
-        : !eligible ? <div className="space-y-4 text-sm"><p>会食の希望は、ビジネス（月880円）から送れます。</p><Link href="/guild/plan" className="c-button-sub inline-flex min-h-11 items-center px-4">会員プランを見る</Link></div>
+        : !eligible ? <div className="space-y-4 text-sm"><p>会食の希望は、ビジネスプラン（月880円）から送れます。</p><Link href="/guild/plan" className="c-button-sub inline-flex min-h-11 items-center px-4">会員プランを見る</Link></div>
           : <MealWishEditor initialText={wish?.wish_text ?? ""} />}
     </Window>
     {eligible && availabilityEnabled && <Window title="会食に空いている日時"><MealAvailabilityEditor initial={availability} /></Window>}

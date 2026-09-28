@@ -29,7 +29,7 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
       {canCreate && quota && <PlanQuotaNote kind="project" plan={quota.plan} slot={quota.slot} />}
       {!canCreate && !showFreeUpsell && quota && <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} />}
       {showFreeUpsell && checkoutResult !== "success" && <>
-        <p className="c-muted text-sm">フリーの作成枠（{quota?.slot.limit ?? FREE_ACTIVE_PROJECT_LIMIT}つ）を使い切りました</p>
+        <p className="c-muted text-sm">フリープランの作成枠（{quota?.slot.limit ?? FREE_ACTIVE_PROJECT_LIMIT}つ）を使い切りました</p>
         <Window title="有料会員">
           <p className="text-[15px] leading-relaxed">データベースを拡張して<span className="whitespace-nowrap">プロジェクト</span>の保存枠を広げることができます。</p>
           <p className="mt-2 text-[15px] leading-relaxed">ギルド・クエスト・<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>

@@ -48,7 +48,7 @@ export default async function MasterPage() {
         {unmappedError
           ? <p className="text-sm">料金の段の状態を読み込めませんでした。migration 0114 が適用済みか確認してください。</p>
           : <>
-            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネス（880円）として扱っています。料金IDと段の対応（sakaba.billing_prices）に登録してください。</p>
+            <p className="text-sm leading-relaxed">支払い中なのに、どの段か登録されていない料金IDがあります。登録するまで、この人たちはビジネスプラン（880円）として扱っています。料金IDと段の対応（sakaba.billing_prices）に登録してください。</p>
             <ul className="mt-3 space-y-1 text-sm">{unmapped.map((row) => <li key={row.price_id} className="break-all"><code>{row.price_id}</code>：{row.members}人</li>)}</ul>
           </>}
       </section>}
@@ -112,7 +112,7 @@ export default async function MasterPage() {
       </section>
       {diningEnabled && <section aria-labelledby="master-meal-wishes-title" className="space-y-4 border-t-2 border-dashed border-[#1b2a41]/25 pt-8">
         <h2 id="master-meal-wishes-title" className="text-xl tracking-wider">会食の希望{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "・空き日時" : ""}</h2>
-        <p className="c-muted text-sm">ビジネス相当の利用者から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
+        <p className="c-muted text-sm">ビジネスプラン相当の利用者から届いた内容です。ほかの会員には見えません。会食の開催・成立を約束するものではありません。</p>
         {mealUserIds.length === 0 ? <p className="c-card p-5 text-sm">まだ希望は届いていません。</p> : <div className="grid gap-4 md:grid-cols-2">
           {mealUserIds.map((userId) => {
             const wish = mealWishes.find((item) => item.user_id === userId);

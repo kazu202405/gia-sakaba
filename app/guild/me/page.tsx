@@ -92,14 +92,14 @@ export default async function MyPage() {
     <LivePushSettings />
     <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">
-        {billing.role !== "member" || billing.billing_status === "exempt" ? "現在は管理者枠です。料金なしで全機能を利用できます。" : billing.company_note_benefit ? "Company Noteの11,000円会員特典で、ビジネス（月880円）の機能を利用中です。酒場への追加申込は不要です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在はプラス（月480円）です。" : currentPlan === "dining" ? "現在はビジネス（月880円）です。" : billing.is_paid ? "現在、有料会員です。" : "現在はフリーです。"}
+        {billing.role !== "member" || billing.billing_status === "exempt" ? "現在は管理者枠です。料金なしで全機能を利用できます。" : billing.company_note_benefit ? "Company Noteの11,000円会員特典で、ビジネスプラン（月880円）の機能を利用中です。酒場への追加申込は不要です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : billing.is_paid ? "現在、有料会員です。" : "現在はフリープランです。"}
       </p>
       {(billing.company_note_benefit || billing.role !== "member") && ["active", "trialing", "past_due"].includes(billing.billing_status) && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は自動解約されず、請求も続きます。不要な場合は支払い管理から解約してください。</p>}
       <div className="mt-4">
         {billing.stripe_customer_id ? <GuildBillingPortalButton label={["active", "trialing"].includes(billing.billing_status) ? "支払い方法・解約を管理する" : billing.billing_status === "past_due" ? "お支払いを確認する" : "支払い履歴を見る"} /> :
           <Link href="/guild/plan" className="c-button-sub h-11 px-5 text-sm">会員プランを見る</Link>}
       </div>
-      <Link href="/guild/plan" className="c-muted mt-3 inline-block text-sm underline underline-offset-4">フリー・プラス・ビジネスをくらべる</Link>
+      <Link href="/guild/plan" className="c-muted mt-3 inline-block text-sm underline underline-offset-4">プランをくらべる</Link>
       {billing.stripe_customer_id && <p className="c-muted mt-3 text-xs">解約はStripeの管理画面で手続きします。このボタンを押すだけでは解約されません。</p>}
     </Window>
   </div>;

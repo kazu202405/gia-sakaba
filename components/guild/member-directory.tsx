@@ -54,7 +54,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             className="c-input h-11"
           />
         </label>
-        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスからです。" : "業種・地域での絞り込みと「めいし」表示はプラス、本文まで探すのはビジネスからです。"}<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
+        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスプランからです。" : "業種・地域での絞り込みと「めいし」表示はプラスプラン、本文まで探すのはビジネスプランからです。"}<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
         {canFilter && <>
         {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
         <div className="mt-3 grid grid-cols-2 gap-2">

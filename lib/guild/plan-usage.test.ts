@@ -29,10 +29,10 @@ describe("料金の段の使用状況", () => {
   });
 
   it("画面の言葉", () => {
-    expect(quotaLine("intro", "free", { limit: 1, used: 0 })).toBe("今月あと1件（フリー：つながり申請は月1件まで）");
-    expect(quotaLine("project", "standard", { limit: 5, used: 3 })).toBe("あと2つ作れます（プラス：プロジェクトは5つまで）");
+    expect(quotaLine("intro", "free", { limit: 1, used: 0 })).toBe("今月あと1件（フリープラン：つながり申請は月1件まで）");
+    expect(quotaLine("project", "standard", { limit: 5, used: 3 })).toBe("あと2つ作れます（プラスプラン：プロジェクトは5つまで）");
     expect(quotaLine("quest", "dining", { limit: null, used: 3 })).toBeNull();
-    expect(exhaustedLine("intro", "dining", { limit: 10, used: 10 })).toContain("ビジネス");
+    expect(exhaustedLine("intro", "dining", { limit: 10, used: 10 })).toContain("ビジネスプラン");
   });
 
   it("DBが上限で断ったことを見分ける", () => {
