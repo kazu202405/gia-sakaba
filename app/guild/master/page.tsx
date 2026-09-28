@@ -34,13 +34,46 @@ export default async function MasterPage() {
         title="ギルドマスター"
         lead="限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
       />
-      <nav aria-label="管理項目" className="flex flex-wrap gap-3 text-sm">
-        <a href="#master-gatherings-title" className="c-button-sub inline-flex h-10 items-center px-4">限定の集まり</a>
-        {diningEnabled && <a href="#master-meal-wishes-title" className="c-button-sub inline-flex h-10 items-center px-4">会食の希望</a>}
-        <a href="#master-invites-title" className="c-button-sub inline-flex h-10 items-center px-4">招待リンク</a>
-        {preparedEnabled && <a href="#master-prepared-title" className="c-button-sub inline-flex h-10 items-center px-4">メンバーの仮登録</a>}
-        <a href="#master-network-title" className="c-button-sub inline-flex h-10 items-center px-4">招待のつながり</a>
-        <Link href="/guild/join?preview=1" className="c-button-sub inline-flex h-10 items-center px-4">入会フォームを見る</Link>
+      <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
+        <span className="c-window-title">管理コマンド</span>
+        <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
+          <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-gatherings-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              限定の集まり
+            </a>
+          </li>
+          {diningEnabled && <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-meal-wishes-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              会食の希望
+            </a>
+          </li>}
+          <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-invites-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              招待リンク
+            </a>
+          </li>
+          {preparedEnabled && <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-prepared-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              メンバーの仮登録
+            </a>
+          </li>}
+          <li className="border-b border-[#1b2a41]/20">
+            <a href="#master-network-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              招待のつながり
+            </a>
+          </li>
+          <li className="border-b border-[#1b2a41]/20">
+            <Link href="/guild/join?preview=1" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              入会フォームを見る
+            </Link>
+          </li>
+        </ul>
       </nav>
       <section aria-labelledby="master-gatherings-title" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
