@@ -35,7 +35,7 @@ export function LiveQuestApplication({
   const [showToGuests, setShowToGuests] = useState(true);
 
   if (quest.creator_id === currentUserId) {
-    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みは管理者画面で確認できます。" : "あなたが出したクエストです。参加希望者の確認機能は準備中です。"}</p>;
+    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みは管理者画面で確認できます。" : "あなたが出したクエストです。参加希望者と届いたひとことは、下の「参加希望者を見る」から確認できます。"}</p>;
   }
 
   if (quest.status !== "open") {

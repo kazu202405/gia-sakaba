@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle, Window } from "@/components/guild/cards";
+import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { JoinForm } from "@/components/guild/join-form";
 import { InviteSignup } from "@/components/guild/invite-signup";
 import { inviteErrorText } from "@/lib/guild/join";
@@ -80,8 +82,28 @@ export default async function JoinPage({ searchParams }: Props) {
 
 function JoinPageFrame({ children }: { children: React.ReactNode }) {
   return (
-    <main className="guild-theme min-h-screen px-4 py-10 sm:px-6 sm:py-14">
-      <div className="mx-auto max-w-4xl space-y-9">{children}</div>
+    <main className="guild-theme guild-scene min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
+      <GuildSceneArt art="tavern" dim />
+      <div className="relative z-10 mx-auto max-w-4xl space-y-9">
+        <header className="flex items-center justify-between gap-4 border-2 border-[#efe6cf]/70 px-4 py-3 text-sm">
+          <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
+          <span className="c-chip">招待状を受け取った方へ</span>
+        </header>
+        <nav aria-label="入会までの流れ" className="c-window px-4 py-4 sm:px-6">
+          <ol className="grid gap-2 text-sm sm:grid-cols-3 sm:gap-0">
+            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-[#efe6cf]/30 sm:pr-4">
+              <span className="c-label guild-px">01</span><span>招待状を確認</span>
+            </li>
+            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-[#efe6cf]/30 sm:px-4">
+              <span className="c-label guild-px">02</span><span>登録・ログイン</span>
+            </li>
+            <li className="flex items-center gap-2 sm:pl-4">
+              <span className="c-label guild-px">03</span><span>酒場へ入会</span>
+            </li>
+          </ol>
+        </nav>
+        {children}
+      </div>
     </main>
   );
 }
