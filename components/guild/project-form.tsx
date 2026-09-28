@@ -4,7 +4,7 @@
 // パーティで進めるものは、クエストで参加する人が決まったときに作る（見本ではまだ作れない）。
 
 import { useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { ME_ID, SALES_STEP_NAMES, TODAY } from "@/lib/guild/mock-data";
 import {
   createProject,
@@ -57,7 +57,7 @@ export function ProjectForm({ projectId }: { projectId?: string }) {
 }
 
 function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectState>["projects"][number] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [title, setTitle] = useState(editing?.title ?? "");
   const [goal, setGoal] = useState(editing?.goal ?? "");
   const [memo, setMemo] = useState(editing?.memo ?? "");

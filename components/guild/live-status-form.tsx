@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { MyGuildProfile } from "@/lib/guild/server-data";
 import type { JobIconKey, Position } from "@/lib/guild/types";
 import { jobIconLabel, positionLabel } from "@/lib/guild/labels";
@@ -64,7 +64,7 @@ async function persist({ draft }: Snapshot) {
 
 // contactEditor：連絡先の窓（別に自動保存する。置き場所だけここ）
 export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildProfile; contactEditor?: React.ReactNode }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const currentYear = new Date().getUTCFullYear();
   const [draft, setDraft] = useState(initial);
   const [saveState, setSaveState] = useState<"saved" | "editing" | "saving" | "error">("saved");

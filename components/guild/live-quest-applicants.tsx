@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildQuestApplicant } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
 import { formatDate, introStatusLabel } from "@/lib/guild/labels";
@@ -16,7 +16,7 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
   members: Profile[];
   canChoose: boolean;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [sent, setSent] = useState<string[]>([]);
   const [error, setError] = useState("");

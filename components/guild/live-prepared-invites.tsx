@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { Window } from "./cards";
 import { createClient } from "@/lib/supabase/client";
 import { formatDate, positionLabel } from "@/lib/guild/labels";
@@ -23,7 +23,7 @@ function inviteStatus(invite: MasterPreparedInvite) {
 }
 
 export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite[] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [draft, setDraft] = useState<PreparedInvite>(emptyDraft);
   const [invites, setInvites] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);

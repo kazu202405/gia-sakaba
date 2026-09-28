@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { Profile } from "@/lib/guild/types";
 import {
   MASTER_INTRO_COMPANY_MAX,
@@ -70,7 +70,7 @@ function PersonFields({ label, value, members, onChange }: {
 }
 
 export function LiveMasterIntroductions({ initial, members }: { initial: MasterIntroduction[]; members: Profile[] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [items, setItems] = useState(initial);
   const [draft, setDraft] = useState<MasterIntroductionDraft>(emptyDraft);
   const [links, setLinks] = useState<CreatedLinks | null>(null);

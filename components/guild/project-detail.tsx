@@ -6,7 +6,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { formatDate } from "@/lib/guild/labels";
 import { ME_ID, getProfile } from "@/lib/guild/mock-data";
 import {
@@ -38,7 +38,7 @@ type TaskView = "list" | "gantt";
 
 export function ProjectDetail({ id }: { id: string }) {
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
-  const router = useRouter();
+  const router = useGuildRouter();
   const [view, setView] = useState<TaskView>("list");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showDone, setShowDone] = useState(false);

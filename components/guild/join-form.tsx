@@ -4,7 +4,7 @@
 // 酒場は だれでも入れる。役職は 限定の集まり（経営者の方向け）の目安に使うだけで、ここでは はじかない。
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
@@ -25,7 +25,7 @@ import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
 export function JoinForm({ inviterName, inviteCode, preview = false, initialName = "", prepared = null }: { inviterName: string; inviteCode: string; preview?: boolean; initialName?: string; prepared?: PreparedInvite | null }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [draft, setDraft] = useState<JoinDraft>({
     display_name: initialName.slice(0, JOIN_NAME_MAX),
     company_name: prepared?.company_name ?? "",

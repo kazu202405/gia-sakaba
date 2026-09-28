@@ -16,6 +16,8 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
   const [saving, setSaving] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  // edit＝書く／confirm＝送る前の見直し（人に届く文章は1回見せてから送る。2026-09-28）
+  const [step, setStep] = useState<"edit" | "confirm">("edit");
   // 開いたら「閉じる」に置く（最初の選択肢に置くと、選ばれているように見えるため）
   const firstRef = useRef<HTMLButtonElement>(null);
 
@@ -34,10 +36,16 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
     setError("");
   };
 
+  function review() {
+    const issue = consultError(topics, message);
+    if (issue) { setError(issue); return; }
+    setError(""); setStep("confirm");
+  }
+
   async function submit() {
     if (saving) return;
     const issue = consultError(topics, message);
-    if (issue) { setError(issue); return; }
+    if (issue) { setError(issue); setStep("edit"); return; }
     setSaving(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_create_consult_request", {
@@ -47,7 +55,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
         setError(rpcError.code === "53400" ? "相談は24時間に3件までです。少し時間をおいてお送りください。" : "送れませんでした。少し待ってもう一度お試しください。");
         return;
       }
-      setSent(true); setOpen(false); setTopics([]); setMessage("");
+      setSent(true); setOpen(false); setTopics([]); setMessage(""); setStep("edit");
       uiToast("相談を送りました。管理者からご連絡します");
     } catch {
       setError("通信に失敗しました。接続を確認してください。");
@@ -79,7 +87,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
           {isMaster
             ? <span className="c-chip">相談は管理者画面に届きます</span>
             : <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => { setOpen(true); setError(""); }} className="rpg-button inline-flex min-h-11 items-center px-5 text-sm">▶ 相談する</button>
+              <button type="button" onClick={() => { setOpen(true); setError(""); setStep("edit"); }} className="rpg-button inline-flex min-h-11 items-center px-5 text-sm">▶ 相談する</button>
               {sent && <p role="status" className="c-muted text-xs"><Ph text="相談を受け付けました。|管理者から|ご連絡します。" /></p>}
             </div>}
         </div>
@@ -92,20 +100,33 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
         <h2 id="enterprise-consult-title" className="c-window-title">相談する</h2>
         <button ref={firstRef} type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>
         <div className={`max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6 ${PHRASE_WRAP}`}>
-          <p className="c-muted text-[13px] leading-relaxed"><Ph text="届くのは管理者だけです。|内容を見て、|管理者からご連絡します。|相談がまとまって|お見積もりを出すまでは|無料です。" /></p>
-          <fieldset className="mt-5">
-            <legend className="text-[15px]">相談したいこと <span className="text-xs text-[#c62828]">必須</span><span className="c-muted ml-1 text-xs">いくつでも</span></legend>
-            <div className="mt-2 grid gap-2">{CONSULT_TOPICS.map((topic) => <button key={topic.key} type="button" aria-pressed={topics.includes(topic.key)} onClick={() => toggle(topic.key)} className="c-choice px-3 py-2.5 text-left text-sm">{topic.title}</button>)}</div>
-          </fieldset>
-          <label className="mt-5 block">
-            <span className="text-[15px]">いまの状況・困っていること</span> <span className="text-xs text-[#c62828]">必須</span>
-            <textarea value={message} onChange={(event) => { setMessage(event.target.value); setError(""); }} rows={4} maxLength={CONSULT_MESSAGE_MAX} className="c-input mt-2" placeholder="例：問い合わせ対応に毎日2時間かかっている。紹介は来るが、商談につながらない など" />
-          </label>
-          {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
-          <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button type="button" disabled={saving} onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button>
-            <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : "▶ 相談を送る"}</button>
-          </div>
+          {step === "edit" ? <>
+            <p className="c-muted text-[13px] leading-relaxed"><Ph text="届くのは管理者だけです。|内容を見て、|管理者からご連絡します。|相談がまとまって|お見積もりを出すまでは|無料です。" /></p>
+            <fieldset className="mt-5">
+              <legend className="text-[15px]">相談したいこと <span className="text-xs text-[#c62828]">必須</span><span className="c-muted ml-1 text-xs">いくつでも</span></legend>
+              <div className="mt-2 grid gap-2">{CONSULT_TOPICS.map((topic) => <button key={topic.key} type="button" aria-pressed={topics.includes(topic.key)} onClick={() => toggle(topic.key)} className="c-choice px-3 py-2.5 text-left text-sm">{topic.title}</button>)}</div>
+            </fieldset>
+            <label className="mt-5 block">
+              <span className="text-[15px]">いまの状況・困っていること</span> <span className="text-xs text-[#c62828]">必須</span>
+              <textarea value={message} onChange={(event) => { setMessage(event.target.value); setError(""); }} rows={4} maxLength={CONSULT_MESSAGE_MAX} className="c-input mt-2" placeholder="例：問い合わせ対応に毎日2時間かかっている。紹介は来るが、商談につながらない など" />
+            </label>
+            {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button>
+              <button type="button" onClick={review} className="rpg-button h-11">▶ 確認する</button>
+            </div>
+          </> : <>
+            <p className="text-[15px]">この内容で送りますか？</p>
+            <dl className="c-card mt-3 space-y-3 p-4 text-sm">
+              <div><dt className="c-muted text-xs">相談したいこと</dt><dd className="mt-1">{CONSULT_TOPICS.filter((topic) => topics.includes(topic.key)).map((topic) => topic.title).join("、")}</dd></div>
+              <div><dt className="c-muted text-xs">いまの状況・困っていること</dt><dd className="mt-1 whitespace-pre-wrap break-words leading-relaxed">{message.trim()}</dd></div>
+            </dl>
+            {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" disabled={saving} onClick={() => { setStep("edit"); setError(""); }} className="c-button-sub h-11">◀ もどって なおす</button>
+              <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : "▶ この内容で送る"}</button>
+            </div>
+          </>}
         </div>
       </div>
     </div>}

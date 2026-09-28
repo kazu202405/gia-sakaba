@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildProject, GuildProjectPipeline } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
@@ -13,7 +13,7 @@ import { DateInput } from "./form-parts";
 import { LiveProjectPeople } from "./live-project-people";
 
 export function LiveProjectDetail({ project, pipeline, members, canEdit, today }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean; today: string }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
   // 追加は、押した瞬間に錠をかける（state の反映を待つと、すばやい2度押しで2件できる）

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
 
 export function InviteSignup({ inviteCode, inviterName, preview = false, initialName = "" }: { inviteCode: string; inviterName: string; preview?: boolean; initialName?: string }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState("");
   const [emailAgain, setEmailAgain] = useState("");

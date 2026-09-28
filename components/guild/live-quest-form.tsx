@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildQuest } from "@/lib/guild/server-data";
 import type { QuestCategory } from "@/lib/guild/types";
 import { questCategoryHint, questCategoryLabel } from "@/lib/guild/labels";
@@ -57,7 +57,7 @@ function daysBetween(from: string, to: string): number {
 
 // quota：新しく出すときだけ渡す（今月の残り）
 export function LiveQuestForm({ questTerm, gathering = false, quest, quota = null }: { questTerm: string; gathering?: boolean; quest?: GuildQuest; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const fixedGathering = gathering || quest?.members_only === true;
   // 新しく出すときだけ、今月の残りを見せる（使い切ったら確認に進めない。最後はDBが止める）
   const showQuota = !quest && quota !== null;

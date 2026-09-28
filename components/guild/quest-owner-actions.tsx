@@ -5,7 +5,7 @@
 // （承諾済み・紹介済みは連絡先が開いたまま残す）。
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { guild } from "@/lib/guild/mock-data";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 
@@ -19,7 +19,7 @@ export function QuestOwnerActions({
   /** 一緒に取り下げる、承諾前の紹介依頼の数 */
   openIntroCount: number;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
 
   const withdraw = async () => {
     const parts = [

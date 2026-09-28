@@ -7,7 +7,7 @@
 // 引き継ぎは本人が押したときだけ行う（勝手に写さない）。
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type {
   GiaApplicantImport,
   JobIconKey,
@@ -140,7 +140,7 @@ export function StatusWizard({
   initialContact: ContactDraft | null;
   giaApplicant: GiaApplicantImport | null;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [step, setStep] = useState<StepKey>(isNew ? "intro" : "basic");
   // はじめて作るときは 通り過ぎた札だけ押せる。なおすときは 最初から どこへでも飛べる
   const [maxReached, setMaxReached] = useState(isNew ? 0 : FLOW.length - 1);

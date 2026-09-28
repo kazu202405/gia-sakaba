@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildIntroRequest } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
 import { closedStatuses, formatDate, formatJstDate, introStatusLabel, purposeLabel } from "@/lib/guild/labels";
@@ -31,7 +31,7 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
   currentUserId: string;
   contacts: Record<string, ViewContactItem[]> | null;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   // 承諾のひとことを書いている申請（1つだけ開く）

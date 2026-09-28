@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildPendingGatheringApplication } from "@/lib/guild/server-data";
 import { formatDate, positionLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
@@ -10,7 +10,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 
 export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGatheringApplication[] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [decided, setDecided] = useState<string[]>([]);
   const [error, setError] = useState("");

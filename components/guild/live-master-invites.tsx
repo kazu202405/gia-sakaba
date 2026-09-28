@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { useState } from "react";
 import type { GuildMasterInvite } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
@@ -21,7 +21,7 @@ function inviteUrl(code: string) {
 }
 
 export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: GuildMasterInvite[]; excludedIds?: string[] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [invites, setInvites] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState("");

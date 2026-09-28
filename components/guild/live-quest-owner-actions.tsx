@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 
@@ -12,7 +12,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
   applicantCount: number;
   gathering: boolean;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 

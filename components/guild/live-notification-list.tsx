@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildIntroRequest, GuildQuest } from "@/lib/guild/server-data";
 import type { GuildNotification, Profile } from "@/lib/guild/types";
 import { formatDate, introStatusLabel } from "@/lib/guild/labels";
@@ -15,7 +15,7 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
   quests: GuildQuest[];
   intros: GuildIntroRequest[];
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const names = new Map(members.map((member) => [member.id, member.display_name]));
@@ -30,6 +30,15 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
   async function markRead(id?: string, href?: string) {
     if (pendingId) return;
     setPendingId(id ?? "all"); setError("");
+    // 別の画面へ移るおしらせは、先に移る（押した瞬間に仮の画面が出る）。既読は裏で付ける。
+    // 既読を待ってから移ると、その間なにも変わらず「押せていない」と思って何度も押される（2026-09-28）。
+    // 押せないままにしておくのは、画面が変わるまで（この部品ごと入れ替わる）
+    if (href && new URL(href, window.location.href).pathname !== window.location.pathname) {
+      router.push(href);
+      void createClient().rpc("sakaba_mark_notifications_read", { p_guild_slug: "gia", p_notification_id: id })
+        .then(({ error: rpcError }) => { if (rpcError) console.warn("[guild] 既読にできませんでした", rpcError.message); });
+      return;
+    }
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_mark_notifications_read", {
         p_guild_slug: "gia", p_notification_id: id,

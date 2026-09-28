@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildProject } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
 import { isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
@@ -16,7 +16,7 @@ function todayInJapan() {
 }
 
 export function LiveProjectForm({ project, canCreate = true, quota = null }: { project?: GuildProject; canCreate?: boolean; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [title, setTitle] = useState(project?.title ?? "");
   const [goal, setGoal] = useState(project?.goal ?? "");
   const [memo, setMemo] = useState(project?.memo ?? "");

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildIntroRequest } from "@/lib/guild/server-data";
 import type { IntroPurpose, Profile } from "@/lib/guild/types";
 import { purposeLabel } from "@/lib/guild/labels";
@@ -15,7 +15,7 @@ const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
 // quota：今月の申請の残り（読めなかったら null。そのときは数を出さず、DBの判定に任せる）
 export function LiveIntroRequestButton({ target, existing, quota = null }: { target: Profile; existing: GuildIntroRequest | null; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
   const [purpose, setPurpose] = useState<IntroPurpose | null>(null);

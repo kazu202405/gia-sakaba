@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuestGathering } from "@/lib/guild/guest-gathering";
 import { GUILD_PROMISES } from "@/lib/guild/rules";
 import { createClient } from "@/lib/supabase/client";
@@ -15,7 +15,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
   accountEmail: string;
   initialName: string;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [email, setEmail] = useState("");
   const [name, setName] = useState(event.my_profile?.name ?? initialName);
   const [introduction, setIntroduction] = useState(event.my_profile?.introduction ?? "");

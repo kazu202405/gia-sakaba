@@ -6,7 +6,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { Quest } from "@/lib/guild/types";
 import { ME_ID, getProfile, guild, introRequests, questApplications } from "@/lib/guild/mock-data";
 import {
@@ -66,7 +66,7 @@ export function QuestToProject({ quest }: { quest: Quest }) {
 }
 
 function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () => void }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const candidates = partyCandidates(quest, questApplications, introRequests);
   const [title, setTitle] = useState(quest.title.slice(0, TITLE_MAX));
   const [members, setMembers] = useState<string[]>([]);

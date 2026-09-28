@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { AuthLinkError } from "@/components/guild/auth-link-error";
@@ -14,7 +14,7 @@ function safeNext(value: string | null): string {
 const REMEMBER_EMAIL_KEY = "sakaba:remember-email";
 
 export default function GuildLoginPage() {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
 import { Trash2, X } from "lucide-react";
 import type { GuildProjectPipeline } from "@/lib/guild/server-data";
@@ -25,7 +25,7 @@ function shortDate(value: string) {
 }
 
 export function LiveProjectPeople({ projectId, pipeline, members, editable }: { projectId: string; pipeline: GuildProjectPipeline; members: Profile[]; editable: boolean }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [selection, setSelection] = useState<Selection>(null);
   const [newContactLabel, setNewContactLabel] = useState("");
   const [newMemberId, setNewMemberId] = useState<string | null>(null);

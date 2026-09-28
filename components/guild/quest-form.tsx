@@ -8,7 +8,7 @@
 //   （全部の項目をなおせる。合わなくなった人は自分で取り消せる）
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryHint, questCategoryLabel } from "@/lib/guild/labels";
 import { PROMISE_NOTE } from "@/lib/guild/rules";
@@ -102,7 +102,7 @@ export function QuestForm({
   /** ギルドマスターが「集まり」（有料会員だけの リアルの集まり）を ひらくとき。しゅるいと急ぎは出さない */
   gathering?: boolean;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [draft, setDraft] = useState<Draft>(() =>
     quest ? draftFromQuest(quest) : gathering ? { ...EMPTY, category: "gathering" } : EMPTY,

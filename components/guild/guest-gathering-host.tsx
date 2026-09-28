@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuestGatheringHost as GuestGatheringHostData } from "@/lib/guild/guest-gathering";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
@@ -15,7 +15,7 @@ export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
   /** 主催者のプロフィールを、申し込んだゲストに見せる設定か（まだ選んでいなければ null） */
   hostVisible?: boolean | null;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [localToken, setLocalToken] = useState<{ baseline: string | null; value: string } | null>(null);
   const token = localToken?.baseline === initial.token ? localToken.value : initial.token;
   const origin = useSyncExternalStore(() => () => {}, () => window.location.origin, () => "");

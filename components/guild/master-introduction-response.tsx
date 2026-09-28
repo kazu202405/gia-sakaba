@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
   MASTER_INTRO_COMPANY_MAX,
   MASTER_INTRO_NAME_MAX,
@@ -26,7 +26,7 @@ export function MasterIntroductionResponse({ token, introduction, authenticated,
   authenticated: boolean;
   accountEmail: string;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [email, setEmail] = useState("");
   const [mailSent, setMailSent] = useState(false);
   const [name, setName] = useState(introduction.approved_name || introduction.recipient_name);

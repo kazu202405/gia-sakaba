@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildIntroRequest } from "@/lib/guild/server-data";
 import type { IntroOutcome, IntroStatus, Profile } from "@/lib/guild/types";
 import { formatDate, introStatusLabel, outcomeLabel, purposeLabel } from "@/lib/guild/labels";
@@ -19,7 +19,7 @@ const GROUPS: { key: Group; label: string; statuses: IntroStatus[] }[] = [
 const OUTCOMES: IntroOutcome[] = ["met", "working", "no_fit"];
 
 export function LiveMasterConsole({ initial, members }: { initial: GuildIntroRequest[]; members: Profile[] }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [group, setGroup] = useState<Group>("inbox");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingOutcome, setPendingOutcome] = useState<IntroOutcome | null>(null);

@@ -14,6 +14,7 @@ import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { FeedbackButton } from "@/components/guild/feedback-button";
 import { GuildPageSkeleton } from "@/components/guild/page-skeleton";
 import { sceneArtOf } from "@/lib/guild/scene-art";
+import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
 
 type NavItem = {
   href: string;
@@ -77,7 +78,16 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
       setPending(url.pathname);
     };
     document.addEventListener("click", onClick);
-    return () => document.removeEventListener("click", onClick);
+    // ボタンから移るとき（useGuildRouter の push / replace）も、リンクと同じ仮の画面を出す
+    const onNavigate = (event: Event) => {
+      const path = (event as CustomEvent<string>).detail;
+      if (typeof path === "string" && path !== window.location.pathname) setPending(path);
+    };
+    window.addEventListener(GUILD_NAVIGATE_EVENT, onNavigate);
+    return () => {
+      document.removeEventListener("click", onClick);
+      window.removeEventListener(GUILD_NAVIGATE_EVENT, onNavigate);
+    };
   }, []);
 
   if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;

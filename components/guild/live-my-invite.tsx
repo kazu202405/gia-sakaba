@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { useState } from "react";
 import type { MyMemberInvite } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
@@ -14,7 +14,7 @@ function inviteUrl(code: string) {
 }
 
 export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [invite, setInvite] = useState(initial);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");

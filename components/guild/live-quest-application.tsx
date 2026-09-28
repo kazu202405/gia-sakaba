@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildQuest } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
 import { CheckBox, TextArea } from "./form-parts";
@@ -17,7 +17,7 @@ export function LiveQuestApplication({
   /** 誰でも参加できる集まりで、自分がゲストにプロフィールを見せる設定か（まだ選んでいなければ null） */
   guestVisible?: boolean | null;
 }) {
-  const router = useRouter();
+  const router = useGuildRouter();
   const [localApplication, setLocalApplication] = useState<{
     baseline: GuildQuest["my_application"];
     value: GuildQuest["my_application"];
