@@ -1,7 +1,7 @@
 "use client";
 
 // 会員プランの3つの枠の下に置く、横長の「エンタープライズプラン」。
-// 管理者が事業そのものを手伝う（要相談・初回相談は無料）。月額の決済はせず、相談を管理者画面に届けるだけ（0115）。
+// 管理者が事業そのものを手伝う（要相談・相談をまとめてお見積もりを出すまでは無料）。月額の決済はせず、相談を管理者画面に届けるだけ（0115）。
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -61,8 +61,8 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
       <div className="min-w-0">
         <h2 className="guild-px text-[32px] leading-tight tracking-[0.1em]"><Ph text="エンタープライズ|プラン" /></h2>
         <p className="mt-4 text-[28px] leading-none tracking-wide">要相談</p>
-        <p className="c-muted mt-2 text-xs"><Ph text="初回の相談は|無料です" /></p>
-        <p className="mt-5 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text="自社の仕事そのものを、|管理者と一緒に|立て直したい" /></p>
+        <p className="c-muted mt-2 text-xs"><Ph text="相談がまとまって|お見積もりを出すまでは|無料です" /></p>
+        <p className="mt-5 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text="自社の仕事に、|五島に一緒に|入ってもらいたい" /></p>
       </div>
       <div className="min-w-0">
         <p className="text-[15px] leading-relaxed"><Ph text="アプリの機能だけでは|届かないところを、|管理者が直接|手伝います。|事業の状況を伺って、|必要なことだけを|ご提案します。" /></p>
@@ -92,7 +92,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
         <h2 id="enterprise-consult-title" className="c-window-title">相談する</h2>
         <button ref={firstRef} type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>
         <div className={`max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6 ${PHRASE_WRAP}`}>
-          <p className="c-muted text-[13px] leading-relaxed"><Ph text="届くのは管理者だけです。|内容を見て、|管理者からご連絡します。|初回の相談は無料です。" /></p>
+          <p className="c-muted text-[13px] leading-relaxed"><Ph text="届くのは管理者だけです。|内容を見て、|管理者からご連絡します。|相談がまとまって|お見積もりを出すまでは|無料です。" /></p>
           <fieldset className="mt-5">
             <legend className="text-[15px]">相談したいこと <span className="text-xs text-[#c62828]">必須</span><span className="c-muted ml-1 text-xs">いくつでも</span></legend>
             <div className="mt-2 grid gap-2">{CONSULT_TOPICS.map((topic) => <button key={topic.key} type="button" aria-pressed={topics.includes(topic.key)} onClick={() => toggle(topic.key)} className="c-choice px-3 py-2.5 text-left text-sm">{topic.title}</button>)}</div>
