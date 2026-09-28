@@ -21,7 +21,7 @@ type Props = {
 
 // 数は PLAN_LIMITS（DBの sakaba.plan_limits と同じかをテストで見張っている）
 const plans = [
-  { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "まず様子を見る・紹介を待つ", features: [`つながり申請は月${PLAN_LIMITS.free.intro}件`, `クエスト・集まりを出すのは月${PLAN_LIMITS.free.quest}件`, "メンバーを一覧で見られる", `プロジェクトは${PLAN_LIMITS.free.project}つまで`] },
+  { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "まず様子を見る・紹介を待つ", features: [`つながり申請は月${PLAN_LIMITS.free.intro}件`, `クエスト・集まりを出すのは月${PLAN_LIMITS.free.quest}件`, "名前・職業でメンバーを探せる", `プロジェクトは${PLAN_LIMITS.free.project}つまで`] },
   { key: "standard", label: SAKABA_PLAN_NAMES.standard, price: "月480円", lead: "月に何人か、自分から会いに行く", features: [`つながり申請は月${PLAN_LIMITS.standard.intro}件`, `クエスト・集まりを出すのは月${PLAN_LIMITS.standard.quest}件`, "業種・地域で絞り込み、「めいし」で並べて探せる", `プロジェクトは${PLAN_LIMITS.standard.project}つまで`, "有料会員限定の集まりに申し込める"] },
   { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "毎週動いて、仕事を回す", features: [`つながり申請は月${PLAN_LIMITS.dining.intro}件`, "クエスト・集まりは何件でも", "キーワードで本文まで探せる", "プロジェクトはいくつでも", "有料会員限定の集まりに申し込める", "会食の希望を管理者へ送れる"] },
 ] as const;

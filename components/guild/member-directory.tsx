@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Profile } from "@/lib/guild/types";
 import type { SearchLevel } from "@/lib/guild/plan-usage";
+import { memberMatchesQuery } from "@/lib/guild/member-search";
 import { MemberCard, Window } from "./cards";
 import { CheckBox } from "./form-parts";
 
@@ -30,43 +31,31 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
   const canFilter = searchLevel !== "list";
   const canKeyword = searchLevel === "keyword";
 
-  const filtered = !canFilter ? members : members.filter((m) => {
-    if (industry && m.industry !== industry) return false;
-    if (region && m.region !== region) return false;
-    if (acceptOnly && !m.accept_intro) return false;
-    const q = canKeyword ? keyword.trim().toLocaleLowerCase("ja") : "";
-    if (!q) return true;
-    const haystack = [
-      m.display_name,
-      m.name_kana,
-      m.headline,
-      m.company_name,
-      m.industry,
-      m.job,
-      m.region,
-      m.bio,
-      m.values_text,
-      m.looking_for,
-      ...m.keywords,
-    ].join(" ").toLocaleLowerCase("ja");
-    return haystack.includes(q);
+  // 名前・職業での検索はどの段でも。絞り込みはプラスから、本文まではビジネスから
+  const filtered = members.filter((m) => {
+    if (canFilter && industry && m.industry !== industry) return false;
+    if (canFilter && region && m.region !== region) return false;
+    if (canFilter && acceptOnly && !m.accept_intro) return false;
+    return memberMatchesQuery(m, keyword, searchLevel);
   });
 
-  const hasFilter = canFilter && (keyword || industry || region || acceptOnly);
+  const hasFilter = keyword || (canFilter && (industry || region || acceptOnly));
   const shownView = canFilter ? view : "list";
 
   return (
     <div>
-      {canFilter ? <Window title="さがす">
-        {canKeyword ? <label className="block">
-          <span className="sr-only">キーワード</span>
+      <Window title="さがす">
+        <label className="block">
+          <span className="sr-only">{canKeyword ? "キーワード" : "名前・職業"}</span>
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="キーワード（れい：採用、決算、ロゴ）"
+            placeholder={canKeyword ? "キーワード（れい：採用、決算、ロゴ）" : "名前・職業で探す（れい：税理士）"}
             className="c-input h-11"
           />
-        </label> : <p className="c-muted text-xs">キーワードで本文まで探すのは、ビジネスからです。<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
+        </label>
+        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスからです。" : "業種・地域での絞り込みと「めいし」表示はプラス、本文まで探すのはビジネスからです。"}<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
+        {canFilter && <>
         {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="block min-w-0">
@@ -93,7 +82,8 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             <span className="text-sm">しょうかいを受けつけている人だけ</span>
           </CheckBox>
         </div>
-      </Window> : <p className="c-card border-dashed px-4 py-3 text-sm leading-relaxed">業種・地域での絞り込みと「めいし」表示は、プラスから使えます。<Link href="/guild/plan" className="ml-1 underline underline-offset-4">▶ 段をくらべる</Link></p>}
+        </>}
+      </Window>
 
       <div className="mt-6 mb-3 flex items-center justify-between text-sm">
         <span>{filtered.length}人 見つかりました</span>
