@@ -52,7 +52,7 @@ export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[
   }
 
   return <div className="space-y-5">
-    <p className="text-sm leading-relaxed">会食を組めそうな日時を登録できます。候補はあなたとギルドマスターだけに見えます。登録しただけで会食は確定しません。</p>
+    <p className="text-sm leading-relaxed">会食を組めそうな日時を登録できます。候補はあなたと管理者だけに見えます。登録しただけで会食は確定しません。</p>
     {slots.length === 0 ? <p className="c-muted text-sm">まだ空き日時はありません。</p> : <ul className="space-y-2">
       {slots.map((slot) => <li key={slot.id} className="c-card flex flex-wrap items-center justify-between gap-3 p-3">
         <div className="min-w-0 text-sm"><span className="tabular-nums">{formatScheduleShort(slot.starts_at)} ～ {toJstInputValue(slot.ends_at).slice(11)}</span>

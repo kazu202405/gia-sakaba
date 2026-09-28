@@ -71,6 +71,6 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
           </div>
         </article>;
       })}
-    <p className="c-muted text-xs">参加希望者の一覧は、投稿者とギルドマスターだけが見られます。</p>
+    <p className="c-muted text-xs">参加希望者の一覧は、投稿者と管理者だけが見られます。</p>
   </div>;
 }

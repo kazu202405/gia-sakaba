@@ -35,7 +35,7 @@ export function LiveQuestApplication({
   const [showToGuests, setShowToGuests] = useState(true);
 
   if (quest.creator_id === currentUserId) {
-    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みはギルドマスター画面で確認できます。" : "あなたが出したクエストです。参加希望者の確認機能は準備中です。"}</p>;
+    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みは管理者画面で確認できます。" : "あなたが出したクエストです。参加希望者の確認機能は準備中です。"}</p>;
   }
 
   if (quest.status !== "open") {
@@ -123,9 +123,9 @@ export function LiveQuestApplication({
         <p className="c-muted text-sm">このクエストは定員に達しました。</p>
       ) : writing ? (
         <div className="space-y-3">
-          <p className="text-sm">{quest.members_only ? "ギルドマスターへのひとこと" : "出した人へのひとこと"}（任意・200文字以内）</p>
+          <p className="text-sm">{quest.members_only ? "管理者へのひとこと" : "出した人へのひとこと"}（任意・200文字以内）</p>
           <TextArea value={message} onChange={setMessage} rows={3} max={200} label="ひとこと" />
-          <p className="c-muted text-xs">このひとことは、出した人とギルドマスターだけが見られます。</p>
+          <p className="c-muted text-xs">このひとことは、出した人と管理者だけが見られます。</p>
           {guestCapable && (
             <CheckBox checked={showToGuests} onChange={setShowToGuests}>
               <span className="text-sm">ゲストにも自分のプロフィールを見せる</span>

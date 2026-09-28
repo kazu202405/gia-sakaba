@@ -20,4 +20,4 @@ export const GROUND_RULES = [
 ] as const;
 
 /** 約束に反するクエストは ギルドマスターが取り下げる（出すときの注意にも使う） */
-export const PROMISE_NOTE = "ギルドの約束に 反する クエストは、ギルドマスターが 取り下げることが あります。";
+export const PROMISE_NOTE = "ギルドの約束に 反する クエストは、管理者が 取り下げることが あります。";

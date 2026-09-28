@@ -31,7 +31,7 @@ const NAV: NavItem[] = [
   { href: "/guild/me", label: "マイページ", short: "マイ\nページ" },
 ];
 
-const MASTER_NAV: NavItem = { href: "/guild/master", label: "ギルドマスター", short: "マスター" };
+const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者" };
 
 function isUnder(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
@@ -113,7 +113,7 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
             ))}
           </ul>
           {isMaster && <div className="c-dashed-top mt-4 pt-3">
-            <p className="c-muted mb-1 text-[11px]">マスターのみ</p>
+            <p className="c-muted mb-1 text-[11px]">管理者のみ</p>
             <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} />
           </div>}
         </nav>

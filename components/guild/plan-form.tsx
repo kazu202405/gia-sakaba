@@ -22,7 +22,7 @@ type Props = {
 const plans = [
   { key: "free", label: SAKABA_PLAN_NAMES.free, price: "0円", lead: "仲間を知り、相談や集まりを見つける。", features: ["ギルド・クエストを使える", `プロジェクトは${FREE_ACTIVE_PROJECT_LIMIT}件まで`] },
   { key: "standard", label: SAKABA_PLAN_NAMES.standard, price: "月480円", lead: "プロジェクトの記録を、数を気にせず残す。", features: ["フリーの内容すべて", "プロジェクトをいくつでも作れる", "有料会員限定の集まりに申し込める"] },
-  { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["プラスの内容すべて", "会食の希望をギルドマスターへ送れる"] },
+  { key: "dining", label: SAKABA_PLAN_NAMES.dining, price: "月880円", lead: "会って話したい人やテーマの希望を届ける。", features: ["プラスの内容すべて", "会食の希望を管理者へ送れる"] },
 ] as const;
 
 export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, availabilityEnabled, checkoutResult }: Props) {

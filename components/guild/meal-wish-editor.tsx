@@ -51,7 +51,7 @@ export function MealWishEditor({ initialText }: { initialText: string }) {
     <label htmlFor="meal-wish" className="block text-sm">会って話したい人や、話してみたいテーマ</label>
     <textarea id="meal-wish" value={text} onChange={(event) => setText(event.target.value)} maxLength={MEAL_WISH_MAX_LENGTH}
       rows={7} className="c-input w-full resize-y p-3 text-[15px] leading-relaxed" placeholder="例：地域で新しい仕事を始めた経営者と、採用の工夫について話したいです。" />
-    <p className="c-muted text-xs">自由に書けます。見られるのはあなたとギルドマスターだけです。{text.length}/{MEAL_WISH_MAX_LENGTH}字</p>
+    <p className="c-muted text-xs">自由に書けます。見られるのはあなたと管理者だけです。{text.length}/{MEAL_WISH_MAX_LENGTH}字</p>
     <div className="flex flex-wrap items-center gap-3">
       <button type="button" disabled={pending !== null || !text.trim() || text.trim() === savedText} onClick={() => void save()}
         className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending === "save" ? "保存中…" : savedText ? "▶ 希望を書き直す" : "▶ 希望を送る"}</button>

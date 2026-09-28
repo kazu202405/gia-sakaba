@@ -25,7 +25,7 @@ export function IntroRequestButton({ target }: { target: Profile }) {
   if (existing || sent) {
     return (
       <Link href="/guild/requests" className="c-button-sub h-12 w-full sm:w-auto">
-        いらい中：{existing ? introStatusLabel[existing.status].requester : "ギルドマスターが確認中"}
+        いらい中：{existing ? introStatusLabel[existing.status].requester : "管理者が確認中"}
       </Link>
     );
   }
@@ -110,7 +110,7 @@ function IntroRequestDialog({
         <div className="max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
           <p className="text-base">{target.display_name}さんを しょうかいしてもらう</p>
           <p className="c-muted mt-2 text-[13px] leading-relaxed">
-            相手に直接は とどきません。ギルドマスターが確認し、{target.display_name}
+            相手に直接は とどきません。管理者が確認し、{target.display_name}
             さんが承諾したら、おたがいの れんらく先が見えるようになります。
           </p>
 
@@ -139,7 +139,7 @@ function IntroRequestDialog({
           </fieldset>
 
           <label className="mt-2 block">
-            <span className="text-[15px]">ギルドマスターへの ひとこと</span>
+            <span className="text-[15px]">管理者への ひとこと</span>
             <span className="c-muted ml-1 text-xs">任意</span>
             <textarea
               value={message}

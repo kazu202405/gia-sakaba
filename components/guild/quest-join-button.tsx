@@ -52,7 +52,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
           <p className="text-base">▶ 参加したいと つたえました</p>
         ) : pending ? (
           <div>
-            <p className="text-base">▶ 申し込みました。ギルドマスターの 承認を お待ちください</p>
+            <p className="text-base">▶ 申し込みました。管理者の 承認を お待ちください</p>
             <p className="c-muted mt-1 text-xs leading-relaxed">
               承認があるのは はじめての ときだけです。次からは そのまま 参加できます。
             </p>
@@ -95,8 +95,8 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
         </p>
         <p className="c-muted text-xs leading-relaxed">
           {gathering
-            ? "ギルドマスターに 届きます。はじめての方は 会社のことを ひとこと 書いてもらえると 助かります。"
-            : "書くと、えらんでもらいやすくなります。見るのは 出した人と ギルドマスターだけです。"}
+            ? "管理者に 届きます。はじめての方は 会社のことを ひとこと 書いてもらえると 助かります。"
+            : "書くと、えらんでもらいやすくなります。見るのは 出した人と 管理者だけです。"}
         </p>
         <TextArea
           value={draft}
@@ -142,7 +142,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
     <div className="space-y-3">
       {gathering && !isExecutive(me.position) && (
         <p className="c-muted text-xs leading-relaxed">
-          経営者（代表・役員・決裁者）の方向けの 集まりです。申し込むと ギルドマスターが 確かめます。
+          経営者（代表・役員・決裁者）の方向けの 集まりです。申し込むと 管理者が 確かめます。
         </p>
       )}
       <button type="button" onClick={() => setWriting(true)} className="rpg-button h-12 w-full text-base sm:w-auto">

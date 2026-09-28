@@ -15,7 +15,7 @@ function Branch({ person, childrenByInviter, path }: {
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
       <Link href={`/guild/members/${person.user_id}`} className="underline underline-offset-4">{person.display_name}</Link>
       {person.role === "owner" && <span className="c-chip text-[10px]">オーナー</span>}
-      {person.role === "master" && <span className="c-chip text-[10px]">マスター</span>}
+      {person.role === "master" && <span className="c-chip text-[10px]">管理者</span>}
       <span className="c-muted text-xs">{formatDate(person.joined_at)} 入会{person.suspended ? "・停止中" : ""}</span>
       {children.length > 0 && <span className="c-muted text-xs">→ {children.length}人を招待</span>}
     </div>

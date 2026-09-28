@@ -86,7 +86,7 @@ export default async function MyPage() {
     </Window>
     <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
     {process.env.SAKABA_880_ENABLED === "true" && canSendMealWish(accessPlan) && <Window title="会食の希望">
-      <p className="text-sm leading-relaxed">会って話したい人やテーマ{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "、空いている日時" : ""}を、ギルドマスターに伝えられます。</p>
+      <p className="text-sm leading-relaxed">会って話したい人やテーマ{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "、空いている日時" : ""}を、管理者に伝えられます。</p>
       <Link href="/guild/me/wish" className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm">希望{process.env.SAKABA_AVAILABILITY_ENABLED === "true" ? "・空き日時" : ""}を見る</Link>
     </Window>}
     <LivePushSettings />

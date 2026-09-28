@@ -21,7 +21,7 @@ export function ApplicantChooseButton({
   if (existingLabel || sent) {
     return (
       <Link href="/guild/requests" className="c-button-sub h-11 w-full text-sm sm:w-auto">
-        しょうかい：{existingLabel ?? "ギルドマスターが確認中"}
+        しょうかい：{existingLabel ?? "管理者が確認中"}
       </Link>
     );
   }
@@ -31,13 +31,13 @@ export function ApplicantChooseButton({
       type="button"
       onClick={async () => {
         const ok = await uiConfirm({
-          title: "ギルドマスターに つないでもらいます",
-          message: `${applicantName}さんとの紹介を依頼します。ギルドマスターが確認し、${applicantName}さんが承諾したら、おたがいの連絡先が見えるようになります。`,
+          title: "管理者に つないでもらいます",
+          message: `${applicantName}さんとの紹介を依頼します。管理者が確認し、${applicantName}さんが承諾したら、おたがいの連絡先が見えるようになります。`,
           okLabel: "依頼する",
         });
         if (!ok) return;
         setSent(true);
-        uiToast("ギルドマスターに依頼しました（見本のため保存はされません）");
+        uiToast("管理者に依頼しました（見本のため保存はされません）");
       }}
       className="rpg-button h-11 w-full text-sm sm:w-auto"
     >

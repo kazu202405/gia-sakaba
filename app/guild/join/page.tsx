@@ -26,8 +26,8 @@ export default async function JoinPage({ searchParams }: Props) {
     if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
     return <JoinPageFrame>
       <PageTitle title="入会フォームの確認" lead="招待状を受け取った人が、GIAのアカウントを作成して入会するまでの画面です。" />
-      <InviteSignup inviterName="ギルドマスター" inviteCode="" preview />
-      <JoinForm inviterName="ギルドマスター" inviteCode="" preview />
+      <InviteSignup inviterName="管理者" inviteCode="" preview />
+      <JoinForm inviterName="管理者" inviteCode="" preview />
     </JoinPageFrame>;
   }
   const code = invite?.trim() ?? "";
@@ -60,7 +60,7 @@ export default async function JoinPage({ searchParams }: Props) {
         <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} initialName={prepared?.display_name ?? ""} />
       ) : valid ? (
         <JoinForm
-          inviterName={check.inviter_name || "ギルドマスター"}
+          inviterName={check.inviter_name || "管理者"}
           inviteCode={code}
           initialName={typeof authData.user?.user_metadata?.name === "string" && authData.user.user_metadata.name.trim()
             ? authData.user.user_metadata.name : prepared?.display_name ?? ""}

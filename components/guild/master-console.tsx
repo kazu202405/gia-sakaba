@@ -198,7 +198,7 @@ function RequestRow({
       {/* マスターのメモは本番では別の表（intro_request_notes）。本人たちには見えない */}
       {(isInbox || r.status === "proposed") && (
         <label className="mt-3 block">
-          <span className="c-muted text-[11px]">マスターのメモ（依頼者・相手には見えません）</span>
+          <span className="c-muted text-[11px]">管理者のメモ（依頼者・相手には見えません）</span>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}

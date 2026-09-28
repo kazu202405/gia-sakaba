@@ -76,7 +76,7 @@ const STEP_META: Record<Exclude<StepKey, "intro">, { tag: string; title: string;
   connect: {
     tag: "つながり",
     title: "どんな人と つながりたいですか？",
-    lead: "ギルドマスターが紹介を考えるときに一番見るところです。",
+    lead: "管理者が紹介を考えるときに一番見るところです。",
     optional: true,
   },
   contact: {
@@ -337,7 +337,7 @@ export function StatusWizard({
                   </Field>
                   <Field
                     label="いま 解決したいこと"
-                    hint="入会のときに 入れたものです。ギルドマスターが つなぐ相手を 考える手がかりに なります"
+                    hint="入会のときに 入れたものです。管理者が つなぐ相手を 考える手がかりに なります"
                   >
                     <TextInput value={draft.want_to_solve} onChange={(v) => set("want_to_solve", v)} max={60} />
                   </Field>
@@ -680,7 +680,7 @@ function ContactStep({
   return (
     <>
       <p className="c-card border-dashed px-3 py-2.5 text-xs leading-relaxed">
-        ※ ここに書いた れんらく先は、名鑑にもステータスにも出ません。ギルドマスターの しょうかいを
+        ※ ここに書いた れんらく先は、名鑑にもステータスにも出ません。管理者の しょうかいを
         あなたが承諾したとき、その相手にだけ見えます。
       </p>
       <Field label="メールアドレス" error={errors.email}>

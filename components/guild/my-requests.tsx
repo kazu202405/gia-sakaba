@@ -144,7 +144,7 @@ function ReceivedCard({
 
   return (
     <article className="c-card p-4 sm:p-5">
-      <p className="c-label text-xs">ギルドマスターからの しょうかい</p>
+      <p className="c-label text-xs">管理者からの しょうかい</p>
       <div className="mt-2 flex items-center gap-3">
         <JobAvatar icon={requester.job_icon} photoUrl={requester.photo_url} name={requester.job} size="sm" />
         <div className="min-w-0 flex-1">

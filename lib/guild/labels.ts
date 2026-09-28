@@ -93,7 +93,7 @@ export const groupLabel: Record<VisibleGroup, { title: string; note: string }> =
  */
 export const introStatusLabel: Record<IntroStatus, { master: string; requester: string }> = {
   requested: { master: "届いた", requester: "送りました" },
-  reviewing: { master: "確認中", requester: "ギルドマスターが確認中" },
+  reviewing: { master: "確認中", requester: "管理者が確認中" },
   proposed: { master: "相手に打診中", requester: "相手に打診中" },
   accepted: { master: "承諾（連絡先公開）", requester: "承諾されました" },
   introduced: { master: "紹介済み", requester: "紹介済み" },

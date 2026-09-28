@@ -11,7 +11,7 @@ import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
 import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
 
-export const metadata: Metadata = { title: "ギルドマスター" };
+export const metadata: Metadata = { title: "管理者" };
 
 export default async function MasterPage() {
   const context = await getGuildContext();
@@ -31,7 +31,7 @@ export default async function MasterPage() {
   return (
     <div className="space-y-9">
       <PageTitle
-        title="ギルドマスター"
+        title="管理者"
         lead="限定の集まり、メンバーの招待、酒場への参加のつながりを管理します。"
       />
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">

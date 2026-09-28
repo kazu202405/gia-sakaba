@@ -129,7 +129,7 @@ export function badges(d: AchievementData): Badge[] {
     list.push({
       key: "introducer",
       label: "つなぐ人",
-      howTo: "ギルドマスターとして 5回 しょうかいする",
+      howTo: "管理者として 5回 しょうかいする",
       earned: c.introduced >= 5,
     });
   }

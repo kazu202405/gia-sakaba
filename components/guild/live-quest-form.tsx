@@ -135,13 +135,13 @@ export function LiveQuestForm({ questTerm, gathering = false, quest }: { questTe
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "ギルドマスター" : `${questTerm} けいじばん`} /></div>
+      <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : `${questTerm} けいじばん`} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : "かくにん"}</span>
         {step === "form" ? (
           <>
             <h1 className="text-xl tracking-wider">{quest ? "内容をなおしますか？" : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
-            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : fixedGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人はギルドマスターの承認が必要です。" : isFreeGathering ? "酒場の掲示板には表示されません。作成後に招待URLを作って案内できます。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
+            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : fixedGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人は管理者の承認が必要です。" : isFreeGathering ? "酒場の掲示板には表示されません。作成後に招待URLを作って案内できます。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
             <div className="mt-7 space-y-6">
               {fixedGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label="しゅるい" required error={errors.category}>
                 <div className="grid gap-2 sm:grid-cols-2">

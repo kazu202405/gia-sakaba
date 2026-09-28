@@ -108,7 +108,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         <Field
           label="役職"
           required
-          hint="ギルドマスターが ひらく 限定の集まりは、経営者（代表・役員・決裁者）の方向けです"
+          hint="管理者が ひらく 限定の集まりは、経営者（代表・役員・決裁者）の方向けです"
           error={errors.position ?? ""}
         >
           <div role="radiogroup" aria-label="役職" className="grid grid-cols-2 gap-2 sm:grid-cols-4">

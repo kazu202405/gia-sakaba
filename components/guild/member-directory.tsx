@@ -118,7 +118,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
         <p className="c-card border-dashed px-4 py-10 text-center text-sm leading-relaxed">
           じょうけんに合う {memberTerm}が 見つかりませんでした。
           <br />
-          <span className="c-muted">ギルドマスターに「こういう人いない？」と相談することもできます。</span>
+          <span className="c-muted">管理者に「こういう人いない？」と相談することもできます。</span>
         </p>
       ) : (
         view === "cards" ? (
