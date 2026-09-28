@@ -62,7 +62,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
         <h2 className="guild-px text-[32px] leading-tight tracking-[0.1em]"><Ph text="エンタープライズ|プラン" /></h2>
         <p className="mt-4 text-[28px] leading-none tracking-wide">要相談</p>
         <p className="c-muted mt-2 text-xs"><Ph text="相談がまとまって|お見積もりを出すまでは|無料です" /></p>
-        <p className="mt-5 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text="自社の仕事に、|五島に一緒に|入ってもらいたい" /></p>
+        <p className="mt-5 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text="自社の仕事に|一緒に入って|もらいたい" /></p>
       </div>
       <div className="min-w-0">
         <p className="text-[15px] leading-relaxed"><Ph text="アプリの機能だけでは|届かないところを、|管理者が直接|手伝います。|事業の状況を伺って、|必要なことだけを|ご提案します。" /></p>
