@@ -32,8 +32,9 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const [editContactLabel, setEditContactLabel] = useState("");
   const [memo, setMemo] = useState("");
   const [stepName, setStepName] = useState("");
-  const [planned, setPlanned] = useState("");
-  const [done, setDone] = useState("");
+  // ます目の日付は1つだけ。「おわった」にチェックがあれば完了日、なければ予定日として保存する
+  const [cellDate, setCellDate] = useState("");
+  const [cellFinished, setCellFinished] = useState(false);
   const [editingSteps, setEditingSteps] = useState(false);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
@@ -66,7 +67,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       else {
         onSuccess?.();
         if (action === "相手の追加") uiToast("相手を追加しました");
-        else if (action === "記録" || action === "保存") uiToast("日付を保存しました");
+        else if (action === "保存") uiToast("日付を保存しました");
         else if (action === "日付の消去") uiToast("日付を消しました");
         startTransition(() => { router.refresh(); });
       }
@@ -87,7 +88,9 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   function selectCell(contactId: string, stepId: string) {
     const record = pipeline.records.find((item) => item.contact_id === contactId && item.step_id === stepId);
     setSelection({ kind: "cell", contactId, stepId });
-    setPlanned(record?.planned_on ?? ""); setDone(record?.done_on ?? ""); setError("");
+    const current = recordOverride[`${contactId}:${stepId}`] ?? record;
+    setCellFinished(!!current?.done_on);
+    setCellDate(current?.done_on ?? current?.planned_on ?? ""); setError("");
   }
 
   async function deleteContact(contactId: string, contactLabel: string) {
@@ -132,7 +135,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
               const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
                 <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
-                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? <span className="c-muted">{shortDate(record.planned_on)} 予定</span> : <span className="c-muted">―</span>}
+                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : <span className="c-muted">―</span>}
                 </button>
               </td>;
             })}
@@ -146,13 +149,12 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
 
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div><p className="c-muted mb-1 text-xs">予定日</p><DateInput value={planned} onChange={setPlanned} label="予定日" /></div>
-        <div><p className="c-muted mb-1 text-xs">おわった日</p><DateInput value={done} onChange={setDone} label="おわった日" /></div>
+      <div className="space-y-3">
+        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={setCellDate} label={cellFinished ? "おわった日" : "予定日"} /></div>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => { setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); }} />おわった</label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, planned || null, todayInJapan(), "記録")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "記録" ? "保存中…" : "今日おわった"}</button>
-        <button type="button" disabled={busy || (!planned && !done)} onClick={() => saveRecord(selection.contactId, selection.stepId, planned || null, done || null, "保存")} className="c-button-sub h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
+        <button type="button" disabled={busy || !cellDate} onClick={() => saveRecord(selection.contactId, selection.stepId, cellFinished ? null : cellDate, cellFinished ? cellDate : null, "保存")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
         {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付を消す</button>}
         <button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button>
       </div>

@@ -134,10 +134,10 @@ describe("日付の保存のトーストと表示（見張り）", () => {
     expect(save).toContain("setSelection(null)");
   });
 
-  it("3つのボタンは すべて saveRecord を通る（run を直接呼ばない）", () => {
+  it("日付のボタンは すべて saveRecord を通る（run を直接呼ばない）", () => {
     // run を呼んでよいのは saveRecord の中の 1か所だけ
     expect((source.match(/run\("sakaba_set_project_step_record"/g) ?? []).length).toBe(1);
-    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(3);
+    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(2);
   });
 
   it("ます目は 仮の日付を優先し、読み直しが終わってから外す", () => {
