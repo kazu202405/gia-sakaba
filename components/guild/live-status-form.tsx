@@ -184,9 +184,11 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
         <span className="c-window-title">きほん</span>
         <div className="flex flex-wrap items-center gap-4">
           <JobAvatar icon={draft.job_icon} photoUrl={draft.photo_url} name={draft.display_name} />
-          <div className="space-y-1">
-            <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="プロフィール写真を選ぶ" onChange={(event) => { choosePhoto(event.target.files?.[0]); event.target.value = ""; }} />
-            <button type="button" disabled={photoUploading} onClick={() => photoInputRef.current?.click()} className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">{photoUploading ? "写真を追加中…" : draft.photo_url ? "写真を変更する" : "写真を追加する"}</button>
+          <div className="max-w-md space-y-1.5">
+            <p className="c-label text-sm">顔がわかる写真がおすすめ</p>
+            <p className="c-muted text-xs leading-relaxed">仕事の相談や紹介では、顔がわかると相手が安心して声をかけやすくなります。むずかしい場合は、アイコンのままでも利用できます。</p>
+            <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="顔写真を選ぶ" onChange={(event) => { choosePhoto(event.target.files?.[0]); event.target.value = ""; }} />
+            <button type="button" disabled={photoUploading} onClick={() => photoInputRef.current?.click()} className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">{photoUploading ? "顔写真を追加中…" : draft.photo_url ? "顔写真を変更する" : "顔写真を追加する"}</button>
             <p className="c-muted text-xs">JPEG・PNG・WebP／20MBまで</p>
           </div>
         </div>
