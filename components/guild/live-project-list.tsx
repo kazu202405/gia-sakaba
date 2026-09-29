@@ -5,6 +5,7 @@ import { Window } from "./cards";
 import { isExhausted, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { GuildCheckoutButton } from "./guild-checkout-button";
+import { ProjectCard, ProjectOrderList } from "./project-order-list";
 
 export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const ownedCount = projects.filter((project) => project.owner_id === userId).length;
@@ -12,6 +13,9 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
   const canCreate = quota ? !isExhausted(quota.slot) : isPaid || ownedCount < FREE_ACTIVE_PROJECT_LIMIT;
   // フリーで使い切ったときだけ、プラスの申し込みを出す。プラスで使い切ったら段の比較へ
   const showFreeUpsell = !canCreate && (!quota || quota.plan === "free");
+  // 並び順は人ごと（0118）。listGuildProjects で並べ済み。進行中だけ並べ替えられる
+  const active = projects.filter((project) => project.status === "active");
+  const finished = projects.filter((project) => project.status === "done");
   return (
     <div className="space-y-5">
       {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] p-4 text-sm leading-relaxed">
@@ -44,15 +48,14 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
       </>}
       {projects.length === 0 ? (
         <div className="c-window p-6 pt-10"><span className="c-window-title">まだありません</span><p className="text-sm">まずは取り組みたいことを登録しましょう。</p></div>
-      ) : projects.map((project) => {
-        const done = project.tasks.filter((task) => task.status === "done").length;
-        return <Link key={project.id} href={`/guild/projects/${project.id}`} className="c-card rpg-cursor-row block p-4">
-          <p className="c-label text-xs">{project.status === "done" ? "完了" : "進行中"} · {project.owner_id === userId ? "自分のプロジェクト" : "参加中"}</p>
-          <h2 className="mt-1 break-words text-lg">▶ {project.title}</h2>
-          {project.goal && <p className="c-muted mt-1 break-words text-sm">{project.goal}</p>}
-          <p className="c-muted mt-2 text-xs">タスク {done}/{project.tasks.length} 完了{project.due_date ? ` · 期限 ${project.due_date}` : ""}</p>
-        </Link>;
-      })}
+      ) : <>
+        {active.length === 0 ? <p className="c-muted text-sm">進行中のプロジェクトはありません。</p> : <ProjectOrderList key={active.map((project) => project.id).join(",")} projects={active} userId={userId} />}
+        {/* 完了したものは下にまとめて、たたんでおく（押すと開く。タスクと同じ形） */}
+        {finished.length > 0 && <details className="c-dashed-top pt-4">
+          <summary className="c-muted cursor-pointer text-sm">おわったプロジェクト（{finished.length}件）</summary>
+          <ul className="mt-3 space-y-3">{finished.map((project) => <li key={project.id}><ProjectCard project={project} userId={userId} /></li>)}</ul>
+        </details>}
+      </>}
     </div>
   );
 }

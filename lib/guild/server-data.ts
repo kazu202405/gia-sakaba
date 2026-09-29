@@ -5,6 +5,7 @@ import type { Guild, GuildNotification, IntroRequest, Position, Profile, Project
 import type { MasterPreparedInvite } from "@/lib/guild/prepared-invites";
 import type { MasterIntroduction } from "@/lib/guild/master-introductions";
 import { parsePlanUsage, type PlanUsage } from "@/lib/guild/plan-usage";
+import { applyProjectOrder, parseProjectOrder } from "@/lib/guild/project-order";
 
 type GuildContext = {
   guild: Guild;
@@ -269,11 +270,15 @@ export async function listGuildNotifications(): Promise<GuildNotification[]> {
 
 export async function listGuildProjects(): Promise<GuildProject[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_my_projects", {
-    p_guild_slug: "gia",
-  });
+  const [{ data, error }, order] = await Promise.all([
+    supabase.rpc("sakaba_list_my_projects", { p_guild_slug: "gia" }),
+    supabase.rpc("sakaba_list_my_project_order", { p_guild_slug: "gia" }),
+  ]);
   if (error) throw rpcError("プロジェクトを取得できませんでした", error.message);
-  return Array.isArray(data) ? (data as GuildProject[]) : [];
+  const projects = Array.isArray(data) ? (data as GuildProject[]) : [];
+  // 並び順（0118）は見た目だけなので、読めなくても一覧は出す（新しい順になる）。読めなかったことは残す
+  if (order.error) console.warn("[guild] プロジェクトの並び順を読めませんでした", order.error.message);
+  return applyProjectOrder(projects, order.error ? [] : parseProjectOrder(order.data));
 }
 
 export async function getMyGuildProfile(): Promise<MyGuildProfile> {
