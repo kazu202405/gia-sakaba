@@ -137,7 +137,7 @@ describe("日付の保存のトーストと表示（見張り）", () => {
   it("日付のボタンは すべて saveRecord を通る（run を直接呼ばない）", () => {
     // run を呼んでよいのは saveRecord の中の 1か所だけ
     expect((source.match(/run\("sakaba_set_project_step_record"/g) ?? []).length).toBe(1);
-    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(3); // 自動保存・閉じるときの保存・消す
+    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(4); // 自動保存・閉じるときの保存・保存ボタン・消す
   });
 
   it("ます目は 仮の日付を優先し、読み直しが終わってから外す", () => {

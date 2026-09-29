@@ -39,11 +39,15 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   // ます目の入力は、変えて少し待つと自動で保存する（editVersion＝直したたびに増える印、savedVersion＝保存に出した版）
   const [editVersion, setEditVersion] = useState(0);
   const savedVersion = useRef(0);
+  // 過去の日付を入れたときは「おわった」を自動でつける（記録のための入力なので、毎回チェックしなくてよい）。チェックを手で触ったら 触らない
+  const finishedTouched = useRef(false);
   const [editingSteps, setEditingSteps] = useState(false);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const busy = !!saving || isPending;
+  // ます目の保存は、ます目の中に「保存中…」が出る。下の共通の表示（読み込み中…）は 出さない
+  const [lastAction, setLastAction] = useState("");
   // 追加した直後〜一覧が読み直されるまで出しておく仮の行（トーストだけ先に出て相手が増えない時間を作らない）
   const [addingContacts, setAddingContacts] = useState<{ key: number; label: string }[]>([]);
   // 日付を保存した直後〜一覧が読み直されるまでは、保存した日付を先にます目へ出す
@@ -59,6 +63,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     return run("sakaba_set_project_step_record", { p_contact_id: contactId, p_step_id: stepId, p_planned_on: plannedOn, p_done_on: doneOn, p_result: result }, action, () => {
       setRecordOverride((current) => ({ ...current, [`${contactId}:${stepId}`]: { planned_on: plannedOn, done_on: doneOn, result } }));
       if (!keepOpen) setSelection(null);
+      if (!keepOpen && action === "保存") uiToast("保存しました");
     });
   }
 
@@ -89,7 +94,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
 
   async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
     if (busy) return;
-    setSaving(action); setError("");
+    setSaving(action); setLastAction(action); setError("");
     try {
       const { error: rpcError } = await createClient().rpc(name, args);
       if (rpcError) setError(rpcError.code === "23505" && name === "sakaba_add_project_contact_v2" ? "このメンバーはすでに追加されています。" : `${action}に失敗しました。もう一度お試しください。`);
@@ -119,6 +124,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     const record = pipeline.records.find((item) => item.contact_id === contactId && item.step_id === stepId);
     setSelection({ kind: "cell", contactId, stepId });
     const current = recordOverride[`${contactId}:${stepId}`] ?? record;
+    finishedTouched.current = false;
     setCellFinished(!!current?.done_on);
     setCellResult(current?.result ?? null);
     setCellDate(current?.done_on ?? current?.planned_on ?? ""); setError("");
@@ -182,15 +188,16 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
       <div className="space-y-3">
-        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => setCellDate(value))} label={cellFinished ? "おわった日" : "予定日"} /></div>
+        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => { setCellDate(value); if (value && value <= todayInJapan() && !finishedTouched.current) setCellFinished(true); })} label={cellFinished ? "おわった日" : "予定日"} /></div>
         <div role="radiogroup" aria-label="結果" className="flex items-center gap-2 text-sm">
           <span className="c-muted text-xs">結果</span>
           {([[null, "未定"], ["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellResult === value} onClick={() => editCell(() => setCellResult(value))} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => editCell(() => { setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); })} />おわった</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => editCell(() => { finishedTouched.current = true; setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); })} />おわった</label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <p role="status" aria-live="polite" className="c-muted text-xs">{saving === "保存" ? "保存中…" : editVersion !== savedVersion.current ? "変更あり…" : "✓ 変えると自動で保存されます"}</p>
+        <p role="status" aria-live="polite" className="c-muted text-xs">{saving === "保存" ? "保存中…" : editVersion !== savedVersion.current ? "変更あり…" : "✓ 変えると自動で保存されます（保存ボタンでも保存できます）"}</p>
+        <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => { savedVersion.current = editVersion; void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存"); }} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "保存"}</button>
         {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付と結果を消す</button>}
         <button type="button" onClick={() => { leaveCell(); setSelection(null); }} className="c-muted ml-auto px-2 text-xs">閉じる</button>
       </div>
@@ -224,7 +231,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         </form>
       </div>}
     </div>}
-    <p role="status" aria-live="polite" className="c-muted min-h-4 text-xs">{saving ? `${saving}中…` : isPending ? "読み込み中…" : ""}</p>
+    <p role="status" aria-live="polite" className="c-muted min-h-4 text-xs">{lastAction === "保存" || lastAction === "日付の消去" ? "" : saving ? `${saving}中…` : isPending ? "読み込み中…" : ""}</p>
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;
 }
