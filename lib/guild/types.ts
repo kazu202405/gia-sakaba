@@ -287,7 +287,8 @@ export type StepRecord = {
   contact_id: string;
   step_id: string;
   planned_on: string | null;
-  done_on: string | null;
+  done_on: string | null;
+  result?: "ok" | "ng" | null;
 };
 
 export type NotificationKind =

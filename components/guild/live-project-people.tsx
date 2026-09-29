@@ -35,6 +35,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   // ます目の日付は1つだけ。「おわった」にチェックがあれば完了日、なければ予定日として保存する
   const [cellDate, setCellDate] = useState("");
   const [cellFinished, setCellFinished] = useState(false);
+  const [cellResult, setCellResult] = useState<"ok" | "ng" | null>(null);
   const [editingSteps, setEditingSteps] = useState(false);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
@@ -43,7 +44,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   // 追加した直後〜一覧が読み直されるまで出しておく仮の行（トーストだけ先に出て相手が増えない時間を作らない）
   const [addingContacts, setAddingContacts] = useState<{ key: number; label: string }[]>([]);
   // 日付を保存した直後〜一覧が読み直されるまでは、保存した日付を先にます目へ出す
-  const [recordOverride, setRecordOverride] = useState<Record<string, { planned_on: string | null; done_on: string | null }>>({});
+  const [recordOverride, setRecordOverride] = useState<Record<string, { planned_on: string | null; done_on: string | null; result: "ok" | "ng" | null }>>({});
   useEffect(() => {
     if (isPending || saving) return;
     setAddingContacts((current) => (current.length ? [] : current));
@@ -51,9 +52,9 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   }, [isPending, saving]);
 
   // 日付の保存：仮の表示 → トースト → 一覧の読み直し の順（run が onSuccess のあとにトーストを出す）
-  function saveRecord(contactId: string, stepId: string, plannedOn: string | null, doneOn: string | null, action: string) {
-    return run("sakaba_set_project_step_record", { p_contact_id: contactId, p_step_id: stepId, p_planned_on: plannedOn, p_done_on: doneOn }, action, () => {
-      setRecordOverride((current) => ({ ...current, [`${contactId}:${stepId}`]: { planned_on: plannedOn, done_on: doneOn } }));
+  function saveRecord(contactId: string, stepId: string, plannedOn: string | null, doneOn: string | null, result: "ok" | "ng" | null, action: string) {
+    return run("sakaba_set_project_step_record", { p_contact_id: contactId, p_step_id: stepId, p_planned_on: plannedOn, p_done_on: doneOn, p_result: result }, action, () => {
+      setRecordOverride((current) => ({ ...current, [`${contactId}:${stepId}`]: { planned_on: plannedOn, done_on: doneOn, result } }));
       setSelection(null);
     });
   }
@@ -67,8 +68,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       else {
         onSuccess?.();
         if (action === "相手の追加") uiToast("相手を追加しました");
-        else if (action === "保存") uiToast("日付を保存しました");
-        else if (action === "日付の消去") uiToast("日付を消しました");
+        else if (action === "保存") uiToast("保存しました");
+        else if (action === "日付の消去") uiToast("消しました");
         startTransition(() => { router.refresh(); });
       }
     } catch {
@@ -90,6 +91,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     setSelection({ kind: "cell", contactId, stepId });
     const current = recordOverride[`${contactId}:${stepId}`] ?? record;
     setCellFinished(!!current?.done_on);
+    setCellResult(current?.result ?? null);
     setCellDate(current?.done_on ?? current?.planned_on ?? ""); setError("");
   }
 
@@ -135,7 +137,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
               const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
                 <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
-                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : <span className="c-muted">―</span>}
+                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : record?.result ? null : <span className="c-muted">―</span>}
+                  {record?.result && <span className={`ml-1 px-1 font-bold ${record.result === "ok" ? "text-[#1f7a3d]" : "text-[#c62828]"}`}>{record.result === "ok" ? "OK" : "NG"}</span>}
                 </button>
               </td>;
             })}
@@ -151,11 +154,15 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
       <div className="space-y-3">
         <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={setCellDate} label={cellFinished ? "おわった日" : "予定日"} /></div>
+        <div role="radiogroup" aria-label="結果" className="flex items-center gap-2 text-sm">
+          <span className="c-muted text-xs">結果</span>
+          {([[null, "未定"], ["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellResult === value} onClick={() => setCellResult(value)} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+        </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => { setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); }} />おわった</label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy || !cellDate} onClick={() => saveRecord(selection.contactId, selection.stepId, cellFinished ? null : cellDate, cellFinished ? cellDate : null, "保存")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
-        {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付を消す</button>}
+        <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
+        {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付と結果を消す</button>}
         <button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button>
       </div>
     </div>}
