@@ -12,9 +12,9 @@ export function GET() {
     background_color: "#0b0f1f",
     theme_color: "#1b2a41",
     icons: [
-      { src: "/images/sakaba/app-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/images/sakaba/app-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/images/sakaba/app-icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/images/sakaba/guild-icon-20260929-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/images/sakaba/guild-icon-20260929-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/images/sakaba/guild-icon-20260929-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   }), {
     headers: { "content-type": "application/manifest+json; charset=utf-8", "cache-control": "public, max-age=3600" },

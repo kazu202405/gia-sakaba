@@ -8,8 +8,8 @@ self.addEventListener("push", (event) => {
     ? payload.href : "/guild/notifications";
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/images/sakaba/app-icon-192.png",
-    badge: "/gia-logo.png",
+    icon: "/images/sakaba/guild-icon-20260929-192.png",
+    badge: "/images/sakaba/guild-icon-20260929-192.png",
     tag: typeof payload.tag === "string" ? payload.tag : undefined,
     data: { href },
   }));

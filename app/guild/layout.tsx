@@ -9,10 +9,11 @@ export const metadata: Metadata = {
   manifest: "/guild/manifest.webmanifest",
   icons: {
     icon: [
-      { url: "/images/sakaba/app-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/images/sakaba/app-icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/images/sakaba/guild-icon-20260929-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/sakaba/guild-icon-20260929-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/images/sakaba/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/images/sakaba/guild-icon-20260929-192.png"],
+    apple: [{ url: "/images/sakaba/guild-icon-20260929-apple-touch.png", sizes: "180x180", type: "image/png" }],
   },
   appleWebApp: { capable: true, title: "GIAの酒場", statusBarStyle: "black-translucent" },
   robots: { index: false, follow: false },

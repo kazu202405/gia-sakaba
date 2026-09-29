@@ -109,7 +109,7 @@ export function LivePushSettings() {
       if (!registration) throw new Error("通知の準備ができていません。ページを再読み込みしてください。");
       await registration.showNotification("GIAの酒場", {
         body: "この端末で通知を表示できました。",
-        icon: "/images/sakaba/app-icon-192.png",
+        icon: "/images/sakaba/guild-icon-20260929-192.png",
         data: { href: "/guild/notifications" },
       });
       uiToast("端末にテスト通知を表示しました");
