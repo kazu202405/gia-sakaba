@@ -32,3 +32,25 @@ export function isShareCancel(error: unknown): boolean {
   return typeof error === "object" && error !== null
     && (error as { name?: unknown }).name === "AbortError";
 }
+
+/**
+ * 「リンクを作り直す」の説明。ふだんは使わない操作なので、何が起きるかを先に伝える。
+ * 押した本人が心配するのは「入会した人はどうなる？」なので、必ず書く。
+ * 実際の動き（sakaba_create_my_member_invite の rotate）：今のリンクを失効させ、新しいリンクを発行する。
+ * すでに入会した人の invite_id は残るので、招待のつながりは消えない。
+ */
+export const ROTATE_COPY = {
+  summary: "リンクを止めたいとき",
+  lead: "リンクが広まりすぎたときなどに使います。ふだんは押さなくて大丈夫です。",
+  effects: [
+    "今のリンクは使えなくなり、新しいリンクができます。",
+    "すでに入会した人とのつながりは、そのまま残ります。",
+    "新しいリンクは、送りたい人へあらためて送り直してください。",
+  ],
+  button: "今のリンクを止めて、作り直す",
+  busy: "作り直し中…",
+  confirmTitle: "今のリンクを止めて、作り直します",
+  confirmMessage: "今のリンクからは入会できなくなります。すでに入会した人とのつながりは、そのまま残ります。",
+  confirmOk: "作り直す",
+  done: "新しいリンクを作ってコピーしました。前のリンクは使えなくなりました",
+} as const;

@@ -5,7 +5,7 @@ import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { useEffect, useRef, useState } from "react";
 import type { MyMemberInvite } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
-import { canNativeShare, inviteMessage, inviteUrl, isShareCancel } from "@/lib/guild/invite-share";
+import { canNativeShare, inviteMessage, inviteUrl, isShareCancel, ROTATE_COPY } from "@/lib/guild/invite-share";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
@@ -26,9 +26,9 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
     if (pending) return;
     if (rotate) {
       const confirmed = await uiConfirm({
-        title: "招待リンクを作り直します",
-        message: "今のリンクは使えなくなります。すでに入会した人とのつながりは残ります。",
-        okLabel: "作り直す",
+        title: ROTATE_COPY.confirmTitle,
+        message: ROTATE_COPY.confirmMessage,
+        okLabel: ROTATE_COPY.confirmOk,
         danger: true,
       });
       if (!confirmed) return;
@@ -46,7 +46,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
       setInvite(fresh as MyMemberInvite);
       try {
         await navigator.clipboard.writeText(inviteUrl(window.location.origin, data.code));
-        uiToast(rotate ? "新しい招待リンクを作ってコピーしました" : "招待リンクを作ってコピーしました");
+        uiToast(rotate ? ROTATE_COPY.done : "招待リンクを作ってコピーしました");
       } catch {
         uiToast("招待リンクを作りました。下のボタンからコピーできます");
       }
@@ -109,9 +109,14 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
         <button type="button" onClick={() => void copy()} className="c-button-sub h-11 px-4 text-sm">リンクだけコピー</button>
       </div>
       <p className="c-muted mt-3 text-xs leading-relaxed">招待文は「酒場に招待します。フリープラン（0円）で入会できます」という短いあいさつと、リンクです。</p>
-      <div className="mt-4 border-t border-[#1b2a41]/20 pt-3">
-        <button type="button" disabled={pending} onClick={() => void issue(true)} className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">{pending ? "作り直し中…" : "リンクを作り直す"}</button>
-      </div>
+      <details className="mt-4 border-t border-[#1b2a41]/20 pt-3">
+        <summary className="c-muted cursor-pointer text-xs underline underline-offset-4">{ROTATE_COPY.summary}</summary>
+        <p className="mt-3 text-sm leading-relaxed">{ROTATE_COPY.lead}</p>
+        <ul className="c-muted mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
+          {ROTATE_COPY.effects.map((line) => <li key={line}>{line}</li>)}
+        </ul>
+        <button type="button" disabled={pending} onClick={() => void issue(true)} className="c-button-sub mt-3 h-11 px-4 text-sm disabled:opacity-50">{pending ? ROTATE_COPY.busy : ROTATE_COPY.button}</button>
+      </details>
     </div> : <button type="button" disabled={pending} onClick={() => void issue(false)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending ? "発行中…" : "▶ 自分の招待リンクを作る"}</button>}
     {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
     <div className="mt-6 border-t-2 border-dashed border-[#1b2a41]/20 pt-4">

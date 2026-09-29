@@ -4,6 +4,7 @@ import {
   inviteMessage,
   inviteUrl,
   isShareCancel,
+  ROTATE_COPY,
 } from "./invite-share";
 
 describe("inviteUrl", () => {
@@ -59,5 +60,38 @@ describe("canNativeShare / isShareCancel", () => {
     expect(isShareCancel({ name: "NotAllowedError" })).toBe(false);
     expect(isShareCancel(null)).toBe(false);
     expect(isShareCancel("AbortError")).toBe(false);
+  });
+});
+
+describe("ROTATE_COPY（リンクを作り直すの説明）", () => {
+  const all = [
+    ROTATE_COPY.lead,
+    ...ROTATE_COPY.effects,
+    ROTATE_COPY.button,
+    ROTATE_COPY.confirmMessage,
+    ROTATE_COPY.done,
+  ].join("\n");
+
+  it("何が起きるかを、押す前に伝える（使えなくなる・入会した人は残る）", () => {
+    expect(ROTATE_COPY.effects.join("")).toContain("今のリンクは使えなくなり、新しいリンクができます");
+    expect(ROTATE_COPY.effects.join("")).toContain("すでに入会した人とのつながりは、そのまま残ります");
+    // 確認画面でも同じ安心を繰り返す
+    expect(ROTATE_COPY.confirmMessage).toContain("すでに入会した人とのつながりは、そのまま残ります");
+    expect(ROTATE_COPY.confirmMessage).toContain("今のリンクからは入会できなくなります");
+  });
+
+  it("ふだんは使わない操作だと分かる", () => {
+    expect(ROTATE_COPY.lead).toContain("ふだんは押さなくて大丈夫");
+  });
+
+  it("入会した人が消えるように読める言い方をしない", () => {
+    for (const word of ["削除", "退会", "取り消", "無効にします", "消えます", "リセット"]) {
+      expect(all).not.toContain(word);
+    }
+  });
+
+  it("ボタンは「止める」と「作り直す」の両方が分かる", () => {
+    expect(ROTATE_COPY.button).toContain("止めて");
+    expect(ROTATE_COPY.button).toContain("作り直す");
   });
 });
