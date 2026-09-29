@@ -4,7 +4,6 @@ import {
   inviteMessage,
   inviteUrl,
   isShareCancel,
-  lineShareUrl,
 } from "./invite-share";
 
 describe("inviteUrl", () => {
@@ -43,16 +42,6 @@ describe("inviteMessage", () => {
     for (const word of ["月額", "480", "880", "特典", "無料で使い放題", "限定", "今すぐ", "必ず"]) {
       expect(text).not.toContain(word);
     }
-  });
-});
-
-describe("lineShareUrl", () => {
-  it("招待文をエンコードしてLINEの共有URLにする", () => {
-    const message = inviteMessage("https://x.example/guild/join?invite=a&b=1");
-    const url = lineShareUrl(message);
-    expect(url.startsWith("https://line.me/R/share?text=")).toBe(true);
-    const text = new URL(url).searchParams.get("text");
-    expect(text).toBe(message);          // 戻すと元の文章（リンク内の & も壊れない）
   });
 });
 

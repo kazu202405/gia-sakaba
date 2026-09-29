@@ -5,7 +5,7 @@ import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { useEffect, useRef, useState } from "react";
 import type { MyMemberInvite } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
-import { canNativeShare, inviteMessage, inviteUrl, isShareCancel, lineShareUrl } from "@/lib/guild/invite-share";
+import { canNativeShare, inviteMessage, inviteUrl, isShareCancel } from "@/lib/guild/invite-share";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
@@ -16,11 +16,9 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   // 画面が出てから決める（サーバーの描画と食い違わせない）。共有画面は対応する端末だけ。
-  const [origin, setOrigin] = useState("");
   const [canShare, setCanShare] = useState(false);
   const sharing = useRef(false); // 共有画面を開いている間の二重起動を防ぐ（押した瞬間にかける）
   useEffect(() => {
-    setOrigin(window.location.origin);
     setCanShare(canNativeShare(navigator));
   }, []);
 
@@ -97,8 +95,6 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
     }
   }
 
-  const lineHref = invite.link && origin ? lineShareUrl(inviteMessage(inviteUrl(origin, invite.link.code))) : "";
-
   return <Window title="仲間を招く">
     <p className="c-muted mb-5 text-sm leading-relaxed">あなたから酒場へ招くためのリンクです。</p>
     {invite.link ? <div className="border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-4 sm:p-5">
@@ -108,7 +104,6 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
       <p className="mt-4 text-base tracking-wider">酒場への招待状</p>
       <p className="c-muted mt-2 text-xs leading-relaxed">このリンクを受け取った人は、入会フォームを開けます。</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        {lineHref && <a href={lineHref} target="_blank" rel="noopener noreferrer" className="rpg-button inline-flex h-11 items-center px-5 text-sm">▶ LINEで送る</a>}
         {canShare && <button type="button" onClick={() => void share()} className="rpg-button h-11 px-5 text-sm">▶ ほかのアプリで送る</button>}
         <button type="button" onClick={() => void copyMessage()} className="c-button-sub h-11 px-4 text-sm">招待文をコピー</button>
         <button type="button" onClick={() => void copy()} className="c-button-sub h-11 px-4 text-sm">リンクだけコピー</button>
