@@ -195,11 +195,13 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         </div>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => editCell(() => { finishedTouched.current = true; setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); })} />おわった</label>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="space-y-2">
         <p role="status" aria-live="polite" className="c-muted text-xs">{saving === "保存" ? "保存中…" : editVersion !== savedVersion.current ? "変更あり…" : "✓ 変えると自動で保存されます（保存ボタンでも保存できます）"}</p>
-        <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => { savedVersion.current = editVersion; void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存"); }} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "保存"}</button>
+      <div className="flex flex-wrap items-center gap-2">
         {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付と結果を消す</button>}
         <button type="button" onClick={() => { leaveCell(); setSelection(null); }} className="c-muted ml-auto px-2 text-xs">閉じる</button>
+        <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => { savedVersion.current = editVersion; void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存"); }} className="rpg-button h-11 px-6 disabled:opacity-50">{saving === "保存" ? "保存中…" : "保存"}</button>
+      </div>
       </div>
     </div>}
 
