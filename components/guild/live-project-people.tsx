@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
 import { Trash2, X } from "lucide-react";
@@ -39,6 +39,23 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
   const busy = !!saving || isPending;
+  // 追加した直後〜一覧が読み直されるまで出しておく仮の行（トーストだけ先に出て相手が増えない時間を作らない）
+  const [addingContacts, setAddingContacts] = useState<{ key: number; label: string }[]>([]);
+  // 日付を保存した直後〜一覧が読み直されるまでは、保存した日付を先にます目へ出す
+  const [recordOverride, setRecordOverride] = useState<Record<string, { planned_on: string | null; done_on: string | null }>>({});
+  useEffect(() => {
+    if (isPending || saving) return;
+    setAddingContacts((current) => (current.length ? [] : current));
+    setRecordOverride((current) => (Object.keys(current).length ? {} : current));
+  }, [isPending, saving]);
+
+  // 日付の保存：仮の表示 → トースト → 一覧の読み直し の順（run が onSuccess のあとにトーストを出す）
+  function saveRecord(contactId: string, stepId: string, plannedOn: string | null, doneOn: string | null, action: string) {
+    return run("sakaba_set_project_step_record", { p_contact_id: contactId, p_step_id: stepId, p_planned_on: plannedOn, p_done_on: doneOn }, action, () => {
+      setRecordOverride((current) => ({ ...current, [`${contactId}:${stepId}`]: { planned_on: plannedOn, done_on: doneOn } }));
+      setSelection(null);
+    });
+  }
 
   async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
     if (busy) return;
@@ -49,6 +66,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       else {
         onSuccess?.();
         if (action === "相手の追加") uiToast("相手を追加しました");
+        else if (action === "記録" || action === "保存") uiToast("日付を保存しました");
+        else if (action === "日付の消去") uiToast("日付を消しました");
         startTransition(() => { router.refresh(); });
       }
     } catch {
@@ -103,20 +122,24 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
           <th scope="col" className="sticky left-0 z-10 min-w-28 bg-[#f3ecd9] px-3 py-2 text-left text-xs font-normal">相手</th>
           {pipeline.steps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
         </tr></thead>
-        <tbody>{pipeline.contacts.length === 0 ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">まだ相手がいません。下から追加してください。</td></tr> :
+        <tbody>{pipeline.contacts.length === 0 && addingContacts.length === 0 ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">まだ相手がいません。下から追加してください。</td></tr> :
           pipeline.contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
               <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
               {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={`/guild/members/${contact.member_user_id}`} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
             </th>
             {pipeline.steps.map((step) => {
-              const record = pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
+              const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
                 <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
                   {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? <span className="c-muted">{shortDate(record.planned_on)} 予定</span> : <span className="c-muted">―</span>}
                 </button>
               </td>;
             })}
+          </tr>)}
+          {addingContacts.map((contact) => <tr key={contact.key} aria-busy="true" className="border-t-2 border-dashed border-[#1b2a41]/15 opacity-60">
+            <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal"><span className="block text-xs">{contact.label}</span></th>
+            <td colSpan={pipeline.steps.length} className="c-muted p-1 text-left text-xs">追加中…</td>
           </tr>)}</tbody>
       </table>
     </div>
@@ -128,9 +151,9 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         <div><p className="c-muted mb-1 text-xs">おわった日</p><DateInput value={done} onChange={setDone} label="おわった日" /></div>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: planned || null, p_done_on: todayInJapan() }, "記録")} className="rpg-button h-11 px-4 disabled:opacity-50">今日おわった</button>
-        <button type="button" disabled={busy || (!planned && !done)} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: planned || null, p_done_on: done || null }, "保存")} className="c-button-sub h-11 px-4 disabled:opacity-50">日付を保存</button>
-        {selectedRecord && <button type="button" disabled={busy} onClick={() => run("sakaba_set_project_step_record", { p_contact_id: selection.contactId, p_step_id: selection.stepId, p_planned_on: null, p_done_on: null }, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付を消す</button>}
+        <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, planned || null, todayInJapan(), "記録")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "記録" ? "保存中…" : "今日おわった"}</button>
+        <button type="button" disabled={busy || (!planned && !done)} onClick={() => saveRecord(selection.contactId, selection.stepId, planned || null, done || null, "保存")} className="c-button-sub h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
+        {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付を消す</button>}
         <button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button>
       </div>
     </div>}
@@ -148,7 +171,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       </div>
     </form>}
 
-    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
+    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
       <p className="text-sm">相手を追加</p>
       <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
     </form>}

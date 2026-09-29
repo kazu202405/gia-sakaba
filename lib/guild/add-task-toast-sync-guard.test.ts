@@ -82,3 +82,66 @@ describe("タスク追加のトーストと一覧（見張り）", () => {
     expect(at(wrong, "uiToast(")).toBeLessThan(at(wrong, "setAddingTasks("));
   });
 });
+
+// 「相手を追加」（あいてごとの じょうきょう）も同じ。追加が通ったら 仮の行 → トースト → 読み直し
+describe("相手の追加のトーストと一覧（見張り）", () => {
+  const source = readFileSync("components/guild/live-project-people.tsx", "utf8");
+  const run = stripComments(functionBody(source, "run") ?? "");
+
+  it("run の本体が読めている", () => {
+    expect(run).toContain("onSuccess?.()");
+    expect(run).toContain("uiToast(");
+  });
+
+  it("成功の処理（仮の行）→ トースト → 一覧の読み直し の順", () => {
+    const onSuccess = at(run, "onSuccess?.()");
+    const toast = at(run, "uiToast(");
+    const refresh = at(run, "router.refresh()");
+    expect(onSuccess).toBeGreaterThan(-1);
+    expect(toast).toBeGreaterThan(onSuccess);
+    expect(refresh).toBeGreaterThan(toast);
+  });
+
+  it("相手の追加の成功処理で 仮の行を足し、入力欄を空にする", () => {
+    const start = source.indexOf('"相手の追加", () =>');
+    const callback = source.slice(start, source.indexOf("}); }}", start));
+    expect(start).toBeGreaterThan(-1);
+    expect(callback).toContain("setAddingContacts(");
+    expect(callback).toContain('setNewContactLabel("")');
+  });
+
+  it("仮の行は 読み直しが終わってから消し、操作できる部品を出さない", () => {
+    expect(source).toMatch(/const busy = !!saving \|\| isPending;/);
+    expect(source).toMatch(/if \(isPending \|\| saving\) return;[\s\S]*setAddingContacts/);
+    const start = source.indexOf("addingContacts.map(");
+    const row = source.slice(start, source.indexOf("</tr>)", start));
+    expect(row).not.toContain("onClick");
+    expect(row).not.toContain("<button");
+  });
+});
+
+// 日付の保存（今日おわった／日付を保存／日付を消す）も同じ。保存した日付を先にます目へ出してからトースト
+describe("日付の保存のトーストと表示（見張り）", () => {
+  const source = readFileSync("components/guild/live-project-people.tsx", "utf8");
+  const save = stripComments(functionBody(source, "saveRecord") ?? "");
+
+  it("saveRecord の本体が読めている", () => {
+    expect(save).toContain("sakaba_set_project_step_record");
+  });
+
+  it("成功したら 保存した日付を先に出し、パネルを閉じる（トーストは run が そのあとに出す）", () => {
+    expect(save).toContain("setRecordOverride(");
+    expect(save).toContain("setSelection(null)");
+  });
+
+  it("3つのボタンは すべて saveRecord を通る（run を直接呼ばない）", () => {
+    // run を呼んでよいのは saveRecord の中の 1か所だけ
+    expect((source.match(/run\("sakaba_set_project_step_record"/g) ?? []).length).toBe(1);
+    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(3);
+  });
+
+  it("ます目は 仮の日付を優先し、読み直しが終わってから外す", () => {
+    expect(source).toMatch(/recordOverride\[`\$\{contact\.id\}:\$\{step\.id\}`\] \?\? pipeline\.records\.find/);
+    expect(source).toMatch(/if \(isPending \|\| saving\) return;/);
+  });
+});
