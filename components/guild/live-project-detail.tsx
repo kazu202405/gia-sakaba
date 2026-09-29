@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
@@ -22,6 +22,11 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
   const [isPending, startTransition] = useTransition();
   const projectActionLock = useRef(false);
   const busy = !!pendingAction || isPending;
+  // 追加した直後〜一覧が読み直されるまで出しておく仮の行
+  const [addingTasks, setAddingTasks] = useState<{ key: number; title: string; due: string }[]>([]);
+  useEffect(() => {
+    if (!isPending && !pendingAction) setAddingTasks((current) => (current.length ? [] : current));
+  }, [isPending, pendingAction]);
   const [error, setError] = useState("");
   const [projectError, setProjectError] = useState("");
   // チェックは押した瞬間に見た目を切り替え、保存は裏で行う（失敗したら元に戻して知らせる）
@@ -55,6 +60,8 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       const { error: rpcError } = await createClient().rpc("sakaba_add_project_task", { p_project_id: project.id, p_title: taskTitle.trim(), p_due_date: taskDue || null });
       if (rpcError) { setError("タスクを追加できませんでした。"); return; }
       // 入れた欄は すぐ空にして、一覧に出るまで（読み込み中）は ボタンを押せないままにする
+      // 一覧が読み直されるまでの間、仮の行を先に出す（トーストだけ出て一覧が増えない時間を作らない）
+      setAddingTasks((current) => [...current, { key: Date.now() + Math.random(), title: taskTitle.trim(), due: taskDue }]);
       setTaskTitle(""); setTaskDue("");
       uiToast("タスクを追加しました");
       startTransition(() => router.refresh());
@@ -257,8 +264,17 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">タスク</span>
-      {tasks.length === 0 ? <p className="c-muted text-sm">まだタスクはありません。</p> : <>
-        {openTasks.length === 0 ? <p className="c-muted text-sm">のこっているタスクはありません。</p> : <ul className="space-y-2">{openTasks.map(taskRow)}</ul>}
+      {tasks.length === 0 && addingTasks.length === 0 ? <p className="c-muted text-sm">まだタスクはありません。</p> : <>
+        {openTasks.length === 0 && addingTasks.length === 0 ? <p className="c-muted text-sm">のこっているタスクはありません。</p> : <ul className="space-y-2">
+          {openTasks.map(taskRow)}
+          {addingTasks.map((task) => <li key={task.key} className="c-card flex items-center gap-3 p-3 opacity-60" aria-busy="true">
+            <input type="checkbox" disabled aria-label={`${task.title}を追加中`} />
+            <span className="min-w-0 flex-1">
+              <span className="block break-words text-sm">{task.title}</span>
+              <span className="c-muted text-xs">追加中…{task.due ? `（しめきり ${task.due}）` : ""}</span>
+            </span>
+          </li>)}
+        </ul>}
         {/* 完了したタスクは下にまとめて、たたんでおく（押すと開く） */}
         {doneTasks.length > 0 && <details className="c-dashed-top mt-5 pt-4">
           <summary className="c-muted cursor-pointer text-sm">おわったタスク（{doneTasks.length}件）</summary>
