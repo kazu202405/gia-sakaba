@@ -20,20 +20,21 @@ type NavItem = {
   href: string;
   label: string;
   short: string;
+  icon: "tavern" | "guild" | "scroll" | "map" | "hero" | "key";
   exact?: boolean;
   /** この道の下も「ここにいる」とみなす */
   also?: string[];
 };
 
 const NAV: NavItem[] = [
-  { href: "/guild", label: "ホーム", short: "ホーム", exact: true },
-  { href: "/guild/members", label: "ギルド", short: "ギルド", also: ["/guild/requests"] },
-  { href: "/guild/quests", label: "クエスト", short: "クエスト" },
-  { href: "/guild/projects", label: "プロジェクト", short: "プロ\nジェクト" },
-  { href: "/guild/me", label: "マイページ", short: "マイ\nページ" },
+  { href: "/guild", label: "ホーム", short: "ホーム", icon: "tavern", exact: true },
+  { href: "/guild/members", label: "ギルド", short: "ギルド", icon: "guild", also: ["/guild/requests"] },
+  { href: "/guild/quests", label: "クエスト", short: "クエスト", icon: "scroll" },
+  { href: "/guild/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
+  { href: "/guild/me", label: "マイページ", short: "マイ\nページ", icon: "hero" },
 ];
 
-const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者" };
+const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者", icon: "key" };
 
 function isUnder(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
@@ -156,20 +157,40 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex min-h-16 min-w-0 items-center justify-center border-r border-[#1b2a41]/15 px-0.5 py-2 text-center leading-tight tracking-normal whitespace-pre-line last:border-r-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[#1b2a41] focus-visible:outline-offset-[-4px]",
+                "group relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 border-r border-[#1b2a41]/15 px-0.5 py-1.5 text-center leading-tight tracking-normal whitespace-pre-line last:border-r-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[#1b2a41] focus-visible:outline-offset-[-4px]",
                 isMaster ? "text-[11px]" : "text-xs",
                 active ? "bg-[#e8cf8e]/35 text-[#1b2a41]" : "text-[#1b2a41]/70",
               )}
             >
-              {/* 「▶」を文字の前に足すと「マイページ」が幅に入りきらないので、いる所は上の線で示す */}
-              {active && <span className="absolute inset-x-3 top-0 h-1 bg-[#1b2a41]" aria-hidden />}
-              {item.short}
+              {/* いる所は金の線とアイコンで示す。文字も残し、初めての人にも行き先が伝わるようにする */}
+              {active && <span className="guild-mobile-active absolute inset-x-3 top-0 h-1 bg-[#1b2a41]" aria-hidden />}
+              <MobileNavIcon kind={item.icon} />
+              <span className="leading-[1.05]">{item.short}</span>
             </Link>
           );
         })}
       </nav>
     </div>
   );
+}
+
+/** 下のコマンド専用の16pxピクセル絵。線画アイコンではなく、酒場の道具として形をそろえる。 */
+function MobileNavIcon({ kind }: { kind: NavItem["icon"] }) {
+  const common = {
+    viewBox: "0 0 16 16",
+    width: 22,
+    height: 22,
+    className: "guild-mobile-icon shrink-0",
+    fill: "currentColor",
+    shapeRendering: "crispEdges" as const,
+    "aria-hidden": true,
+  };
+  if (kind === "tavern") return <svg {...common}><path d="M2 2h8v2h2v1h2v7h-2v2H2v-2H1V4h1V2Zm2 2v8h6V4H4Zm8 3v3h1V7h-1ZM6 8h2v2H6V8Z" /></svg>;
+  if (kind === "guild") return <svg {...common}><path d="M3 2h4v1h1v4H7v1H3V7H2V3h1V2Zm7 1h3v1h1v3h-1v1h-3V7H9V4h1V3ZM2 9h6l2 2v3H1v-4h1V9Zm8 0h3l2 2v3h-4v-3l-1-1V9Z" /></svg>;
+  if (kind === "scroll") return <svg {...common}><path d="M3 1h9v1h1v3h-2V3H5v9h6v-2h2v3h-1v1H3v-1H2V2h1V1Zm3 4h4v1H6V5Zm0 3h5v1H6V8Z" /></svg>;
+  if (kind === "map") return <svg {...common}><path d="M1 3h1V2l4 2 4-2 5 2v10h-1l-4-2-4 2-5-2V3Zm2 1v7l2 1V5L3 4Zm4 1v7l2-1V4L7 5Zm4-1v7l2 1V5l-2-1Z" /></svg>;
+  if (kind === "hero") return <svg {...common}><path d="M5 1h6v1h1v5h-1v2h-1v1H6V9H5V7H4V2h1V1Zm1 2v3h5V3H6Zm-2 8h8v1h2v3H2v-3h2v-1Z" /></svg>;
+  return <svg {...common}><path d="M2 2h6v1h1v5H8v1H6v2h3v2H7v2H4V9H2V8H1V3h1V2Zm1 2v3h3V4H3Zm6 6h5v2H9v-2Z" /></svg>;
 }
 
 function CommandLink({ item, active }: { item: NavItem; active: boolean }) {

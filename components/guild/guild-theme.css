@@ -701,6 +701,17 @@ body:has(.guild-theme) [data-ui-toast-action] {
   color: #efe6cf;
   background: rgba(217, 180, 90, 0.18);
 }
-.guild-scene .guild-mobile-nav a[aria-current="page"] > span {
+.guild-scene .guild-mobile-nav a[aria-current="page"] > .guild-mobile-active {
   background: #d9b45a;
+}
+.guild-mobile-icon {
+  image-rendering: pixelated;
+  transition: transform 100ms steps(1, end), color 100ms steps(1, end);
+}
+.guild-mobile-nav a[aria-current="page"] .guild-mobile-icon {
+  color: #9a6812;
+  transform: translateY(-1px);
+}
+.guild-scene .guild-mobile-nav a[aria-current="page"] .guild-mobile-icon {
+  color: #d9b45a;
 }
