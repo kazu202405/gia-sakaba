@@ -68,17 +68,6 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
     }
   }
 
-  // 招待文（あいさつ＋リンク）。そのまま貼って送れる。
-  async function copyMessage() {
-    if (!invite.link) return;
-    try {
-      await navigator.clipboard.writeText(inviteMessage(inviteUrl(window.location.origin, invite.link.code)));
-      uiToast("招待文をコピーしました");
-    } catch {
-      setError("コピーできませんでした。ブラウザの権限設定を確認してください。");
-    }
-  }
-
   // 端末の共有画面（LINE・メール・メッセージなど）を開く。閉じただけならエラーにしない。
   async function share() {
     if (!invite.link || sharing.current) return;
@@ -89,7 +78,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
         text: inviteMessage(inviteUrl(window.location.origin, invite.link.code)),
       });
     } catch (e) {
-      if (!isShareCancel(e)) setError("共有できませんでした。「招待文をコピー」から送ってください。");
+      if (!isShareCancel(e)) setError("共有できませんでした。「リンクをコピー」から送ってください。");
     } finally {
       sharing.current = false;
     }
@@ -105,10 +94,9 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
       <p className="c-muted mt-2 text-xs leading-relaxed">このリンクを受け取った人は、入会フォームを開けます。</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {canShare && <button type="button" onClick={() => void share()} className="rpg-button h-11 px-5 text-sm">▶ ほかのアプリで送る</button>}
-        <button type="button" onClick={() => void copyMessage()} className="c-button-sub h-11 px-4 text-sm">招待文をコピー</button>
-        <button type="button" onClick={() => void copy()} className="c-button-sub h-11 px-4 text-sm">リンクだけコピー</button>
+        {/* 共有画面が無い端末（PCなど）では、コピーが主役になる */}
+        <button type="button" onClick={() => void copy()} className={canShare ? "c-button-sub h-11 px-4 text-sm" : "rpg-button h-11 px-5 text-sm"}>{canShare ? "リンクをコピー" : "▶ リンクをコピー"}</button>
       </div>
-      <p className="c-muted mt-3 text-xs leading-relaxed">招待文は「酒場に招待します。フリープラン（0円）で入会できます」という短いあいさつと、リンクです。</p>
       <details className="mt-4 border-t border-[#1b2a41]/20 pt-3">
         <summary className="c-muted cursor-pointer text-xs underline underline-offset-4">{ROTATE_COPY.summary}</summary>
         <p className="mt-3 text-sm leading-relaxed">{ROTATE_COPY.lead}</p>

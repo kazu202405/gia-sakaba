@@ -82,6 +82,9 @@ describe("ROTATE_COPY（リンクを作り直すの説明）", () => {
 
   it("ふだんは使わない操作だと分かる", () => {
     expect(ROTATE_COPY.lead).toContain("ふだんは押さなくて大丈夫");
+    // 「広まりすぎた」ではなく「意図しない広がり方」。広まること自体は悪くない（2026-09-29 五島さん）
+    expect(ROTATE_COPY.summary).toBe("リンクを変更したいとき");
+    expect(ROTATE_COPY.lead).toContain("意図しない広がり方");
   });
 
   it("入会した人が消えるように読める言い方をしない", () => {

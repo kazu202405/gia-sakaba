@@ -40,8 +40,8 @@ export function isShareCancel(error: unknown): boolean {
  * すでに入会した人の invite_id は残るので、招待のつながりは消えない。
  */
 export const ROTATE_COPY = {
-  summary: "リンクを止めたいとき",
-  lead: "リンクが広まりすぎたときなどに使います。ふだんは押さなくて大丈夫です。",
+  summary: "リンクを変更したいとき",
+  lead: "リンクが意図しない広がり方をしたときに使います。ふだんは押さなくて大丈夫です。",
   effects: [
     "今のリンクは使えなくなり、新しいリンクができます。",
     "すでに入会した人とのつながりは、そのまま残ります。",
