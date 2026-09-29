@@ -9,9 +9,13 @@ export function GET() {
     start_url: "/guild",
     scope: "/guild",
     display: "standalone",
-    background_color: "#f8f4e8",
+    background_color: "#0b0f1f",
     theme_color: "#1b2a41",
-    icons: [{ src: "/gia-logo.png", sizes: "500x500", type: "image/png", purpose: "any" }],
+    icons: [
+      { src: "/images/sakaba/app-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/images/sakaba/app-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/images/sakaba/app-icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
   }), {
     headers: { "content-type": "application/manifest+json; charset=utf-8", "cache-control": "public, max-age=3600" },
   });

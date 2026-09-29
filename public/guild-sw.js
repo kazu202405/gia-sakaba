@@ -8,7 +8,7 @@ self.addEventListener("push", (event) => {
     ? payload.href : "/guild/notifications";
   event.waitUntil(self.registration.showNotification(title, {
     body,
-    icon: "/gia-logo.png",
+    icon: "/images/sakaba/app-icon-192.png",
     badge: "/gia-logo.png",
     tag: typeof payload.tag === "string" ? payload.tag : undefined,
     data: { href },

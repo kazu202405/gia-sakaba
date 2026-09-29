@@ -7,7 +7,14 @@ export const metadata: Metadata = {
   // absolute にしないと、親（app/layout.tsx）の「| GIA」が後ろに付く
   title: { absolute: "GIAの酒場", template: "%s | GIAの酒場" },
   manifest: "/guild/manifest.webmanifest",
-  appleWebApp: { capable: true, title: "GIAの酒場", statusBarStyle: "default" },
+  icons: {
+    icon: [
+      { url: "/images/sakaba/app-icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/sakaba/app-icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/images/sakaba/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: { capable: true, title: "GIAの酒場", statusBarStyle: "black-translucent" },
   robots: { index: false, follow: false },
 };
 
