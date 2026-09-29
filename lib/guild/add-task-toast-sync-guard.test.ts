@@ -137,11 +137,17 @@ describe("日付の保存のトーストと表示（見張り）", () => {
   it("日付のボタンは すべて saveRecord を通る（run を直接呼ばない）", () => {
     // run を呼んでよいのは saveRecord の中の 1か所だけ
     expect((source.match(/run\("sakaba_set_project_step_record"/g) ?? []).length).toBe(1);
-    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(2);
+    expect((source.match(/saveRecord\(selection\.contactId/g) ?? []).length).toBe(3); // 自動保存・閉じるときの保存・消す
   });
 
   it("ます目は 仮の日付を優先し、読み直しが終わってから外す", () => {
     expect(source).toMatch(/recordOverride\[`\$\{contact\.id\}:\$\{step\.id\}`\] \?\? pipeline\.records\.find/);
     expect(source).toMatch(/if \(isPending \|\| saving\) return;/);
+  });
+  it("自動保存：直した版を数え、保存中に直した分も 終わったあとに拾う", () => {
+    expect(source).toMatch(/editVersion === savedVersion\.current \|\| busy\) return;/);
+    expect(source).toMatch(/\}, \[editVersion, busy, selection,/);
+    // 閉じる・ほかのます目を開くときは 待たずに保存してから移る
+    expect((source.match(/leaveCell\(\)/g) ?? []).length).toBeGreaterThanOrEqual(4);
   });
 });

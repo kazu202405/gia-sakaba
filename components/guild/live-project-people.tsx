@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
 import { Trash2, X } from "lucide-react";
@@ -36,6 +36,9 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const [cellDate, setCellDate] = useState("");
   const [cellFinished, setCellFinished] = useState(false);
   const [cellResult, setCellResult] = useState<"ok" | "ng" | null>(null);
+  // ます目の入力は、変えて少し待つと自動で保存する（editVersion＝直したたびに増える印、savedVersion＝保存に出した版）
+  const [editVersion, setEditVersion] = useState(0);
+  const savedVersion = useRef(0);
   const [editingSteps, setEditingSteps] = useState(false);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
@@ -52,12 +55,37 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   }, [isPending, saving]);
 
   // 日付の保存：仮の表示 → トースト → 一覧の読み直し の順（run が onSuccess のあとにトーストを出す）
-  function saveRecord(contactId: string, stepId: string, plannedOn: string | null, doneOn: string | null, result: "ok" | "ng" | null, action: string) {
+  function saveRecord(contactId: string, stepId: string, plannedOn: string | null, doneOn: string | null, result: "ok" | "ng" | null, action: string, keepOpen = false) {
     return run("sakaba_set_project_step_record", { p_contact_id: contactId, p_step_id: stepId, p_planned_on: plannedOn, p_done_on: doneOn, p_result: result }, action, () => {
       setRecordOverride((current) => ({ ...current, [`${contactId}:${stepId}`]: { planned_on: plannedOn, done_on: doneOn, result } }));
-      setSelection(null);
+      if (!keepOpen) setSelection(null);
     });
   }
+
+  function editCell(change: () => void) {
+    change();
+    setEditVersion((version) => version + 1);
+  }
+
+  // 待たずに閉じる・ほかを開くときは、直した分をすぐ保存してから移る（0.5秒待ちで消えないように）
+  function leaveCell() {
+    if (selection?.kind === "cell" && editVersion !== savedVersion.current && !busy) {
+      savedVersion.current = editVersion;
+      void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存", true);
+    }
+    savedVersion.current = editVersion;
+  }
+
+  // 直してから0.5秒たったら保存。保存中に直した分は、終わったあとの再実行で拾う（取りこぼさない）
+  useEffect(() => {
+    if (selection?.kind !== "cell" || editVersion === savedVersion.current || busy) return;
+    const timer = setTimeout(() => {
+      savedVersion.current = editVersion;
+      void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存", true);
+    }, 500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editVersion, busy, selection, cellDate, cellFinished, cellResult]);
 
   async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
     if (busy) return;
@@ -68,8 +96,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       else {
         onSuccess?.();
         if (action === "相手の追加") uiToast("相手を追加しました");
-        else if (action === "保存") uiToast("保存しました");
-        else if (action === "日付の消去") uiToast("消しました");
+                else if (action === "日付の消去") uiToast("消しました");
         startTransition(() => { router.refresh(); });
       }
     } catch {
@@ -80,6 +107,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   }
 
   function selectContact(contactId: string) {
+    leaveCell();
     const contact = pipeline.contacts.find((item) => item.id === contactId);
     if (!contact) return;
     setSelection({ kind: "contact", contactId });
@@ -87,6 +115,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   }
 
   function selectCell(contactId: string, stepId: string) {
+    leaveCell();
     const record = pipeline.records.find((item) => item.contact_id === contactId && item.step_id === stepId);
     setSelection({ kind: "cell", contactId, stepId });
     const current = recordOverride[`${contactId}:${stepId}`] ?? record;
@@ -153,17 +182,17 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
       <div className="space-y-3">
-        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={setCellDate} label={cellFinished ? "おわった日" : "予定日"} /></div>
+        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => setCellDate(value))} label={cellFinished ? "おわった日" : "予定日"} /></div>
         <div role="radiogroup" aria-label="結果" className="flex items-center gap-2 text-sm">
           <span className="c-muted text-xs">結果</span>
-          {([[null, "未定"], ["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellResult === value} onClick={() => setCellResult(value)} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+          {([[null, "未定"], ["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellResult === value} onClick={() => editCell(() => setCellResult(value))} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
         </div>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => { setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); }} />おわった</label>
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={cellFinished} onChange={(event) => editCell(() => { setCellFinished(event.target.checked); if (event.target.checked && !cellDate) setCellDate(todayInJapan()); })} />おわった</label>
       </div>
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存")} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "保存" ? "保存中…" : "日付を保存"}</button>
+        <p role="status" aria-live="polite" className="c-muted text-xs">{saving === "保存" ? "保存中…" : editVersion !== savedVersion.current ? "変更あり…" : "✓ 変えると自動で保存されます"}</p>
         {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, null, "日付の消去")} className="c-muted px-2 text-xs underline disabled:opacity-50">日付と結果を消す</button>}
-        <button type="button" onClick={() => setSelection(null)} className="c-muted ml-auto px-2 text-xs">閉じる</button>
+        <button type="button" onClick={() => { leaveCell(); setSelection(null); }} className="c-muted ml-auto px-2 text-xs">閉じる</button>
       </div>
     </div>}
 
