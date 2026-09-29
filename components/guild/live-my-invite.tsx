@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { MyMemberInvite } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
-import { canNativeShare, inviteMessage, inviteUrl, isShareCancel, ROTATE_COPY } from "@/lib/guild/invite-share";
+import { inviteUrl, ROTATE_COPY } from "@/lib/guild/invite-share";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
@@ -15,12 +15,6 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
   const [invite, setInvite] = useState(initial);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  // 画面が出てから決める（サーバーの描画と食い違わせない）。共有画面は対応する端末だけ。
-  const [canShare, setCanShare] = useState(false);
-  const sharing = useRef(false); // 共有画面を開いている間の二重起動を防ぐ（押した瞬間にかける）
-  useEffect(() => {
-    setCanShare(canNativeShare(navigator));
-  }, []);
 
   async function issue(rotate: boolean) {
     if (pending) return;
@@ -68,22 +62,6 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
     }
   }
 
-  // 端末の共有画面（LINE・メール・メッセージなど）を開く。閉じただけならエラーにしない。
-  async function share() {
-    if (!invite.link || sharing.current) return;
-    sharing.current = true;
-    try {
-      await navigator.share({
-        title: "GIAの酒場への招待",
-        text: inviteMessage(inviteUrl(window.location.origin, invite.link.code)),
-      });
-    } catch (e) {
-      if (!isShareCancel(e)) setError("共有できませんでした。「リンクをコピー」から送ってください。");
-    } finally {
-      sharing.current = false;
-    }
-  }
-
   return <Window title="仲間を招く">
     <p className="c-muted mb-5 text-sm leading-relaxed">あなたから酒場へ招くためのリンクです。</p>
     {invite.link ? <div className="border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-4 sm:p-5">
@@ -93,9 +71,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
       <p className="mt-4 text-base tracking-wider">酒場への招待状</p>
       <p className="c-muted mt-2 text-xs leading-relaxed">このリンクを受け取った人は、入会フォームを開けます。</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        {canShare && <button type="button" onClick={() => void share()} className="rpg-button h-11 px-5 text-sm">▶ ほかのアプリで送る</button>}
-        {/* 共有画面が無い端末（PCなど）では、コピーが主役になる */}
-        <button type="button" onClick={() => void copy()} className={canShare ? "c-button-sub h-11 px-4 text-sm" : "rpg-button h-11 px-5 text-sm"}>{canShare ? "リンクをコピー" : "▶ リンクをコピー"}</button>
+        <button type="button" onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm">▶ リンクをコピー</button>
       </div>
       <details className="mt-4 border-t border-[#1b2a41]/20 pt-3">
         <summary className="c-muted cursor-pointer text-xs underline underline-offset-4">{ROTATE_COPY.summary}</summary>
