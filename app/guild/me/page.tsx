@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { LivePushSettings } from "@/components/guild/live-push-settings";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
+import { ShareUrlWindow } from "@/components/guild/share-url-window";
+import type { ShareSettings } from "@/lib/guild/shared-profile";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { FeedbackButton } from "@/components/guild/feedback-button";
 import { canSendMealWish, resolveSakabaAccessPlan, resolveSakabaPlan } from "@/lib/guild/billing-plans";
@@ -26,6 +28,9 @@ export default async function MyPage() {
   // 自分の入会のつながり（根っこ → … → あなた）と、名前を出さない設定
   const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: me.id });
   const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
+  // 共有URLの設定（なければ、ここで作られる＝本人がマイページを開いたとき）
+  const shareResult = await (await createClient()).rpc("sakaba_get_my_share", { p_guild_slug: "gia" });
+  const share = shareResult.error ? null : shareResult.data as ShareSettings;
   const fields = [me.bio, me.values_text, me.looking_for];
   const filled = fields.filter((value) => value.trim()).length + (me.photo_url ? 1 : 0);
   const myQuests = quests.filter((quest) => quest.creator_id === me.id && quest.status !== "withdrawn");
@@ -59,6 +64,7 @@ export default async function MyPage() {
     </Window>
 
     <PersonalProfileWindow profile={me} />
+    {share ? <ShareUrlWindow initial={share} /> : <Window title="共有URL"><p className="c-muted text-sm">共有URLを読み込めませんでした。時間をおいて開き直してください。</p></Window>}
 
     <LiveMyInvite initial={invite} />
 

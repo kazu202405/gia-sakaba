@@ -39,6 +39,8 @@ export function guildGate(pathname: string, options: { allowLook: boolean }): Gu
   if (/^\/e\/[0-9a-f]{64}$/i.test(pathname)) return { kind: "pass" };
   // 管理者からの紹介も、受取人ごとの推測困難な専用URLだけを公開する。
   if (/^\/i\/[0-9a-f]{64}$/i.test(pathname)) return { kind: "pass" };
+  // 本人が作った共有URL（会員以外にも見せるステータス）も、推測困難な専用URLだけを公開する。
+  if (/^\/p\/[0-9a-f]{64}$/.test(pathname)) return { kind: "pass" };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 

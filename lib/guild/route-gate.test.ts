@@ -23,6 +23,15 @@ describe("guildGate", () => {
     expect(guildGate(`/i/${token}/extra`, prod)).toEqual({ kind: "redirect", to: "/guild" });
   });
 
+  it("共有URL（/p/）は64桁の専用URLだけ通す", () => {
+    const token = "c".repeat(64);
+    expect(guildGate(`/p/${token}`, prod)).toEqual({ kind: "pass" });
+    expect(guildGate("/p/example", prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate(`/p/${token}/extra`, prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate("/p", prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate(`/p/${token.toUpperCase()}`, prod)).toEqual({ kind: "redirect", to: "/guild" });
+  });
+
   it("/guild 配下は通す", () => {
     for (const p of ["/guild", "/guild/", "/guild/quests/new", "/guild/members/abc"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { Window } from "./cards";
 
-export function BusinessCardView({ card, urls, isMe }: { card: BusinessCard | null; urls: Record<string, string>; isMe: boolean }) {
+export function BusinessCardView({ card, urls, isMe, footnote = "押すと大きく開きます。名刺はギルドの会員だけが見られます。" }: { card: BusinessCard | null; urls: Record<string, string>; isMe: boolean; footnote?: string }) {
   const sides = ([["front", "表"], ["back", "裏"]] as const)
     .map(([side, label]) => ({ label, path: card?.[side] ?? null }))
     .filter((item) => item.path);
@@ -29,6 +29,6 @@ export function BusinessCardView({ card, urls, isMe }: { card: BusinessCard | nu
         </div>;
       })}
     </div>
-    <p className="c-muted mt-3 text-xs">押すと大きく開きます。名刺はギルドの会員だけが見られます。</p>
+    <p className="c-muted mt-3 text-xs">{footnote}</p>
   </Window>;
 }
