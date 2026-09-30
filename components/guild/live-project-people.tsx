@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
-import { Trash2, X } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 import type { GuildProjectPipeline } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
@@ -54,8 +54,11 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const [addingContacts, setAddingContacts] = useState<{ key: number; label: string }[]>([]);
   // 日付を保存した直後〜一覧が読み直されるまでは、保存した日付を先にます目へ出す
   const [recordOverride, setRecordOverride] = useState<Record<string, { planned_on: string | null; done_on: string | null; result: "ok" | "ng" | null }>>({});
+  // 削除を確定した手順は、消える処理が終わって一覧が読み直されるまで隠しておき、編集欄には「削除中…」を出す
+  const [hiddenSteps, setHiddenSteps] = useState<string[]>([]);
   useEffect(() => {
     if (isPending || saving) return;
+    setHiddenSteps((current) => (current.length ? [] : current));
     setAddingContacts((current) => (current.length ? [] : current));
     setRecordOverride((current) => (Object.keys(current).length ? {} : current));
   }, [isPending, saving]);
@@ -94,9 +97,10 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editVersion, busy, selection, cellDate, cellFinished, cellResult]);
 
-  async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) {
-    if (busy) return;
+  async function run(name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void): Promise<boolean> {
+    if (busy) return false;
     setSaving(action); setLastAction(action); setError("");
+    let ok = false;
     try {
       const { error: rpcError } = await createClient().rpc(name, args);
       if (rpcError) setError(rpcError.code === "23505" && name === "sakaba_add_project_contact_v2" ? "このメンバーはすでに追加されています。" : `${action}に失敗しました。もう一度お試しください。`);
@@ -104,6 +108,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         onSuccess?.();
         if (action === "相手の追加") uiToast("相手を追加しました");
                 else if (action === "日付の消去") uiToast("消しました");
+        ok = true;
         startTransition(() => { router.refresh(); });
       }
     } catch {
@@ -111,6 +116,22 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     } finally {
       setSaving("");
     }
+    return ok;
+  }
+
+  async function deleteStep(step: GuildProjectPipeline["steps"][number]) {
+    if (busy) return;
+    const confirmed = await uiConfirm({
+      title: "手順を削除する",
+      message: `「${step.name}」の列と、この列に記録したすべての日付・結果を削除します。元に戻せません。`,
+      okLabel: "削除する",
+      danger: true,
+    });
+    if (!confirmed) return;
+    // 確定した瞬間に列を隠す。失敗したら戻して理由を出す（黙って消さない）
+    setHiddenSteps((current) => [...current, step.id]);
+    const ok = await run("sakaba_delete_project_step", { p_step_id: step.id }, "手順の削除", () => uiToast("手順を削除しました"));
+    if (!ok) setHiddenSteps((current) => current.filter((id) => id !== step.id));
   }
 
   function selectContact(contactId: string) {
@@ -157,7 +178,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   }
 
   // 一番右の手順が「完了」になった相手は、下の「フォローアップ」へ移す（保存した直後の表示＝recordOverride も見る）
-  const lastStep = pipeline.steps[pipeline.steps.length - 1];
+  const visibleSteps = pipeline.steps.filter((step) => !hiddenSteps.includes(step.id));
+  const lastStep = visibleSteps[visibleSteps.length - 1];
   const isFollowUp = (contactId: string) => {
     const record = recordOverride[`${contactId}:${lastStep.id}`] ?? pipeline.records.find((item) => item.contact_id === contactId && item.step_id === lastStep.id);
     return !!record?.done_on;
@@ -177,15 +199,15 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       <table className="w-full min-w-max border-collapse text-sm">
         <thead><tr className="bg-[#f3ecd9]">
           <th scope="col" className="sticky left-0 z-10 min-w-28 bg-[#f3ecd9] px-3 py-2 text-left text-xs font-normal">相手</th>
-          {pipeline.steps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
+          {visibleSteps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
         </tr></thead>
-        <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? (followUpContacts.length === 0 ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "この結果の人はいません。") : "まだ相手がいません。下から追加してください。"}</td></tr> :
+        <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={visibleSteps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? (followUpContacts.length === 0 ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "この結果の人はいません。") : "まだ相手がいません。下から追加してください。"}</td></tr> :
           contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
               <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
               {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={`/guild/members/${contact.member_user_id}`} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
             </th>
-            {pipeline.steps.map((step) => {
+            {visibleSteps.map((step) => {
               const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
                 <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
@@ -197,33 +219,24 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
           </tr>)}
           {kind === "active" && addingContacts.map((contact) => <tr key={contact.key} aria-busy="true" className="border-t-2 border-dashed border-[#1b2a41]/15 opacity-60">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal"><span className="block text-xs">{contact.label}</span></th>
-            <td colSpan={pipeline.steps.length} className="c-muted p-1 text-left text-xs">追加中…</td>
+            <td colSpan={visibleSteps.length} className="c-muted p-1 text-left text-xs">追加中…</td>
           </tr>)}</tbody>
       </table>
     </div>;
 
-  return <div className="space-y-5">
-    <p className="c-muted text-xs leading-relaxed">行＝相手、列＝手順。ます目を選ぶと予定日と完了日を記録できます。一番右の手順が「完了」になった人は、下の「フォローアップ」へ移ります。</p>
-    <div className="space-y-2">
-      <p className="text-sm">進行中<span className="c-muted ml-2 text-xs">{activeContacts.length}人</span></p>
-      {peopleTable(activeContacts, "active")}
-    </div>
-    <div className="space-y-2">
-      <p className="text-sm">フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人</span></p>
-      <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
-        {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-[#1b2a41] px-3 text-sm ${followUpTab === tab.key ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{tab.label} {tab.list.length}</button>)}
-      </div>
-      {peopleTable(shownFollowUp.list, "followUp")}
-    </div>
-
+  // 編集する枠は、選んだ相手がいる表（進行中／フォローアップ）のすぐ下に出す
+  const selectedInFollowUp = !!selection && isFollowUp(selection.contactId);
+  const editPanels = <>
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
       <div className="space-y-3">
         <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => { setCellDate(value); if (value && value <= todayInJapan() && !finishedTouched.current) setCellFinished(true); })} label={cellFinished ? "おわった日" : "予定日"} /></div>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <button type="button" aria-pressed={cellFinished} onClick={() => editCell(() => { finishedTouched.current = true; const next = !cellFinished; setCellFinished(next); if (next && !cellDate) setCellDate(todayInJapan()); })} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellFinished ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{cellFinished ? "✓ 完了" : "完了"}</button>
-          <div role="radiogroup" aria-label="結果" className="flex items-center gap-2">
-            {([[null, "未定"], ["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellResult === value} onClick={() => editCell(() => setCellResult(value))} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          <div role="radiogroup" aria-label="進み具合" className="flex items-center gap-2">
+            {([[true, "完了"], [false, "未定"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellFinished === value} onClick={() => editCell(() => { finishedTouched.current = true; setCellFinished(value); if (value && !cellDate) setCellDate(todayInJapan()); })} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellFinished === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+          </div>
+          <div role="group" aria-label="結果" className="flex items-center gap-2">
+            {([["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" aria-pressed={cellResult === value} onClick={() => editCell(() => setCellResult(cellResult === value ? null : value))} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
           </div>
         </div>
       </div>
@@ -251,6 +264,24 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         </div>
       </div>
     </form>}
+  </>;
+
+  return <div className="space-y-5">
+    <p className="c-muted text-xs leading-relaxed">行＝相手、列＝手順。ます目を選ぶと予定日と完了日を記録できます。一番右の手順が「完了」になった人は、下の「フォローアップ」へ移ります。</p>
+    <div className="space-y-2">
+      <p className="text-sm">進行中<span className="c-muted ml-2 text-xs">{activeContacts.length}人</span></p>
+      {peopleTable(activeContacts, "active")}
+    </div>
+    {!selectedInFollowUp && editPanels}
+    <div className="space-y-2">
+      <p className="text-sm">フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人</span></p>
+      <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
+        {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-[#1b2a41] px-3 text-sm ${followUpTab === tab.key ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{tab.label} {tab.list.length}</button>)}
+      </div>
+      {peopleTable(shownFollowUp.list, "followUp")}
+    </div>
+    {selectedInFollowUp && editPanels}
+
 
     {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
       <p className="text-sm">相手を追加</p>
@@ -260,10 +291,12 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {editable && <div className="c-dashed-top pt-4">
       <button type="button" onClick={() => setEditingSteps(!editingSteps)} className="c-muted text-xs underline">{editingSteps ? "手順の編集を閉じる" : "手順（列）をなおす"}</button>
       {editingSteps && <div className="mt-4 space-y-3">
-        {pipeline.steps.map((step) => <StepNameEditor key={step.id} step={step} busy={busy} run={run} canDelete={pipeline.steps.length > 1} />)}
+        {pipeline.steps.map((step) => hiddenSteps.includes(step.id)
+          ? <div key={step.id} role="status" aria-busy="true" className="c-muted flex h-11 items-center gap-2 text-xs opacity-60"><Loader2 size={16} className="animate-spin" aria-hidden />「{step.name}」を削除中…</div>
+          : <StepNameEditor key={step.id} step={step} busy={busy} run={run} onDelete={() => deleteStep(step)} canDelete={visibleSteps.length > 1} />)}
         <form onSubmit={(event) => { event.preventDefault(); if (!stepName.trim()) return; run("sakaba_add_project_step", { p_project_id: projectId, p_name: stepName.trim() }, "手順の追加", () => setStepName("")); }} className="flex gap-2">
           <div className="min-w-0 flex-1"><TextInput value={stepName} onChange={setStepName} max={12} label="新しい手順" placeholder="例：見積" /></div>
-          <button type="submit" disabled={busy || !stepName.trim() || pipeline.steps.length >= 12} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">右に足す</button>
+          <button type="submit" disabled={busy || !stepName.trim() || visibleSteps.length >= 12} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">右に足す</button>
         </form>
       </div>}
     </div>}
@@ -272,21 +305,10 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   </div>;
 }
 
-function StepNameEditor({ step, busy, run, canDelete }: { step: GuildProjectPipeline["steps"][number]; busy: boolean; run: (name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) => Promise<void>; canDelete: boolean }) {
+function StepNameEditor({ step, busy, run, onDelete, canDelete }: { step: GuildProjectPipeline["steps"][number]; busy: boolean; run: (name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) => Promise<boolean>; onDelete: () => void; canDelete: boolean }) {
   const [name, setName] = useState(step.name);
-  async function deleteStep() {
-    if (busy) return;
-    const confirmed = await uiConfirm({
-      title: "手順を削除する",
-      message: `「${step.name}」の列と、この列に記録したすべての日付・結果を削除します。元に戻せません。`,
-      okLabel: "削除する",
-      danger: true,
-    });
-    if (!confirmed) return;
-    await run("sakaba_delete_project_step", { p_step_id: step.id }, "手順の削除", () => uiToast("手順を削除しました"));
-  }
   return <div className="flex items-center gap-2"><div className="min-w-0 flex-1"><TextInput value={name} onChange={setName} max={12} label={`${step.name}の名前`} /></div>
     <button type="button" disabled={busy || !name.trim() || name.trim() === step.name} onClick={() => run("sakaba_rename_project_step", { p_step_id: step.id, p_name: name.trim() }, "手順の更新")} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">なおす</button>
-    <button type="button" disabled={busy || !canDelete} onClick={deleteStep} aria-label={`${step.name}の列を削除`} title={canDelete ? `${step.name}の列を削除` : "最後の1列は削除できません"} className="flex h-11 w-11 shrink-0 items-center justify-center text-[#c62828] hover:bg-[#c62828]/10 focus-visible:outline-2 focus-visible:outline-[#c62828] disabled:opacity-40"><Trash2 size={18} aria-hidden /></button>
+    <button type="button" disabled={busy || !canDelete} onClick={onDelete} aria-label={`${step.name}の列を削除`} title={canDelete ? `${step.name}の列を削除` : "最後の1列は削除できません"} className="flex h-11 w-11 shrink-0 items-center justify-center text-[#c62828] hover:bg-[#c62828]/10 focus-visible:outline-2 focus-visible:outline-[#c62828] disabled:opacity-40"><Trash2 size={18} aria-hidden /></button>
   </div>;
 }
