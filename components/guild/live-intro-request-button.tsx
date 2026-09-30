@@ -14,7 +14,9 @@ import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
 // quota：今月の申請の残り（読めなかったら null。そのときは数を出さず、DBの判定に任せる）
-export function LiveIntroRequestButton({ target, existing, quota = null }: { target: Profile; existing: GuildIntroRequest | null; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
+// inviteConnected：入会のつながりで、直接つながっている相手（招待した人・された人）。回数には数えないので、残りの表示は出さない
+export function LiveIntroRequestButton({ target, existing, quota: quotaProp = null, inviteConnected = false }: { target: Profile; existing: GuildIntroRequest | null; quota?: { plan: PlanKey; slot: QuotaSlot } | null; inviteConnected?: boolean }) {
+  const quota = inviteConnected ? null : quotaProp;
   const router = useGuildRouter();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
@@ -64,15 +66,15 @@ export function LiveIntroRequestButton({ target, existing, quota = null }: { tar
   if (quota && isExhausted(quota.slot)) return <PlanQuotaExhausted kind="intro" plan={quota.plan} slot={quota.slot} />;
 
   return <>
-    <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">▶ つながりを申請する</button>
+    <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{inviteConnected ? "▶ 連絡先を見せてもらう" : "▶ つながりを申請する"}</button>
     {quota && <PlanQuotaNote kind="intro" plan={quota.plan} slot={quota.slot} className="mt-2" />}
     {open && <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="intro-live-title" className="c-window relative w-full pt-9 sm:max-w-lg">
-        <h2 id="intro-live-title" className="c-window-title">つながり申請</h2>
+        <h2 id="intro-live-title" className="c-window-title">{inviteConnected ? "連絡先を見せてもらう" : "つながり申請"}</h2>
         <button type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>
         <div className="max-h-[80vh] overflow-y-auto px-5 pb-5 sm:px-6 sm:pb-6">
-          <p className="text-base">{target.display_name}さんにつながりを申請する</p>
+          <p className="text-base">{inviteConnected ? `${target.display_name}さんに連絡先を見せてもらう` : `${target.display_name}さんにつながりを申請する`}</p>
           <p className="c-muted mt-2 text-[13px] leading-relaxed">申請は相手に直接届きます。相手が承諾すると、お互いの登録済みの連絡先が見えるようになります。</p>
           <fieldset className="mt-5">
             <legend className="text-[15px]">目的 <span className="text-xs text-[#c62828]">必須</span></legend>

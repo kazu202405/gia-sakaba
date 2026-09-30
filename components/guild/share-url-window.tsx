@@ -88,8 +88,8 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
     }
   }
 
-  return <Window title="共有URL">
-    <p className="text-[15px] leading-relaxed">ステータスを、会員でない方にも見せるためのURLです。紹介のときに貼って使えます。</p>
+  return <Window title="紹介してもらうための共有URL">
+    <p className="text-[15px] leading-relaxed">あなたを紹介してもらうときに、LINEなどで貼ってもらうURLです。会員でない方にも、ステータスが見えます。</p>
     <p className="c-muted mt-1 text-xs leading-relaxed">連絡先と、出身地・誕生日は、どの設定でも出ません。</p>
 
     <div className="mt-5">

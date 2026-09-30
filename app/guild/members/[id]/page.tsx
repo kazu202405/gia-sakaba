@@ -6,6 +6,7 @@ import { LiveIntroRequestButton } from "@/components/guild/live-intro-request-bu
 import { LiveMemberIntroductions } from "@/components/guild/live-member-introductions";
 import { InvitePathWindow } from "@/components/guild/invite-path";
 import { BusinessCardView } from "@/components/guild/business-card-view";
+import { MemberShareUrl } from "@/components/guild/member-share-url";
 import { ContactItemsView } from "@/components/guild/contact-items-view";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { parseContactItemsMap } from "@/lib/guild/contact-items";
@@ -46,6 +47,9 @@ export default async function MemberStatusPage({ params }: Props) {
   // 連絡先（見せてよい分だけDBから来る。「つながった人だけ」でまだのものは種類だけ）
   const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [p.id] });
   const contactItems = parseContactItemsMap(contactData)[p.id] ?? [];
+  // 相手の共有URL（あれば）と、入会のつながり（招待した人・された人）。読めなかったときは、どちらも出さない
+  const linkResult = isMe ? null : await supabase.rpc("sakaba_get_member_link_info", { p_target_id: p.id });
+  const linkInfo = linkResult && !linkResult.error ? linkResult.data as { share_token: string | null; invite_connected: boolean } : null;
   const memberTerm = context.guild.terms.member;
 
   return (
@@ -93,7 +97,9 @@ export default async function MemberStatusPage({ params }: Props) {
             ? "これは、ほかのメンバーから見えるあなたのプロフィールです。"
             : "連絡先は、本人が選んだ相手にだけ表示しています。🔒 のものは、つながり申請を承諾し合うと見えるようになります。"}
         </p>
-        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} /></div>}
+        {!isMe && linkInfo?.invite_connected && <p className="mt-5"><span className="c-chip">入会のつながりで、つながっています</span></p>}
+        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} inviteConnected={Boolean(linkInfo?.invite_connected)} /></div>}
+        {!isMe && linkInfo && <MemberShareUrl token={linkInfo.share_token} />}
       </Window>
 
       <PersonalProfileWindow profile={p} />
