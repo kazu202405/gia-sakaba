@@ -42,6 +42,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   // 過去の日付を入れたときは「おわった」を自動でつける（記録のための入力なので、毎回チェックしなくてよい）。チェックを手で触ったら 触らない
   const finishedTouched = useRef(false);
   const [editingSteps, setEditingSteps] = useState(false);
+  // フォローアップ表の絞り込み（一番右の手順の結果で分ける）
+  const [followUpTab, setFollowUpTab] = useState<"all" | "ok" | "ng" | "undecided">("all");
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -162,6 +164,14 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   };
   const activeContacts = pipeline.contacts.filter((contact) => !isFollowUp(contact.id));
   const followUpContacts = pipeline.contacts.filter((contact) => isFollowUp(contact.id));
+  const lastResultOf = (contactId: string) => (recordOverride[`${contactId}:${lastStep.id}`] ?? pipeline.records.find((item) => item.contact_id === contactId && item.step_id === lastStep.id))?.result ?? null;
+  const followUpTabs = [
+    { key: "all", label: "すべて", list: followUpContacts },
+    { key: "ok", label: "OK", list: followUpContacts.filter((contact) => lastResultOf(contact.id) === "ok") },
+    { key: "ng", label: "NG", list: followUpContacts.filter((contact) => lastResultOf(contact.id) === "ng") },
+    { key: "undecided", label: "未定", list: followUpContacts.filter((contact) => lastResultOf(contact.id) === null) },
+  ] as const;
+  const shownFollowUp = followUpTabs.find((tab) => tab.key === followUpTab) ?? followUpTabs[0];
 
   const peopleTable = (contacts: typeof pipeline.contacts, kind: "active" | "followUp") => <div className="overflow-x-auto border-2 border-[#1b2a41]">
       <table className="w-full min-w-max border-collapse text-sm">
@@ -169,7 +179,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
           <th scope="col" className="sticky left-0 z-10 min-w-28 bg-[#f3ecd9] px-3 py-2 text-left text-xs font-normal">相手</th>
           {pipeline.steps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
         </tr></thead>
-        <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "まだ相手がいません。下から追加してください。"}</td></tr> :
+        <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={pipeline.steps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? (followUpContacts.length === 0 ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "この結果の人はいません。") : "まだ相手がいません。下から追加してください。"}</td></tr> :
           contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
             <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
               <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
@@ -200,7 +210,10 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     </div>
     <div className="space-y-2">
       <p className="text-sm">フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人</span></p>
-      {peopleTable(followUpContacts, "followUp")}
+      <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
+        {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-[#1b2a41] px-3 text-sm ${followUpTab === tab.key ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{tab.label} {tab.list.length}</button>)}
+      </div>
+      {peopleTable(shownFollowUp.list, "followUp")}
     </div>
 
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
