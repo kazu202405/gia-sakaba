@@ -45,13 +45,14 @@ export async function POST(request: NextRequest) {
     };
     const origin = request.nextUrl.origin;
     const returnPath = request.nextUrl.searchParams.get("from") === "projects" ? "/guild/projects" : "/guild/plan";
-    const session = await stripe.checkout.sessions.create({
+    const emailParam = user.email && looksLikeEmail(user.email) ? user.email : undefined;
+    const createSession = (customerId: string | null) => stripe.checkout.sessions.create({
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      ...(billing.stripe_customer_id
-        ? { customer: billing.stripe_customer_id }
+      ...(customerId
+        ? { customer: customerId }
         // 形の正しくないメール（テスト用の a@a など）はStripeが拒否するので渡さない。決済画面で本人が入れる
-        : { customer_email: user.email && looksLikeEmail(user.email) ? user.email : undefined }),
+        : { customer_email: emailParam }),
       client_reference_id: user.id,
       metadata,
       subscription_data: { metadata },
@@ -59,6 +60,15 @@ export async function POST(request: NextRequest) {
       cancel_url: `${origin}${returnPath}?checkout=canceled`,
       billing_address_collection: "auto",
       locale: "ja",
+    });
+    // 保存してある顧客IDが今のStripe（本番／テスト）に無いとき（テストモードで作られたIDが残っている等）は、
+    // 顧客なしで作り直す。決済が済めばWebhookが新しい顧客IDで上書きする
+    const session = await createSession(billing.stripe_customer_id).catch((error: unknown) => {
+      const missingCustomer = typeof error === "object" && error !== null
+        && (error as { code?: unknown }).code === "resource_missing" && (error as { param?: unknown }).param === "customer";
+      if (!missingCustomer) throw error;
+      console.warn("[sakaba.billing] 保存済みの顧客IDがStripeに無いため、顧客なしで作り直します", { userId: user.id });
+      return createSession(null);
     });
 
     if (!session.url) throw new Error("Checkout URL was not returned");
