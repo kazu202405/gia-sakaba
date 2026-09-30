@@ -270,6 +270,18 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     </form>}
   </>;
 
+  // 新しい相手は必ず「進行中」から始まるので、追加の入口は進行中の表のすぐ下に置く
+  const addPanel = <>
+    {editable && !addOpen && <button type="button" onClick={() => setAddOpen(true)} className="c-button-sub h-11 px-4 text-sm">＋ 進行中に相手を追加</button>}
+    {editable && addOpen && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm">進行中に相手を追加</p>
+        <button type="button" onClick={() => setAddOpen(false)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
+      </div>
+      <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
+    </form>}
+  </>;
+
   return <div className="space-y-5">
     <p className="c-muted text-xs leading-relaxed">行＝相手、列＝手順。ます目を選ぶと予定日と完了日を記録できます。一番右の手順が「完了」になった人は、下の「フォローアップ」へ移ります。</p>
     <div className="space-y-2">
@@ -277,6 +289,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       {peopleTable(activeContacts, "active")}
     </div>
     {!selectedInFollowUp && editPanels}
+    {addPanel}
     <div className="space-y-2">
       <button type="button" aria-expanded={followUpOpen} onClick={() => { if (followUpOpen && selectedInFollowUp) { leaveCell(); setSelection(null); } setFollowUpOpen(!followUpOpen); }} className="flex min-h-9 items-center gap-1 text-sm">
         {followUpOpen ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人{followUpOpen ? "" : "（ひらく）"}</span>
@@ -287,17 +300,6 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
       {followUpOpen && peopleTable(shownFollowUp.list, "followUp")}
     </div>
     {selectedInFollowUp && editPanels}
-
-
-    {editable && !addOpen && <button type="button" onClick={() => setAddOpen(true)} className="c-button-sub h-11 px-4 text-sm">＋ 相手を追加</button>}
-    {editable && addOpen && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="text-sm">相手を追加</p>
-        <button type="button" onClick={() => setAddOpen(false)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
-      </div>
-      <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
-    </form>}
-
     {editable && <div className="c-dashed-top pt-4">
       <button type="button" onClick={() => setEditingSteps(!editingSteps)} className="c-muted text-xs underline">{editingSteps ? "手順の編集を閉じる" : "手順（列）をなおす"}</button>
       {editingSteps && <div className="mt-4 space-y-3">
