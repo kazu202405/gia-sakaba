@@ -127,6 +127,8 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         <div className="mt-6 min-h-12">{actionFor(plan.key)}</div>
       </div>)}
     </section>
+    {/* 押した場所の近くに出す（ページの一番下だと、画面の外で気づかれない） */}
+    {error && <p role="alert" className="c-card border-[#c62828] px-4 py-3 text-sm text-[#c62828]">{error}</p>}
 
     <EnterprisePlan isMaster={exempt && role !== "member"} />
 
@@ -168,6 +170,5 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         <p className="text-[15px] leading-relaxed">{billingStatus === "past_due" ? "お支払いを確認できていません。支払い方法を確認してください。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : isPaid ? "現在、有料会員です。" : "現在はフリープランです。"}</p>
         <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : (hasActiveContract || billingStatus === "past_due") ? "支払い方法・解約を管理する" : "支払い履歴を見る"}</button>
       </Window> : <Window title="会員の状態"><p className="text-[15px] leading-relaxed">現在はフリープランです。上の比較から、いつでもプラスプラン・ビジネスプランへの申し込みを選べます。</p></Window>}
-    {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;
 }

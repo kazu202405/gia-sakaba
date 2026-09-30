@@ -4,7 +4,6 @@ import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/m
 import { Window } from "./cards";
 import { isExhausted, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
-import { GuildCheckoutButton } from "./guild-checkout-button";
 import { ProjectCard, ProjectOrderList } from "./project-order-list";
 
 export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
@@ -42,8 +41,8 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
             <li>▶ プロジェクトをいくつでも作って、記録を残せる</li>
             <li>▶ 有料会員限定（不定期開催）の懇親会などに申し込める</li>
           </ul>
-          <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}の月額制です。無料体験期間はありません。</p>
-          <GuildCheckoutButton />
+          <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}からの月額制です。無料体験期間はありません。</p>
+          <Link href="/guild/plan" className="rpg-button mt-5 h-12 w-full px-6 text-base sm:w-auto">▶ 有料会員について</Link>
         </Window>
       </>}
       {projects.length === 0 ? (

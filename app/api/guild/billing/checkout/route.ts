@@ -6,6 +6,10 @@ import { getSakabaPriceId, getSakabaStripeClient } from "@/lib/stripe/client";
 
 export const runtime = "nodejs";
 
+function looksLikeEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
+}
+
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -46,7 +50,8 @@ export async function POST(request: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       ...(billing.stripe_customer_id
         ? { customer: billing.stripe_customer_id }
-        : { customer_email: user.email ?? undefined }),
+        // 形の正しくないメール（テスト用の a@a など）はStripeが拒否するので渡さない。決済画面で本人が入れる
+        : { customer_email: user.email && looksLikeEmail(user.email) ? user.email : undefined }),
       client_reference_id: user.id,
       metadata,
       subscription_data: { metadata },
@@ -60,6 +65,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("[sakaba.billing] Checkout作成失敗", error);
+    // 原因の違う失敗を1つの文言にしない：メールアドレスをStripeが受け付けない場合は、それと分かるように返す
+    if (typeof error === "object" && error !== null && (error as { param?: unknown }).param === "customer_email") {
+      return NextResponse.json({ error: "登録されているメールアドレスが、決済で使えない形式です。ログインに使っているメールアドレスを確認してください。" }, { status: 422 });
+    }
     return NextResponse.json({ error: "決済画面を開けませんでした。設定を確認してください。" }, { status: 503 });
   }
 }
