@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "@/components/guild/guild-theme.css";
 import styles from "./sakaba-landing.module.css";
+import { PHRASE_WRAP, Ph } from "@/components/guild/phrase";
+import { plans } from "@/lib/guild/plan-catalog";
 
 const demoUrl = "https://gia-sakaba-git-demo-sakaba-mock-63c2cc-kazus-projects-dc60dadc.vercel.app/guild";
 
@@ -73,6 +75,33 @@ export default function SakabaLandingPage() {
           <h2 id="connection-title">人と人の間にも、役割がある。</h2>
           <p>紹介依頼は相手に直接届きます。連絡先が開くのは、相手が承諾してから。お互いが自分のペースで判断できる流れを大切にしています。</p>
         </div>
+      </section>
+
+      <section className={styles.content} aria-labelledby="plans-title">
+        <div className={styles.sectionHeading}>
+          <p>MEMBERSHIP</p>
+          <h2 id="plans-title">会員プラン</h2>
+          <span className={PHRASE_WRAP}><Ph text="酒場は無料で|使い始められます。|使いたい機能に|合わせて|選べます。" /></span>
+        </div>
+        <ul className={`${styles.planGrid} ${PHRASE_WRAP}`}>
+          {plans.map((plan) => <li key={plan.key} className={`${styles.plan} ${plan.key === "dining" ? styles.planStrong : ""}`}>
+            <h3 className={styles.planName}>{plan.label}</h3>
+            <p className={styles.planPrice}>{plan.price}{plan.key !== "free" && <small>（税込）</small>}</p>
+            <p className={styles.planFor}><span className={styles.planLabel}>こんな人に</span><Ph text={plan.lead} /></p>
+            <ul className={styles.planList}>
+              {plan.features.map((feature) => <li key={feature.title}>▶ {feature.title}</li>)}
+            </ul>
+          </li>)}
+        </ul>
+        <div className={`${styles.plan} ${styles.planWide} ${PHRASE_WRAP}`}>
+          <div>
+            <h3 className={styles.planName}><Ph text="エンタープライズ|プラン" /></h3>
+            <p className={styles.planPrice}>要相談</p>
+            <p className={styles.planFor}><span className={styles.planLabel}>こんな人に</span><Ph text="少ない予算でも|仕組み化を|したい" /></p>
+          </div>
+          <p className={styles.planWideText}><Ph text="アプリの機能だけでは|届かないところを、|管理者が直接|手伝います。|事業の状況を伺って、|必要なことだけを|ご提案します。|相談がまとまって|お見積もりを出すまでは|無料です。" /></p>
+        </div>
+        <p className={`${styles.planNote} ${PHRASE_WRAP}`}><Ph text="入会時に有料プランを選ぶ必要はありません。|プランは、入会後にマイページから|選べます。|プラスプラン・ビジネスプランは|月額制で、無料体験は|ありません。" /></p>
       </section>
 
       <section className={styles.entry} aria-labelledby="entry-title">
