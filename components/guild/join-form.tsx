@@ -77,7 +77,8 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             });
             if (error) throw error;
             uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : "GIAの酒場に入会しました");
-            router.push("/guild/me/status?new=1");
+            // 入会した直後は、ホームで「はじめまして」を出す（すでに入会済みの人には出さない）
+            router.push((data as { already_member?: boolean } | null)?.already_member ? "/guild" : "/guild?welcome=1");
             router.refresh();
           } catch {
             setSaveError("入会できませんでした。招待リンクの期限や利用回数を確認し、再度お試しください。");

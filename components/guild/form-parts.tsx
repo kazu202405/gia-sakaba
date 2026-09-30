@@ -151,7 +151,7 @@ export function CheckBox({
       />
       <span
         aria-hidden
-        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center border-2 border-[#1b2a41] bg-[#fffdf6] text-sm leading-none peer-focus-visible:outline-3 peer-focus-visible:outline-[#c8a55a]"
+        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center border-2 border-[#1b2a41] bg-[#fffdf6] text-sm font-bold leading-none text-[#1b2a41] peer-focus-visible:outline-3 peer-focus-visible:outline-[#c8a55a]"
       >
         {checked ? "✓" : ""}
       </span>

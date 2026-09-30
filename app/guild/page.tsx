@@ -11,7 +11,10 @@ import {
 
 export const metadata: Metadata = { title: { absolute: "GIAの酒場" } };
 
-export default async function GuildHomePage() {
+// welcome=1 は、入会した直後だけ付く（初回のあいさつを出す）
+export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+  const { welcome } = await searchParams;
+  const isFirstVisit = welcome === "1";
   const [me, notifications, projects] = await Promise.all([
     getMyGuildProfile(),
     listGuildNotifications(),
@@ -27,21 +30,23 @@ export default async function GuildHomePage() {
       {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
       <TypeLines
         lines={[
-          { className: "text-[17px] leading-loose", segments: [{ text: `おかえりなさい、${me.display_name}さん。` }] },
+          { className: "text-[17px] leading-loose", segments: [{ text: isFirstVisit ? `はじめまして、${me.display_name}さん。` : `おかえりなさい、${me.display_name}さん。` }] },
           {
             className: "mt-1 text-sm leading-relaxed",
-            segments: unread > 0
+            segments: isFirstVisit ? [{ text: "マイページから ステータスを うめてみましょう。" }] : unread > 0
               ? [{ text: "まだ読んでいない おしらせが " }, { text: String(unread), className: "text-xl tabular-nums" }, { text: "件あります。" }]
               : [{ text: "新しい おしらせはありません。" }],
           },
         ]}
       />
-      <Link href="/guild/notifications" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>
+      {isFirstVisit
+        ? <Link href="/guild/me" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ マイページを開く</Link>
+        : <Link href="/guild/notifications" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>}
     </Window>
 
     <div className="grid gap-10 md:grid-cols-2">
       <Window title="すすめている プロジェクト" action={<MoreLink href="/guild/projects" />} className="order-2 md:order-1">
-        {active.length === 0 ? <p className="c-muted text-sm leading-relaxed">すすめている プロジェクトはありません。<Link href="/guild/projects/new" className="ml-1 underline underline-offset-4">プロジェクトをつくる</Link></p> :
+        {active.length === 0 ? <p className="c-muted text-sm leading-relaxed">すすめている プロジェクトはありません。<Link href="/guild/projects/new" className="mt-1 block underline underline-offset-4">プロジェクトをつくる</Link></p> :
           <ul className="space-y-5">{active.slice(0, 5).map((project) => {
             const done = project.tasks.filter((task) => task.status === "done").length;
             return <li key={project.id}>
