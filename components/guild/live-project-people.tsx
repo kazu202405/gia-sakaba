@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import Link from "next/link";
-import { Loader2, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Loader2, Trash2, X } from "lucide-react";
 import type { GuildProjectPipeline } from "@/lib/guild/server-data";
 import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
@@ -43,6 +43,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const finishedTouched = useRef(false);
   const [editingSteps, setEditingSteps] = useState(false);
   // フォローアップ表の絞り込み（一番右の手順の結果で分ける）
+  // フォローアップ表は、開け閉めできる（閉じても人数は見出しに出る）
+  const [followUpOpen, setFollowUpOpen] = useState(true);
   const [followUpTab, setFollowUpTab] = useState<"all" | "ok" | "ng" | "undecided">("all");
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
@@ -274,11 +276,13 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     </div>
     {!selectedInFollowUp && editPanels}
     <div className="space-y-2">
-      <p className="text-sm">フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人</span></p>
-      <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
+      <button type="button" aria-expanded={followUpOpen} onClick={() => { if (followUpOpen && selectedInFollowUp) { leaveCell(); setSelection(null); } setFollowUpOpen(!followUpOpen); }} className="flex min-h-9 items-center gap-1 text-sm">
+        {followUpOpen ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人{followUpOpen ? "" : "（ひらく）"}</span>
+      </button>
+      {followUpOpen && <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
         {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-[#1b2a41] px-3 text-sm ${followUpTab === tab.key ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{tab.label} {tab.list.length}</button>)}
-      </div>
-      {peopleTable(shownFollowUp.list, "followUp")}
+      </div>}
+      {followUpOpen && peopleTable(shownFollowUp.list, "followUp")}
     </div>
     {selectedInFollowUp && editPanels}
 
