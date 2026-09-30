@@ -44,6 +44,8 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   const [editingSteps, setEditingSteps] = useState(false);
   // フォローアップ表の絞り込み（一番右の手順の結果で分ける）
   // フォローアップ表は、開け閉めできる（閉じても人数は見出しに出る）
+  // 「相手を追加」の入力欄は、ボタンを押したときだけ出す（続けて足せるよう、追加したあとも開いたまま）
+  const [addOpen, setAddOpen] = useState(false);
   const [followUpOpen, setFollowUpOpen] = useState(true);
   const [followUpTab, setFollowUpTab] = useState<"all" | "ok" | "ng" | "undecided">("all");
   const [saving, setSaving] = useState("");
@@ -287,8 +289,12 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {selectedInFollowUp && editPanels}
 
 
-    {editable && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
-      <p className="text-sm">相手を追加</p>
+    {editable && !addOpen && <button type="button" onClick={() => setAddOpen(true)} className="c-button-sub h-11 px-4 text-sm">＋ 相手を追加</button>}
+    {editable && addOpen && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-sm">相手を追加</p>
+        <button type="button" onClick={() => setAddOpen(false)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
+      </div>
       <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
     </form>}
 
