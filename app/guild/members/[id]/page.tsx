@@ -50,7 +50,7 @@ export default async function MemberStatusPage({ params }: Props) {
   // 相手の共有URL（あれば）と、入会のつながり（招待した人・された人）。読めなかったときは、どちらも出さない
   const linkResult = isMe ? null : await supabase.rpc("sakaba_get_member_link_info", { p_target_id: p.id });
   const linkInfo = linkResult && !linkResult.error ? linkResult.data as { share_token: string | null; invite_connected: boolean } : null;
-  // 自分の画面でも、他の人に見える「この方を知ってもらうURL」を同じ形で出す（人からの見え方の確認）。共有オフなら「まだ作っていません」と同じ表示
+  // 自分の画面でも、他の人に見える「紹介のためのURL」を同じ形で出す（人からの見え方の確認）。共有オフなら「まだ作っていません」と同じ表示
   const myShareResult = isMe ? await supabase.rpc("sakaba_get_my_share", { p_guild_slug: "gia" }) : null;
   const myShare = myShareResult && !myShareResult.error ? myShareResult.data as { token: string; enabled: boolean } : null;
   const shareToken = isMe ? (myShare?.enabled ? myShare.token : null) : linkInfo?.share_token ?? null;
