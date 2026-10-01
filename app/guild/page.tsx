@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MoreLink, Window } from "@/components/guild/cards";
+import { ShareUrlNudge } from "@/components/guild/share-url-nudge";
 import { TypeLines } from "@/components/guild/type-lines";
 import { dueLabel, upcomingTasks } from "@/lib/guild/projects";
 import {
   getMyGuildProfile,
+  getMyShareAcknowledged,
   listGuildNotifications,
   listGuildProjects,
 } from "@/lib/guild/server-data";
@@ -15,10 +17,11 @@ export const metadata: Metadata = { title: { absolute: "GIAの酒場" } };
 export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   const { welcome } = await searchParams;
   const isFirstVisit = welcome === "1";
-  const [me, notifications, projects] = await Promise.all([
+  const [me, notifications, projects, shareAcknowledged] = await Promise.all([
     getMyGuildProfile(),
     listGuildNotifications(),
     listGuildProjects(),
+    getMyShareAcknowledged(),
   ]);
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
   const active = projects.filter((project) => project.status === "active");
@@ -43,6 +46,8 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
         ? <Link href="/guild/me" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ マイページを開く</Link>
         : <Link href="/guild/notifications" className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>}
     </Window>
+
+    {shareAcknowledged === false && <ShareUrlNudge />}
 
     <div className="grid gap-10 md:grid-cols-2">
       <Window title="すすめている プロジェクト" action={<MoreLink href="/guild/projects" />} className="order-2 md:order-1">

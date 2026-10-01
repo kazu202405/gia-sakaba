@@ -9,7 +9,7 @@ import { formatDate, positionLabel } from "@/lib/guild/labels";
 import { isShareToken, type SharedProfile } from "@/lib/guild/shared-profile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import "@/components/guild/guild-theme.css";
+import { NightPageFrame } from "@/components/guild/night-page-frame";
 
 // 会員以外にも見せるステータス（本人が作った共有URL）。仕様：contexts/projects/gia/sakaba_share_url.md
 // 出す項目の判断はDBの関数（sakaba_get_shared_profile）が行う。ここは渡された分を並べるだけ。
@@ -49,7 +49,7 @@ export default async function SharedProfilePage({ params }: Props) {
   ].filter((item) => item.value?.trim());
   const introductions = p.introductions ?? [];
 
-  return <main className="guild-theme min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
+  return <NightPageFrame>
     <div className="mx-auto max-w-3xl space-y-9">
       <header className="flex items-center justify-between gap-4 text-sm">
         <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
@@ -110,5 +110,5 @@ export default async function SharedProfilePage({ params }: Props) {
 
       <p className="c-muted text-xs leading-relaxed">このページは、ご本人が選んで共有した内容だけを表示しています。連絡先は含まれません。</p>
     </div>
-  </main>;
+  </NightPageFrame>;
 }

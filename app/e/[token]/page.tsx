@@ -8,8 +8,7 @@ import { PageTitle, Window } from "@/components/guild/cards";
 import type { GuestGathering, GuestGatheringMembers } from "@/lib/guild/guest-gathering";
 import { formatScheduleLong, type GatheringSchedule as GatheringScheduleData } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
-import "@/components/guild/guild-theme.css";
-import { GuildSceneArt } from "@/components/guild/guild-scene-art";
+import { NightPageFrame } from "@/components/guild/night-page-frame";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -36,11 +35,8 @@ export default async function GuestGatheringPage({ params }: Props) {
   const { data: membersData } = await supabase.rpc("sakaba_get_guest_gathering_members", { p_token: token });
   const members = membersData ? membersData as GuestGatheringMembers : null;
 
-  // 見た目は酒場の中と同じ夜の酒場（絵を敷き、窓を紺に）。外側を .guild-scene、中身を main にすると、
-  // 部品に直接書かれた色の入れ替え（guild-theme.css の .guild-scene main ...）もほかの画面と同じく効く
-  return <div className="guild-theme guild-scene min-h-screen">
-    <GuildSceneArt art="tavern" dim />
-    <main className="relative min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
+  // 見た目は酒場の中と同じ夜の酒場（NightPageFrame）
+  return <NightPageFrame>
     <div className="mx-auto max-w-3xl space-y-9">
       <header className="flex items-center justify-between gap-4 text-sm">
         <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
@@ -72,6 +68,5 @@ export default async function GuestGatheringPage({ params }: Props) {
       </Window>
       <GuestGatheringForm token={token} event={event} authenticated={Boolean(auth.user)} accountEmail={auth.user?.email ?? ""} initialName={typeof auth.user?.user_metadata?.name === "string" ? auth.user.user_metadata.name : ""} />
     </div>
-  </main>
-  </div>;
+  </NightPageFrame>;
 }

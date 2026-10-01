@@ -281,6 +281,12 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
   return applyProjectOrder(projects, order.error ? [] : parseProjectOrder(order.data));
 }
 
+/** 共有URLを本人が使いはじめたか。読めなかったとき（0123が未適用など）は null＝ホームの案内を出さない */
+export async function getMyShareAcknowledged(): Promise<boolean | null> {
+  const { data, error } = await (await createClient()).rpc("sakaba_get_my_share_acknowledged", { p_guild_slug: "gia" });
+  return error || typeof data !== "boolean" ? null : data;
+}
+
 export async function getMyGuildProfile(): Promise<MyGuildProfile> {
   const supabase = await createClient();
   const [{ data, error }, extras] = await Promise.all([

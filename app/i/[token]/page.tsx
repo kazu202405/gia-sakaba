@@ -5,7 +5,7 @@ import { MasterIntroductionResponse } from "@/components/guild/master-introducti
 import { PageTitle, Window } from "@/components/guild/cards";
 import type { MasterIntroductionView } from "@/lib/guild/master-introductions";
 import { createClient } from "@/lib/supabase/server";
-import "@/components/guild/guild-theme.css";
+import { NightPageFrame } from "@/components/guild/night-page-frame";
 
 type Props = { params: Promise<{ token: string }> };
 
@@ -28,7 +28,7 @@ export default async function MasterIntroductionPage({ params }: Props) {
   if (error || !data) notFound();
   const introduction = data as MasterIntroductionView;
 
-  return <main className="guild-theme min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
+  return <NightPageFrame>
     <div className="mx-auto max-w-3xl space-y-9">
       <header className="flex items-center justify-between gap-4 text-sm">
         <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
@@ -46,5 +46,5 @@ export default async function MasterIntroductionPage({ params }: Props) {
       </Window>
       <MasterIntroductionResponse token={token} introduction={introduction} authenticated={Boolean(auth.user)} accountEmail={auth.user?.email ?? ""} />
     </div>
-  </main>;
+  </NightPageFrame>;
 }

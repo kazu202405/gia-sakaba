@@ -27,6 +27,11 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
   const lock = useRef(false);
 
   useEffect(() => { setOrigin(window.location.origin); }, []);
+
+  // 使いはじめた印（ホームの「共有URLを作りましょう」を消す）。失敗しても本体の操作は止めない
+  function acknowledge() {
+    void createClient().rpc("sakaba_ack_my_share", { p_guild_slug: "gia" });
+  }
   const url = origin ? shareUrl(origin, settings.token) : "";
 
   async function change(patch: Partial<Omit<ShareSettings, "token">>) {
@@ -44,6 +49,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
       });
       if (rpcError) throw rpcError;
       uiToast("設定を保存しました");
+      acknowledge();
     } catch {
       setSettings(before);
       setError("保存できませんでした。通信を確認して、もう一度お試しください。");
@@ -83,6 +89,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
     try {
       await navigator.clipboard.writeText(url);
       uiToast("URLをコピーしました");
+      acknowledge();
     } catch {
       setError("コピーできませんでした。URLを長押しして、コピーしてください。");
     }
@@ -104,7 +111,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
       <input id="share-url" readOnly value={url} onFocus={(event) => event.currentTarget.select()} className="c-input mt-1 w-full text-xs" aria-label="共有URL" />
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button type="button" disabled={!url || !settings.enabled} onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">▶ URLをコピー</button>
-        {url && settings.enabled && <a href={url} target="_blank" rel="noopener noreferrer" className="c-button-sub inline-flex h-11 items-center px-4 text-sm">見え方を確認する ↗</a>}
+        {url && settings.enabled && <a href={url} onClick={acknowledge} target="_blank" rel="noopener noreferrer" className="c-button-sub inline-flex h-11 items-center px-4 text-sm">見え方を確認する ↗</a>}
       </div>
     </div>
 

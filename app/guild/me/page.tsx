@@ -64,7 +64,7 @@ export default async function MyPage() {
     </Window>
 
     <PersonalProfileWindow profile={me} />
-    {share ? <ShareUrlWindow initial={share} /> : <Window title="紹介してもらうための共有URL"><p className="c-muted text-sm">共有URLを読み込めませんでした。時間をおいて開き直してください。</p></Window>}
+    <div id="share" className="scroll-mt-24">{share ? <ShareUrlWindow initial={share} /> : <Window title="紹介してもらうための共有URL"><p className="c-muted text-sm">共有URLを読み込めませんでした。時間をおいて開き直してください。</p></Window>}</div>
 
     <LiveMyInvite initial={invite} />
 
