@@ -281,9 +281,9 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
   return applyProjectOrder(projects, order.error ? [] : parseProjectOrder(order.data));
 }
 
-/** 共有URLを本人が使いはじめたか。読めなかったとき（0123が未適用など）は null＝ホームの案内を出さない */
-export async function getMyShareAcknowledged(): Promise<boolean | null> {
-  const { data, error } = await (await createClient()).rpc("sakaba_get_my_share_acknowledged", { p_guild_slug: "gia" });
+/** ホームの共有URLの案内をもう出さなくてよいか（使いはじめた／「使わない」を選んだ）。読めなかったとき（0123が未適用など）は null＝案内を出さない */
+export async function getMyShareNudgeDone(): Promise<boolean | null> {
+  const { data, error } = await (await createClient()).rpc("sakaba_get_my_share_nudge_done", { p_guild_slug: "gia" });
   return error || typeof data !== "boolean" ? null : data;
 }
 
