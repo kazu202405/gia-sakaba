@@ -116,6 +116,6 @@ export default function SakabaLandingPage() {
       </section>
     </main>
 
-    <footer className={styles.footer}><div><span>GIAの酒場</span><span>© GIA</span></div></footer>
+    <footer className={styles.footer}><div><span>GIAの酒場</span><span className={styles.footerLinks}><Link href="/terms">利用規約</Link><Link href="/privacy">プライバシーポリシー</Link><Link href="/tokushoho">特定商取引法に基づく表記</Link></span><span>© GIA</span></div></footer>
   </div>;
 }

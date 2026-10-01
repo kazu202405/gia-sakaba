@@ -7,6 +7,7 @@ import { GUILD_PROMISES } from "@/lib/guild/rules";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { LegalLinks } from "./legal-consent";
 
 export function GuestGatheringForm({ token, event, authenticated, accountEmail, initialName }: {
   token: string;
@@ -129,7 +130,8 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
         <p className="c-label mb-2">酒場の約束</p>
         <ul className="space-y-1">{GUILD_PROMISES.map((promise) => <li key={promise}>・{promise}</li>)}</ul>
       </div>
-      <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>酒場の約束に同意して、会員として参加する</span></label>
+      <div className="mt-4 space-y-1"><p className="text-sm leading-relaxed">参加の前に、利用規約とプライバシーポリシーもお読みください。</p><LegalLinks /></div>
+      <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>酒場の約束をまもり、利用規約とプライバシーポリシーに同意して、会員として参加する</span></label>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
       <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "登録中…" : "▶ 酒場に無料で参加する"}</button>
       <p className="c-muted mt-3 text-xs leading-relaxed">会社名・役職は後からステータス画面で追加できます。登録時は公開されません。</p>

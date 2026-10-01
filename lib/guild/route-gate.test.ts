@@ -32,6 +32,13 @@ describe("guildGate", () => {
     expect(guildGate(`/p/${token.toUpperCase()}`, prod)).toEqual({ kind: "redirect", to: "/guild" });
   });
 
+  it("利用規約・プライバシー・特商法表記は未ログインでも通す（下位パスは通さない）", () => {
+    for (const p of ["/terms", "/privacy", "/tokushoho"]) {
+      expect(guildGate(p, prod)).toEqual({ kind: "pass" });
+      expect(guildGate(`${p}/extra`, prod)).toEqual({ kind: "redirect", to: "/guild" });
+    }
+  });
+
   it("/guild 配下は通す", () => {
     for (const p of ["/guild", "/guild/", "/guild/quests/new", "/guild/members/abc"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });

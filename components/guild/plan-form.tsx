@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import type { GuildBillingStatus } from "@/lib/guild/server-data";
 import { SAKABA_PLAN_NAMES, type PaidSakabaPlan, type SakabaPlan } from "@/lib/guild/billing-plans";
@@ -8,6 +8,8 @@ import { F, plans } from "@/lib/guild/plan-catalog";
 import { BackLink, PageTitle, Window } from "./cards";
 import { PHRASE_WRAP, Ph } from "./phrase";
 import { EnterprisePlan } from "./enterprise-plan";
+import { CheckBox } from "./form-parts";
+import { BillingPoints, LegalLinks } from "./legal-consent";
 
 type Props = {
   role: "owner" | "master" | "member";
@@ -26,9 +28,23 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
   const [error, setError] = useState("");
   const exempt = role === "owner" || role === "master" || billingStatus === "exempt";
   const hasActiveContract = billingStatus === "active" || billingStatus === "trialing";
+  // 申し込み・プラン変更のボタンが出る人にだけ、契約の要点と同意を出す（actionFor と同じ条件）
+  const canApply = !exempt && !companyNoteBenefit && billingStatus !== "past_due"
+    && (hasActiveContract ? diningEnabled && (currentPlan === "standard" || currentPlan === "dining") : !isPaid);
+  const [agreed, setAgreed] = useState(false);
+  const [consentError, setConsentError] = useState("");
+  const consentRef = useRef<HTMLDivElement>(null);
+
+  // 同意前に申し込みボタンを押したら、止めて同意の欄まで送る（押せない見た目にすると、なぜ押せないか分からない）
+  function needsConsent() {
+    if (agreed) return false;
+    setConsentError("申し込む前に、上の内容を確認して「同意します」にチェックを入れてください。");
+    consentRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return true;
+  }
 
   async function openCheckout(plan: PaidSakabaPlan) {
-    if (pending) return;
+    if (pending || needsConsent()) return;
     setPending(`checkout-${plan}`); setError("");
     try {
       const response = await fetch("/api/guild/billing/checkout", {
@@ -46,7 +62,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
   }
 
   async function openPortal(switchPlan = false) {
-    if (pending) return;
+    if (pending || (switchPlan && needsConsent())) return;
     setPending(switchPlan ? "switch" : "portal"); setError("");
     try {
       const response = await fetch(`/api/guild/billing/portal${switchPlan ? "?switch=1" : ""}`, { method: "POST" });
@@ -87,6 +103,17 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       <Link href="/guild/projects" className="c-button-sub mt-3 h-10 px-4">▶ プロジェクト一覧を見る</Link>
     </div>}
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
+
+    {canApply && <div ref={consentRef} className="scroll-mt-6"><Window title="お申し込みの前に">
+      <div className="space-y-4">
+        <BillingPoints />
+        <LegalLinks withTokushoho />
+        <CheckBox checked={agreed} onChange={(next) => { setAgreed(next); if (next) setConsentError(""); }}>
+          <span className="text-[15px]">上の内容と、利用規約・プライバシーポリシー・特定商取引法に基づく表記に同意します</span>
+        </CheckBox>
+        {consentError && <p role="alert" className="text-sm text-[#c62828]">{consentError}</p>}
+      </div>
+    </Window></div>}
 
     <section aria-label="3つの会員プラン" className="grid gap-4 lg:grid-cols-3">
       {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${PHRASE_WRAP} ${plan.key === "dining" ? "border-[#8f7337]" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>

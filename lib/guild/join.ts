@@ -61,7 +61,7 @@ export function validateJoin(d: JoinDraft): JoinErrors {
     errors.company_name = `${JOIN_COMPANY_MAX}字までに してください`;
   if (d.position === "") errors.position = "役職を えらんでください";
   if (d.want_to_solve.trim().length > JOIN_SOLVE_MAX) errors.want_to_solve = `${JOIN_SOLVE_MAX}字までに してください`;
-  if (!d.agreed) errors.agreed = "ギルドの約束に 同意すると 入会できます";
+  if (!d.agreed) errors.agreed = "約束と 利用規約に 同意すると 入会できます";
   return errors;
 }
 

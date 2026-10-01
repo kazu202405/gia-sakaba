@@ -5,6 +5,7 @@
 // そこで「通してよい道」だけを並べ、それ以外は閉じる（書き漏れたら閉じる側に倒れる）。
 //
 // - /（公開の酒場案内）と /guild 配下 → 通す
+// - 利用規約・プライバシーポリシー・特商法表記 → 通す（入会・申し込みの前に、未ログインで読むもの）
 // - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す
 // - Next.js の内部ファイル・画像など → 通す
 // - 酒場の決済・プッシュ通知APIとStripe Webhookだけ通し、その他の /api 配下 → 404
@@ -17,6 +18,10 @@ export type GuildGateResult =
   | { kind: "notFound" };
 
 export const GUILD_HOME = "/guild";
+
+// 2026-10-01 まで書き漏れていて、/terms などが /guild へ飛ばされ誰も読めなかった。
+// 下位パスは通さない（ちょうどこの3つだけ）。
+export const LEGAL_PATHS = new Set(["/terms", "/privacy", "/tokushoho"]);
 
 const ALLOWED_GUILD_API_PATHS = new Set([
   "/api/guild/billing/checkout",
@@ -35,6 +40,7 @@ function isUnder(pathname: string, prefix: string): boolean {
 
 export function guildGate(pathname: string, options: { allowLook: boolean }): GuildGateResult {
   if (pathname === "/") return { kind: "pass" };
+  if (LEGAL_PATHS.has(pathname)) return { kind: "pass" };
   // 招待制の集まりだけは公開。推測しやすい文字列や余分な下位パスは通さない。
   if (/^\/e\/[0-9a-f]{64}$/i.test(pathname)) return { kind: "pass" };
   // 管理者からの紹介も、受取人ごとの推測困難な専用URLだけを公開する。

@@ -60,7 +60,9 @@
 .entry p { max-width: 39rem; margin-top: 1rem; color: #d4d0c7; line-height: 1.9; }
 .entryWindow > a { flex: none; min-height: 3rem; }
 .footer { border-top: 1px solid rgba(239,230,207,.24); color: #a9a9ac; }
-.footer > div { display: flex; justify-content: space-between; gap: 1rem; padding-block: 1.5rem; font-size: .78rem; }
+.footer > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; padding-block: 1.5rem; font-size: .78rem; }
+.footerLinks { display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+.footerLinks a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .landing a:focus-visible { outline: 3px solid #e8cf8e; outline-offset: 4px; }
 
 @media (max-width: 700px) {

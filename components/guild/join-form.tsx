@@ -20,6 +20,7 @@ import {
 } from "@/lib/guild/join";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { LegalLinks } from "./legal-consent";
 import { LoginGuide } from "./login-guide";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
@@ -178,9 +179,13 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             </div>
           ))}
           <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
+          <div className="space-y-1 border-t border-[#1b2a41]/20 pt-3">
+            <p className="text-sm leading-relaxed">入会の前に、利用規約とプライバシーポリシーもお読みください。</p>
+            <LegalLinks />
+          </div>
           <div className="pt-1">
             <CheckBox checked={draft.agreed} onChange={(v) => set("agreed", v)}>
-              <span className="text-[15px]">約束を まもります</span>
+              <span className="text-[15px]">約束を まもり、利用規約と プライバシーポリシーに 同意します</span>
             </CheckBox>
           </div>
           {errors.agreed && <p className="text-xs text-[#c62828]">{errors.agreed}</p>}
