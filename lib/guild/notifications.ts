@@ -116,6 +116,8 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}エンタープライズの相談が 届きました`, href: "/guild/master#master-consults-title" };
     case "feedback_report":
       return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}ご意見・不具合の報告が 届きました`, href: "/guild/master#master-feedback-title" };
+    case "member_joined":
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー"}さんが 入会しました`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };

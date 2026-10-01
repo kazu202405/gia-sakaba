@@ -165,6 +165,9 @@ describe("notificationText", () => {
     expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).text).toContain("エンタープライズの相談");
     expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/master#master-feedback-title");
     expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).text).toContain("ご意見・不具合");
+    const joined = notificationText(note({ kind: "member_joined", quest_id: null, actor_id: "a" }), ctx);
+    expect(joined.text).toContain("入会しました");
+    expect(joined.href).toBe("/guild/members/a");
     expect(notificationText(note({ kind: "schedule_decided" }), ctx)).toEqual({
       text: "「LPの文章」の 日にちが 決まりました",
       href: "/guild/quests/q1",

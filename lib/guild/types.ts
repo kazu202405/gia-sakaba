@@ -304,7 +304,9 @@ export type NotificationKind =
   /** エンタープライズの相談が届いた（管理者あて・0116） */
   | "consult_request"
   /** 会員から ご意見・不具合の報告が届いた（管理者あて・0117） */
-  | "feedback_report";
+  | "feedback_report"
+  /** 新しいメンバーが入会した（オーナーあて・0124） */
+  | "member_joined";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。
