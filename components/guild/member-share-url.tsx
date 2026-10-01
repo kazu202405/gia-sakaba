@@ -1,6 +1,6 @@
 "use client";
 
-// 会員のステータスのページ：この人を紹介するときに貼る「紹介のためのURL」（コピーボタン）。
+// 会員のステータスのページ：この人がどんな人かを伝えるときに貼る「この方を知ってもらうURL」（コピーボタン）。
 // URLは相手が共有をオンにしていて、すでに作ってあるときだけDBから届く。ないときは、その旨だけ出す。コピーするのはURLだけ。
 
 import Link from "next/link";
@@ -24,8 +24,8 @@ export function MemberShareUrl({ token, isMe = false }: { token: string | null; 
   }
 
   return <div className="c-dashed-top mt-5 pt-5">
-    <p className="c-label text-base">紹介のためのURL</p>
-    <p className="c-muted mt-1 text-xs leading-relaxed">LINEなどで、この方を紹介するときに貼るURLです。会員でない方にも、この方が共有している内容が見えます。</p>
+    <p className="c-label text-base">この方を知ってもらうURL</p>
+    <p className="c-muted mt-1 text-xs leading-relaxed">この方がどんな方かを、LINEなどで会員でない方にも伝えられるURLです。貼るだけで、この方が共有を許可している内容が見えます。</p>
     {token
       ? <button type="button" onClick={() => void copy()} className="c-button-sub mt-3 h-11 px-5 text-sm">▶ URLをコピー</button>
       : isMe
