@@ -20,6 +20,7 @@ import {
 } from "@/lib/guild/join";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { LoginGuide } from "./login-guide";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
@@ -49,6 +50,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
     <Window title="入会フォーム">
       {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
         <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
+      {!preview && <div className="mb-6"><LoginGuide /></div>}
       {prepared && <p className="c-card mb-6 px-4 py-3 text-sm leading-relaxed">招待した人が、お名前などを下書きしました。内容を確認し、違うところは直してください。入会するまでは名鑑に表示されません。</p>}
       <form
         noValidate
