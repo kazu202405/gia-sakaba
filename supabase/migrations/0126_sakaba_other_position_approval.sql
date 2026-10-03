@@ -233,9 +233,16 @@ $$;
 revoke all on function public.sakaba_join_guild(text, text, text, text, boolean, text, boolean, text, text) from public, anon, authenticated;
 grant execute on function public.sakaba_join_guild(text, text, text, text, boolean, text, boolean, text, text) to authenticated;
 
--- ---------- 集まりのゲストからの入会（0102 の本文から、入会の呼び出し1行だけ差し替え） ----------
+-- ---------- 集まりのゲストからの入会（0102 の本文から。役職を受け取る引数を足し、入会の呼び出しを差し替え） ----------
+-- 役職を選んでもらう（2026-10-03 五島さん：限定と知らずに来た人もいるので）。代表・役員・決裁者はそのまま会員、「その他」は役職・お仕事の内容を書いて承認待ち。
+-- 役職を渡さない古い画面からの呼び出し（p_position が空）は、今まで通り「その他」の承認待ちとして入れる（役職・お仕事の内容は空で可）。
 
-create or replace function public.sakaba_join_from_guest_gathering(p_token text, p_agreed boolean)
+drop function if exists public.sakaba_join_from_guest_gathering(text, boolean);
+
+create or replace function public.sakaba_join_from_guest_gathering(
+  p_token text, p_agreed boolean,
+  p_position text default null, p_other_title text default '', p_other_work text default ''
+)
 returns jsonb language plpgsql security definer
 set search_path = pg_catalog, public, sakaba as $$
 declare
@@ -267,10 +274,12 @@ begin
   if v_invite.revoked_at is not null or v_invite.expires_at < now() then
     raise exception 'invite unavailable' using errcode = '42501';
   end if;
-  -- 集まりのゲストは役職を聞いていない（'other' 固定）。承認待ちとして入る（役職・お仕事の内容は空のまま。0126）
-  return sakaba._join_guild(v_invite.code, v_profile.display_name, '未登録', 'other', false, '', true, '', '', true);
+  return sakaba._join_guild(v_invite.code, v_profile.display_name, '未登録', coalesce(p_position, 'other'), false, '', true,
+    coalesce(p_other_title, ''), coalesce(p_other_work, ''), p_position is null);
 end;
 $$;
+revoke all on function public.sakaba_join_from_guest_gathering(text, boolean, text, text, text) from public, anon;
+grant execute on function public.sakaba_join_from_guest_gathering(text, boolean, text, text, text) to authenticated;
 
 -- ---------- 下書き招待からの入会（0111 の本文から、入会の呼び出しと引数だけ差し替え） ----------
 

@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
+import { APPROVAL_COPY, OTHER_TITLE_MAX, OTHER_WORK_MAX, requiresApproval } from "@/lib/guild/approval";
 import type { GuestGathering } from "@/lib/guild/guest-gathering";
+import { positionLabel } from "@/lib/guild/labels";
+import type { Position } from "@/lib/guild/types";
 import { GUILD_PROMISES } from "@/lib/guild/rules";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
@@ -22,6 +25,11 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
   const [introduction, setIntroduction] = useState(event.my_profile?.introduction ?? "");
   const [showIntroduction, setShowIntroduction] = useState(event.my_application?.show_introduction ?? false);
   const [agreed, setAgreed] = useState(false);
+  // 酒場に参加するときの役職。「その他」は役職・お仕事の内容を書いて申請（オーナーの承認制・0126）
+  const [position, setPosition] = useState<Position | "">("");
+  const [otherTitle, setOtherTitle] = useState("");
+  const [otherWork, setOtherWork] = useState("");
+  const joinLock = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mailSent, setMailSent] = useState(false);
@@ -75,12 +83,29 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
   }
 
   async function joinGuild() {
-    if (busy || !agreed) return;
+    if (joinLock.current || busy || !agreed) return;
+    if (!position) { setError("役職を選んでください。"); return; }
+    const needsApproval = requiresApproval(position);
+    if (needsApproval && (!otherTitle.trim() || !otherWork.trim())) { setError("役職とお仕事の内容を入力してください。"); return; }
+    joinLock.current = true;
     setBusy(true); setError("");
-    const { error: joinError } = await createClient().rpc("sakaba_join_from_guest_gathering", {
-      p_token: token, p_agreed: true,
+    const { data, error: joinError } = await createClient().rpc("sakaba_join_from_guest_gathering", {
+      p_token: token, p_agreed: true, p_position: position,
+      p_other_title: needsApproval ? otherTitle.trim() : "", p_other_work: needsApproval ? otherWork.trim() : "",
     });
-    if (joinError) { setBusy(false); setError("酒場への参加を完了できませんでした。少し待って再度お試しください。"); return; }
+    if (joinError) {
+      joinLock.current = false;
+      setBusy(false);
+      setError(needsApproval ? "申請できませんでした。入力内容を確認し、再度お試しください。" : "酒場への参加を完了できませんでした。少し待って再度お試しください。");
+      return;
+    }
+    // 承認が要る人は、申請後の画面（app/guild/layout.tsx が出す）へ
+    if ((data as { pending?: boolean } | null)?.pending) {
+      uiToast(APPROVAL_COPY.appliedToast);
+      router.push("/guild");
+      router.refresh();
+      return;
+    }
     uiToast("GIAの酒場に参加しました");
     router.push("/guild/me/status?new=1");
     router.refresh();
@@ -131,10 +156,25 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
         <ul className="space-y-1">{GUILD_PROMISES.map((promise) => <li key={promise}>・{promise}</li>)}</ul>
       </div>
       <div className="mt-4 space-y-1"><p className="text-sm leading-relaxed">参加の前に、利用規約とプライバシーポリシーもお読みください。</p><LegalLinks /></div>
+      <div className="mt-5">
+        <p className="text-sm">役職</p>
+        <p className="c-muted mt-1 text-xs">{APPROVAL_COPY.positionHint}</p>
+        <div role="radiogroup" aria-label="役職" className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {(Object.keys(positionLabel) as Position[]).map((p) => (
+            <button key={p} type="button" role="radio" aria-checked={position === p} onClick={() => { setPosition(p); setError(""); }}
+              className={position === p ? "rpg-button h-11 text-sm" : "c-button-sub h-11 text-sm"}>{positionLabel[p]}</button>
+          ))}
+        </div>
+      </div>
+      {requiresApproval(position) && <div className="mt-4 space-y-3">
+        <div className="c-card space-y-1 p-4 text-sm leading-relaxed">{APPROVAL_COPY.otherNotice.map((line) => <p key={line}>{line}</p>)}</div>
+        <label className="block text-sm">{APPROVAL_COPY.titleLabel}<input value={otherTitle} maxLength={OTHER_TITLE_MAX} onChange={(e) => { setOtherTitle(e.target.value); setError(""); }} className="c-input mt-2 h-12" /></label>
+        <label className="block text-sm">{APPROVAL_COPY.workLabel}<input value={otherWork} maxLength={OTHER_WORK_MAX} onChange={(e) => { setOtherWork(e.target.value); setError(""); }} className="c-input mt-2 h-12" /></label>
+      </div>}
       <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>酒場の約束をまもり、利用規約とプライバシーポリシーに同意して、会員として参加する</span></label>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
-      <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "登録中…" : "▶ 酒場に無料で参加する"}</button>
-      <p className="c-muted mt-3 text-xs leading-relaxed">会社名・役職は後からステータス画面で追加できます。登録時は公開されません。</p>
+      <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{requiresApproval(position) ? (busy ? APPROVAL_COPY.submittingLabel : `▶ ${APPROVAL_COPY.submitLabel}`) : (busy ? "登録中…" : "▶ 酒場に無料で参加する")}</button>
+      <p className="c-muted mt-3 text-xs leading-relaxed">会社名は後からステータス画面で追加できます。登録時は公開されません。</p>
     </Window></div>}
   </div>;
 }
