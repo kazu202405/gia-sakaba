@@ -4,6 +4,7 @@
 // - 経営者の確認を 別の作業にしない：限定の集まりへの はじめての申し込みを ギルドマスターが承認したら確認ずみ。
 //   次からは 承認なしで そのまま参加できる
 
+import { OTHER_TITLE_MAX, OTHER_WORK_MAX, requiresApproval } from "./approval";
 import type { Invite, Position, Profile, Quest, QuestApplication } from "./types";
 
 export const JOIN_NAME_MAX = 30;
@@ -47,9 +48,13 @@ export type JoinDraft = {
   want_to_solve: string;
   /** ギルドの約束に 同意したか（必須） */
   agreed: boolean;
+  /** 役職「その他」のときだけ必須：役職（例：営業部長） */
+  other_title: string;
+  /** 役職「その他」のときだけ必須：お仕事の内容（ひとこと） */
+  other_work: string;
 };
 export type JoinErrors = Partial<
-  Record<"display_name" | "company_name" | "position" | "want_to_solve" | "agreed", string>
+  Record<"display_name" | "company_name" | "position" | "want_to_solve" | "agreed" | "other_title" | "other_work", string>
 >;
 
 export function validateJoin(d: JoinDraft): JoinErrors {
@@ -60,6 +65,13 @@ export function validateJoin(d: JoinDraft): JoinErrors {
   else if (d.company_name.trim().length > JOIN_COMPANY_MAX)
     errors.company_name = `${JOIN_COMPANY_MAX}字までに してください`;
   if (d.position === "") errors.position = "役職を えらんでください";
+  // 役職「その他」は承認制（0126）。役職とお仕事の内容がどちらも要る
+  if (requiresApproval(d.position)) {
+    if (d.other_title.trim() === "") errors.other_title = "役職を入れてください";
+    else if (d.other_title.trim().length > OTHER_TITLE_MAX) errors.other_title = `${OTHER_TITLE_MAX}字までにしてください`;
+    if (d.other_work.trim() === "") errors.other_work = "お仕事の内容を入れてください";
+    else if (d.other_work.trim().length > OTHER_WORK_MAX) errors.other_work = `${OTHER_WORK_MAX}字までにしてください`;
+  }
   if (d.want_to_solve.trim().length > JOIN_SOLVE_MAX) errors.want_to_solve = `${JOIN_SOLVE_MAX}字までに してください`;
   if (!d.agreed) errors.agreed = "約束と 利用規約に 同意すると 入会できます";
   return errors;

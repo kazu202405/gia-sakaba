@@ -6,6 +6,7 @@ import type { MasterPreparedInvite } from "@/lib/guild/prepared-invites";
 import type { MasterIntroduction } from "@/lib/guild/master-introductions";
 import { parsePlanUsage, type PlanUsage } from "@/lib/guild/plan-usage";
 import { applyProjectOrder, parseProjectOrder } from "@/lib/guild/project-order";
+import { parsePendingMembers, type PendingMember } from "@/lib/guild/approval";
 
 type GuildContext = {
   guild: Guild;
@@ -207,6 +208,14 @@ export async function listGuildMasterInvites(): Promise<GuildMasterInvite[]> {
   const { data, error } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
   if (error) throw rpcError("招待リンクを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildMasterInvite[] : [];
+}
+
+/** 役職「その他」で参加を申請した人（オーナーだけ読める・0126） */
+export async function listPendingMembers(): Promise<PendingMember[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("sakaba_list_pending_members", { p_guild_slug: "gia" });
+  if (error) throw rpcError("参加の申請を取得できませんでした", error.message);
+  return parsePendingMembers(data);
 }
 
 export async function listPreparedInvites(): Promise<MasterPreparedInvite[]> {

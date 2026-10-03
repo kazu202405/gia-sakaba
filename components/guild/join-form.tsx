@@ -1,13 +1,14 @@
 "use client";
 
 // 入会の入力。名前・会社名・役職と、名鑑に会社名と役職を出すか。
-// 酒場は だれでも入れる。役職は 限定の集まり（経営者の方向け）の目安に使うだけで、ここでは はじかない。
+// 代表・役員・決裁者は そのまま入会できる。役職「その他」は、役職とお仕事の内容を書いて「参加を申請する」（オーナーの承認制・0126）。
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import type { Position } from "@/lib/guild/types";
 import { positionLabel } from "@/lib/guild/labels";
+import { APPROVAL_COPY, OTHER_TITLE_MAX, OTHER_WORK_MAX, requiresApproval } from "@/lib/guild/approval";
 import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/rules";
 import {
@@ -35,9 +36,13 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
     show_company: true,
     want_to_solve: "",
     agreed: false,
+    other_title: "",
+    other_work: "",
   });
   const [errors, setErrors] = useState<JoinErrors>({});
   const [saving, setSaving] = useState(false);
+  // 2度押しの錠は押した瞬間にかける（state は反映が遅れるので ref）
+  const lockRef = useRef(false);
   const [saveError, setSaveError] = useState("");
   const [acceptIntroduction, setAcceptIntroduction] = useState(false);
 
@@ -58,15 +63,17 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         className="space-y-7"
         onSubmit={async (e) => {
           e.preventDefault();
-          if (saving || preview) return;
+          if (lockRef.current || preview) return;
           const next = validateJoin(draft);
           setErrors(next);
           if (Object.keys(next).length > 0) {
             scrollToFirstError();
             return;
           }
+          lockRef.current = true;
           setSaving(true);
           setSaveError("");
+          const needsApproval = requiresApproval(draft.position);
           try {
             const { data, error } = await createClient().rpc(prepared ? "sakaba_join_prepared_guild" : "sakaba_join_guild", {
               p_code: inviteCode,
@@ -76,15 +83,25 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
               p_show_company: draft.show_company,
               p_want_to_solve: draft.want_to_solve.trim(),
               p_agreed: draft.agreed,
+              p_other_title: needsApproval ? draft.other_title.trim() : "",
+              p_other_work: needsApproval ? draft.other_work.trim() : "",
               ...(prepared ? { p_accept_introduction: acceptIntroduction } : {}),
             });
             if (error) throw error;
+            // 承認が要る人は、申請後の画面（app/guild/layout.tsx が出す）へ。入会の祝いは出さない
+            if ((data as { pending?: boolean } | null)?.pending) {
+              uiToast(APPROVAL_COPY.appliedToast);
+              router.push("/guild");
+              router.refresh();
+              return;
+            }
             uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : "GIAの酒場に入会しました");
             // 入会した直後は、ホームで「はじめまして」を出す（すでに入会済みの人には出さない）
             router.push((data as { already_member?: boolean } | null)?.already_member ? "/guild" : "/guild?welcome=1");
             router.refresh();
           } catch {
-            setSaveError("入会できませんでした。招待リンクの期限や利用回数を確認し、再度お試しください。");
+            setSaveError(needsApproval ? "申請できませんでした。招待リンクの期限や利用回数、入力内容を確認し、再度お試しください。" : "入会できませんでした。招待リンクの期限や利用回数を確認し、再度お試しください。");
+            lockRef.current = false;
             setSaving(false);
           }
         }}
@@ -112,7 +129,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         <Field
           label="役職"
           required
-          hint="管理者が ひらく 限定の集まりは、経営者（代表・役員・決裁者）の方向けです"
+          hint={APPROVAL_COPY.positionHint}
           error={errors.position ?? ""}
         >
           <div role="radiogroup" aria-label="役職" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -130,6 +147,28 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             ))}
           </div>
         </Field>
+
+        {requiresApproval(draft.position) && <>
+          <div className="c-card space-y-1 p-4 text-sm leading-relaxed" data-testid="other-position-notice">
+            {APPROVAL_COPY.otherNotice.map((line) => <p key={line}>{line}</p>)}
+          </div>
+          <Field label={APPROVAL_COPY.titleLabel} required error={errors.other_title ?? ""}>
+            <TextInput
+              value={draft.other_title}
+              onChange={(v) => set("other_title", v)}
+              max={OTHER_TITLE_MAX}
+              label={APPROVAL_COPY.titleLabel}
+            />
+          </Field>
+          <Field label={APPROVAL_COPY.workLabel} required error={errors.other_work ?? ""}>
+            <TextInput
+              value={draft.other_work}
+              onChange={(v) => set("other_work", v)}
+              max={OTHER_WORK_MAX}
+              label={APPROVAL_COPY.workLabel}
+            />
+          </Field>
+        </>}
 
         <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
           <span className="block text-[15px]">会社名と役職を メンバーめいかんに 出す</span>
@@ -193,7 +232,9 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
 
         {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
         <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
-          {preview ? "プレビュー中（送信できません）" : saving ? "入会手続き中…" : "▶ 入会する"}
+          {preview ? "プレビュー中（送信できません）" : requiresApproval(draft.position)
+            ? (saving ? APPROVAL_COPY.submittingLabel : `▶ ${APPROVAL_COPY.submitLabel}`)
+            : (saving ? "入会手続き中…" : "▶ 入会する")}
         </button>
       </form>
     </Window>

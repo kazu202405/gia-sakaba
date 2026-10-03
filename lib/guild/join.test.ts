@@ -54,6 +54,8 @@ describe("入会の入力", () => {
     show_company: true,
     want_to_solve: "",
     agreed: true,
+    other_title: "",
+    other_work: "",
   };
 
   it("名前・会社名・役職がそろえば エラーなし", () => {
@@ -73,6 +75,16 @@ describe("入会の入力", () => {
     expect(validateJoin({ ...ok, want_to_solve: "" })).toEqual({});
     expect(validateJoin({ ...ok, want_to_solve: "あ".repeat(61) }).want_to_solve).toContain("60字");
     expect(validateJoin({ ...ok, agreed: false }).agreed).toBeDefined();
+  });
+
+  it("役職「その他」は、役職とお仕事の内容が どちらも要る（代表・役員・決裁者は要らない）", () => {
+    const other = { ...ok, position: "other" as const };
+    expect(Object.keys(validateJoin(other))).toEqual(["other_title", "other_work"]);
+    expect(Object.keys(validateJoin({ ...other, other_title: "営業部長", other_work: "  " }))).toEqual(["other_work"]);
+    expect(validateJoin({ ...other, other_title: "営業部長", other_work: "広告の営業" })).toEqual({});
+    expect(validateJoin({ ...other, other_title: "あ".repeat(41), other_work: "あ" }).other_title).toContain("40字");
+    expect(validateJoin({ ...other, other_title: "あ", other_work: "あ".repeat(101) }).other_work).toContain("100字");
+    expect(validateJoin({ ...ok, position: "officer" })).toEqual({});
   });
 
   it("経営者は 代表・役員・決裁者", () => {

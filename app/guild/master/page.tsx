@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/guild/cards";
 import { LiveGatheringApprovals } from "@/components/guild/live-gathering-approvals";
+import { LivePendingMembers } from "@/components/guild/live-pending-members";
 import { LiveMasterInvites } from "@/components/guild/live-master-invites";
 import { LivePreparedInvites } from "@/components/guild/live-prepared-invites";
 import { LiveMasterIntroductions } from "@/components/guild/live-master-introductions";
@@ -15,7 +16,7 @@ import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
-import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPreparedInvites } from "@/lib/guild/server-data";
+import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPendingMembers, listPreparedInvites } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "管理者" };
 
@@ -24,11 +25,14 @@ export default async function MasterPage() {
   if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
   const preparedEnabled = process.env.SAKABA_PREJOIN_ENABLED === "true";
   const introductionsEnabled = process.env.SAKABA_MASTER_INTRO_ENABLED === "true";
-  const [pendingGatherings, invites, network, preparedInvites, introductions, introductionMembers] = await Promise.all([
+  // 参加の申請（役職「その他」・0126）は、承認できるオーナーにだけ出す
+  const isOwner = context.membership.role === "owner";
+  const [pendingGatherings, invites, network, preparedInvites, introductions, introductionMembers, pendingMembers] = await Promise.all([
     listPendingGatheringApplications(), listGuildMasterInvites(), listGuildInviteNetwork(),
     preparedEnabled ? listPreparedInvites() : Promise.resolve([]),
     introductionsEnabled ? listMasterIntroductions() : Promise.resolve([]),
     introductionsEnabled ? listGuildMembers() : Promise.resolve([]),
+    isOwner ? listPendingMembers() : Promise.resolve([]),
   ]);
   const diningEnabled = process.env.SAKABA_880_ENABLED === "true";
   const mealWishes = diningEnabled ? await listMealWishes(context.guild.id) : [];
@@ -65,6 +69,12 @@ export default async function MasterPage() {
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
         <span className="c-window-title">管理コマンド</span>
         <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
+          {isOwner && <li>
+            <a href="#master-pending-members-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
+              <span className="rpg-cursor">▶</span>
+              参加の申請{pendingMembers.length > 0 && <span className="c-chip-strong ml-1 text-xs">承認待ち {pendingMembers.length}</span>}
+            </a>
+          </li>}
           {introductionsEnabled && <li>
             <a href="#master-introductions-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">
               <span className="rpg-cursor">▶</span>
@@ -121,6 +131,10 @@ export default async function MasterPage() {
           </li>
         </ul>
       </nav>
+      {isOwner && <section aria-labelledby="master-pending-members-title" className="space-y-4">
+        <h2 id="master-pending-members-title" className="text-xl tracking-wider">参加の申請</h2>
+        <LivePendingMembers initial={pendingMembers} />
+      </section>}
       {introductionsEnabled && <section aria-labelledby="master-introductions-title" className="space-y-4">
         <h2 id="master-introductions-title" className="text-xl tracking-wider">人をつなぐ</h2>
         <LiveMasterIntroductions initial={introductions} members={introductionMembers} />
