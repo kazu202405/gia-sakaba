@@ -26,7 +26,13 @@ export default async function QuestsPage() {
       <MarkSeen list="quests" />
       <PageTitle
         title={`${questTerm} けいじばん`}
-        lead="仕事の依頼・相談・協業したいことを、だれでも出せます。"
+        lead={
+          <>
+            手伝ってほしいこと・お願いしたい仕事を出して、できる人を探す場所です。
+            <span className="mt-1 block">例：「LPを作れる人を探しています」「来月の勉強会で話せる方いませんか」</span>
+            <span className="mt-1 block">（自分のサービスの紹介は、プロフィールに書いてください）</span>
+          </>
+        }
       />
 
       <div className="mb-9">
