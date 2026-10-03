@@ -1,11 +1,16 @@
 import type { Metadata } from "next";
 import { GuildShell } from "@/components/guild/guild-shell";
 import { createClient } from "@/lib/supabase/server";
+import { GUILD_SHARE_DESCRIPTION, GUILD_SITE_URL, guildShareMetadata } from "@/lib/guild/site-meta";
 import "@/components/guild/guild-theme.css";
 
 export const metadata: Metadata = {
   // absolute にしないと、親（app/layout.tsx）の「| GIA」が後ろに付く
   title: { absolute: "GIAの酒場", template: "%s | GIAの酒場" },
+  // 無いと親（app/layout.tsx）のGIA本体HPの説明・画像が、送ったURLの見え方に出る
+  metadataBase: new URL(GUILD_SITE_URL),
+  description: GUILD_SHARE_DESCRIPTION,
+  ...guildShareMetadata,
   manifest: "/guild/manifest.webmanifest",
   icons: {
     icon: [

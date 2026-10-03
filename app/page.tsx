@@ -4,20 +4,16 @@ import "@/components/guild/guild-theme.css";
 import styles from "./sakaba-landing.module.css";
 import { PHRASE_WRAP, Ph } from "@/components/guild/phrase";
 import { plans } from "@/lib/guild/plan-catalog";
+import { GUILD_SITE_URL, guildShareMetadata } from "@/lib/guild/site-meta";
 
 const demoUrl = "https://gia-sakaba-git-demo-sakaba-mock-63c2cc-kazus-projects-dc60dadc.vercel.app/guild";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://guild.gia2018.com"),
+  metadataBase: new URL(GUILD_SITE_URL),
   title: { absolute: "GIAの酒場 | 仕事の話が、次の一歩になる場所" },
   description: "GIAの酒場は、仲間を知り、相談や仕事のクエストを出し、プロジェクトを進める招待制の場所です。",
-  alternates: { canonical: "https://guild.gia2018.com/" },
-  openGraph: {
-    title: "GIAの酒場",
-    description: "仕事の話が、次の一歩になる場所。仲間・クエスト・プロジェクトをひとつの酒場に。",
-    url: "https://guild.gia2018.com/",
-    type: "website",
-  },
+  alternates: { canonical: `${GUILD_SITE_URL}/` },
+  ...guildShareMetadata,
 };
 
 const features = [
