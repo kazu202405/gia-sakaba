@@ -9,6 +9,10 @@ import type { Profile } from "@/lib/guild/types";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { dueLabel } from "@/lib/guild/projects";
+import {
+  dueForSave, firstDueDate, recurrenceLabel, toDraft, toRecurrence, validateRecurrenceDraft, weekdayName,
+  type Recurrence, type RecurrenceDraft,
+} from "@/lib/guild/recurrence";
 import { DateInput } from "./form-parts";
 import { LiveProjectPeople } from "./live-project-people";
 
@@ -35,8 +39,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
   // なおした名前・消したタスクも、保存を待たずに画面へ反映する
   const [titleOverride, setTitleOverride] = useState<Record<string, string>>({});
   const [removedTasks, setRemovedTasks] = useState<string[]>([]);
-  const [editingTask, setEditingTask] = useState<{ id: string; title: string; due: string; error: string } | null>(null);
+  const [editingTask, setEditingTask] = useState<{ id: string; title: string; due: string; rec: RecurrenceDraft; error: string } | null>(null);
   const [dueOverride, setDueOverride] = useState<Record<string, string | null>>({});
+  const [recurrenceOverride, setRecurrenceOverride] = useState<Record<string, Recurrence | null>>({});
   const tasks = project.tasks
     .filter((task) => !removedTasks.includes(task.id))
     .map((task) => ({
@@ -44,6 +49,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       ...(statusOverride[task.id] ? { status: statusOverride[task.id] } : {}),
       ...(titleOverride[task.id] !== undefined ? { title: titleOverride[task.id] } : {}),
       ...(dueOverride[task.id] !== undefined ? { due_date: dueOverride[task.id] } : {}),
+      ...(recurrenceOverride[task.id] !== undefined
+        ? { recurrence_kind: recurrenceOverride[task.id]?.kind ?? null, recurrence_day: recurrenceOverride[task.id]?.day ?? null }
+        : {}),
     }));
   // のこっているタスクは しめきりが近い順（しめきり無しは あとに、入れた順のまま）
   const openTasks = tasks.filter((task) => task.status !== "done")
@@ -99,16 +107,23 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     if (!title) { setEditingTask({ ...editingTask, error: "タスクの名前を入力してください。" }); return; }
     if (title.length > 100) { setEditingTask({ ...editingTask, error: "100文字以内で入力してください。" }); return; }
     const { id } = editingTask;
-    const due = editingTask.due || null;
+    // くり返しの日にちが範囲外のときも、閉じずに理由を赤字で出す
+    const recProblem = validateRecurrenceDraft(editingTask.rec);
+    if (recProblem) { setEditingTask({ ...editingTask, error: recProblem }); return; }
+    const recurrence = toRecurrence(editingTask.rec);
+    // くり返しを付けるのにしめきりが空なら、次の該当日を入れる（DB も同じ日を入れる）
+    const due = dueForSave(editingTask.due, recurrence, today);
     const shown = tasks.find((task) => task.id === id);
-    if (shown && title === shown.title && due === shown.due_date) { setEditingTask(null); return; }
+    const sameRecurrence = (shown?.recurrence_kind ?? null) === (recurrence?.kind ?? null) && (shown?.recurrence_day ?? null) === (recurrence?.day ?? null);
+    if (shown && title === shown.title && due === shown.due_date && sameRecurrence) { setEditingTask(null); return; }
     if (due && shown?.start_date && due < shown.start_date) { setEditingTask({ ...editingTask, error: `しめきりは、はじめる日（${shown.start_date}）より後にしてください。` }); return; }
     setError("");
     setTitleOverride((current) => ({ ...current, [id]: title }));
     setDueOverride((current) => ({ ...current, [id]: due }));
+    setRecurrenceOverride((current) => ({ ...current, [id]: recurrence }));
     setEditingTask(null);
     setSavingTasks((current) => [...current, id]);
-    const { error: rpcError } = await createClient().rpc("sakaba_update_project_task", { p_task_id: id, p_title: title, p_due_date: due });
+    const { error: rpcError } = await createClient().rpc("sakaba_update_project_task", { p_task_id: id, p_title: title, p_due_date: due, p_recurrence_kind: recurrence?.kind ?? null, p_recurrence_day: recurrence?.day ?? null });
     if (rpcError) {
       setTitleOverride((current) => {
         const next = { ...current };
@@ -116,6 +131,11 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
         return next;
       });
       setDueOverride((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+      setRecurrenceOverride((current) => {
         const next = { ...current };
         delete next[id];
         return next;
@@ -175,6 +195,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
           <div className="w-44"><DateInput value={editingTask.due} onChange={(due) => setEditingTask({ ...editingTask, due, error: "" })} label="しめきり" /></div>
           {editingTask.due && <button type="button" onClick={() => setEditingTask({ ...editingTask, due: "", error: "" })} className="c-muted h-9 px-1 text-xs underline underline-offset-4">しめきりを消す</button>}
         </div>
+        <RecurrenceFields value={editingTask.rec} due={editingTask.due} today={today} onChange={(rec) => setEditingTask({ ...editingTask, rec, error: "" })} />
         {editingTask.error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{editingTask.error}</p>}
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" onClick={() => setEditingTask(null)} className="c-button-sub h-9 px-3 text-xs">やめる</button>
@@ -185,12 +206,15 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     return <li key={task.id} className="c-card flex items-center gap-3 p-3">
       {editable ? <input type="checkbox" checked={isDone} disabled={projectActionLock.current || saving} onChange={() => void setTaskStatus(task.id, isDone ? "todo" : "done")} aria-label={`${task.title}を${isDone ? "未完了" : "完了"}にする`} /> : <span>{isDone ? "✓" : "□"}</span>}
       <span className="min-w-0 flex-1">
-        <span className={`block break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>{task.title}</span>
+        <span className={`block break-words text-sm ${isDone ? "c-muted line-through" : ""}`}>
+          {task.title}
+          {task.recurrence_kind && <span role="img" aria-label={recurrenceLabel(task.recurrence_kind, task.recurrence_day)} title={recurrenceLabel(task.recurrence_kind, task.recurrence_day)} className="c-muted ml-1.5 text-xs">🔁</span>}
+        </span>
         {task.due_date && !isDone && <DueText due={task.due_date} today={today} />}
       </span>
       {editable && <span className="flex shrink-0 gap-1.5">
         {/* 文字だと行が詰まるのでアイコンにする。読み上げ用の名前と、マウスを乗せたときの説明は残す */}
-        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, due: task.due_date ?? "", error: "" })} aria-label={`${task.title}をなおす`} title="名前・しめきりをなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
+        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, due: task.due_date ?? "", rec: toDraft(task.recurrence_kind, task.recurrence_day, task.due_date ?? today), error: "" })} aria-label={`${task.title}をなおす`} title="名前・しめきり・くり返しをなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
         <button type="button" disabled={saving} onClick={() => void deleteTask(task)} aria-label={`${task.title}を削除する`} title="削除する" className="c-button-danger h-9 w-9 disabled:opacity-50"><Trash2 size={15} aria-hidden="true" /></button>
       </span>}
     </li>;
@@ -307,4 +331,30 @@ function DueText({ due, today }: { due: string; today: string }) {
   const label = dueLabel(due, today);
   const [, m, d] = due.split("-");
   return <span className={`mt-0.5 block text-xs ${label.overdue ? "text-[#c62828]" : "c-muted"}`}>しめきり {Number(m)}/{Number(d)}・{label.text}</span>;
+}
+
+/** 編集の枠の「くり返し」欄。なし／毎週［曜日］／毎月［日にち］／毎月末 */
+function RecurrenceFields({ value, due, today, onChange }: { value: RecurrenceDraft; due: string; today: string; onChange: (v: RecurrenceDraft) => void }) {
+  const rec = toRecurrence(value);
+  const first = rec && !validateRecurrenceDraft(value) && !due ? firstDueDate(rec.kind, rec.day, today) : null;
+  return <div className="mt-3">
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="c-muted text-xs">くり返し</span>
+      <select value={value.choice} onChange={(event) => onChange({ ...value, choice: event.target.value as RecurrenceDraft["choice"] })} aria-label="くり返し" className="c-input h-11 w-auto">
+        <option value="">なし</option>
+        <option value="weekly">毎週</option>
+        <option value="monthly">毎月（日にち）</option>
+        <option value="month_end">毎月末</option>
+      </select>
+      {value.choice === "weekly" && <select value={value.weekday} onChange={(event) => onChange({ ...value, weekday: event.target.value })} aria-label="くり返しの曜日" className="c-input h-11 w-auto">
+        {[1, 2, 3, 4, 5, 6, 7].map((day) => <option key={day} value={day}>{weekdayName(day)}曜</option>)}
+      </select>}
+      {value.choice === "monthly" && <select value={value.monthDay} onChange={(event) => onChange({ ...value, monthDay: event.target.value })} aria-label="くり返しの日にち" className="c-input h-11 w-auto">
+        {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => <option key={day} value={day}>{day}日</option>)}
+      </select>}
+    </div>
+    {value.choice !== "" && <p className="c-muted mt-1 text-xs">
+      済にすると、次の回のタスクが自動でできます。{first ? `しめきりが空なので、${Number(first.slice(5, 7))}/${Number(first.slice(8, 10))} を入れます。` : ""}
+    </p>}
+  </div>;
 }
