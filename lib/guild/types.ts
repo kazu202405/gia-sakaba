@@ -258,6 +258,9 @@ export type ProjectTask = {
   due_date: string | null;
   sort_order: number;
   done_at: string | null;
+  /** くり返し（無ければ なし）。済にすると次の回が DB 側でできる（lib/guild/recurrence.ts） */
+  recurrence_kind?: "weekly" | "monthly" | "month_end" | null;
+  recurrence_day?: number | null;
 };
 
 /**
