@@ -17,6 +17,7 @@ import { sceneArtOf } from "@/lib/guild/scene-art";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
 import { countNavBadges, formatBadge, type NavBadgeKey, type NavBadges } from "@/lib/guild/nav-badges";
 import { createClient } from "@/lib/supabase/client";
+import { setAppIconBadge } from "@/lib/guild/app-badge";
 import type { GuildNotification } from "@/lib/guild/types";
 
 type NavItem = {
@@ -85,6 +86,11 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [pathname]);
+  // ホーム画面のアイコンの数字も、メニューの数字（合計）に合わせる。ログイン前の画面では消す
+  const iconTotal = AUTH_PATHS.includes(pathname) ? 0 : badges.total;
+  useEffect(() => {
+    setAppIconBadge(iconTotal);
+  }, [iconTotal]);
   // コマンドを押した瞬間に、行き先の背景・いる所の印・仮の窓を先に出す（見た目だけ。移動そのものは Next.js のリンクのまま）。
   // loading.tsx は使わない：URLを直接開いたときに本体が動かなくなる事故があった（テツジン・同じ Next 16.1.1）
   const [pending, setPending] = useState<string | null>(null);
