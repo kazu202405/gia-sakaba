@@ -15,6 +15,9 @@ import { FeedbackButton } from "@/components/guild/feedback-button";
 import { GuildPageSkeleton } from "@/components/guild/page-skeleton";
 import { sceneArtOf } from "@/lib/guild/scene-art";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
+import { countNavBadges, formatBadge, type NavBadgeKey, type NavBadges } from "@/lib/guild/nav-badges";
+import { createClient } from "@/lib/supabase/client";
+import type { GuildNotification } from "@/lib/guild/types";
 
 type NavItem = {
   href: string;
@@ -24,17 +27,19 @@ type NavItem = {
   exact?: boolean;
   /** この道の下も「ここにいる」とみなす */
   also?: string[];
+  /** 未読の数を出すときの種類（lib/guild/nav-badges.ts） */
+  badge?: NavBadgeKey;
 };
 
 const NAV: NavItem[] = [
   { href: "/guild", label: "ホーム", short: "ホーム", icon: "tavern", exact: true },
-  { href: "/guild/members", label: "ギルド", short: "ギルド", icon: "guild", also: ["/guild/requests"] },
-  { href: "/guild/quests", label: "クエスト", short: "クエスト", icon: "scroll" },
+  { href: "/guild/members", label: "ギルド", short: "ギルド", icon: "guild", also: ["/guild/requests"], badge: "guild" },
+  { href: "/guild/quests", label: "クエスト", short: "クエスト", icon: "scroll", badge: "quests" },
   { href: "/guild/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
   { href: "/guild/me", label: "マイページ", short: "マイ\nページ", icon: "hero" },
 ];
 
-const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者", icon: "key" };
+const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者", icon: "key", badge: "master" };
 
 function isUnder(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(href + "/");
@@ -50,8 +55,36 @@ function isActive(pathname: string, item: NavItem) {
 const PENDING_LIMIT_MS = 15000;
 
 
-export function GuildShell({ children, isMaster }: { children: React.ReactNode; isMaster: boolean }) {
+// 画面を移った・アプリに戻ったときに数字を読み直す。上限なしに待たず、失敗したら今の数字のまま
+const AUTH_PATHS = ["/guild/login", "/guild/join", "/guild/forgot-password", "/guild/reset-password", "/guild/auth/callback"];
+
+export function GuildShell({ children, isMaster, initialBadges }: { children: React.ReactNode; isMaster: boolean; initialBadges: NavBadges }) {
   const pathname = usePathname();
+  // メニューの数字。はじめはサーバーが数えた値。layout は画面を移っても作り直されないので、移るたびにここで読み直す
+  const [badges, setBadges] = useState(initialBadges);
+  const [prevInitial, setPrevInitial] = useState(initialBadges);
+  if (prevInitial !== initialBadges) {
+    // サーバーが数え直した（router.refresh など）ら、そちらに合わせる
+    setPrevInitial(initialBadges);
+    setBadges(initialBadges);
+  }
+  useEffect(() => {
+    if (AUTH_PATHS.includes(pathname)) return;
+    let cancelled = false;
+    const reload = () => {
+      void createClient().rpc("sakaba_list_my_notifications", { p_guild_slug: "gia" }).then(({ data, error }) => {
+        if (cancelled || error || !Array.isArray(data)) return;
+        setBadges(countNavBadges(data as GuildNotification[]));
+      });
+    };
+    reload();
+    const onVisible = () => { if (document.visibilityState === "visible") reload(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [pathname]);
   // コマンドを押した瞬間に、行き先の背景・いる所の印・仮の窓を先に出す（見た目だけ。移動そのものは Next.js のリンクのまま）。
   // loading.tsx は使わない：URLを直接開いたときに本体が動かなくなる事故があった（テツジン・同じ Next 16.1.1）
   const [pending, setPending] = useState<string | null>(null);
@@ -108,7 +141,10 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
           </Link>
           <div className="flex items-center gap-4">
             <FeedbackButton label="ご意見" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
-            <Link href="/guild/notifications" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">おしらせ</Link>
+            <Link href="/guild/notifications" className="inline-flex items-center gap-1 text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">
+              おしらせ
+              <NavBadge count={badges.total} />
+            </Link>
             <LogoutButton redirectTo="/guild/login" showIcon={false} label="ログアウト" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
           </div>
         </div>
@@ -121,13 +157,13 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
           <ul className="space-y-1">
             {NAV.map((item) => (
               <li key={item.href}>
-                <CommandLink item={item} active={isActive(shownPath, item)} />
+                <CommandLink item={item} active={isActive(shownPath, item)} count={item.badge ? badges[item.badge] : 0} />
               </li>
             ))}
           </ul>
           {isMaster && <div className="c-dashed-top mt-4 pt-3">
             <p className="c-muted mb-1 text-[11px]">管理者のみ</p>
-            <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} />
+            <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} count={badges.master} />
           </div>}
         </nav>
 
@@ -164,7 +200,10 @@ export function GuildShell({ children, isMaster }: { children: React.ReactNode; 
             >
               {/* いる所は金の線とアイコンで示す。文字も残し、初めての人にも行き先が伝わるようにする */}
               {active && <span className="guild-mobile-active absolute inset-x-3 top-0 h-1 bg-[#1b2a41]" aria-hidden />}
-              <MobileNavIcon kind={item.icon} />
+              <span className="relative">
+                <MobileNavIcon kind={item.icon} />
+                <NavBadge count={item.badge ? badges[item.badge] : 0} className="absolute -top-1.5 -right-3.5" />
+              </span>
               <span className="leading-[1.05]">{item.short}</span>
             </Link>
           );
@@ -193,7 +232,7 @@ function MobileNavIcon({ kind }: { kind: NavItem["icon"] }) {
   return <svg {...common}><path d="M2 2h6v1h1v5H8v1H6v2h3v2H7v2H4V9H2V8H1V3h1V2Zm1 2v3h3V4H3Zm6 6h5v2H9v-2Z" /></svg>;
 }
 
-function CommandLink({ item, active }: { item: NavItem; active: boolean }) {
+function CommandLink({ item, active, count }: { item: NavItem; active: boolean; count: number }) {
   return (
     <Link
       href={item.href}
@@ -203,6 +242,19 @@ function CommandLink({ item, active }: { item: NavItem; active: boolean }) {
     >
       <span className="rpg-cursor">▶</span>
       {item.label}
+      <NavBadge count={count} />
     </Link>
+  );
+}
+
+/** 未読の数の赤い丸。0 のときは出さない。読み上げ用に「未読○件」を添える */
+function NavBadge({ count, className }: { count: number; className?: string }) {
+  const text = formatBadge(count);
+  if (text === null) return null;
+  return (
+    <span className={cn("c-badge", className)}>
+      <span aria-hidden>{text}</span>
+      <span className="sr-only">未読{text}件</span>
+    </span>
   );
 }
