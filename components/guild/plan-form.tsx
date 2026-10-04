@@ -168,7 +168,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         {hasCustomer && <><p className="mt-3 text-sm leading-relaxed">過去の酒場の契約・支払い履歴がある場合は、支払い管理で確認できます。継続中の契約は管理者枠に変わっても自動解約されません。</p><button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button></>}
       </Window>
       : companyNoteBenefit ? <Window title="会員の状態">
-        <p className="text-[15px] leading-relaxed">Company Noteの11,000円会員特典として、酒場のビジネスプラン（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
+        <p className="text-[15px] leading-relaxed">Company Note会員の特典として、酒場のビジネスプラン（月880円）の機能を利用できます。特典のために酒場へ申し込む必要はありません。</p>
         {hasActiveContract && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は継続中です。特典が付いても自動解約されず、請求も止まりません。不要な場合は下のボタンから解約してください。</p>}
         {hasCustomer && <button type="button" disabled={pending !== null} onClick={() => void openPortal()} className="c-button-sub mt-5 min-h-11 px-5 text-sm disabled:opacity-50">{pending === "portal" ? "開いています…" : "酒場の支払い・解約を管理する"}</button>}
       </Window>

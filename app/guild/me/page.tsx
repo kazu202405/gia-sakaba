@@ -103,7 +103,7 @@ export default async function MyPage() {
     </Window>
     <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">
-        {billing.role !== "member" || billing.billing_status === "exempt" ? "現在は管理者枠です。料金なしで全機能を利用できます。" : billing.company_note_benefit ? "Company Noteの11,000円会員特典で、ビジネスプラン（月880円）の機能を利用中です。酒場への追加申込は不要です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : billing.is_paid ? "現在、有料会員です。" : "現在はフリープランです。"}
+        {billing.role !== "member" || billing.billing_status === "exempt" ? "現在は管理者枠です。料金なしで全機能を利用できます。" : billing.company_note_benefit ? "Company Note会員の特典で、ビジネスプラン（月880円）の機能を利用中です。酒場への追加申込は不要です。" : billing.billing_status === "past_due" ? "お支払いを確認できていません。" : currentPlan === "standard" ? "現在はプラスプラン（月480円）です。" : currentPlan === "dining" ? "現在はビジネスプラン（月880円）です。" : billing.is_paid ? "現在、有料会員です。" : "現在はフリープランです。"}
       </p>
       {(billing.company_note_benefit || billing.role !== "member") && ["active", "trialing", "past_due"].includes(billing.billing_status) && <p className="mt-3 text-sm leading-relaxed">酒場の別契約は自動解約されず、請求も続きます。不要な場合は支払い管理から解約してください。</p>}
       <div className="mt-4">
