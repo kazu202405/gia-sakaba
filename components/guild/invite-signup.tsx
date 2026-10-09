@@ -17,14 +17,17 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [mailSent, setMailSent] = useState(false);
 
   const joinPath = `/guild/join?invite=${encodeURIComponent(inviteCode)}`;
+  const loginPath = `/guild/login?next=${encodeURIComponent(joinPath)}`;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy || preview) return;
     setError("");
+    setAlreadyRegistered(false);
     if (!name.trim() || name.trim().length > 30) {
       setError("お名前は30文字以内で入力してください。");
       return;
@@ -51,9 +54,25 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
         emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(joinPath)}`,
       },
     });
+    // 登録済みか：ふつうはエラーで返る。メール確認が必須の設定だと、エラーにならず identities が空で返る
+    const registered = signupError
+      ? signupError.message.toLowerCase().includes("already") || signupError.message.toLowerCase().includes("registered")
+      : !data.session && data.user?.identities?.length === 0;
+    if (registered) {
+      // Company Note などで作ったGIAのアカウントがある人。同じパスワードを打っていれば、そのままログインして入会へ進める
+      const { error: loginError } = await createClient().auth.signInWithPassword({ email: email.trim(), password });
+      if (!loginError) {
+        router.refresh();
+        return;
+      }
+      // パスワードが違うときは、ログインへの入口を知らせのすぐ下に出す（スマホではログインの窓がフォームより上にあり、探しても見つからないため）
+      setAlreadyRegistered(true);
+      setError("このメールアドレスは、すでにGIAのアカウントがあります（Company Note と共通です）。新しく作る必要はありません。Company Note と同じメールアドレスとパスワードでログインしてください。");
+      setBusy(false);
+      return;
+    }
     if (signupError) {
-      const registered = signupError.message.toLowerCase().includes("already") || signupError.message.toLowerCase().includes("registered");
-      setError(registered ? "このメールアドレスは登録済みです。下の「ログインして続ける」から進んでください。" : "アカウントを作成できませんでした。入力内容を確認して再度お試しください。");
+      setError("アカウントを作成できませんでした。入力内容を確認して再度お試しください。");
       setBusy(false);
       return;
     }
@@ -75,7 +94,10 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
           <p role="status" className="border border-[#2e7d32]/40 bg-green-50 p-3 text-sm text-[#1b5e20]">登録できました。確認メールを送りました。メール内のリンクを開くと、この招待状に戻って入会へ進めます。</p>
           <LoginGuide tone="success" />
         </div>}
-        {error && <p role="alert" className="border border-[#c62828]/40 bg-red-50 p-3 text-sm text-[#c62828]">{error}</p>}
+        {error && <div role="alert" className="space-y-3 border border-[#c62828]/40 bg-red-50 p-3 text-sm text-[#c62828]">
+          <p>{error}</p>
+          {alreadyRegistered && <Link href={loginPath} className="c-button inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして続ける</Link>}
+        </div>}
         <label className="block"><span className="mb-1 block text-sm">お名前 <span className="text-[#c62828]">必須</span></span>
           <input className="c-input h-11" value={name} onChange={(event) => setName(event.target.value)} maxLength={30} autoComplete="name" required /></label>
         <label className="block"><span className="mb-1 block text-sm">メールアドレス <span className="text-[#c62828]">必須</span></span>
@@ -93,9 +115,9 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
     </Window>
     <div className="order-first lg:order-none">
     <Window title="すでに登録した方はこちら">
-      <p className="c-muted mb-5 text-sm leading-relaxed">以前にこのリンクから登録した方・GIAのアカウントがある方は、ログインするとこの招待状へ戻れます。</p>
+      <p className="c-muted mb-5 text-sm leading-relaxed">以前にこのリンクから登録した方・Company Note をお使いの方（GIAのアカウントがある方）は、同じメールアドレスとパスワードでログインすると、この招待状へ戻れます。</p>
       {preview ? <span className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm opacity-50">▶ ログインして酒場へ</span> :
-        <Link href={`/guild/login?next=${encodeURIComponent(joinPath)}`} className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして酒場へ</Link>}
+        <Link href={loginPath} className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして酒場へ</Link>}
     </Window>
     </div>
   </div>;
