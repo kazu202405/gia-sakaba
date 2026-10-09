@@ -8,6 +8,7 @@ import { InviteSignup } from "@/components/guild/invite-signup";
 import { inviteErrorText } from "@/lib/guild/join";
 import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { getGuildContext } from "@/lib/guild/server-data";
+import { isActiveMember } from "@/lib/membership/plans";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "入会" };
@@ -46,6 +47,11 @@ export default async function JoinPage({ searchParams }: Props) {
     ? await supabase.rpc("sakaba_get_prepared_invite", { p_code: code })
     : { data: null, error: null };
   const prepared = preparedData as PreparedInvite | null;
+  // Company Note の有料会員か（判定は酒場のプラン判定と同じ isActiveMember）。ログイン後にだけ調べて知らせる
+  const { data: applicant } = valid && authData.user
+    ? await supabase.from("applicants").select("plan, tier").eq("id", authData.user.id).maybeSingle()
+    : { data: null };
+  const companyNoteMember = isActiveMember(applicant);
 
   return (
     <JoinPageFrame>
@@ -60,7 +66,10 @@ export default async function JoinPage({ searchParams }: Props) {
       {preparedError ? <Window title="招待状"><p className="text-sm">招待状の下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>
       : valid && !authData.user ? (
         <InviteSignup inviterName={check.inviter_name || "酒場のメンバー"} inviteCode={code} initialName={prepared?.display_name ?? ""} />
-      ) : valid ? (
+      ) : valid ? (<>
+        {companyNoteMember && <Window title="Company Note 会員の方へ">
+          <p className="text-sm leading-relaxed">Company Note の会員なので、入会するとビジネスプランの機能がそのまま使えます。酒場への追加の申込みやお支払いはいりません。</p>
+        </Window>}
         <JoinForm
           inviterName={check.inviter_name || "管理者"}
           inviteCode={code}
@@ -68,7 +77,7 @@ export default async function JoinPage({ searchParams }: Props) {
             ? authData.user.user_metadata.name : prepared?.display_name ?? ""}
           prepared={prepared}
         />
-      ) : (
+      </>) : (
         <Window title="招待リンク">
           <p className="text-sm leading-relaxed">{error ? "招待リンクを確認できませんでした。時間をおいて再度お試しください。" : check && !check.ok ? inviteErrorText[check.reason] : "この招待リンクはGIAの酒場では使えません。招待してくれた人にご確認ください。"}</p>
         </Window>

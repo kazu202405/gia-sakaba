@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
@@ -19,6 +19,10 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
   const [error, setError] = useState("");
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [mailSent, setMailSent] = useState(false);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkSent, setLinkSent] = useState(false);
+  const [linkError, setLinkError] = useState("");
+  const linkLock = useRef(false);
 
   const joinPath = `/guild/join?invite=${encodeURIComponent(inviteCode)}`;
   const loginPath = `/guild/login?next=${encodeURIComponent(joinPath)}`;
@@ -28,6 +32,8 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
     if (busy || preview) return;
     setError("");
     setAlreadyRegistered(false);
+    setLinkSent(false);
+    setLinkError("");
     if (!name.trim() || name.trim().length > 30) {
       setError("お名前は30文字以内で入力してください。");
       return;
@@ -84,6 +90,29 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
     router.refresh();
   }
 
+  // パスワードを思い出せない人向け。リンクは本人のメールにだけ届くので、パスワードなしでも本人しか入れない
+  async function sendLoginLink() {
+    if (linkLock.current || !email.trim()) return;
+    linkLock.current = true;
+    setLinkBusy(true);
+    setLinkError("");
+    const { error: otpError } = await createClient().auth.signInWithOtp({
+      email: email.trim(),
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(joinPath)}`,
+      },
+    });
+    setLinkBusy(false);
+    if (otpError) {
+      setLinkError("ログイン用メールを送れませんでした。少し待って再度お試しください。");
+      linkLock.current = false;
+      return;
+    }
+    // 送ったあとは押せないままにする（続けて押すと、同じメールが何通も届く）
+    setLinkSent(true);
+  }
+
   return <div className="grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-start">
     <Window title="新規登録">
       {preview && <p className="mb-4 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">新規アカウント作成画面のプレビューです。送信はできません。</p>}
@@ -96,7 +125,13 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
         </div>}
         {error && <div role="alert" className="space-y-3 border border-[#c62828]/40 bg-red-50 p-3 text-sm text-[#c62828]">
           <p>{error}</p>
-          {alreadyRegistered && <Link href={loginPath} className="c-button inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして続ける</Link>}
+          {alreadyRegistered && <>
+            <Link href={loginPath} className="c-button inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして続ける</Link>
+            <p>パスワードを思い出せないときは、このメールアドレスにログイン用のリンクを送れます。</p>
+            <button type="button" disabled={linkBusy || linkSent} onClick={() => void sendLoginLink()} className="c-button-sub min-h-12 w-full text-sm disabled:cursor-not-allowed disabled:opacity-50">{linkSent ? "ログイン用リンクを送信済み" : linkBusy ? "送信中…" : "▶ メールのリンクでログインする"}</button>
+            {linkSent && <p role="status">ログイン用リンクを送りました。メールのリンクを開くと、この招待状に戻って入会へ進めます。</p>}
+            {linkError && <p>{linkError}</p>}
+          </>}
         </div>}
         <label className="block"><span className="mb-1 block text-sm">お名前 <span className="text-[#c62828]">必須</span></span>
           <input className="c-input h-11" value={name} onChange={(event) => setName(event.target.value)} maxLength={30} autoComplete="name" required /></label>
