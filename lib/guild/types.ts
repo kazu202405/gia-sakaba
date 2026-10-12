@@ -261,6 +261,8 @@ export type ProjectTask = {
   /** くり返し（無ければ なし）。済にすると次の回が DB 側でできる（lib/guild/recurrence.ts） */
   recurrence_kind?: "weekly" | "monthly" | "month_end" | null;
   recurrence_day?: number | null;
+  /** null=常に表示。undefined は表示開始設定のDB更新前。 */
+  show_before_days?: number | null;
 };
 
 /**

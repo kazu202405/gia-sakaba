@@ -13,6 +13,7 @@ import type {
   QuestApplication,
   StepRecord,
 } from "./types";
+import { isTaskVisible } from "./task-visibility";
 
 export function canSeeProject(p: Project, userId: string): boolean {
   return p.owner_id === userId || p.member_ids.includes(userId);
@@ -67,6 +68,7 @@ export function upcomingTasks(
       const project = byId.get(task.project_id);
       if (!project || project.status !== "active") return [];
       if (task.status === "done" || task.due_date === null) return [];
+      if (!isTaskVisible(task, today)) return [];
       if (!isMyTask(task, project, userId)) return [];
       if (daysBetween(today, task.due_date) > days) return [];
       return [{ task, project }];

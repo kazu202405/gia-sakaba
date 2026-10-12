@@ -279,12 +279,21 @@ export async function listGuildNotifications(): Promise<GuildNotification[]> {
 
 export async function listGuildProjects(): Promise<GuildProject[]> {
   const supabase = await createClient();
-  const [{ data, error }, order] = await Promise.all([
+  const [{ data, error }, order, visibility] = await Promise.all([
     supabase.rpc("sakaba_list_my_projects", { p_guild_slug: "gia" }),
     supabase.rpc("sakaba_list_my_project_order", { p_guild_slug: "gia" }),
+    supabase.rpc("sakaba_list_task_visibility", { p_guild_slug: "gia" }),
   ]);
   if (error) throw rpcError("プロジェクトを取得できませんでした", error.message);
   const projects = Array.isArray(data) ? (data as GuildProject[]) : [];
+  // 0128未適用なら既存操作を維持し、表示開始の設定は出さない。
+  if (!visibility.error && visibility.data && typeof visibility.data === "object" && !Array.isArray(visibility.data)) {
+    const settings = visibility.data as Record<string, unknown>;
+    for (const project of projects) for (const task of project.tasks) {
+      const value = settings[task.id];
+      if (value === null || (typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 365)) task.show_before_days = value;
+    }
+  }
   // 並び順（0118）は見た目だけなので、読めなくても一覧は出す（新しい順になる）。読めなかったことは残す
   if (order.error) console.warn("[guild] プロジェクトの並び順を読めませんでした", order.error.message);
   return applyProjectOrder(projects, order.error ? [] : parseProjectOrder(order.data));
