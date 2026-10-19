@@ -61,6 +61,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/guild/requests" ||
     pathname === "/guild/notifications" ||
     pathname === "/guild/join" ||
+    pathname === "/guild/survey" ||
     pathname === "/guild/forgot-password" ||
     pathname === "/guild/reset-password" ||
     pathname === "/guild/auth/callback" ||
@@ -79,7 +80,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const isPublicGuildRoute = pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback";
+  const isPublicGuildRoute = pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/survey" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback";
   if (pathname.startsWith("/guild") && !isPublicGuildRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/guild/login";
