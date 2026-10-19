@@ -5,8 +5,12 @@ import {
   SURVEY_CUSTOM_PRICE_MAX,
   SURVEY_NOT_JOINING,
   SURVEY_PRICE_CHIPS,
+  SURVEY_TOKEN_STORAGE_KEY,
   checkSurveyInput,
   countJoiners,
+  isResponseToken,
+  readStoredResponseToken,
+  storeResponseToken,
   normalizeInviteUrl,
   priceLabel,
   resolvePrice,
@@ -131,6 +135,43 @@ describe("招待リンク（normalizeInviteUrl）", () => {
   });
 });
 
+describe("回答ID（端末への保存）", () => {
+  const id = "123e4567-e89b-42d3-a456-426614174000";
+  function fakeWindow(store: Record<string, string> | "throws") {
+    const storage = {
+      getItem: (k: string) => { if (store === "throws") throw new Error("blocked"); return store[k] ?? null; },
+      setItem: (k: string, v: string) => { if (store === "throws") throw new Error("blocked"); store[k] = v; },
+    };
+    (globalThis as unknown as { window: unknown }).window = { localStorage: storage };
+  }
+  it("uuid の形だけを回答IDとして受ける", () => {
+    expect(isResponseToken(id)).toBe(true);
+    for (const bad of ["", "abc", null, undefined, 1, id + "x", "' or 1=1 --"]) expect(isResponseToken(bad)).toBe(false);
+  });
+  it("保存して読み戻せる／変な値は保存も読みもしない", () => {
+    const store: Record<string, string> = {};
+    fakeWindow(store);
+    expect(readStoredResponseToken()).toBeNull();
+    storeResponseToken(id);
+    expect(store[SURVEY_TOKEN_STORAGE_KEY]).toBe(id);
+    expect(readStoredResponseToken()).toBe(id);
+    storeResponseToken("bad");
+    expect(store[SURVEY_TOKEN_STORAGE_KEY]).toBe(id);
+    store[SURVEY_TOKEN_STORAGE_KEY] = "garbage";
+    expect(readStoredResponseToken()).toBeNull();
+  });
+  it("localStorage が使えなくても落ちず、毎回新規（null）になる", () => {
+    fakeWindow("throws");
+    expect(readStoredResponseToken()).toBeNull();
+    expect(() => storeResponseToken(id)).not.toThrow();
+  });
+  it("画面は送るとき保存した回答IDを渡し、返ってきた回答IDを保存する", () => {
+    const code = stripComments(read("components/guild/survey-form.tsx"));
+    expect(code).toMatch(/p_response_token:\s*readStoredResponseToken\(\)/);
+    expect(code).toMatch(/storeResponseToken\(/);
+  });
+});
+
 // ---- ソースの見張り ----
 
 // 送信処理の中の順番：錠の確認 → 錠をかける → await rpc。錠が await より前にあること
@@ -178,13 +219,16 @@ function checkMigration(sql: string): string[] {
   if (!/alter table sakaba\.survey_responses enable row level security/i.test(code)) problems.push("RLS を有効にしていない");
   if (!/revoke all on sakaba\.survey_responses from public, anon, authenticated/i.test(code)) problems.push("表の直接アクセスを外していない");
   if (/create policy/i.test(code)) problems.push("ポリシーを作っている（直接読み書きさせない）");
-  if (!/create unique index[\s\S]*\(survey_key, lower\(btrim\(display_name\)\)\)/i.test(code)) problems.push("同名の一意制約が無い");
-  if (!/on conflict \(survey_key, lower\(btrim\(display_name\)\)\) do update/i.test(code)) problems.push("同名を上書きしていない");
+  // 上書きの目印は名前ではなく回答ID：名前の一意制約・名前での上書きは置かない（同名の別人を両方残す）
+  if (/create unique index[^;]*display_name/i.test(code) || /on conflict/i.test(code)) problems.push("名前で上書きしている（同名の別人が消える）");
+  if (!/response_token uuid not null default gen_random_uuid\(\) unique/i.test(code)) problems.push("回答IDの列が無い");
+  if (!/where response_token = p_response_token and survey_key = p_survey_key/i.test(code)) problems.push("回答IDが一致する行だけを更新していない");
+  if (!/insert into sakaba\.survey_responses[^;]*returning response_token into v_token/i.test(code)) problems.push("新規の行で回答IDを返していない");
   if (!/security definer/i.test(code)) problems.push("security definer ではない");
   if (!/pg_advisory_xact_lock/.test(code)) problems.push("上限の数え方が同時実行に弱い");
   if (!/updated_at > now\(\) - interval '1 minute'/.test(code) || !/v_recent >= 30(?![0-9])/.test(code) || !/survey_rate_limited/.test(code)) problems.push("1分あたりの上限が無い");
   if (!/btrim\(coalesce\(p_trap, ''\)\) <> ''/.test(code)) problems.push("見えない入力欄の判定が無い");
-  if (!/grant execute on function public\.sakaba_submit_survey\(text, text, integer, text, text\) to anon, authenticated/i.test(code)) problems.push("ログインなしで呼べない");
+  if (!/grant execute on function public\.sakaba_submit_survey\(text, text, integer, text, text, uuid\) to anon, authenticated/i.test(code)) problems.push("ログインなしで呼べない");
   return problems;
 }
 
@@ -198,7 +242,7 @@ describe("連続で送れない対策（見張り）", () => {
   it("画面：見えない入力欄・送信中の表示・もどって なおす・標準ダイアログ不使用・値段の直書きなし", () => {
     expect(checkForm(form)).toEqual([]);
   });
-  it("SQL：直接読み書き不可・同名は上書き・1分あたりの上限・見えない入力欄・ログインなしで呼べる", () => {
+  it("SQL：直接読み書き不可・回答IDで上書き（同名は別の行）・1分あたりの上限・見えない入力欄・ログインなしで呼べる", () => {
     expect(checkMigration(sql)).toEqual([]);
   });
   it("SQL のコメントの数え方が countJoiners と同じ意味（以上・0は数えない）", () => {
@@ -244,7 +288,8 @@ describe("見張り自身の自己テスト（外すと落ちる）", () => {
   it("SQL の上限・上書き・RLS・直接アクセスを外すと見つかる", () => {
     for (const [from, to] of [
       ["v_recent >= 30", "v_recent >= 3000000"],
-      ["do update", "do nothing"],
+      ["where response_token = p_response_token and survey_key", "where lower(display_name) = lower(v_name) and survey_key"],
+      ["response_token uuid not null default gen_random_uuid() unique", "response_token uuid not null default gen_random_uuid()"],
       ["enable row level security", "disable row level security"],
       ["revoke all on sakaba.survey_responses from public, anon, authenticated;", "revoke all on sakaba.survey_responses from public;"],
     ]) {
@@ -252,6 +297,7 @@ describe("見張り自身の自己テスト（外すと落ちる）", () => {
       expect(broken, from).not.toBe(sql);
       expect(checkMigration(broken).length, from).toBeGreaterThan(0);
     }
+    expect(checkMigration(`${sql}\ncreate unique index x on sakaba.survey_responses (survey_key, lower(btrim(display_name)));`)).toContain("名前で上書きしている（同名の別人が消える）");
     expect(checkMigration(`${sql}\ncreate policy p on sakaba.survey_responses for select using (true);`).length).toBeGreaterThan(0);
   });
   it("SQL のコメントに書いた語では通らない（本体をコメントにすると落ちる）", () => {

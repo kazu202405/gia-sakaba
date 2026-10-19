@@ -4,7 +4,8 @@
 --
 -- 守り
 --  1. 表は直接読み書きさせない（RLSを有効にし、ポリシーなし。anon/authenticatedの権限も外す）。書き込みはRPC 1本だけ
---  2. 同じアンケートに同じ名前で送り直したら、新しい1件にせず上書き（二重に数えない）
+--  2. 上書きの目印は名前ではなく回答ID（response_token）。初回は新しい行を作って token を返し、
+--     同じ端末が token を付けて送り直したときだけ、その行を更新する（同名の別人は別の行に残る）
 --  3. 全体で1分あたり30件まで（超えたら survey_rate_limited）
 --  4. 見えない入力欄（p_trap）に何か入っていたら、保存せず成功と同じ返事を返す（機械による送信よけ）
 
@@ -17,13 +18,12 @@ create table if not exists sakaba.survey_responses (
   -- 月いくらまでなら入るか（月額の会費・円）。0＝入らない
   max_monthly_price_yen integer not null check (max_monthly_price_yen between 0 and 1000000),
   wish_text text not null default '' check (char_length(wish_text) <= 300),
+  -- 送り直しの目印（推測できない乱数）。表は直接読めないので平文で持つ
+  response_token uuid not null default gen_random_uuid() unique,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
--- 同じアンケート・同じ名前（前後の空白と大文字小文字は無視）は1件
-create unique index if not exists survey_responses_one_per_name
-  on sakaba.survey_responses (survey_key, lower(btrim(display_name)));
 create index if not exists survey_responses_recent
   on sakaba.survey_responses (updated_at);
 
@@ -35,7 +35,8 @@ create or replace function public.sakaba_submit_survey(
   p_display_name text,
   p_max_monthly_price_yen integer,
   p_wish_text text default '',
-  p_trap text default ''
+  p_trap text default '',
+  p_response_token uuid default null
 )
 returns jsonb
 language plpgsql
@@ -46,6 +47,7 @@ declare
   v_name text := btrim(coalesce(p_display_name, ''));
   v_wish text := btrim(coalesce(p_wish_text, ''));
   v_recent integer;
+  v_token uuid;
 begin
   -- 機械による送信よけ：保存はしないが、見た目は成功と同じにする
   if btrim(coalesce(p_trap, '')) <> '' then
@@ -70,20 +72,29 @@ begin
     raise exception 'survey_rate_limited' using errcode = '54000';
   end if;
 
-  insert into sakaba.survey_responses (survey_key, display_name, max_monthly_price_yen, wish_text)
-  values (p_survey_key, v_name, p_max_monthly_price_yen, v_wish)
-  on conflict (survey_key, lower(btrim(display_name))) do update
-    set display_name = excluded.display_name,
-        max_monthly_price_yen = excluded.max_monthly_price_yen,
-        wish_text = excluded.wish_text,
-        updated_at = now();
+  -- token が一致する行だけ更新する。一致しない・無いときは新しい行（token は常にサーバーが作る）
+  if p_response_token is not null then
+    update sakaba.survey_responses
+       set display_name = v_name,
+           max_monthly_price_yen = p_max_monthly_price_yen,
+           wish_text = v_wish,
+           updated_at = now()
+     where response_token = p_response_token and survey_key = p_survey_key
+    returning response_token into v_token;
+  end if;
 
-  return jsonb_build_object('ok', true);
+  if v_token is null then
+    insert into sakaba.survey_responses (survey_key, display_name, max_monthly_price_yen, wish_text)
+    values (p_survey_key, v_name, p_max_monthly_price_yen, v_wish)
+    returning response_token into v_token;
+  end if;
+
+  return jsonb_build_object('ok', true, 'response_token', v_token);
 end;
 $$;
 
-revoke all on function public.sakaba_submit_survey(text, text, integer, text, text) from public;
-grant execute on function public.sakaba_submit_survey(text, text, integer, text, text) to anon, authenticated;
+revoke all on function public.sakaba_submit_survey(text, text, integer, text, text, uuid) from public;
+grant execute on function public.sakaba_submit_survey(text, text, integer, text, text, uuid) to anon, authenticated;
 
 notify pgrst, 'reload schema';
 

@@ -16,6 +16,8 @@ import {
   SURVEY_WISH_MAX,
   checkSurveyInput,
   priceLabel,
+  readStoredResponseToken,
+  storeResponseToken,
 } from "@/lib/guild/survey";
 import { cn } from "@/lib/utils";
 import { Window } from "./cards";
@@ -77,12 +79,13 @@ export function SurveyForm({ inviteUrl }: { inviteUrl: string | null }) {
       setPhase("edit");
       return;
     }
-    const { error } = await createClient().rpc("sakaba_submit_survey", {
+    const { data, error } = await createClient().rpc("sakaba_submit_survey", {
       p_survey_key: SURVEY_KEY,
       p_display_name: result.answer.displayName,
       p_max_monthly_price_yen: result.answer.priceYen,
       p_wish_text: result.answer.wishText,
       p_trap: trap,
+      p_response_token: readStoredResponseToken(),
     });
     if (error) {
       // 失敗：錠を外し、入力は残して理由を出す
@@ -91,7 +94,8 @@ export function SurveyForm({ inviteUrl }: { inviteUrl: string | null }) {
       setSendError(error.message.includes("survey_rate_limited") ? SURVEY_COPY.errors.rateLimited : SURVEY_COPY.errors.failed);
       return;
     }
-    // 成功：錠は外さない（同じ内容をもう一度送れないように）
+    // 成功：錠は外さない（同じ内容をもう一度送れないように）。回答IDは端末に残し、送り直しはその行を更新する
+    storeResponseToken((data as { response_token?: unknown } | null)?.response_token);
     setBusy(false);
     setPhase("done");
   }

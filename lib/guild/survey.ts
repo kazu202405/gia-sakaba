@@ -56,6 +56,35 @@ export const SURVEY_COPY = {
   },
 } as const;
 
+/** 送り直しの目印（回答ID）を端末に残す場所。同じ端末から送り直したときだけ、前の回答を更新する */
+export const SURVEY_TOKEN_STORAGE_KEY = `sakaba_survey_response_token_${SURVEY_KEY}`;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** 回答IDとして使える形か（変なものは送らない） */
+export function isResponseToken(value: unknown): value is string {
+  return typeof value === "string" && UUID_PATTERN.test(value);
+}
+
+/** 保存した回答IDを読む。読めない（プライベート窓など）ときは null ＝ 毎回新規 */
+export function readStoredResponseToken(): string | null {
+  try {
+    const value = window.localStorage.getItem(SURVEY_TOKEN_STORAGE_KEY);
+    return isResponseToken(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 回答IDを保存する。保存できなくても送信は成功扱い（次回は新規になるだけ） */
+export function storeResponseToken(token: unknown): void {
+  if (!isResponseToken(token)) return;
+  try {
+    window.localStorage.setItem(SURVEY_TOKEN_STORAGE_KEY, token);
+  } catch {
+    // 保存できない端末では、送り直しが新しい1件になるだけ
+  }
+}
+
 export function formatYen(yen: number): string {
   return `${yen.toLocaleString("ja-JP")}円`;
 }
