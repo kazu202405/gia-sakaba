@@ -16,7 +16,7 @@ import { PageTitle, Window } from "@/components/guild/cards";
 import { FeedbackButton } from "@/components/guild/feedback-button";
 import { canSendMealWish, resolveSakabaAccessPlan, resolveSakabaPlan } from "@/lib/guild/billing-plans";
 import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
-import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, getMyProfileDraft, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "マイページ" };
 
@@ -25,6 +25,8 @@ export default async function MyPage() {
     getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(), getMyGuildBilling(),
   ]);
   const introductions = await listGuildMemberIntroductions(me.id);
+  // 届いているステータスの下書き（読めなかったときは何も出さない。ステータスの編集は普段どおり使える）
+  const profileDraft = await getMyProfileDraft();
   // 自分の入会のつながり（根っこ → … → あなた）と、名前を出さない設定
   const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: me.id });
   const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
@@ -41,6 +43,10 @@ export default async function MyPage() {
 
   return <div className="space-y-9">
     <PageTitle title="マイページ" lead="自分のステータスと、酒場で進めていることを確認できます。" />
+    {profileDraft.ok && profileDraft.draft && <Window title="ステータスの下書きが届いています">
+      <p className="text-sm leading-relaxed">{profileDraft.draft.drafted_by_name}さんが、あなたのステータスの下書きを書きました。載せるまで、ほかのメンバーには見えません。</p>
+      <p className="mt-4"><Link href="/guild/me/status/draft" className="rpg-button inline-flex h-11 items-center px-5 text-sm">▶ 下書きを見る</Link></p>
+    </Window>}
     <Window title={context.guild.terms.status}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
         <JobAvatar icon={me.job_icon} photoUrl={me.photo_url} name={me.job || me.display_name} size="lg" />

@@ -16,7 +16,7 @@ import { listMealWishes } from "@/lib/guild/meal-wishes-server";
 import { listMealAvailability } from "@/lib/guild/meal-availability-server";
 import { formatScheduleShort, toJstInputValue } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
-import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listMasterIntroductions, listPendingGatheringApplications, listPendingMembers, listPreparedInvites } from "@/lib/guild/server-data";
+import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listInviteProfileDrafts, listMasterIntroductions, listPendingGatheringApplications, listPendingMembers, listPreparedInvites } from "@/lib/guild/server-data";
 
 export const metadata: Metadata = { title: "管理者" };
 
@@ -27,12 +27,14 @@ export default async function MasterPage() {
   const introductionsEnabled = process.env.SAKABA_MASTER_INTRO_ENABLED === "true";
   // 参加の申請（役職「その他」・0126）は、承認できるオーナーにだけ出す
   const isOwner = context.membership.role === "owner";
-  const [pendingGatherings, invites, network, preparedInvites, introductions, introductionMembers, pendingMembers] = await Promise.all([
+  const [pendingGatherings, invites, network, preparedInvites, introductions, introductionMembers, pendingMembers, inviteProfileDrafts] = await Promise.all([
     listPendingGatheringApplications(), listGuildMasterInvites(), listGuildInviteNetwork(),
     preparedEnabled ? listPreparedInvites() : Promise.resolve([]),
     introductionsEnabled ? listMasterIntroductions() : Promise.resolve([]),
     introductionsEnabled ? listGuildMembers() : Promise.resolve([]),
     isOwner ? listPendingMembers() : Promise.resolve([]),
+    // 入会前のステータスの下書き（0130）。読めなかったとき（未適用など）は null で、入力欄を出さない
+    preparedEnabled ? listInviteProfileDrafts() : Promise.resolve([]),
   ]);
   const diningEnabled = process.env.SAKABA_880_ENABLED === "true";
   const mealWishes = diningEnabled ? await listMealWishes(context.guild.id) : [];
@@ -180,7 +182,7 @@ export default async function MasterPage() {
       </section>
       {preparedEnabled && <section aria-labelledby="master-prepared-title" className="space-y-4 border-t-2 border-dashed border-[#1b2a41]/25 pt-8">
         <h2 id="master-prepared-title" className="text-xl tracking-wider">メンバーの仮登録</h2>
-        <LivePreparedInvites initial={preparedInvites} />
+        <LivePreparedInvites initial={preparedInvites} initialDrafts={inviteProfileDrafts} />
       </section>}
       <section aria-labelledby="master-network-title" className="space-y-4 border-t-2 border-dashed border-[#1b2a41]/25 pt-8">
         <h2 id="master-network-title" className="text-xl tracking-wider">招待のつながり</h2>

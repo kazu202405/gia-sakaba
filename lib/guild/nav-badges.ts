@@ -27,6 +27,9 @@ const BADGE_OF_KIND: Record<NotificationKind, NavBadgeKey | null> = {
   consult_request: "master",
   feedback_report: "master",
   member_pending: "master",
+  profile_draft_waiting: "guild",
+  profile_draft_applied: "guild",
+  profile_draft_declined: "guild",
 };
 
 export function countNavBadges(items: GuildNotification[]): NavBadges {

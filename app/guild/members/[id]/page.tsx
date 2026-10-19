@@ -7,6 +7,7 @@ import { LiveMemberIntroductions } from "@/components/guild/live-member-introduc
 import { InvitePathWindow } from "@/components/guild/invite-path";
 import { BusinessCardView } from "@/components/guild/business-card-view";
 import { MemberShareUrl } from "@/components/guild/member-share-url";
+import { LiveMemberProfileDraft } from "@/components/guild/live-member-profile-draft";
 import { ContactItemsView } from "@/components/guild/contact-items-view";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { parseContactItemsMap } from "@/lib/guild/contact-items";
@@ -15,7 +16,7 @@ import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
 import { groupLabel, positionLabel } from "@/lib/guild/labels";
-import { getAuthenticatedUserId, getGuildContext, getMyPlanUsage, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
+import { getAuthenticatedUserId, getGuildContext, getMemberProfileDraft, getMyPlanUsage, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 
 type Props = { params: Promise<{ id: string }> };
@@ -36,6 +37,9 @@ export default async function MemberStatusPage({ params }: Props) {
   if (!p) notFound();
 
   const isMe = p.id === currentUserId;
+  // ステータスの下書き（0130）：オーナー・マスターが、自分以外のメンバーに書いて届ける
+  const canDraftStatus = !isMe && (context.membership.role === "owner" || context.membership.role === "master");
+  const memberDraft = canDraftStatus ? await getMemberProfileDraft(p.id) : null;
   // 入会のつながり（あなた → … → この方）
   const supabase = await createClient();
   const invitePathResult = await supabase.rpc("sakaba_get_invite_path", { p_target_id: p.id });
@@ -118,6 +122,10 @@ export default async function MemberStatusPage({ params }: Props) {
           { group: "connect", label: "さがしているもの・であいたい人", value: p.looking_for },
         ]}
       />
+
+      {memberDraft && (memberDraft.ok
+        ? <LiveMemberProfileDraft key={memberDraft.draft?.id ?? "none"} memberId={p.id} memberName={p.display_name} initial={memberDraft.draft} />
+        : <Window title="ステータスの下書き"><p className="text-sm">下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>)}
 
       <BusinessCardView card={card} urls={cardUrls} isMe={isMe} />
 
