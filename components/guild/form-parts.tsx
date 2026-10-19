@@ -15,12 +15,15 @@ export function Field({
   label,
   hint,
   required = false,
+  optional = false,
   error,
   children,
 }: {
   label: string;
   hint?: string;
   required?: boolean;
+  // 書かなくても進める項目に「任意」と出す（入力が多く見えて止まらないように）
+  optional?: boolean;
   error?: string;
   children: React.ReactNode;
 }) {
@@ -30,6 +33,7 @@ export function Field({
       <p className="guild-px text-[15px] tracking-wider">
         {label}
         {required && <span className="ml-1.5 text-xs text-[#c62828]">必須</span>}
+        {optional && !required && <span className="c-muted ml-1.5 text-xs">任意</span>}
       </p>
       {hint && <p className="c-muted mt-0.5 text-xs">{hint}</p>}
       <div className="mt-2">{children}</div>

@@ -178,7 +178,7 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
 
   return <div className="mx-auto max-w-2xl space-y-7">
     <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
-    <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="c-muted mt-2 text-sm">入力が止まってから約2秒で自動保存します。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
+    <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="mt-2 text-sm">必須は「おなまえ」と「かいしゃ」だけです。ほかは書きたいところだけで大丈夫です。あとからいつでも書き足せます。</p><p className="c-muted mt-1 text-sm">入力が止まってから約2秒で自動保存します。途中でやめても、書いたところまで残ります。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
     <form onSubmit={saveAndLeave} className="space-y-7">
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">きほん</span>
@@ -194,14 +194,14 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
         </div>
         {photoError && <p role="alert" className="text-sm text-[#c62828]">{photoError}</p>}
         <Field label="おなまえ" required><TextInput value={draft.display_name} onChange={(value) => set("display_name", value)} max={30} label="おなまえ" /></Field>
-        <Field label="ふりがな" hint="任意。名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
-        <Field label="ひとこと"><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
+        <Field label="ふりがな" optional hint="名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
+        <Field label="ひとこと" optional><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
         <div className="grid gap-5 sm:grid-cols-2 sm:items-end">
-          <Field label="業種" hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>
-          <Field label="地域"><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>
+          <Field label="業種" optional hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>
+          <Field label="地域" optional><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>
         </div>
-        <Field label="職業" hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
-        <Field label="プロフィールのアイコン" hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
+        <Field label="職業" optional hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
+        <Field label="プロフィールのアイコン" optional hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
           <button type="button" aria-expanded={iconPickerOpen} aria-controls="profile-icon-options" onClick={() => setIconPickerOpen((open) => !open)} className="c-input flex min-h-16 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41]">
             <JobAvatar icon={draft.job_icon} name={jobIconLabel[draft.job_icon]} size="sm" />
             <span className="flex-1 text-sm">{jobIconLabel[draft.job_icon]}</span>
@@ -219,7 +219,7 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
           </div>}
         </Field>
         <Field label="かいしゃ" required><TextInput value={draft.company_name} onChange={(value) => set("company_name", value)} max={60} label="かいしゃ" /></Field>
-        <Field label="役職"><Select value={draft.position} onChange={(value) => set("position", value as Position)} label="役職" options={(Object.keys(positionLabel) as Position[]).map((key) => ({ value: key, label: positionLabel[key] }))} /></Field>
+        <Field label="役職" optional><Select value={draft.position} onChange={(value) => set("position", value as Position)} label="役職" options={(Object.keys(positionLabel) as Position[]).map((key) => ({ value: key, label: positionLabel[key] }))} /></Field>
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>会社名と役職を名鑑に表示する</CheckBox>
       </section>
 
@@ -231,32 +231,32 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
         </summary>
         <div className="mt-5 space-y-5">
           <p className="c-muted text-xs">書きたい項目だけで大丈夫です。入力した内容はギルドのメンバーに表示されます。</p>
-          <Field label="しゅっしんち" hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
-          <Field label="たんじょうび" hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
+          <Field label="しゅっしんち" optional hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
+          <Field label="たんじょうび" optional hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="col-span-2 sm:col-span-1"><span className="c-muted mb-1 block text-xs">生年（任意）</span><Select value={draft.birth_year?.toString() ?? ""} onChange={(value) => set("birth_year", value ? Number(value) : null)} label="生まれた年" placeholder="未設定" options={Array.from({ length: currentYear - 1899 }, (_, index) => ({ value: String(currentYear - index), label: `${currentYear - index}年` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">月</span><Select value={draft.birth_month?.toString() ?? ""} onChange={(value) => { set("birth_month", value ? Number(value) : null); if (!value) { set("birth_day", null); set("birth_year", null); } }} label="誕生月" placeholder="未設定" options={Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}月` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">日</span><Select value={draft.birth_day?.toString() ?? ""} onChange={(value) => { set("birth_day", value ? Number(value) : null); if (!value) { set("birth_month", null); set("birth_year", null); } }} label="誕生日" placeholder="未設定" options={Array.from({ length: 31 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}日` }))} /></label>
             </div>
           </Field>
-          <Field label="しゅみ・すきなこと"><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
-          <Field label="これまでの あゆみ" hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
+          <Field label="しゅみ・すきなこと" optional><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
+          <Field label="これまでの あゆみ" optional hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
         </div>
       </details>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">しごと</span>
-        <Field label="仕事内容・できること" hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
+        <Field label="仕事内容・できること" optional hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">おもい</span>
-        <Field label="自由に書いてください" hint="だいじにしていること、これからしようとしていること、とりくんでいる社会課題など"><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={1200} rows={6} label="おもい" /></Field>
+        <Field label="自由に書いてください" optional hint="だいじにしていること、これからしようとしていること、とりくんでいる社会課題など"><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={1200} rows={6} label="おもい" /></Field>
       </section>
 
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">つながり</span>
-        <Field label="さがしているもの・であいたい人" hint="仕事、情報、協力してほしいこと、話してみたい人などを自由に書けます"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={1200} rows={6} label="さがしているもの・であいたい人" /></Field>
+        <Field label="さがしているもの・であいたい人" optional hint="仕事、情報、協力してほしいこと、話してみたい人などを自由に書けます"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={1200} rows={6} label="さがしているもの・であいたい人" /></Field>
       </section>
 
       {contactEditor}
