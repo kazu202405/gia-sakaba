@@ -21,6 +21,7 @@ describe("sceneArtOf（画面ごとの背景の絵）", () => {
       ["/guild/projects/abc/edit", "projects"],
       ["/guild/me", "me"],
       ["/guild/me/status", "me"],
+      ["/guild/me/status/draft", "me"],
       ["/guild/notifications", "me"],
       ["/guild/plan", "me"],
     ];

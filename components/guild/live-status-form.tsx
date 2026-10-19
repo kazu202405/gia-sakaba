@@ -6,6 +6,7 @@ import type { MyGuildProfile } from "@/lib/guild/server-data";
 import type { JobIconKey, Position } from "@/lib/guild/types";
 import { jobIconLabel, positionLabel } from "@/lib/guild/labels";
 import { isValidBirthday } from "@/lib/guild/birthday";
+import { draftFieldLabel, type DraftField } from "@/lib/guild/profile-drafts";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
@@ -63,7 +64,12 @@ async function persist({ draft }: Snapshot) {
 }
 
 // contactEditor：連絡先の窓（別に自動保存する。置き場所だけここ）
-export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildProfile; contactEditor?: React.ReactNode }) {
+// profileDraft：届いたステータスの下書きを入れて開いたとき（0130）。自動保存はせず、「保存して載せる」を押したときだけ保存して、下書きを済みにする
+export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
+  initial: MyGuildProfile;
+  contactEditor?: React.ReactNode;
+  profileDraft?: { id: string; from: string; skipped: DraftField[] };
+}) {
   const router = useGuildRouter();
   const currentYear = new Date().getUTCFullYear();
   const [draft, setDraft] = useState(initial);
@@ -78,7 +84,8 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
   const latestRef = useRef<Snapshot>({ draft: initial });
-  const lastSavedRef = useRef(JSON.stringify({ draft: initial }));
+  // 下書きを入れて開いたときは、まだ何も保存していない扱い（入れた内容を、本人が保存を押したときに必ず保存する）
+  const lastSavedRef = useRef(profileDraft ? "" : JSON.stringify({ draft: initial }));
   const queueRef = useRef<Promise<boolean>>(Promise.resolve(true));
 
   const saveCurrent = useCallback((mode: "auto" | "manual"): Promise<boolean> => {
@@ -111,10 +118,11 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
 
   useEffect(() => {
     latestRef.current = { draft };
+    if (profileDraft) return;
     if (JSON.stringify(latestRef.current) === lastSavedRef.current) return;
     const timer = window.setTimeout(() => { void saveCurrent("auto"); }, 1800);
     return () => window.clearTimeout(timer);
-  }, [draft, retryToken, saveCurrent]);
+  }, [draft, retryToken, saveCurrent, profileDraft]);
   const set = <K extends keyof MyGuildProfile>(key: K, value: MyGuildProfile[K]) => {
     const next = { ...latestRef.current.draft, [key]: value };
     latestRef.current = { draft: next };
@@ -127,8 +135,25 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
     if (leaving || photoUploading) return;
     setLeaving(true);
     const saved = await saveCurrent("manual");
-    if (saved) { router.push("/guild/me"); router.refresh(); }
-    else setLeaving(false);
+    if (!saved) { setLeaving(false); return; }
+    if (profileDraft) {
+      // 保存できたら、下書きを「載せた」にする（載せる入口は sakaba_decide_my_profile_draft の1か所）
+      const { error: decideError } = await createClient().rpc("sakaba_decide_my_profile_draft", { p_draft_id: profileDraft.id, p_decision: "edited" });
+      if (decideError) {
+        setError("保存はできましたが、下書きを「載せた」にできませんでした。もう一度「保存して載せる」を押してください。");
+        setLeaving(false);
+        return;
+      }
+      uiToast("ステータスに載せました");
+    }
+    router.push("/guild/me"); router.refresh();
+  }
+
+  /** 下書きから来たときの「戻る」。保存はしない（載せるのは、保存を押したときだけ） */
+  function leaveWithoutSaving() {
+    if (leaving) return;
+    setLeaving(true);
+    router.push("/guild/me/status/draft");
   }
 
   function closeCropper() {
@@ -167,7 +192,8 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("profile-photos").getPublicUrl(path);
       set("photo_url", `${data.publicUrl}?v=${Date.now()}`);
-      const saved = await saveCurrent("manual");
+      // 下書きを入れて開いているときは、ここでは保存しない（「保存して載せる」を押すまで載せない）
+      const saved = profileDraft ? true : await saveCurrent("manual");
       if (!saved) setPhotoError("写真は追加できましたが、プロフィールを保存できませんでした。保存して戻るを押して再試行してください。");
     } catch {
       setPhotoError("写真をアップロードできませんでした。もう一度お試しください。");
@@ -177,8 +203,13 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
   }
 
   return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">◀ マイページへ戻る</button>
-    <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="mt-2 text-sm">必須は「おなまえ」と「かいしゃ」だけです。ほかは書きたいところだけで大丈夫です。あとからいつでも書き足せます。</p><p className="c-muted mt-1 text-sm">入力が止まってから約2秒で自動保存します。途中でやめても、書いたところまで残ります。</p><p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
+    <button type="button" onClick={() => profileDraft ? leaveWithoutSaving() : void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">{profileDraft ? "◀ 下書きの画面へ戻る（保存しません）" : "◀ マイページへ戻る"}</button>
+    <div><h1 className="text-2xl tracking-[0.12em]">▶ ステータスをなおす</h1><p className="mt-2 text-sm">必須は「おなまえ」と「かいしゃ」だけです。ほかは書きたいところだけで大丈夫です。あとからいつでも書き足せます。</p>{profileDraft
+      ? <div className="c-card mt-3 space-y-1 px-4 py-3 text-sm leading-relaxed">
+        <p>{profileDraft.from}さんが書いた下書きを入れてあります。直したいところは直してください。<strong>下の「保存して載せる」を押すまで、ステータスには載りません。</strong>この画面では自動保存しません。</p>
+        {profileDraft.skipped.length > 0 && <p className="c-muted text-xs">すでに書いてあるので、下書きを入れていない項目：{profileDraft.skipped.map((key) => draftFieldLabel[key]).join("・")}</p>}
+      </div>
+      : <p className="c-muted mt-1 text-sm">入力が止まってから約2秒で自動保存します。途中でやめても、書いたところまで残ります。</p>}<p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
     <form onSubmit={saveAndLeave} className="space-y-7">
       <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">きほん</span>
@@ -262,7 +293,7 @@ export function LiveStatusForm({ initial, contactEditor }: { initial: MyGuildPro
       {contactEditor}
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || photoUploading ? "保存を確認中…" : "▶ 保存して戻る"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || photoUploading ? (profileDraft ? "載せています…" : "保存を確認中…") : profileDraft ? "▶ 保存して載せる" : "▶ 保存して戻る"}</button></div>
     </form>
     <ImageCropDialog open={cropSrc !== null} src={cropSrc} onCancel={closeCropper} onConfirm={(blob) => void uploadPhoto(blob)} />
   </div>;

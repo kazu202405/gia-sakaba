@@ -120,6 +120,15 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       return { text: `${n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー"}さんが 入会しました`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
     case "member_pending":
       return { text: "参加の申請が 届きました", href: "/guild/master#master-pending-members-title" };
+    case "profile_draft_waiting":
+      return {
+        text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんが ` : ""}あなたのステータスの 下書きを 書きました。見て、載せるか選んでください`,
+        href: "/guild/me/status/draft",
+      };
+    case "profile_draft_applied":
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんが、書いた下書きを ステータスに載せました`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
+    case "profile_draft_declined":
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんは、書いた下書きを 今回は載せませんでした`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };

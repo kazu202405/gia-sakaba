@@ -313,7 +313,12 @@ export type NotificationKind =
   /** 新しいメンバーが入会した（オーナーあて・0124）。役職「その他」の人は、承認した時点で出る（0126） */
   | "member_joined"
   /** 役職「その他」で参加の申請が届いた（オーナーあて・0126） */
-  | "member_pending";
+  | "member_pending"
+  /** ステータスの下書きが届いた（本人あて・0130）。見て「載せる／なおして載せる／いらない」を選ぶ */
+  | "profile_draft_waiting"
+  /** 本人が下書きをステータスに載せた／いらないと選んだ（書いたオーナー・マスターあて・0130） */
+  | "profile_draft_applied"
+  | "profile_draft_declined";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。

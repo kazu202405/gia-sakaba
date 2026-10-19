@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Guild, GuildNotification, IntroRequest, Position, Profile, Project, ProjectContact, ProjectStep, ProjectTask, Quest, QuestApplication, StepRecord } from "@/lib/guild/types";
 import type { MasterPreparedInvite } from "@/lib/guild/prepared-invites";
+import { parseInviteProfileDrafts, parseMemberProfileDraft, parseMyProfileDraft, type InviteProfileDraft, type MemberProfileDraft, type MyProfileDraft } from "@/lib/guild/profile-drafts";
 import type { MasterIntroduction } from "@/lib/guild/master-introductions";
 import { parsePlanUsage, type PlanUsage } from "@/lib/guild/plan-usage";
 import { applyProjectOrder, parseProjectOrder } from "@/lib/guild/project-order";
@@ -223,6 +224,30 @@ export async function listPreparedInvites(): Promise<MasterPreparedInvite[]> {
   const { data, error } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: "gia" });
   if (error) throw rpcError("仮登録の招待状を取得できませんでした", error.message);
   return Array.isArray(data) ? data as MasterPreparedInvite[] : [];
+}
+
+/**
+ * ステータスの下書き（0130）。読めなかったとき（0130が未適用など）は ok:false。
+ * 「下書きが無い」と区別する（読めないのを「無い」と見せない）。
+ */
+export async function getMyProfileDraft(): Promise<{ ok: true; draft: MyProfileDraft | null } | { ok: false }> {
+  const { data, error } = await (await createClient()).rpc("sakaba_get_my_profile_draft", { p_guild_slug: "gia" });
+  if (error) { console.warn("[guild] ステータスの下書きを読めませんでした", error.message); return { ok: false }; }
+  return { ok: true, draft: parseMyProfileDraft(data) };
+}
+
+/** 書いたオーナー・マスターが、その人あての下書きを読む */
+export async function getMemberProfileDraft(memberId: string): Promise<{ ok: true; draft: MemberProfileDraft | null } | { ok: false }> {
+  const { data, error } = await (await createClient()).rpc("sakaba_get_member_profile_draft", { p_guild_slug: "gia", p_member_id: memberId });
+  if (error) { console.warn("[guild] 書いた下書きを読めませんでした", error.message); return { ok: false }; }
+  return { ok: true, draft: parseMemberProfileDraft(data) };
+}
+
+/** 入会前（招待状にひもづく）の、自分が書いた下書き。読めなかったときは null */
+export async function listInviteProfileDrafts(): Promise<InviteProfileDraft[] | null> {
+  const { data, error } = await (await createClient()).rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: "gia" });
+  if (error) { console.warn("[guild] 入会前の下書きを読めませんでした", error.message); return null; }
+  return parseInviteProfileDrafts(data);
 }
 
 export async function listMasterIntroductions(): Promise<MasterIntroduction[]> {

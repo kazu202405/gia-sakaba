@@ -6,6 +6,8 @@ import { Window } from "./cards";
 import { createClient } from "@/lib/supabase/client";
 import { formatDate, positionLabel } from "@/lib/guild/labels";
 import { PREPARED_INTRODUCTION_MAX, validatePreparedInvite, type MasterPreparedInvite, type PreparedInvite } from "@/lib/guild/prepared-invites";
+import { countDraftFields, draftHasContent, draftRpcArgs, emptyDraftFields, parseInviteProfileDrafts, pickDraftFields, validateProfileDraft, type InviteProfileDraft, type ProfileDraftFields } from "@/lib/guild/profile-drafts";
+import { ProfileDraftInputs } from "./profile-draft-fields";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import type { Position } from "@/lib/guild/types";
 
@@ -22,9 +24,12 @@ function inviteStatus(invite: MasterPreparedInvite) {
   return "招待中";
 }
 
-export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite[] }) {
+// initialDrafts：入会前のステータスの下書き（0130）。null は読めなかったとき（未適用など）で、その入力欄は出さない
+export function LivePreparedInvites({ initial, initialDrafts }: { initial: MasterPreparedInvite[]; initialDrafts: InviteProfileDraft[] | null }) {
   const router = useGuildRouter();
   const [draft, setDraft] = useState<PreparedInvite>(emptyDraft);
+  const [statusDrafts, setStatusDrafts] = useState(initialDrafts);
+  const [statusDraft, setStatusDraft] = useState<ProfileDraftFields>(emptyDraftFields);
   const [invites, setInvites] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -36,6 +41,8 @@ export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite
     if (pending) return;
     const validation = validatePreparedInvite(draft);
     if (validation) { setError(validation); return; }
+    const statusValidation = statusDrafts ? validateProfileDraft(statusDraft) : null;
+    if (statusValidation) { setError(statusValidation); return; }
     setPending(editingId ?? "create"); setError(""); setNewUrl("");
     try {
       const supabase = createClient();
@@ -50,10 +57,30 @@ export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite
         : await supabase.rpc("sakaba_create_prepared_invite", { p_guild_slug: "gia", ...fields });
       if (saveError || (!editingId && !data?.code)) throw saveError ?? new Error("招待状を保存できませんでした");
       if (!editingId) setNewUrl(inviteUrl(data.code));
+      // ステータスの下書き：招待状ができてから、同じ招待状にひもづけて保存する。
+      // 編集のときは全部空でも送る（空にして保存すると、待っている下書きを取り下げる）
+      const inviteId = editingId ?? (data as { id: string }).id;
+      let statusDraftFailed = false;
+      if (statusDrafts && (editingId || draftHasContent(statusDraft))) {
+        const { error: draftError } = await supabase.rpc("sakaba_save_invite_profile_draft", { p_invite_id: inviteId, ...draftRpcArgs(statusDraft) });
+        if (draftError) statusDraftFailed = true;
+        else {
+          const { data: draftList, error: draftListError } = await supabase.rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: "gia" });
+          if (!draftListError) setStatusDrafts(parseInviteProfileDrafts(draftList));
+        }
+      }
       const { data: list, error: listError } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: "gia" });
       if (listError) setError("保存しましたが一覧を更新できませんでした。画面を読み直してください。");
       else setInvites(Array.isArray(list) ? list as MasterPreparedInvite[] : []);
+      if (statusDraftFailed) {
+        // 招待状はできている。下書きだけ保存し直せるよう、この招待状の編集に切り替えて入力を残す
+        setEditingId(inviteId);
+        setError("招待状は保存しましたが、ステータスの下書きを保存できませんでした。そのまま「下書きを保存する」を押すと、もう一度保存します。");
+        router.refresh();
+        return;
+      }
       setDraft(emptyDraft);
+      setStatusDraft(emptyDraftFields);
       setEditingId(null);
       uiToast(editingId ? "招待状の下書きを更新しました" : "仮登録の招待状を作成しました");
       router.refresh();
@@ -98,6 +125,8 @@ export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite
   function edit(invite: MasterPreparedInvite) {
     setEditingId(invite.id);
     setDraft({ display_name: invite.display_name, company_name: invite.company_name, position: invite.position, introduction: invite.introduction });
+    const savedStatusDraft = statusDrafts?.find((item) => item.invite_id === invite.id);
+    setStatusDraft(savedStatusDraft ? pickDraftFields(savedStatusDraft) : emptyDraftFields);
     setError(""); setNewUrl("");
     document.getElementById("prepared-invite-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -124,10 +153,19 @@ export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite
         <textarea className="c-input mt-1 min-h-28 resize-y p-3" value={draft.introduction} onChange={(event) => setDraft({ ...draft, introduction: event.target.value })} maxLength={PREPARED_INTRODUCTION_MAX} placeholder="一緒に仕事をしていなくても、人柄や話してみて感じた魅力などを。" />
         <span className="c-muted mt-1 block text-xs">{draft.introduction.length} / {PREPARED_INTRODUCTION_MAX}字。本人が掲載に同意したときだけ紹介状になります。</span>
       </label>
+      {statusDrafts ? <details className="c-card p-4" open={draftHasContent(statusDraft)}>
+        <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-sm">
+          <span>▶ ステータスの下書きを書く</span><span className="c-muted text-xs">任意</span>
+        </summary>
+        <div className="mt-4 space-y-4">
+          <p className="c-muted text-xs leading-relaxed">仕事内容などを、本人の代わりに下書きできます。入会したあと、本人が見て「載せる」を選ぶまで、誰にも見えません。本人が書いた項目は上書きしません。</p>
+          <ProfileDraftInputs value={statusDraft} onChange={(next) => { setStatusDraft(next); setError(""); }} />
+        </div>
+      </details> : <p className="c-muted text-xs">ステータスの下書きを読み込めませんでした（migration 0130 が適用済みか確認してください）。招待状は作れます。</p>}
       <p className="c-muted text-xs">メールアドレスやパスワードは本人が入力します。招待状は1人用・30日間有効です。</p>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
       <div className="flex flex-wrap gap-2"><button type="submit" disabled={pending !== null} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : editingId ? "▶ 下書きを保存する" : "▶ 仮登録の招待状を作る"}</button>
-        {editingId && <button type="button" disabled={pending !== null} onClick={() => { setEditingId(null); setDraft(emptyDraft); setError(""); }} className="c-button-sub min-h-11 px-4 text-sm">編集をやめる</button>}
+        {editingId && <button type="button" disabled={pending !== null} onClick={() => { setEditingId(null); setDraft(emptyDraft); setStatusDraft(emptyDraftFields); setError(""); }} className="c-button-sub min-h-11 px-4 text-sm">編集をやめる</button>}
       </div>
     </form>
     {newUrl && <div role="status" className="c-card mt-5 p-4"><p className="mb-2 text-sm">招待状ができました。このURLを本人へ渡してください。</p><input className="c-input w-full text-xs" readOnly value={newUrl} onFocus={(event) => event.target.select()} /></div>}
@@ -139,6 +177,10 @@ export function LivePreparedInvites({ initial }: { initial: MasterPreparedInvite
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="break-words text-sm">{invite.display_name} <span className="c-muted">{invite.company_name && `・${invite.company_name}`}</span></p><span className="c-chip text-xs">{status}</span></div>
           <p className="c-muted mt-1 text-xs">{formatDate(invite.created_at)} 作成{invite.expires_at && ` ・ ${formatDate(invite.expires_at)}まで`}</p>
           {invite.introduction && <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{invite.introduction}</p>}
+          {status === "招待中" && (() => {
+            const saved = statusDrafts?.find((item) => item.invite_id === invite.id);
+            return saved && draftHasContent(saved) ? <p className="c-muted mt-2 text-xs">ステータスの下書きあり（{countDraftFields(saved)}項目）。入会後に本人が見て選びます。</p> : null;
+          })()}
           {status === "招待中" && <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void copy(invite.code)} className="c-button-sub min-h-10 px-4 text-sm">リンクをコピー</button><button type="button" disabled={pending !== null} onClick={() => edit(invite)} className="c-button-sub min-h-10 px-4 text-sm">下書きを直す</button><button type="button" disabled={pending !== null} onClick={() => void revoke(invite)} className="c-button-sub min-h-10 px-4 text-sm disabled:opacity-50">{pending === invite.id ? "無効化中…" : "無効にする"}</button></div>}
         </li>;
       })}</ul>}
