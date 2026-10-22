@@ -14,9 +14,11 @@ export const dynamic = "force-dynamic";
 export default async function GuildEntryPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
   const supabase = await createClient();
+  let readFailed = false;
   for (const slug of STORE_SLUGS) {
     const { data, error } = await supabase.rpc("sakaba_get_my_gate_status", { p_guild_slug: slug });
     // 'none'＝その店の会員ではない。読めなかったとき（error）は次の店を見る
+    if (error) readFailed = true;
     if (!error && typeof data === "string" && data !== "none") {
       const qs = new URLSearchParams();
       for (const [key, value] of Object.entries(query)) {
@@ -25,5 +27,7 @@ export default async function GuildEntryPage({ searchParams }: { searchParams: P
       redirect(`${guildPath(slug)}${qs.size ? `?${qs}` : ""}`);
     }
   }
+  // 読めなかった店があるのに「会員ではありません」と出すと、会員を締め出したように見える。エラー画面に任せる
+  if (readFailed) throw new Error("酒場の会員情報を読み込めませんでした");
   return <NotMemberNotice storeName="酒場" showEntryLink={false} />;
 }
