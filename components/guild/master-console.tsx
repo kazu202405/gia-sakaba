@@ -12,6 +12,7 @@ import { getProfile, getQuest, listMembers } from "@/lib/guild/mock-data";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { JobAvatar } from "./job-avatar";
 import { cn } from "@/lib/utils";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type GroupKey = "inbox" | "proposed" | "connected" | "closed";
 
@@ -112,6 +113,7 @@ function RequestRow({
   onUpdate: (patch: Partial<IntroRequest>) => void;
   onRedirect: (newTargetId: string) => void;
 }) {
+  const store = useGuildStore();
   const requester = getProfile(r.requester_id);
   const target = getProfile(r.target_id);
   const quest = r.quest_id ? getQuest(r.quest_id) : undefined;
@@ -183,14 +185,14 @@ function RequestRow({
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
         <span className="c-chip">{purposeLabel[r.purpose]}</span>
         {quest && (
-          <Link href={`/guild/quests/${quest.id}`} className="c-muted break-all underline underline-offset-4">
+          <Link href={store.path(`/quests/${quest.id}`)} className="c-muted break-all underline underline-offset-4">
             クエスト：{quest.title}
           </Link>
         )}
       </div>
 
       {r.message && (
-        <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 bg-[#f3ecd9]/60 px-3 py-2 text-sm leading-relaxed break-words">
+        <p className="mt-3 border-2 border-dashed border-guild-ink/30 bg-guild-bg/60 px-3 py-2 text-sm leading-relaxed break-words">
           {r.message}
         </p>
       )}
@@ -220,7 +222,7 @@ function RequestRow({
         )}
 
         {isInbox && choosing && (
-          <div className="border-2 border-[#1b2a41] p-3">
+          <div className="border-2 border-guild-ink p-3">
             <p className="c-muted text-xs">
               {requester.display_name}さんに、{target.display_name}さんの代わりに提案する人
             </p>
@@ -326,10 +328,11 @@ function RequestRow({
 }
 
 function PersonChip({ id }: { id: string }) {
+  const store = useGuildStore();
   const p = getProfile(id);
   if (!p) return null;
   return (
-    <Link href={`/guild/members/${p.id}`} className="flex min-w-0 flex-1 items-center gap-2 hover:underline">
+    <Link href={store.path(`/members/${p.id}`)} className="flex min-w-0 flex-1 items-center gap-2 hover:underline">
       <JobAvatar icon={p.job_icon} photoUrl={p.photo_url} name={p.job} size="sm" />
       <span className="min-w-0">
         <span className="block truncate text-sm">{p.display_name}</span>

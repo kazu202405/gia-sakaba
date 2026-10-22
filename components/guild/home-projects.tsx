@@ -11,10 +11,12 @@ import { getInitialProjectState, getProjectState, subscribeProjects } from "@/li
 import { dueLabel, upcomingItems, visibleProjects, type UpcomingItem } from "@/lib/guild/projects";
 import { MoreLink, Window } from "./cards";
 import { ProjectRow, TaskLine } from "./project-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const UPCOMING_DAYS = 7;
 
 export function HomeProjects() {
+  const store = useGuildStore();
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const active = visibleProjects(state.projects, ME_ID).filter((p) => p.status === "active");
   const upcoming = upcomingItems(state, ME_ID, TODAY, UPCOMING_DAYS);
@@ -25,11 +27,11 @@ export function HomeProjects() {
 
   return (
     <div className="grid gap-11 md:grid-cols-2">
-      <Window title="すすめている プロジェクト" action={<MoreLink href="/guild/projects" />} className="order-2 md:order-1">
+      <Window title="すすめている プロジェクト" action={<MoreLink href={store.path("/projects")} />} className="order-2 md:order-1">
         {active.length === 0 ? (
           <p className="c-muted text-sm leading-relaxed">
             すすめている プロジェクトは ありません。
-            <Link href="/guild/projects/new" className="ml-1 underline underline-offset-4">
+            <Link href={store.path("/projects/new")} className="ml-1 underline underline-offset-4">
               プロジェクトを つくる
             </Link>
           </p>
@@ -52,7 +54,7 @@ export function HomeProjects() {
             {tasks.length > 0 && (
               <div>
                 <p className="c-label text-xs">タスク（□を押すと おわり）</p>
-                <ul className="mt-1 divide-y-2 divide-dashed divide-[#1b2a41]/15">
+                <ul className="mt-1 divide-y-2 divide-dashed divide-guild-ink/15">
                   {tasks.map((item) => (
                     <li key={item.task.id}>
                       <TaskLine
@@ -68,7 +70,7 @@ export function HomeProjects() {
             {steps.length > 0 && (
               <div className={tasks.length > 0 ? "c-dashed-top pt-4" : undefined}>
                 <p className="c-label text-xs">あいてごとの よてい（押すと ひらく）</p>
-                <ul className="mt-1 divide-y-2 divide-dashed divide-[#1b2a41]/15">
+                <ul className="mt-1 divide-y-2 divide-dashed divide-guild-ink/15">
                   {steps.map((item) => (
                     <li key={`${item.contact.id}-${item.step.id}`}>
                       <StepLine item={item} />
@@ -86,9 +88,10 @@ export function HomeProjects() {
 
 /** あいてごとの じょうきょうの予定。完了は ます目で入れるので、押すとプロジェクトへ移る */
 function StepLine({ item }: { item: Extract<UpcomingItem, { kind: "step" }> }) {
+  const store = useGuildStore();
   const due = dueLabel(item.date, TODAY);
   return (
-    <Link href={`/guild/projects/${item.project.id}#people`} className="rpg-cursor-row flex items-start gap-3 py-2.5">
+    <Link href={store.path(`/projects/${item.project.id}#people`)} className="rpg-cursor-row flex items-start gap-3 py-2.5">
       {/* ここでは おわりにできないので、□ではなく 移動の目印（▶）にする */}
       <span className="rpg-cursor mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center text-sm">▶</span>
       <span className="min-w-0 flex-1">

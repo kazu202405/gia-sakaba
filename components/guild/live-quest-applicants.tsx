@@ -8,6 +8,7 @@ import type { Profile } from "@/lib/guild/types";
 import { formatDate, introStatusLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveQuestApplicants({ questId, questTerm, applicants, members, canChoose }: {
   questId: string;
@@ -16,6 +17,7 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
   members: Profile[];
   canChoose: boolean;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [sent, setSent] = useState<string[]>([]);
@@ -58,14 +60,14 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
         return <article key={applicant.user_id} className="c-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              {member ? <Link href={`/guild/members/${member.id}`} className="text-base underline underline-offset-2">{name}</Link> : <span className="text-base">{name}</span>}
+              {member ? <Link href={store.path(`/members/${member.id}`)} className="text-base underline underline-offset-2">{name}</Link> : <span className="text-base">{name}</span>}
               {member?.company_name && <p className="c-muted mt-1 text-xs">{member.company_name}</p>}
             </div>
             <span className="c-muted text-xs">{formatDate(applicant.created_at)}に参加希望</span>
           </div>
-          {applicant.message && <p className="mt-4 whitespace-pre-line break-words border-2 border-dashed border-[#1b2a41]/25 px-3 py-2 text-sm">{applicant.message}</p>}
+          {applicant.message && <p className="mt-4 whitespace-pre-line break-words border-2 border-dashed border-guild-ink/25 px-3 py-2 text-sm">{applicant.message}</p>}
           <div className="mt-4">
-            {hasRequest ? <Link href="/guild/requests" className="c-button-sub inline-flex h-11 items-center px-4 text-sm">{applicant.intro_status ? introStatusLabel[applicant.intro_status].requester : "紹介依頼済み"}・状況を見る ▶</Link>
+            {hasRequest ? <Link href={store.path("/requests")} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">{applicant.intro_status ? introStatusLabel[applicant.intro_status].requester : "紹介依頼済み"}・状況を見る ▶</Link>
               : canChoose && member?.accept_intro ? <button type="button" onClick={() => void choose(applicant.user_id, name)} disabled={pendingId !== null} className="rpg-button h-11 px-4 text-sm disabled:opacity-50">{pendingId === applicant.user_id ? "依頼中…" : "▶ この人にお願いしたい"}</button>
                 : canChoose && member && !member.accept_intro ? <p className="c-muted text-xs">この人は現在、紹介を受け付けていません。</p> : null}
           </div>

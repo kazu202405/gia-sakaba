@@ -3,11 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle, Window } from "@/components/guild/cards";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
+import { StoreProvider } from "@/components/guild/store-context";
 import { JoinForm } from "@/components/guild/join-form";
 import { InviteSignup } from "@/components/guild/invite-signup";
 import { inviteErrorText } from "@/lib/guild/join";
 import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { getGuildContext } from "@/lib/guild/server-data";
+import { findStore, storeOrDefault, storeThemeAttrs, type StoreConfig } from "@/lib/guild/stores";
 import { isActiveMember } from "@/lib/membership/plans";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,7 +29,7 @@ export default async function JoinPage({ searchParams }: Props) {
     if (!user) notFound();
     const context = await getGuildContext();
     if (context.membership.role !== "owner" && context.membership.role !== "master") notFound();
-    return <JoinPageFrame>
+    return <JoinPageFrame config={storeOrDefault(null)}>
       <PageTitle title="入会フォームの確認" lead="招待状を受け取った人が、GIAのアカウントを作成して入会するまでの画面です。" />
       <InviteSignup inviterName="管理者" inviteCode="" preview />
       <JoinForm inviterName="管理者" inviteCode="" preview />
@@ -42,9 +44,11 @@ export default async function JoinPage({ searchParams }: Props) {
     supabase.auth.getUser(),
   ]);
   const check = data as InviteResult | null;
-  const valid = !error && check?.ok && check.guild.slug === "gia";
+  // 招待コードが指す店。登録されていない店の招待（店の設定が無い）は使えないものとして扱う
+  const valid = !error && check?.ok && findStore(check.guild.slug) !== null;
+  const config = (valid ? findStore(check.guild.slug) : null) ?? storeOrDefault(null);
   const { data: preparedData, error: preparedError } = valid && process.env.SAKABA_PREJOIN_ENABLED === "true"
-    ? await supabase.rpc("sakaba_get_prepared_invite", { p_code: code })
+    ? await supabase.rpc("sakaba_get_prepared_invite", { p_code: code, p_guild_slug: config.slug })
     : { data: null, error: null };
   const prepared = preparedData as PreparedInvite | null;
   // Company Note の有料会員か（判定は酒場のプラン判定と同じ isActiveMember）。ログイン後にだけ調べて知らせる
@@ -54,7 +58,7 @@ export default async function JoinPage({ searchParams }: Props) {
   const companyNoteMember = isActiveMember(applicant);
 
   return (
-    <JoinPageFrame>
+    <JoinPageFrame config={config}>
       <PageTitle
         title={prepared ? "あなたへの招待状" : "招待リンクから入会"}
         lead="GIAのアカウントを作成、またはログインして入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"
@@ -89,21 +93,25 @@ export default async function JoinPage({ searchParams }: Props) {
   );
 }
 
-function JoinPageFrame({ children }: { children: React.ReactNode }) {
+// 入会画面は、招待を出した店の見た目・名前で出す（招待コードが店を決める）。子の部品（入会フォーム）も同じ店として動く
+function JoinPageFrame({ config, children }: { config: StoreConfig; children: React.ReactNode }) {
+  const tavern = config.theme === "tavern";
   return (
-    <main className="guild-theme guild-scene min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
-      <GuildSceneArt art="tavern" dim />
+    <StoreProvider slug={config.slug}>
+    <div {...storeThemeAttrs(config)} className="contents">
+    <main className={tavern ? "guild-theme guild-scene min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12" : "guild-theme min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12"}>
+      {tavern && <GuildSceneArt art="tavern" dim />}
       <div className="relative z-10 mx-auto max-w-4xl space-y-9">
-        <header className="flex items-center justify-between gap-4 border-2 border-[#efe6cf]/70 px-4 py-3 text-sm">
-          <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
+        <header className="flex items-center justify-between gap-4 border-2 border-guild-scene-text/70 px-4 py-3 text-sm">
+          <Link href="/" className="guild-px tracking-widest hover:underline">{config.name}</Link>
           <span className="c-chip">招待状を受け取った方へ</span>
         </header>
         <nav aria-label="入会までの流れ" className="c-window px-4 py-4 sm:px-6">
           <ol className="grid gap-2 text-sm sm:grid-cols-3 sm:gap-0">
-            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-[#efe6cf]/30 sm:pr-4">
+            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-guild-scene-text/30 sm:pr-4">
               <span className="c-label guild-px">01</span><span>招待状を確認</span>
             </li>
-            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-[#efe6cf]/30 sm:px-4">
+            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-guild-scene-text/30 sm:px-4">
               <span className="c-label guild-px">02</span><span>登録・ログイン</span>
             </li>
             <li className="flex items-center gap-2 sm:pl-4">
@@ -114,5 +122,7 @@ function JoinPageFrame({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </main>
+    </div>
+    </StoreProvider>
   );
 }

@@ -7,6 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function ApplicantChooseButton({
   applicantName,
@@ -16,11 +17,12 @@ export function ApplicantChooseButton({
   /** すでに依頼していれば、その状態の文言（依頼者向け） */
   existingLabel: string | null;
 }) {
+  const store = useGuildStore();
   const [sent, setSent] = useState(false);
 
   if (existingLabel || sent) {
     return (
-      <Link href="/guild/requests" className="c-button-sub h-11 w-full text-sm sm:w-auto">
+      <Link href={store.path("/requests")} className="c-button-sub h-11 w-full text-sm sm:w-auto">
         しょうかい：{existingLabel ?? "管理者が確認中"}
       </Link>
     );

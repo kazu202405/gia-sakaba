@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { CheckBox, DateInput, Field, TextArea, TextInput } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 function todayInJapan() {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -16,6 +17,7 @@ function todayInJapan() {
 }
 
 export function LiveProjectForm({ project, canCreate = true, quota = null }: { project?: GuildProject; canCreate?: boolean; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [title, setTitle] = useState(project?.title ?? "");
   const [goal, setGoal] = useState(project?.goal ?? "");
@@ -40,9 +42,9 @@ export function LiveProjectForm({ project, canCreate = true, quota = null }: { p
     if (project) {
       const { error: rpcError } = await createClient().rpc("sakaba_update_project", { p_project_id: project.id, ...fields });
       if (rpcError) { setError("保存できませんでした。再度お試しください。"); setSaving(false); return; }
-      router.push(`/guild/projects/${project.id}`);
+      router.push(store.path(`/projects/${project.id}`));
     } else {
-      const { data, error: rpcError } = await createClient().rpc("sakaba_create_project", { p_guild_slug: "gia", ...fields });
+      const { data, error: rpcError } = await createClient().rpc("sakaba_create_project", { p_guild_slug: store.slug, ...fields });
       if (rpcError || typeof data !== "string") { setError(isPlanLimitError(rpcError) ? "プロジェクトの作成枠を使い切りました。" : "作成できませんでした。入力内容や作成枠を確認してください。"); setSaving(false); return; }
       if (withSteps) {
         const { error: stepsError } = await createClient().rpc("sakaba_enable_project_steps", { p_project_id: data });
@@ -53,13 +55,13 @@ export function LiveProjectForm({ project, canCreate = true, quota = null }: { p
           return;
         }
       }
-      router.push(`/guild/projects/${data}`);
+      router.push(store.path(`/projects/${data}`));
     }
     router.refresh();
   }
 
   return <div className="mx-auto max-w-2xl">
-    <Link href={project ? `/guild/projects/${project.id}` : "/guild/projects"} className="c-muted mb-8 inline-block text-sm">◀ プロジェクトへ戻る</Link>
+    <Link href={project ? store.path(`/projects/${project.id}`) : store.path("/projects")} className="c-muted mb-8 inline-block text-sm">◀ プロジェクトへ戻る</Link>
     <form onSubmit={submit} className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">{project ? "プロジェクトをなおす" : "プロジェクトをつくる"}</span>
       {!project && !canCreate && (quota ? <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} /> : <p className="text-sm text-[#c62828]">プロジェクトの作成枠を使い切りました。</p>)}
@@ -76,7 +78,7 @@ export function LiveProjectForm({ project, canCreate = true, quota = null }: { p
         <span className="c-muted block text-xs leading-relaxed">営業など、同じ手順を何人にも進めるとき。初回アポ／興味付け／提案／契約から始められます。</span>
       </CheckBox>}
       <p className="c-muted text-xs">作成したプロジェクトは、いまは自分だけに表示されます。</p>
-      {error && <p role="alert" className="text-sm text-[#c62828]">{error}{createdId && <Link href={`/guild/projects/${createdId}`} className="ml-2 underline">詳細へ進む</Link>}</p>}
+      {error && <p role="alert" className="text-sm text-[#c62828]">{error}{createdId && <Link href={store.path(`/projects/${createdId}`)} className="ml-2 underline">詳細へ進む</Link>}</p>}
       <button type="submit" disabled={saving || !canCreate || !!createdId} aria-busy={saving} className="rpg-button w-full px-6 py-3 disabled:opacity-50 sm:w-auto">{saving ? project ? "保存中…" : "作成中…" : project ? "▶ 保存する" : "▶ 作成する"}</button>
     </form>
   </div>;

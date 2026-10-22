@@ -83,6 +83,8 @@ export type NotificationContext = {
   name: (profileId: string) => string;
   questTitle: (questId: string) => string;
   intro: (introRequestId: string) => IntroRequest | undefined;
+  /** 店の中の道を作る（store.path）。行き先は今の店の道にする */
+  path: (rest: string) => string;
 };
 
 /** 知らせの文面と、押したときの行き先 */
@@ -92,7 +94,7 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
     case "quest_applied":
       return {
         text: `${n.actor_id ? ctx.name(n.actor_id) : "だれか"}さんが「${title}」に 参加したいと伝えました`,
-        href: `/guild/quests/${n.quest_id}/applicants`,
+        href: ctx.path(`/quests/${n.quest_id}/applicants`),
       };
     case "quest_updated": {
       // 保存された順に関係なく、入力画面の順で並べる
@@ -101,43 +103,43 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
         .join("・");
       return {
         text: `「${title}」の内容が なおされました${fields ? `（${fields}）` : ""}`,
-        href: `/guild/quests/${n.quest_id}`,
+        href: ctx.path(`/quests/${n.quest_id}`),
       };
     }
     case "quest_withdrawn":
-      return { text: `「${title}」が 取り下げられました`, href: `/guild/quests/${n.quest_id}` };
+      return { text: `「${title}」が 取り下げられました`, href: ctx.path(`/quests/${n.quest_id}`) };
     case "gathering_approved":
-      return { text: `「${title}」への 参加が 決まりました`, href: `/guild/quests/${n.quest_id}` };
+      return { text: `「${title}」への 参加が 決まりました`, href: ctx.path(`/quests/${n.quest_id}`) };
     case "gathering_declined":
-      return { text: `「${title}」への 申し込みは 今回 見送りになりました`, href: `/guild/quests/${n.quest_id}` };
+      return { text: `「${title}」への 申し込みは 今回 見送りになりました`, href: ctx.path(`/quests/${n.quest_id}`) };
     case "schedule_decided":
-      return { text: `「${title}」の 日にちが 決まりました`, href: `/guild/quests/${n.quest_id}` };
+      return { text: `「${title}」の 日にちが 決まりました`, href: ctx.path(`/quests/${n.quest_id}`) };
     case "consult_request":
-      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}エンタープライズの相談が 届きました`, href: "/guild/master#master-consults-title" };
+      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}エンタープライズの相談が 届きました`, href: ctx.path("/master#master-consults-title") };
     case "feedback_report":
-      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}ご意見・不具合の報告が 届きました`, href: "/guild/master#master-feedback-title" };
+      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}ご意見・不具合の報告が 届きました`, href: ctx.path("/master#master-feedback-title") };
     case "member_joined":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー"}さんが 入会しました`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー"}さんが 入会しました`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "member_pending":
-      return { text: "参加の申請が 届きました", href: "/guild/master#master-pending-members-title" };
+      return { text: "参加の申請が 届きました", href: ctx.path("/master#master-pending-members-title") };
     case "profile_draft_waiting":
       return {
         text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんが ` : ""}あなたのステータスの 下書きを 書きました。見て、載せるか選んでください`,
-        href: "/guild/me/status/draft",
+        href: ctx.path("/me/status/draft"),
       };
     case "profile_draft_applied":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんが、書いた下書きを ステータスに載せました`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんが、書いた下書きを ステータスに載せました`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "profile_draft_declined":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんは、書いた下書きを 今回は載せませんでした`, href: n.actor_id ? `/guild/members/${n.actor_id}` : "/guild/members" };
+      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんは、書いた下書きを 今回は載せませんでした`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
-      if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: "/guild/requests" };
+      if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: ctx.path("/requests") };
       if (n.user_id === r.target_id) {
-        return { text: `${ctx.name(r.requester_id)}さんとの しょうかいの打診が 届きました`, href: "/guild/requests" };
+        return { text: `${ctx.name(r.requester_id)}さんとの しょうかいの打診が 届きました`, href: ctx.path("/requests") };
       }
       return {
         text: `${ctx.name(r.target_id)}さんへの しょうかい：${introStatusLabel[n.intro_status].requester}`,
-        href: "/guild/requests",
+        href: ctx.path("/requests"),
       };
     }
   }

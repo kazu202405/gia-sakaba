@@ -253,7 +253,7 @@ function ScheduleTable({ schedule, guest, canDecide, busy, onDecide }: {
   if (guest) {
     return <ul className="mt-5 space-y-2">
       {schedule.options.map((option) => (
-        <li key={option.id} className={`c-card flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${option.id === schedule.decided_option_id ? "border-[#c8a55a]" : ""}`}>
+        <li key={option.id} className={`c-card flex flex-wrap items-center justify-between gap-2 px-3 py-2 ${option.id === schedule.decided_option_id ? "border-guild-accent" : ""}`}>
           <span className="text-sm tabular-nums">{formatScheduleShort(option.starts_at)}{option.id === schedule.decided_option_id && " ★"}</span>
           <span className="c-muted text-sm tabular-nums">○{option.yes}　△{option.maybe}　×{option.no}</span>
         </li>
@@ -273,7 +273,7 @@ function ScheduleTable({ schedule, guest, canDecide, busy, onDecide }: {
           ))}
         </tr>
       </thead>
-      <tbody className="divide-y divide-dashed divide-[#1b2a41]/15">
+      <tbody className="divide-y divide-dashed divide-guild-ink/15">
         {schedule.respondents.length === 0 && (
           <tr><td colSpan={schedule.options.length + 1} className="c-muted px-2 py-3 text-xs">まだ回答はありません。</td></tr>
         )}

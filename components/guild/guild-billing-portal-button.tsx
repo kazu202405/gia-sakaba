@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useGuildStore } from "@/components/guild/store-context";
+import { guildApiPath } from "@/lib/guild/store-path";
 
 type Props = { label: string };
 
 export function GuildBillingPortalButton({ label }: Props) {
+  const store = useGuildStore();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
 
@@ -13,7 +16,7 @@ export function GuildBillingPortalButton({ label }: Props) {
     setPending(true);
     setError("");
     try {
-      const response = await fetch("/api/guild/billing/portal?from=me", { method: "POST" });
+      const response = await fetch(guildApiPath(store.slug, "/billing/portal", { from: "me" }), { method: "POST" });
       const result = await response.json() as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || "支払い管理を開けませんでした。");
       window.location.assign(result.url);

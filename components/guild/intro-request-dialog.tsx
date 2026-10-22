@@ -9,10 +9,12 @@ import type { IntroPurpose, Profile } from "@/lib/guild/types";
 import { closedStatuses, introStatusLabel, purposeLabel } from "@/lib/guild/labels";
 import { ME_ID, introRequests } from "@/lib/guild/mock-data";
 import { uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
 export function IntroRequestButton({ target }: { target: Profile }) {
+  const store = useGuildStore();
   const [open, setOpen] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -24,7 +26,7 @@ export function IntroRequestButton({ target }: { target: Profile }) {
   );
   if (existing || sent) {
     return (
-      <Link href="/guild/requests" className="c-button-sub h-12 w-full sm:w-auto">
+      <Link href={store.path("/requests")} className="c-button-sub h-12 w-full sm:w-auto">
         いらい中：{existing ? introStatusLabel[existing.status].requester : "管理者が確認中"}
       </Link>
     );
@@ -97,7 +99,7 @@ function IntroRequestDialog({
 
   return (
     <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-guild-ink/50" onClick={onClose} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="intro-dialog-title" className="c-window relative w-full pt-9 sm:max-w-lg">
         <h2 id="intro-dialog-title" className="c-window-title">
           しょうかい いらい

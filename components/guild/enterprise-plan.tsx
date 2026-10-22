@@ -8,8 +8,10 @@ import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { CONSULT_MESSAGE_MAX, CONSULT_TOPICS, consultError, type ConsultTopic } from "@/lib/guild/enterprise";
 import { PHRASE_WRAP, Ph } from "./phrase";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
+  const store = useGuildStore();
   const [open, setOpen] = useState(false);
   const [topics, setTopics] = useState<ConsultTopic[]>([]);
   const [message, setMessage] = useState("");
@@ -49,7 +51,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
     setSaving(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_create_consult_request", {
-        p_guild_slug: "gia", p_topics: topics, p_message: message.trim(),
+        p_guild_slug: store.slug, p_topics: topics, p_message: message.trim(),
       });
       if (rpcError) {
         setError(rpcError.code === "53400" ? "相談は24時間に3件までです。少し時間をおいてお送りください。" : "送れませんでした。少し待ってもう一度お試しください。");
@@ -64,7 +66,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
     }
   }
 
-  return <section aria-label="エンタープライズプラン" className={`c-window border-[#8f7337] p-5 sm:p-7 ${PHRASE_WRAP}`}>
+  return <section aria-label="エンタープライズプラン" className={`c-window border-guild-accent-dark p-5 sm:p-7 ${PHRASE_WRAP}`}>
     <div className="grid gap-6 lg:grid-cols-[minmax(18rem,1fr)_minmax(0,2fr)] lg:gap-10">
       <div className="min-w-0">
         <h2 className="guild-px text-[32px] leading-tight tracking-[0.05em]"><Ph text="エンタープライズ|プラン" /></h2>
@@ -74,7 +76,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
       </div>
       <div className="min-w-0">
         <p className="text-[15px] leading-relaxed"><Ph text="アプリの機能だけでは|届かないところを、|管理者が直接|手伝います。|事業の状況を伺って、|必要なことだけを|ご提案します。" /></p>
-        <ul className="mt-4 grid gap-4 border-t border-[#1b2a41]/25 pt-4 sm:grid-cols-2">
+        <ul className="mt-4 grid gap-4 border-t border-guild-ink/25 pt-4 sm:grid-cols-2">
           {CONSULT_TOPICS.filter((topic) => topic.key !== "other").map((topic) => <li key={topic.key} className="flex gap-2">
             <span aria-hidden="true" className="text-sm leading-relaxed">▶</span>
             <span className="min-w-0">
@@ -95,7 +97,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
     </div>
 
     {open && <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
+      <div className="absolute inset-0 bg-guild-ink/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="enterprise-consult-title" className="c-window relative w-full pt-9 sm:max-w-lg">
         <h2 id="enterprise-consult-title" className="c-window-title">相談する</h2>
         <button ref={firstRef} type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>

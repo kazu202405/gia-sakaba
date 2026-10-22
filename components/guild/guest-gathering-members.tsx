@@ -52,7 +52,7 @@ export function GuestGatheringMembersWindow({ data, isMember }: { data: GuestGat
                   {member.introductions.length > 0 && <div>
                     <p className="c-label text-xs">紹介状（{member.introductions.length}通）</p>
                     <ul className="mt-2 space-y-2">
-                      {member.introductions.map((letter, index) => <li key={index} className="border-l-2 border-[#c8a55a] pl-3 text-sm">
+                      {member.introductions.map((letter, index) => <li key={index} className="border-l-2 border-guild-accent pl-3 text-sm">
                         <p className="whitespace-pre-line leading-relaxed break-words">{letter.body}</p>
                         <p className="c-muted mt-1 text-xs">{letter.author_name}・{formatDate(letter.updated_at)}</p>
                       </li>)}

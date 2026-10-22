@@ -4,6 +4,7 @@ import Link from "next/link";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { FormEvent, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { GUILD_ROOT, outsideStorePath } from "@/lib/guild/store-path";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -55,7 +56,7 @@ export default function ResetPasswordPage() {
         <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> パスワードを表示</label>
         <button type="submit" className="c-button w-full" disabled={!ready || busy || !password || !passwordAgain}>{busy ? "変更中..." : "パスワードを変更する"}</button>
       </form>}
-      <Link href={saved ? "/guild" : "/guild/forgot-password"} className="mt-6 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">{saved ? "酒場へ進む" : "再設定メールを送り直す"}</Link>
+      <Link href={saved ? GUILD_ROOT : outsideStorePath("forgot-password")} className="mt-6 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">{saved ? "酒場へ進む" : "再設定メールを送り直す"}</Link>
     </section>
   </main>;
 }

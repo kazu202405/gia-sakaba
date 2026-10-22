@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 
 export default function GuildLookIndexPage() {
   const items = [
@@ -59,7 +61,7 @@ export default function GuildLookIndexPage() {
           ))}
         </div>
         <p className="mt-6 text-xs text-slate-500">
-          いまの見た目は <Link href="/guild" className="underline underline-offset-4">/guild</Link> です。
+          いまの見た目は <Link href={guildPath(DEFAULT_STORE_SLUG)} className="underline underline-offset-4">{guildPath(DEFAULT_STORE_SLUG)}</Link> です。
         </p>
       </div>
     </main>

@@ -23,7 +23,7 @@ describe("Company Note会員の特典（sakaba.has_company_note_11000_benefit）
   });
 
   it("画面に招待プランの金額を出さない", () => {
-    for (const file of ["app/guild/me/page.tsx", "components/guild/plan-form.tsx"]) {
+    for (const file of ["app/guild/[store]/me/page.tsx", "components/guild/plan-form.tsx"]) {
       expect(readFileSync(join(process.cwd(), file), "utf8")).not.toContain("11,000円会員特典");
     }
   });

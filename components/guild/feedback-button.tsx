@@ -11,8 +11,10 @@ import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { FEEDBACK_KINDS, FEEDBACK_MESSAGE_MAX, feedbackError, type FeedbackKind } from "@/lib/guild/feedback";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function FeedbackButton({ className, label = "ご意見・不具合" }: { className?: string; label?: string }) {
+  const store = useGuildStore();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<FeedbackKind | null>(null);
@@ -48,7 +50,7 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
     setSaving(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_create_feedback_report", {
-        p_guild_slug: "gia", p_kind: kind, p_message: message.trim(),
+        p_guild_slug: store.slug, p_kind: kind, p_message: message.trim(),
         p_page_path: pathname, p_user_agent: navigator.userAgent,
       });
       if (rpcError) {
@@ -69,8 +71,8 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
 
   return <>
     <button type="button" onClick={() => { setOpen(true); setError(""); setStep("edit"); }} className={className}>{label}</button>
-    {open && <div className="fixed inset-0 z-[90] flex items-end justify-center text-[#1b2a41] sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
+    {open && <div className="fixed inset-0 z-[90] flex items-end justify-center text-guild-ink sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-guild-ink/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="feedback-title" className="c-window relative w-full pt-9 sm:max-w-lg">
         <h2 id="feedback-title" className="c-window-title">ご意見・不具合</h2>
         <button ref={closeRef} type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>

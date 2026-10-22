@@ -1,14 +1,16 @@
 // B案の外枠。8bitcn の部品と、ドット文字を全体に使う。
 
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { cn } from "@/lib/utils";
 
 export const NAV_B = [
   { href: "/guild-look/b", label: "ホーム" },
   { href: "/guild-look/b/status", label: "なかま" },
-  { href: "/guild/quests", label: "クエスト" },
-  { href: "/guild/requests", label: "いらい" },
-  { href: "/guild/me", label: "マイページ" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/quests"), label: "クエスト" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/requests"), label: "いらい" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/me"), label: "マイページ" },
 ];
 
 export function ShellB({ active, children }: { active: string; children: React.ReactNode }) {

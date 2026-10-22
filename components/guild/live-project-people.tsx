@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { DateInput, TextInput } from "./form-parts";
 import { ProjectMemberCombobox } from "./project-member-combobox";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Selection = { kind: "contact"; contactId: string } | { kind: "cell"; contactId: string; stepId: string } | null;
 
@@ -25,6 +26,7 @@ function shortDate(value: string) {
 }
 
 export function LiveProjectPeople({ projectId, pipeline, members, editable }: { projectId: string; pipeline: GuildProjectPipeline; members: Profile[]; editable: boolean }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [selection, setSelection] = useState<Selection>(null);
   const [newContactLabel, setNewContactLabel] = useState("");
@@ -199,30 +201,30 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   ] as const;
   const shownFollowUp = followUpTabs.find((tab) => tab.key === followUpTab) ?? followUpTabs[0];
 
-  const peopleTable = (contacts: typeof pipeline.contacts, kind: "active" | "followUp") => <div className="overflow-x-auto border-2 border-[#1b2a41]">
+  const peopleTable = (contacts: typeof pipeline.contacts, kind: "active" | "followUp") => <div className="overflow-x-auto border-2 border-guild-ink">
       <table className="w-full min-w-max border-collapse text-sm">
-        <thead><tr className="bg-[#f3ecd9]">
-          <th scope="col" className="sticky left-0 z-10 min-w-28 bg-[#f3ecd9] px-3 py-2 text-left text-xs font-normal">相手</th>
+        <thead><tr className="bg-guild-bg">
+          <th scope="col" className="sticky left-0 z-10 min-w-28 bg-guild-bg px-3 py-2 text-left text-xs font-normal">相手</th>
           {visibleSteps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
         </tr></thead>
         <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={visibleSteps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? (followUpContacts.length === 0 ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "この結果の人はいません。") : "まだ相手がいません。下から追加してください。"}</td></tr> :
-          contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-[#1b2a41]/15">
-            <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal">
+          contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-guild-ink/15">
+            <th scope="row" className="sticky left-0 z-10 bg-guild-paper p-2 text-left font-normal">
               <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
-              {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={`/guild/members/${contact.member_user_id}`} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
+              {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={store.path(`/members/${contact.member_user_id}`)} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
             </th>
             {visibleSteps.map((step) => {
               const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
-                <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-[#1b2a41] disabled:cursor-default">
-                  {record?.done_on ? <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : record?.result ? null : <span className="c-muted">―</span>}
+                <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-guild-ink disabled:cursor-default">
+                  {record?.done_on ? <span className="bg-guild-ink px-1 text-guild-paper">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : record?.result ? null : <span className="c-muted">―</span>}
                   {record?.result && <span className={`ml-1 px-1 font-bold ${record.result === "ok" ? "text-[#1f7a3d]" : "text-[#c62828]"}`}>{record.result === "ok" ? "OK" : "NG"}</span>}
                 </button>
               </td>;
             })}
           </tr>)}
-          {kind === "active" && addingContacts.map((contact) => <tr key={contact.key} aria-busy="true" className="border-t-2 border-dashed border-[#1b2a41]/15 opacity-60">
-            <th scope="row" className="sticky left-0 z-10 bg-[#fffdf6] p-2 text-left font-normal"><span className="block text-xs">{contact.label}</span></th>
+          {kind === "active" && addingContacts.map((contact) => <tr key={contact.key} aria-busy="true" className="border-t-2 border-dashed border-guild-ink/15 opacity-60">
+            <th scope="row" className="sticky left-0 z-10 bg-guild-paper p-2 text-left font-normal"><span className="block text-xs">{contact.label}</span></th>
             <td colSpan={visibleSteps.length} className="c-muted p-1 text-left text-xs">追加中…</td>
           </tr>)}</tbody>
       </table>
@@ -237,10 +239,10 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => { setCellDate(value); if (value && value <= todayInJapan() && !finishedTouched.current) setCellFinished(true); })} label={cellFinished ? "おわった日" : "予定日"} /></div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <div role="radiogroup" aria-label="進み具合" className="flex items-center gap-2">
-            {([[true, "完了"], [false, "未定"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellFinished === value} onClick={() => editCell(() => { finishedTouched.current = true; setCellFinished(value); if (value && !cellDate) setCellDate(todayInJapan()); })} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellFinished === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+            {([[true, "完了"], [false, "未定"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellFinished === value} onClick={() => editCell(() => { finishedTouched.current = true; setCellFinished(value); if (value && !cellDate) setCellDate(todayInJapan()); })} className={`h-9 min-w-14 border-2 border-guild-ink px-3 text-sm ${cellFinished === value ? "bg-guild-ink text-guild-paper" : "bg-guild-paper"}`}>{text}</button>)}
           </div>
           <div role="group" aria-label="結果" className="flex items-center gap-2">
-            {([["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" aria-pressed={cellResult === value} onClick={() => editCell(() => setCellResult(cellResult === value ? null : value))} className={`h-9 min-w-14 border-2 border-[#1b2a41] px-3 text-sm ${cellResult === value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{text}</button>)}
+            {([["ok", "OK"], ["ng", "NG"]] as const).map(([value, text]) => <button key={text} type="button" aria-pressed={cellResult === value} onClick={() => editCell(() => setCellResult(cellResult === value ? null : value))} className={`h-9 min-w-14 border-2 border-guild-ink px-3 text-sm ${cellResult === value ? "bg-guild-ink text-guild-paper" : "bg-guild-paper"}`}>{text}</button>)}
           </div>
         </div>
       </div>
@@ -250,7 +252,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         <button type="button" disabled={busy || (!cellDate && !cellResult)} onClick={() => { savedVersion.current = editVersion; void saveRecord(selection.contactId, selection.stepId, cellFinished || !cellDate ? null : cellDate, cellFinished && cellDate ? cellDate : null, cellResult, "保存"); }} className="rpg-button h-11 px-6 disabled:opacity-50">{saving === "保存" ? "保存中…" : "保存"}</button>
         <div className="ml-auto flex items-center gap-1">
           {selectedRecord && <button type="button" disabled={busy} onClick={() => saveRecord(selection.contactId, selection.stepId, null, null, null, "日付の消去")} aria-label="日付と結果を消す" title="日付と結果を消す" className="flex h-11 w-11 items-center justify-center text-[#c62828] hover:bg-[#c62828]/10 focus-visible:outline-2 focus-visible:outline-[#c62828] disabled:opacity-50"><Trash2 size={18} aria-hidden /></button>}
-          <button type="button" onClick={() => { leaveCell(); setSelection(null); }} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
+          <button type="button" onClick={() => { leaveCell(); setSelection(null); }} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-guild-ink/10 focus-visible:outline-2 focus-visible:outline-guild-ink"><X size={20} aria-hidden /></button>
         </div>
       </div>
       </div>
@@ -264,7 +266,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         <button type="submit" disabled={busy || !editContactLabel.trim()} className="rpg-button h-11 px-4 disabled:opacity-50">{saving === "相手の更新" ? "保存中…" : "保存"}</button>
         <div className="ml-auto flex items-center gap-1">
           <button type="button" disabled={busy} onClick={() => deleteContact(selectedContact.id, selectedContact.label)} aria-label="この人を削除" title="この人を削除" className="flex h-11 w-11 items-center justify-center text-[#c62828] hover:bg-[#c62828]/10 focus-visible:outline-2 focus-visible:outline-[#c62828] disabled:opacity-50"><Trash2 size={18} aria-hidden /></button>
-          <button type="button" onClick={() => setSelection(null)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
+          <button type="button" onClick={() => setSelection(null)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-guild-ink/10 focus-visible:outline-2 focus-visible:outline-guild-ink"><X size={20} aria-hidden /></button>
         </div>
       </div>
     </form>}
@@ -276,7 +278,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {editable && addOpen && <form onSubmit={(event) => { event.preventDefault(); if (!newContactLabel.trim()) return; void run("sakaba_add_project_contact_v2", { p_project_id: projectId, p_label: newContactLabel.trim(), p_member_user_id: newMemberId }, "相手の追加", () => { setAddingContacts((current) => [...current, { key: Date.now() + Math.random(), label: newContactLabel.trim() }]); setNewContactLabel(""); setNewMemberId(null); }); }} className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="text-sm">進行中に相手を追加</p>
-        <button type="button" onClick={() => setAddOpen(false)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-[#1b2a41]/10 focus-visible:outline-2 focus-visible:outline-[#1b2a41]"><X size={20} aria-hidden /></button>
+        <button type="button" onClick={() => setAddOpen(false)} aria-label="閉じる" title="閉じる" className="c-muted flex h-11 w-11 items-center justify-center hover:bg-guild-ink/10 focus-visible:outline-2 focus-visible:outline-guild-ink"><X size={20} aria-hidden /></button>
       </div>
       <div className="flex gap-2"><ProjectMemberCombobox members={members} label={newContactLabel} selectedMemberId={newMemberId} disabled={busy} onChange={(label, memberId) => { setNewContactLabel(label); setNewMemberId(memberId); }} /><button type="submit" disabled={busy || !newContactLabel.trim()} aria-busy={busy} className="rpg-button h-11 shrink-0 px-4 disabled:opacity-50">{saving === "相手の追加" ? "追加中…" : isPending ? "読み込み中…" : "追加"}</button></div>
     </form>}
@@ -295,7 +297,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
         {followUpOpen ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人{followUpOpen ? "" : "（ひらく）"}</span>
       </button>
       {followUpOpen && <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
-        {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-[#1b2a41] px-3 text-sm ${followUpTab === tab.key ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6]"}`}>{tab.label} {tab.list.length}</button>)}
+        {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-guild-ink px-3 text-sm ${followUpTab === tab.key ? "bg-guild-ink text-guild-paper" : "bg-guild-paper"}`}>{tab.label} {tab.list.length}</button>)}
       </div>}
       {followUpOpen && peopleTable(shownFollowUp.list, "followUp")}
     </div>

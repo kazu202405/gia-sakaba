@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { guildGate } from "./route-gate";
+import { STORE_SLUGS } from "./stores";
 
 const prod = { allowLook: false };
 const dev = { allowLook: true };
@@ -39,10 +40,43 @@ describe("guildGate", () => {
     }
   });
 
-  it("/guild 配下は通す", () => {
-    for (const p of ["/guild", "/guild/", "/guild/quests/new", "/guild/members/abc"]) {
+  it("/guild 配下は通す（店の道・店に属さない画面）", () => {
+    for (const p of [
+      "/guild", "/guild/", "/guild/login", "/guild/join", "/guild/survey", "/guild/auth/callback", "/guild/manifest.webmanifest",
+      "/guild/gia", "/guild/gia/quests/new", "/guild/gia/members/abc", "/guild/kensetsu-fudosan", "/guild/kensetsu-fudosan/quests",
+    ]) {
       expect(guildGate(p, prod)).toEqual({ kind: "pass" });
     }
+  });
+
+  it("店ができる前の昔の道は、既定の店（gia）の道へ転送する。?以降（招待コードなど）は残す", () => {
+    const cases: [string, string][] = [
+      ["/guild/quests", "/guild/gia/quests"],
+      ["/guild/quests/new", "/guild/gia/quests/new"],
+      ["/guild/quests/3f2a/applicants", "/guild/gia/quests/3f2a/applicants"],
+      ["/guild/members", "/guild/gia/members"],
+      ["/guild/members/abc", "/guild/gia/members/abc"],
+      ["/guild/projects/abc/edit", "/guild/gia/projects/abc/edit"],
+      ["/guild/requests", "/guild/gia/requests"],
+      ["/guild/me", "/guild/gia/me"],
+      ["/guild/me/status/draft", "/guild/gia/me/status/draft"],
+      ["/guild/notifications", "/guild/gia/notifications"],
+      ["/guild/plan", "/guild/gia/plan"],
+      ["/guild/master", "/guild/gia/master"],
+      ["/guild/master/gathering/new", "/guild/gia/master/gathering/new"],
+      ["/guild/thanks", "/guild/gia/thanks"],
+    ];
+    for (const [from, to] of cases) expect([from, guildGate(from, prod)]).toEqual([from, { kind: "redirect", to, keepSearch: true }]);
+  });
+
+  it("昔の道に似ているだけの道は転送しない（登録されていない店の名前として、画面側が 404 にする）", () => {
+    for (const p of ["/guild/questsx", "/guild/meeting", "/guild/members-only"]) {
+      expect(guildGate(p, prod)).toEqual({ kind: "pass" });
+    }
+  });
+
+  it("店の slug が昔の道の名前とぶつからない（転送が店の道を奪わない）", () => {
+    for (const slug of STORE_SLUGS) expect(guildGate(`/guild/${slug}/quests`, prod)).toEqual({ kind: "pass" });
   });
 
   it("/guild で始まるだけの別の道は通さない", () => {

@@ -11,13 +11,14 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { ContactItemsView } from "./contact-items-view";
 import type { ViewContactItem } from "@/lib/guild/contact-items";
+import { useGuildStore } from "@/components/guild/store-context";
 
 // 承諾し合った相手の連絡先。contacts が null＝読み込めなかった
 export function LiveContactDetails({ name, items }: {
   name: string;
   items: ViewContactItem[] | null;
 }) {
-  return <div className="mt-4 border-2 border-dashed border-[#8f7337] bg-[#fffdf6] px-3 py-3 text-sm">
+  return <div className="mt-4 border-2 border-dashed border-guild-accent-dark bg-guild-paper px-3 py-3 text-sm">
     <p className="c-label text-xs">{name}さんの連絡先（承諾済み）</p>
     {items === null
       ? <p className="c-muted mt-2 text-xs">連絡先を読み込めませんでした。ページを開き直してください。</p>
@@ -31,6 +32,7 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
   currentUserId: string;
   contacts: Record<string, ViewContactItem[]> | null;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -79,9 +81,9 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
         const name = names.get(request.requester_id) ?? "メンバー";
         return <article key={request.id} className="c-card p-4 sm:p-5">
           <p className="c-label text-xs">{name}さんからのつながり申請</p>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2"><Link href={`/guild/members/${request.requester_id}`} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2"><Link href={store.path(`/members/${request.requester_id}`)} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
           <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}・{formatDate(request.created_at)}</p>
-          {request.message && <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 px-3 py-2 text-sm break-words">{request.message}</p>}
+          {request.message && <p className="mt-3 border-2 border-dashed border-guild-ink/30 px-3 py-2 text-sm break-words">{request.message}</p>}
           {request.status === "proposed" ? (
             accepting?.id === request.id ? (
               <div className="mt-4 space-y-3">
@@ -112,14 +114,14 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
       })}</div>}
     </Window>
     <Window title="あなたが出した いらい">
-      {sent.length === 0 ? <p className="c-muted text-sm">まだつながり申請を送っていません。<Link href="/guild/members" className="underline">メンバー名鑑から探す</Link></p> : <div className="space-y-4">{sent.map((request) => {
+      {sent.length === 0 ? <p className="c-muted text-sm">まだつながり申請を送っていません。<Link href={store.path("/members")} className="underline">メンバー名鑑から探す</Link></p> : <div className="space-y-4">{sent.map((request) => {
         const name = names.get(request.target_id) ?? "メンバー";
         const closed = closedStatuses.includes(request.status);
         return <article key={request.id} className={`c-card p-4 sm:p-5 ${closed ? "opacity-75" : ""}`}>
-          <div className="flex flex-wrap items-center justify-between gap-2"><Link href={`/guild/members/${request.target_id}`} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><Link href={store.path(`/members/${request.target_id}`)} className="text-base underline underline-offset-2">{name}さん</Link><span className="c-chip">{introStatusLabel[request.status].requester}</span></div>
           <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}・{formatDate(request.created_at)}</p>
           {(request.status === "accepted" || request.status === "introduced") && request.accept_message && (
-            <p className="mt-3 border-l-2 border-[#c8a55a] pl-3 text-sm whitespace-pre-line break-words">{name}さんからのひとこと：{request.accept_message}</p>
+            <p className="mt-3 border-l-2 border-guild-accent pl-3 text-sm whitespace-pre-line break-words">{name}さんからのひとこと：{request.accept_message}</p>
           )}
           {request.status === "accepted" || request.status === "introduced" ? <LiveContactDetails name={name} items={contacts ? contacts[request.target_id] ?? [] : null} /> : null}
           {request.status === "proposed" && request.expires_at && <p className="c-muted mt-3 text-xs">{formatJstDate(request.expires_at)}までにお返事がなければ、取り下げになります。</p>}

@@ -11,6 +11,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { JobAvatar } from "./job-avatar";
 import { Window } from "./cards";
 import { cn } from "@/lib/utils";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const STEP_SHORT = ["そうしん", "かくにん", "だしん", "しょうだく", "しょうかい"];
 
@@ -55,6 +56,7 @@ export function MyRequests({ initial }: { initial: IntroRequest[] }) {
 }
 
 function SentCard({ request: r, onCancel }: { request: IntroRequest; onCancel: () => void }) {
+  const store = useGuildStore();
   const target = getProfile(r.target_id);
   if (!target) return null;
   const closed = closedStatuses.includes(r.status);
@@ -76,7 +78,7 @@ function SentCard({ request: r, onCancel }: { request: IntroRequest; onCancel: (
       <div className="flex items-center gap-3">
         <JobAvatar icon={target.job_icon} photoUrl={target.photo_url} name={target.job} size="sm" />
         <div className="min-w-0 flex-1">
-          <Link href={`/guild/members/${target.id}`} className="text-base hover:underline">
+          <Link href={store.path(`/members/${target.id}`)} className="text-base hover:underline">
             {target.display_name}さん
           </Link>
           <p className="c-muted text-xs">
@@ -107,7 +109,7 @@ function SentCard({ request: r, onCancel }: { request: IntroRequest; onCancel: (
 
       {r.outcome && (
         <p className="c-muted mt-3 text-xs">
-          けっか：<span className="text-[#1b2a41]">{outcomeLabel[r.outcome]}</span>
+          けっか：<span className="text-guild-ink">{outcomeLabel[r.outcome]}</span>
         </p>
       )}
 
@@ -127,6 +129,7 @@ function ReceivedCard({
   request: IntroRequest;
   onUpdate: (patch: Partial<IntroRequest>) => void;
 }) {
+  const store = useGuildStore();
   const requester = getProfile(r.requester_id);
   const quest = r.quest_id ? getQuest(r.quest_id) : undefined;
   if (!requester) return null;
@@ -148,7 +151,7 @@ function ReceivedCard({
       <div className="mt-2 flex items-center gap-3">
         <JobAvatar icon={requester.job_icon} photoUrl={requester.photo_url} name={requester.job} size="sm" />
         <div className="min-w-0 flex-1">
-          <Link href={`/guild/members/${requester.id}`} className="text-base hover:underline">
+          <Link href={store.path(`/members/${requester.id}`)} className="text-base hover:underline">
             {requester.display_name}さん
           </Link>
           <p className="c-muted text-xs">
@@ -157,12 +160,12 @@ function ReceivedCard({
         </div>
       </div>
       {quest && (
-        <Link href={`/guild/quests/${quest.id}`} className="c-muted mt-2 block text-xs underline underline-offset-4">
+        <Link href={store.path(`/quests/${quest.id}`)} className="c-muted mt-2 block text-xs underline underline-offset-4">
           クエスト：{quest.title}
         </Link>
       )}
       {r.message && (
-        <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 bg-[#f3ecd9]/60 px-3 py-2 text-sm">{r.message}</p>
+        <p className="mt-3 border-2 border-dashed border-guild-ink/30 bg-guild-bg/60 px-3 py-2 text-sm">{r.message}</p>
       )}
 
       {r.status === "proposed" ? (
@@ -190,7 +193,7 @@ function ReceivedCard({
 
 function ContactBox({ name }: { name: string }) {
   return (
-    <div className="mt-3 border-2 border-dashed border-[#8f7337] bg-[#fffdf6] px-3 py-2 text-sm">
+    <div className="mt-3 border-2 border-dashed border-guild-accent-dark bg-guild-paper px-3 py-2 text-sm">
       <p className="c-label text-[11px]">{name}さんの れんらく先（承諾されたので見えています）</p>
       <p className="mt-0.5">sample@example.com（見本）</p>
     </div>

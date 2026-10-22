@@ -1,3 +1,5 @@
+import { isLiveGuildPath, isPublicGuildPath } from "./live-routes";
+import { outsideStorePath } from "./store-path";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -250,9 +252,12 @@ describe("連続で送れない対策（見張り）", () => {
     expect(sql).toMatch(/r\.max_monthly_price_yen > 0/);
   });
   it("ログインなしで開ける：未ログインの行き先の例外と、ログイン済みの道に /guild/survey がある", () => {
-    const middleware = read("lib/supabase/middleware.ts");
-    expect(middleware).toMatch(/isPublicGuildRoute = [^;]*pathname === "\/guild\/survey"/);
-    expect(middleware).toMatch(/isLiveGuildRoute =[\s\S]*?pathname === "\/guild\/survey"[\s\S]*?;\n\n/);
+    // 道の表は lib/guild/live-routes.ts（middleware はそれを読む）。実際に呼んで確かめる
+    expect(isPublicGuildPath(outsideStorePath("survey"))).toBe(true);
+    expect(isLiveGuildPath(outsideStorePath("survey"))).toBe(true);
+    // 似た名前の道は巻き込まない
+    expect(isPublicGuildPath(`${outsideStorePath("survey")}x`)).toBe(false);
+    expect(isPublicGuildPath(`${outsideStorePath("survey")}/extra`)).toBe(false);
   });
 });
 

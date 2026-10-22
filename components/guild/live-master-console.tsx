@@ -8,6 +8,7 @@ import type { IntroOutcome, IntroStatus, Profile } from "@/lib/guild/types";
 import { formatDate, introStatusLabel, outcomeLabel, purposeLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Group = "inbox" | "proposed" | "connected" | "closed";
 const GROUPS: { key: Group; label: string; statuses: IntroStatus[] }[] = [
@@ -19,6 +20,7 @@ const GROUPS: { key: Group; label: string; statuses: IntroStatus[] }[] = [
 const OUTCOMES: IntroOutcome[] = ["met", "working", "no_fit"];
 
 export function LiveMasterConsole({ initial, members }: { initial: GuildIntroRequest[]; members: Profile[] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [group, setGroup] = useState<Group>("inbox");
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -79,13 +81,13 @@ export function LiveMasterConsole({ initial, members }: { initial: GuildIntroReq
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{GROUPS.map((item) => <button key={item.key} type="button" aria-pressed={group === item.key} onClick={() => setGroup(item.key)} className="c-choice border-3 p-3 text-left sm:p-4"><span className="block text-sm">{item.label}</span><span className="mt-1 block text-3xl tabular-nums">{initial.filter((request) => item.statuses.includes(request.status)).length}</span></button>)}</div>
     <div className="mt-8 space-y-4">{visible.length === 0 ? <p className="c-card border-dashed px-4 py-10 text-center text-sm">「{current.label}」の依頼はありません</p> : visible.map((request) => <article key={request.id} className="c-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2"><span className="c-chip">{introStatusLabel[request.status].master}</span><span className="c-muted text-xs">{formatDate(request.created_at)}</span></div>
-      <p className="mt-3 break-words text-sm"><Link href={`/guild/members/${request.requester_id}`} className="underline underline-offset-2">{names.get(request.requester_id) ?? "メンバー"}</Link><span className="mx-2">→</span><Link href={`/guild/members/${request.target_id}`} className="underline underline-offset-2">{names.get(request.target_id) ?? "メンバー"}</Link></p>
+      <p className="mt-3 break-words text-sm"><Link href={store.path(`/members/${request.requester_id}`)} className="underline underline-offset-2">{names.get(request.requester_id) ?? "メンバー"}</Link><span className="mx-2">→</span><Link href={store.path(`/members/${request.target_id}`)} className="underline underline-offset-2">{names.get(request.target_id) ?? "メンバー"}</Link></p>
       <p className="c-muted mt-1 text-xs">{purposeLabel[request.purpose]}</p>
-      {request.message && <p className="mt-3 border-2 border-dashed border-[#1b2a41]/30 px-3 py-2 text-sm break-words">{request.message}</p>}
+      {request.message && <p className="mt-3 border-2 border-dashed border-guild-ink/30 px-3 py-2 text-sm break-words">{request.message}</p>}
       {(request.status === "requested" || request.status === "reviewing") && <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={pendingId !== null} onClick={() => void act(request, "propose")} className="rpg-button h-11 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "▶ 相手に打診"}</button><button type="button" disabled={pendingId !== null} onClick={() => void act(request, "decline_master")} className="c-button-sub h-11 disabled:opacity-50">見送る</button></div>}
       {request.status === "proposed" && <p className="c-muted mt-4 text-xs">相手の返事を待っています。</p>}
       {request.status === "accepted" && <div className="mt-4 flex flex-wrap items-center gap-3"><p className="c-muted text-xs">お二人には連絡先が表示されています。</p><button type="button" disabled={pendingId !== null} onClick={() => void act(request, "introduced")} className="rpg-button h-11 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "▶ 紹介済みにする"}</button></div>}
-      {request.status === "introduced" && <div className="mt-4 border-t-2 border-dashed border-[#1b2a41]/20 pt-4"><p className="c-muted text-xs">紹介後、どうなりましたか？</p><div className="mt-2 flex flex-wrap gap-2">{OUTCOMES.map((outcome) => <button key={outcome} type="button" aria-pressed={request.outcome === outcome} disabled={pendingId !== null} onClick={() => void setOutcome(request, outcome)} className="c-choice min-h-11 px-3 text-sm disabled:opacity-50">{pendingId === request.id && pendingOutcome === outcome ? "記録中…" : outcomeLabel[outcome]}</button>)}</div></div>}
+      {request.status === "introduced" && <div className="mt-4 border-t-2 border-dashed border-guild-ink/20 pt-4"><p className="c-muted text-xs">紹介後、どうなりましたか？</p><div className="mt-2 flex flex-wrap gap-2">{OUTCOMES.map((outcome) => <button key={outcome} type="button" aria-pressed={request.outcome === outcome} disabled={pendingId !== null} onClick={() => void setOutcome(request, outcome)} className="c-choice min-h-11 px-3 text-sm disabled:opacity-50">{pendingId === request.id && pendingOutcome === outcome ? "記録中…" : outcomeLabel[outcome]}</button>)}</div></div>}
     </article>)}</div>
   </div>;
 }

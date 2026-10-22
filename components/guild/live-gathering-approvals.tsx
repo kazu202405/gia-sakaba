@@ -8,8 +8,10 @@ import { formatDate, positionLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGatheringApplication[] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [decided, setDecided] = useState<string[]>([]);
@@ -55,12 +57,12 @@ export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGathe
         const key = `${item.quest_id}:${item.user_id}`;
         return <li key={key} className="c-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <Link href={`/guild/members/${item.user_id}`} className="text-base underline underline-offset-4">{item.display_name}</Link>
+            <Link href={store.path(`/members/${item.user_id}`)} className="text-base underline underline-offset-4">{item.display_name}</Link>
             <span className="c-muted text-xs">{formatDate(item.created_at)}に申し込み</span>
           </div>
           <p className="c-muted mt-1 text-xs">{item.company_name}・{positionLabel[item.position]}</p>
           {item.position === "other" && <p className="c-chip mt-2 inline-block text-xs">役職が「その他」です。経営者か確認してください</p>}
-          <p className="mt-3 text-sm"><Link href={`/guild/quests/${item.quest_id}`} className="underline underline-offset-4">{item.quest_title}</Link></p>
+          <p className="mt-3 text-sm"><Link href={store.path(`/quests/${item.quest_id}`)} className="underline underline-offset-4">{item.quest_title}</Link></p>
           {item.message && <p className="mt-3 whitespace-pre-line break-words text-sm">申込時のひとこと：{item.message}</p>}
           {item.want_to_solve && <p className="c-muted mt-2 break-words text-xs">いま解決したいこと：{item.want_to_solve}</p>}
           <div className="mt-4 flex flex-wrap gap-3">

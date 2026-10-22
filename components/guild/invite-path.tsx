@@ -1,7 +1,7 @@
 // 入会のつながり（「あなた → Bさん → Aさん → Cさん」）。DBは supabase/migrations/0105_sakaba_invite_path.sql。
 // 名前を出さない設定の人は「匿名の会員」、停止中・退会済みの人は「今は在籍していない方」。どちらもリンクにしない。
 
-import Link from "next/link";
+import { StoreLink } from "@/components/guild/store-link";
 import { Fragment } from "react";
 import type { InvitePath } from "@/lib/guild/invite-path";
 import { Window } from "./cards";
@@ -13,7 +13,7 @@ export function InvitePathChain({ path }: { path: InvitePath }) {
       {node.kind === "me" ? <span className="c-label">あなた</span>
         : node.kind === "anonymous" ? <span className="c-muted">匿名の会員</span>
         : node.kind === "former" ? <span className="c-muted">今は在籍していない方</span>
-        : <Link href={`/guild/members/${node.id}`} className="underline underline-offset-4">{node.name}さん</Link>}
+        : <StoreLink to={`/members/${node.id}`} className="underline underline-offset-4">{node.name}さん</StoreLink>}
     </Fragment>)}
   </p>;
 }

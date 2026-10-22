@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gathering }: {
   questId: string;
@@ -12,6 +13,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
   applicantCount: number;
   gathering: boolean;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -33,7 +35,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
       const { error: rpcError } = await createClient().rpc("sakaba_withdraw_quest", { p_quest_id: questId });
       if (rpcError) throw rpcError;
       uiToast(`${questTerm}を取り下げました`);
-      router.push(gathering ? "/guild/master" : "/guild/quests");
+      router.push(gathering ? store.path("/master") : store.path("/quests"));
       router.refresh();
     } catch {
       setError("取り下げられませんでした。画面を読み直して再度お試しください。");
@@ -45,8 +47,8 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
   return <div className="c-dashed-top mt-8 space-y-3 pt-6">
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     <div className="flex flex-wrap items-center gap-3">
-      <Link href={`/guild/quests/${questId}/edit`} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">内容をなおす</Link>
-      {!gathering && <Link href={`/guild/quests/${questId}/applicants`} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">参加希望者を見る（{applicantCount}人）</Link>}
+      <Link href={store.path(`/quests/${questId}/edit`)} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">内容をなおす</Link>
+      {!gathering && <Link href={store.path(`/quests/${questId}/applicants`)} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">参加希望者を見る（{applicantCount}人）</Link>}
       <button type="button" onClick={() => void withdraw()} disabled={busy} className="c-muted ml-auto text-xs underline underline-offset-4 disabled:opacity-50">{busy ? "取り下げ中…" : `この${questTerm}を取り下げる`}</button>
     </div>
   </div>;

@@ -20,10 +20,12 @@ import { canActivateProject } from "@/lib/guild/membership";
 import { uiToast } from "@/lib/ui-dialog";
 import { CheckBox, TextInput } from "./form-parts";
 import { ProjectLimitNotice, useMembership } from "./membership-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const TITLE_MAX = 40;
 
 export function QuestToProject({ quest }: { quest: Quest }) {
+  const store = useGuildStore();
   const { projects } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const [open, setOpen] = useState(false);
   const { isPaid } = useMembership();
@@ -37,7 +39,7 @@ export function QuestToProject({ quest }: { quest: Quest }) {
       {existing ? (
         <div className="mt-2 space-y-2">
           <p className="text-sm leading-relaxed">プロジェクト「{existing.title}」で すすめています。</p>
-          <Link href={`/guild/projects/${existing.id}`} className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
+          <Link href={store.path(`/projects/${existing.id}`)} className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
             ▶ プロジェクトを 見る
           </Link>
         </div>
@@ -66,6 +68,7 @@ export function QuestToProject({ quest }: { quest: Quest }) {
 }
 
 function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () => void }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const candidates = partyCandidates(quest, questApplications, introRequests);
   const [title, setTitle] = useState(quest.title.slice(0, TITLE_MAX));
@@ -86,7 +89,7 @@ function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () =>
         }
         const id = createProjectFromQuest(quest, { title: title.trim(), member_ids: members });
         uiToast("プロジェクトに しました（見本のため保存はされません）");
-        router.push(`/guild/projects/${id}`);
+        router.push(store.path(`/projects/${id}`));
       }}
     >
       <div>

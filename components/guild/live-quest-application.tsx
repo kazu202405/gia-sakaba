@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
+import { useGuildStore } from "@/components/guild/store-context";
 import type { GuildQuest } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
 import { CheckBox, TextArea } from "./form-parts";
@@ -17,6 +18,7 @@ export function LiveQuestApplication({
   /** 誰でも参加できる集まりで、自分がゲストにプロフィールを見せる設定か（まだ選んでいなければ null） */
   guestVisible?: boolean | null;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [localApplication, setLocalApplication] = useState<{
     baseline: GuildQuest["my_application"];
@@ -35,11 +37,11 @@ export function LiveQuestApplication({
   const [showToGuests, setShowToGuests] = useState(true);
 
   if (quest.creator_id === currentUserId) {
-    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みは管理者画面で確認できます。" : "あなたが出したクエストです。参加希望者と届いたひとことは、下の「参加希望者を見る」から確認できます。"}</p>;
+    return <p className="c-muted text-sm">{quest.members_only ? "あなたが開いた集まりです。申し込みは管理者画面で確認できます。" : `あなたが出した${store.config.terms.quest}です。参加希望者と届いたひとことは、下の「参加希望者を見る」から確認できます。`}</p>;
   }
 
   if (quest.status !== "open") {
-    return <p className="c-muted text-sm">このクエストは募集を終えています。</p>;
+    return <p className="c-muted text-sm">この{store.config.terms.quest}は募集を終えています。</p>;
   }
 
   const isFull =
@@ -120,7 +122,7 @@ export function LiveQuestApplication({
           )}
         </div>
       ) : isFull ? (
-        <p className="c-muted text-sm">このクエストは定員に達しました。</p>
+        <p className="c-muted text-sm">この{store.config.terms.quest}は定員に達しました。</p>
       ) : writing ? (
         <div className="space-y-3">
           <p className="text-sm">{quest.members_only ? "管理者へのひとこと" : "出した人へのひとこと"}（任意・200文字以内）</p>

@@ -5,6 +5,7 @@ import styles from "./sakaba-landing.module.css";
 import { PHRASE_WRAP, Ph } from "@/components/guild/phrase";
 import { plans } from "@/lib/guild/plan-catalog";
 import { GUILD_SITE_URL, guildShareMetadata } from "@/lib/guild/site-meta";
+import { outsideStorePath } from "@/lib/guild/store-path";
 
 const demoUrl = "https://gia-sakaba-git-demo-sakaba-mock-63c2cc-kazus-projects-dc60dadc.vercel.app/guild";
 
@@ -29,7 +30,7 @@ export default function SakabaLandingPage() {
         <Link href="/" className={styles.brand}>GIAの酒場</Link>
         <nav aria-label="入口" className={styles.headerNav}>
           <a href={demoUrl} target="_blank" rel="noopener noreferrer">見本を見る ↗</a>
-          <Link href="/guild/login">ログイン ▶</Link>
+          <Link href={outsideStorePath("login")}>ログイン ▶</Link>
         </nav>
       </div>
     </header>
@@ -42,7 +43,7 @@ export default function SakabaLandingPage() {
           <h1 id="landing-title" className={styles.heroTitle}>仕事の話が、<br /><span>次の一歩</span>になる場所。</h1>
           <p className={styles.heroLead}>GIAの酒場は、RPGで冒険の仲間を探す酒場のように、仲間を知り、相談を持ち寄り、いっしょに動き出すための場所。名刺交換で終わらないつながりを、ここから育てます。</p>
           <div className={styles.heroActions}>
-            <Link href="/guild/login" className="rpg-button">▶ 酒場に入る</Link>
+            <Link href={outsideStorePath("login")} className="rpg-button">▶ 酒場に入る</Link>
             <a href={demoUrl} target="_blank" rel="noopener noreferrer" className={styles.outlineButton}>見本を見てみる ↗</a>
           </div>
           <p className={styles.heroNote}>入会には招待リンクが必要です。見本のデータは架空で、操作は保存されません。</p>
@@ -107,7 +108,7 @@ export default function SakabaLandingPage() {
             <h2 id="entry-title">招待リンクから、酒場へ。</h2>
             <p>招待された方は、届いたリンクから手続きを進めてください。すでにアカウントをお持ちの方はログインして続けられます。</p>
           </div>
-          <Link href="/guild/login" className="rpg-button">▶ ログインする</Link>
+          <Link href={outsideStorePath("login")} className="rpg-button">▶ ログインする</Link>
         </div>
       </section>
     </main>

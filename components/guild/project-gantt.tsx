@@ -37,7 +37,7 @@ export function ProjectGantt({ project, tasks }: { project: Project; tasks: Proj
             <div className="absolute inset-y-0 w-[3px] -translate-x-1/2 bg-[#b58a2a]" />
             <span
               className={cn(
-                "absolute -top-5 bg-[#fffdf6] px-0.5 text-[10px] whitespace-nowrap text-[#8f7337]",
+                "absolute -top-5 bg-guild-paper px-0.5 text-[10px] whitespace-nowrap text-guild-accent-dark",
                 todayPct > 80 ? "right-1" : "left-1",
               )}
             >
@@ -49,7 +49,7 @@ export function ProjectGantt({ project, tasks }: { project: Project; tasks: Proj
         {dated.length === 0 ? (
           <p className="c-muted py-4 text-sm">日付の入った タスクは まだ ありません。</p>
         ) : (
-          <ul className="space-y-3 border-y-2 border-dashed border-[#1b2a41]/15 py-3">
+          <ul className="space-y-3 border-y-2 border-dashed border-guild-ink/15 py-3">
             {dated.map((t) => (
               <GanttRow key={t.id} task={t} range={range} />
             ))}
@@ -83,10 +83,10 @@ function GanttRow({ task, range }: { task: ProjectTask; range: { from: string; t
           {isDone ? "おわり" : (due?.text ?? period)}
         </span>
       </p>
-      <div className="relative mt-1 h-3 bg-[#1b2a41]/[0.06]">
+      <div className="relative mt-1 h-3 bg-guild-ink/[0.06]">
         {bar ? (
           <span
-            className={cn("absolute inset-y-0 border-2 border-[#1b2a41]", isDone ? "bg-[#1b2a41]" : "bg-[#fffdf6]")}
+            className={cn("absolute inset-y-0 border-2 border-guild-ink", isDone ? "bg-guild-ink" : "bg-guild-paper")}
             style={{ left: `${bar.left}%`, width: `${bar.width}%` }}
           />
         ) : (

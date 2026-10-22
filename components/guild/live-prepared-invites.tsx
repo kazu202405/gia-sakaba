@@ -10,11 +10,13 @@ import { countDraftFields, draftHasContent, draftRpcArgs, emptyDraftFields, pars
 import { ProfileDraftInputs } from "./profile-draft-fields";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import type { Position } from "@/lib/guild/types";
+import { inviteUrl as sharedInviteUrl } from "@/lib/guild/invite-share";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const emptyDraft: PreparedInvite = { display_name: "", company_name: "", position: "", introduction: "" };
 
 function inviteUrl(code: string) {
-  return `${window.location.origin}/guild/join?invite=${encodeURIComponent(code)}`;
+  return sharedInviteUrl(window.location.origin, code);
 }
 
 function inviteStatus(invite: MasterPreparedInvite) {
@@ -26,6 +28,7 @@ function inviteStatus(invite: MasterPreparedInvite) {
 
 // initialDrafts：入会前のステータスの下書き（0130）。null は読めなかったとき（未適用など）で、その入力欄は出さない
 export function LivePreparedInvites({ initial, initialDrafts }: { initial: MasterPreparedInvite[]; initialDrafts: InviteProfileDraft[] | null }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [draft, setDraft] = useState<PreparedInvite>(emptyDraft);
   const [statusDrafts, setStatusDrafts] = useState(initialDrafts);
@@ -54,7 +57,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
       };
       const { data, error: saveError } = editingId
         ? await supabase.rpc("sakaba_update_prepared_invite", { p_invite_id: editingId, ...fields })
-        : await supabase.rpc("sakaba_create_prepared_invite", { p_guild_slug: "gia", ...fields });
+        : await supabase.rpc("sakaba_create_prepared_invite", { p_guild_slug: store.slug, ...fields });
       if (saveError || (!editingId && !data?.code)) throw saveError ?? new Error("招待状を保存できませんでした");
       if (!editingId) setNewUrl(inviteUrl(data.code));
       // ステータスの下書き：招待状ができてから、同じ招待状にひもづけて保存する。
@@ -65,11 +68,11 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
         const { error: draftError } = await supabase.rpc("sakaba_save_invite_profile_draft", { p_invite_id: inviteId, ...draftRpcArgs(statusDraft) });
         if (draftError) statusDraftFailed = true;
         else {
-          const { data: draftList, error: draftListError } = await supabase.rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: "gia" });
+          const { data: draftList, error: draftListError } = await supabase.rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: store.slug });
           if (!draftListError) setStatusDrafts(parseInviteProfileDrafts(draftList));
         }
       }
-      const { data: list, error: listError } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: "gia" });
+      const { data: list, error: listError } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: store.slug });
       if (listError) setError("保存しましたが一覧を更新できませんでした。画面を読み直してください。");
       else setInvites(Array.isArray(list) ? list as MasterPreparedInvite[] : []);
       if (statusDraftFailed) {
@@ -169,7 +172,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
       </div>
     </form>
     {newUrl && <div role="status" className="c-card mt-5 p-4"><p className="mb-2 text-sm">招待状ができました。このURLを本人へ渡してください。</p><input className="c-input w-full text-xs" readOnly value={newUrl} onFocus={(event) => event.target.select()} /></div>}
-    <div className="mt-7 border-t border-[#1b2a41]/20 pt-5">
+    <div className="mt-7 border-t border-guild-ink/20 pt-5">
       <p className="mb-3 text-sm tracking-wider">作成した招待状 <span className="c-muted">{invites.length}件</span></p>
       {invites.length === 0 ? <p className="c-muted text-sm">まだありません。</p> : <ul className="space-y-3">{invites.map((invite) => {
         const status = inviteStatus(invite);

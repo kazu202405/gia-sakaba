@@ -3,6 +3,7 @@ import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { isPaidSakabaPlan } from "@/lib/guild/billing-plans";
 import { createClient } from "@/lib/supabase/server";
 import { getSakabaPriceId, getSakabaStripeClient } from "@/lib/stripe/client";
+import { currentStore } from "@/lib/guild/current-store";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,7 @@ function looksLikeEmail(value: string) {
 }
 
 export async function POST(request: NextRequest) {
+  const store = await currentStore();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
@@ -44,7 +46,9 @@ export async function POST(request: NextRequest) {
       tier: plan,
     };
     const origin = request.nextUrl.origin;
-    const returnPath = request.nextUrl.searchParams.get("from") === "projects" ? "/guild/projects" : "/guild/plan";
+    // どの店の画面から来たかは ?store=（proxy.ts が今の店として渡す）。決済のあとはその店に戻す
+    const fromProjects = request.nextUrl.searchParams.get("from") === "projects";
+    const returnPath = fromProjects ? store.path("/projects") : store.path("/plan");
     const emailParam = user.email && looksLikeEmail(user.email) ? user.email : undefined;
     const createSession = (customerId: string | null) => stripe.checkout.sessions.create({
       mode: "subscription",
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
       client_reference_id: user.id,
       metadata,
       subscription_data: { metadata },
-      success_url: `${origin}/guild/thanks?session_id={CHECKOUT_SESSION_ID}${returnPath === "/guild/projects" ? "&from=projects" : ""}`,
+      success_url: `${origin}${store.path("/thanks")}?session_id={CHECKOUT_SESSION_ID}${fromProjects ? "&from=projects" : ""}`,
       cancel_url: `${origin}${returnPath}?checkout=canceled`,
       billing_address_collection: "auto",
       locale: "ja",

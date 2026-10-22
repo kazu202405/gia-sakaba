@@ -291,6 +291,18 @@ select (select name from sakaba.guilds where slug = 'kensetsu-fudosan') = '建�
    and (select count(*) from sakaba.guild_members where guild_id = :'ken_id' and role = 'owner') = 1 as ok \gset
 insert into results values ('K店の行がある（名前・呼び名）', :'ok', '');
 
+-- ================= 9. 入口の状態（画面の「この店の会員ではありません」の根拠＝sakaba_get_my_gate_status） =================
+-- 画面（app/guild/[store]/layout.tsx）は 'none' のときだけ「会員ではありません」を出す。会員が 'none' で返ると全員が締め出されるので、会員は必ず 'active'
+select pg_temp.contains('入口の状態：GIA店の会員Aは GIA店で active', :'u_a', $q$select public.sakaba_get_my_gate_status('gia')$q$, 'active', true);
+select pg_temp.contains('入口の状態：GIA店の会員Aは K店で none', :'u_a', $q$select public.sakaba_get_my_gate_status('kensetsu-fudosan')$q$, 'none', true);
+select pg_temp.contains('入口の状態：K店の会員Kは K店で active', :'u_k', $q$select public.sakaba_get_my_gate_status('kensetsu-fudosan')$q$, 'active', true);
+select pg_temp.contains('入口の状態：K店の会員Kは GIA店で none', :'u_k', $q$select public.sakaba_get_my_gate_status('gia')$q$, 'none', true);
+select pg_temp.contains('入口の状態：両店のownerは GIA店で active', :'u_g', $q$select public.sakaba_get_my_gate_status('gia')$q$, 'active', true);
+select pg_temp.contains('入口の状態：両店のownerは K店で active', :'u_g', $q$select public.sakaba_get_my_gate_status('kensetsu-fudosan')$q$, 'active', true);
+select pg_temp.contains('入口の状態：K店のマスターMは K店で active', :'u_m', $q$select public.sakaba_get_my_gate_status('kensetsu-fudosan')$q$, 'active', true);
+select pg_temp.contains('入口の状態：K店の招待で入ったNは K店で active', :'u_n', $q$select public.sakaba_get_my_gate_status('kensetsu-fudosan')$q$, 'active', true);
+select pg_temp.contains('入口の状態：K店の招待で入ったNは GIA店で none', :'u_n', $q$select public.sakaba_get_my_gate_status('gia')$q$, 'none', true);
+
 -- ================= 結果 =================
 select case when ok then 'PASS' else 'FAIL' end as result, name, detail from results order by ok, name;
 select count(*) filter (where ok) as pass, count(*) filter (where not ok) as fail, count(*) as total from results;

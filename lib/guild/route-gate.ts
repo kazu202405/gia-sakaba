@@ -4,7 +4,7 @@
 // （/login・/plans・/clone など）や API まで酒場のドメインで開けてしまう。
 // そこで「通してよい道」だけを並べ、それ以外は閉じる（書き漏れたら閉じる側に倒れる）。
 //
-// - /（公開の酒場案内）と /guild 配下 → 通す
+// - /（公開の酒場案内）と /guild 配下 → 通す（ただし店ができる前の昔の道 /guild/quests/… は /guild/<既定の店>/… へ転送）
 // - 利用規約・プライバシーポリシー・特商法表記 → 通す（入会・申し込みの前に、未ログインで読むもの）
 // - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す
 // - Next.js の内部ファイル・画像など → 通す
@@ -12,12 +12,14 @@
 //   （リダイレクトすると外部からの呼び出しが 200 で成功したように見える）
 // - それ以外 → /guild へ飛ばす
 
+import { GUILD_ROOT, legacyPathToStore } from "./store-path";
+
 export type GuildGateResult =
   | { kind: "pass" }
-  | { kind: "redirect"; to: string }
+  | { kind: "redirect"; to: string; keepSearch?: boolean }
   | { kind: "notFound" };
 
-export const GUILD_HOME = "/guild";
+export const GUILD_HOME = GUILD_ROOT;
 
 // 2026-10-01 まで書き漏れていて、/terms などが /guild へ飛ばされ誰も読めなかった。
 // 下位パスは通さない（ちょうどこの3つだけ）。
@@ -47,6 +49,9 @@ export function guildGate(pathname: string, options: { allowLook: boolean }): Gu
   if (/^\/i\/[0-9a-f]{64}$/i.test(pathname)) return { kind: "pass" };
   // 本人が作った共有URL（会員以外にも見せるステータス）も、推測困難な専用URLだけを公開する。
   if (/^\/p\/[0-9a-f]{64}$/.test(pathname)) return { kind: "pass" };
+  // 店ができる前の道（/guild/quests/…）は、既定の店の道へ転送する。招待リンク・プッシュ通知・ブックマークを壊さないため、?以降も残す
+  const legacy = legacyPathToStore(pathname);
+  if (legacy) return { kind: "redirect", to: legacy, keepSearch: true };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 

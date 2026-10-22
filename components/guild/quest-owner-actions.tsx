@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { guild } from "@/lib/guild/mock-data";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function QuestOwnerActions({
   questId,
@@ -19,6 +20,7 @@ export function QuestOwnerActions({
   /** 一緒に取り下げる、承諾前の紹介依頼の数 */
   openIntroCount: number;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
 
   const withdraw = async () => {
@@ -39,12 +41,12 @@ export function QuestOwnerActions({
     });
     if (!ok) return;
     uiToast("取り下げました（見本のため保存はされません）");
-    router.push("/guild/me");
+    router.push(store.path("/me"));
   };
 
   return (
     <div className="c-dashed-top mt-6 flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
-      <Link href={`/guild/quests/${questId}/edit`} className="c-button-sub h-11 w-full text-sm sm:w-auto">
+      <Link href={store.path(`/quests/${questId}/edit`)} className="c-button-sub h-11 w-full text-sm sm:w-auto">
         内容を なおす
       </Link>
       <button type="button" onClick={withdraw} className="c-muted text-left text-xs underline underline-offset-4">

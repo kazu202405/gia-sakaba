@@ -23,6 +23,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Draft = Pick<
   Profile,
@@ -140,6 +141,7 @@ export function StatusWizard({
   initialContact: ContactDraft | null;
   giaApplicant: GiaApplicantImport | null;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [step, setStep] = useState<StepKey>(isNew ? "intro" : "basic");
   // はじめて作るときは 通り過ぎた札だけ押せる。なおすときは 最初から どこへでも飛べる
@@ -198,7 +200,7 @@ export function StatusWizard({
     setErrors({});
     if (index <= 0) {
       if (isNew && step === "basic") setStep("intro");
-      else router.push("/guild/me");
+      else router.push(store.path("/me"));
       return;
     }
     setStep(FLOW[index - 1]);
@@ -238,7 +240,7 @@ export function StatusWizard({
     uiToast(
       isNew ? `${guild.name}へようこそ（見本のため保存はされません）` : `${guild.terms.status}を保存しました（見本）`,
     );
-    router.push(isNew ? "/guild" : "/guild/me");
+    router.push(isNew ? store.path() : store.path("/me"));
   };
 
   return (
@@ -279,8 +281,8 @@ export function StatusWizard({
                     aria-current={s === step ? "step" : undefined}
                     onClick={() => jumpTo(s)}
                     className={cn(
-                      "border-2 border-[#1b2a41] px-2.5 py-1.5 text-xs whitespace-nowrap",
-                      s === step ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6] text-[#1b2a41]",
+                      "border-2 border-guild-ink px-2.5 py-1.5 text-xs whitespace-nowrap",
+                      s === step ? "bg-guild-ink text-guild-paper" : "bg-guild-paper text-guild-ink",
                       !reachable && "border-dashed opacity-40",
                     )}
                   >
@@ -726,7 +728,7 @@ function VisibilityStep({
     );
 
   return (
-    <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/20">
+    <ul className="divide-y-2 divide-dashed divide-guild-ink/20">
       <SwitchRow
         title="きほん"
         note="名前・写真・ひとこと・つよみ・しょくぎょう・業種・地域（かいしゃと やくしょくは きほんで 出す/出さないを 選べます）"
@@ -813,7 +815,7 @@ function ConfirmStep({
         </div>
       </div>
 
-      <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/20">
+      <ul className="divide-y-2 divide-dashed divide-guild-ink/20">
         {rows.map((r) => (
           <li key={r.step} className="flex items-center justify-between gap-3 py-3 text-sm">
             <div className="min-w-0">

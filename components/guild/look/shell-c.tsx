@@ -2,14 +2,16 @@
 // 英字のドットフォント（Press Start 2P）は空白が広く名前の間が空くので、Cでは使わない。
 
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { cn } from "@/lib/utils";
 
 export const NAV_C = [
   { href: "/guild-look/c", label: "ホーム" },
   { href: "/guild-look/c/status", label: "なかま" },
-  { href: "/guild/quests", label: "クエスト" },
-  { href: "/guild/requests", label: "いらい" },
-  { href: "/guild/me", label: "マイページ" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/quests"), label: "クエスト" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/requests"), label: "いらい" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/me"), label: "マイページ" },
 ];
 
 export function ShellC({ active, children }: { active: string; children: React.ReactNode }) {

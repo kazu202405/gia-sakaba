@@ -1,5 +1,6 @@
 "use client";
 
+import { authCallbackUrl } from "@/lib/guild/store-path";
 import { useState, type FormEvent } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
@@ -41,7 +42,7 @@ export function MasterIntroductionResponse({ token, introduction, authenticated,
     event.preventDefault();
     if (busy) return;
     setBusy(true); setError("");
-    const callback = `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(`/i/${token}`)}`;
+    const callback = authCallbackUrl(window.location.origin, `/i/${token}`);
     const { error: authError } = await createClient().auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: callback, shouldCreateUser: true },
@@ -145,7 +146,7 @@ export function MasterIntroductionResponse({ token, introduction, authenticated,
         {contactKind !== "via_admin" && <label className="mt-4 block text-sm">連絡先 <span className="text-[#b52a2a]">必須</span><input type={contactKind === "email" ? "email" : "url"} className="c-input mt-1 h-11" value={contactValue} onChange={(event) => setContactValue(event.target.value)} maxLength={300} placeholder={contactKind === "email" ? "example@example.com" : "https://..."} required /></label>}
         <p className="c-muted mt-3 text-xs">管理者には連絡方法の有無だけが見えます。入力した連絡先そのものは表示しません。</p>
       </div>
-      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>双方が承諾した場合に限り、この名前・会社名・選んだ連絡先を相手だけに表示する。<span className="c-muted block text-xs">名鑑や公開プロフィールには掲載されません。</span></span></label>
+      <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} className="mt-1 accent-guild-ink" /><span>双方が承諾した場合に限り、この名前・会社名・選んだ連絡先を相手だけに表示する。<span className="c-muted block text-xs">名鑑や公開プロフィールには掲載されません。</span></span></label>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
       <div className="flex flex-wrap gap-3"><button type="submit" disabled={busy || !agreed} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : "▶ つながってみる"}</button><button type="button" disabled={busy} onClick={() => void respond(false)} className="c-button-sub min-h-12 px-5 text-sm disabled:opacity-50">今回は見送る</button></div>
     </form>

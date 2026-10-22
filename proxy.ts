@@ -8,6 +8,7 @@
 
 import { guildGate } from "@/lib/guild/route-gate";
 import { guardGuildApiRequest } from "@/lib/guild/request-security";
+import { STORE_HEADER, isManifestPath, requestStoreSlug } from "@/lib/guild/store-path";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -22,8 +23,9 @@ export async function proxy(request: NextRequest) {
   }
   if (gate.kind === "redirect") {
     const url = request.nextUrl.clone();
+    // gate.to に ?… が付くことはない（道だけ）。転送のときは元の ?… を残す（招待コード・チェックアウト結果など）
     url.pathname = gate.to;
-    url.search = "";
+    if (!gate.keepSearch) url.search = "";
     return NextResponse.redirect(url);
   }
 
@@ -41,8 +43,14 @@ export async function proxy(request: NextRequest) {
     );
   }
 
+  // 「今の店」を画面コードへ渡す（lib/guild/current-store.ts が読む）。
+  // クライアントが付けてきた値は信用せず、必ず消してから道（と API の ?store=）で決め直す。
+  request.headers.delete(STORE_HEADER);
+  const storeSlug = requestStoreSlug(request.nextUrl.pathname, request.nextUrl.searchParams);
+  if (storeSlug) request.headers.set(STORE_HEADER, storeSlug);
+
   // PWAの設定とService Workerはログイン前にも取得される公開の固定ファイル。
-  if (request.nextUrl.pathname === "/guild-sw.js" || request.nextUrl.pathname === "/guild/manifest.webmanifest") {
+  if (request.nextUrl.pathname === "/guild-sw.js" || isManifestPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
 

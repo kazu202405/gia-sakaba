@@ -18,6 +18,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { BackLink, PageTitle, Window } from "./cards";
 import { CheckBox, DateInput, Field, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const TITLE_MAX = 40;
 const GOAL_MAX = 200;
@@ -26,6 +27,7 @@ export const PROJECT_MEMO_MAX = 500;
 type Errors = { title?: string; start?: string; due?: string };
 
 export function ProjectForm({ projectId }: { projectId?: string }) {
+  const store = useGuildStore();
   const { projects } = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const { isPaid } = useMembership();
   const editing = projectId ? projects.find((p) => p.id === projectId) : undefined;
@@ -34,7 +36,7 @@ export function ProjectForm({ projectId }: { projectId?: string }) {
   if (!projectId && !canActivateProject(projects, ME_ID, isPaid)) {
     return (
       <div className="space-y-9">
-        <BackLink href="/guild/projects" label="プロジェクト" />
+        <BackLink href={store.path("/projects")} label="プロジェクト" />
         <PageTitle title="プロジェクトを つくる" />
         <ProjectLimitNotice />
       </div>
@@ -45,7 +47,7 @@ export function ProjectForm({ projectId }: { projectId?: string }) {
   if (projectId && (!editing || editing.owner_id !== ME_ID)) {
     return (
       <div className="space-y-9">
-        <BackLink href="/guild/projects" label="プロジェクト" />
+        <BackLink href={store.path("/projects")} label="プロジェクト" />
         <Window>
           <p className="text-sm">このプロジェクトは 見つかりませんでした。</p>
         </Window>
@@ -57,6 +59,7 @@ export function ProjectForm({ projectId }: { projectId?: string }) {
 }
 
 function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectState>["projects"][number] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [title, setTitle] = useState(editing?.title ?? "");
   const [goal, setGoal] = useState(editing?.goal ?? "");
@@ -65,7 +68,7 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
   const [due, setDue] = useState(editing?.due_date ?? "");
   const [withSteps, setWithSteps] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
-  const back = editing ? `/guild/projects/${editing.id}` : "/guild/projects";
+  const back = editing ? store.path(`/projects/${editing.id}`) : store.path("/projects");
 
   const submit = () => {
     const next: Errors = {};
@@ -92,7 +95,7 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
     }
     const id = createProject({ ...input, withSteps });
     uiToast("プロジェクトを つくりました（見本のため保存はされません）");
-    router.push(`/guild/projects/${id}`);
+    router.push(store.path(`/projects/${id}`));
   };
 
   return (

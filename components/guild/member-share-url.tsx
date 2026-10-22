@@ -7,9 +7,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { shareUrl } from "@/lib/guild/shared-profile";
 import { uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
 
 // isMe：自分の画面（人からの見え方の確認）。オフのときの文だけ自分向けにする
 export function MemberShareUrl({ token, isMe = false }: { token: string | null; isMe?: boolean }) {
+  const store = useGuildStore();
   const [error, setError] = useState("");
 
   async function copy() {
@@ -29,7 +31,7 @@ export function MemberShareUrl({ token, isMe = false }: { token: string | null; 
     {token
       ? <button type="button" onClick={() => void copy()} className="c-button-sub mt-3 h-11 px-5 text-sm">▶ URLをコピー</button>
       : isMe
-        ? <p className="c-muted mt-3 text-sm">いまは共有をオフにしているため、ほかの人には「まだ共有URLを作っていません」と出ます。<Link href="/guild/me#share" className="ml-1 underline underline-offset-4">マイページで入れる</Link></p>
+        ? <p className="c-muted mt-3 text-sm">いまは共有をオフにしているため、ほかの人には「まだ共有URLを作っていません」と出ます。<Link href={store.path("/me#share")} className="ml-1 underline underline-offset-4">マイページで入れる</Link></p>
         : <p className="c-muted mt-3 text-sm">この方は、まだ共有URLを作っていません。</p>}
     {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
   </div>;

@@ -2,7 +2,7 @@
 // 役割：
 //   1. 全リクエストで session を refresh（cookie の有効期限を伸ばす）
 //   2. /admin/* 配下で未ログインなら /admin/login にリダイレクト
-//   3. /guild/* 配下で未ログインなら /guild/login にリダイレクト
+//   3. /guild/* 配下で未ログインなら /guild/login にリダイレクト（案内ページのある店のホームなど、公開の道は除く）
 //
 // `@supabase/ssr` 公式の Next.js Server-Side Auth パターンに準拠。
 // middleware で cookie を書き換えた場合は必ず supabaseResponse 経由で返す
@@ -10,6 +10,8 @@
 
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isLiveGuildPath, isLoginPath, isPublicGuildPath } from "@/lib/guild/live-routes";
+import { GUILD_ROOT, outsideStorePath } from "@/lib/guild/store-path";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -46,32 +48,6 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isLiveGuildRoute =
-    pathname === "/guild" ||
-    pathname === "/guild/members" ||
-    pathname.startsWith("/guild/members/") ||
-    pathname === "/guild/quests" ||
-    pathname === "/guild/quests/new" ||
-    pathname === "/guild/projects" ||
-    pathname === "/guild/projects/new" ||
-    pathname === "/guild/me" ||
-    pathname === "/guild/me/status" ||
-    pathname === "/guild/me/status/draft" ||
-    pathname === "/guild/me/wish" ||
-    pathname === "/guild/plan" ||
-    pathname === "/guild/requests" ||
-    pathname === "/guild/notifications" ||
-    pathname === "/guild/join" ||
-    pathname === "/guild/survey" ||
-    pathname === "/guild/forgot-password" ||
-    pathname === "/guild/reset-password" ||
-    pathname === "/guild/auth/callback" ||
-    pathname === "/guild/master" ||
-    pathname === "/guild/master/gathering/new" ||
-    /^\/guild\/projects\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\/edit)?$/i.test(pathname) ||
-    /^\/guild\/quests\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?:\/(?:edit|applicants))?$/i.test(
-      pathname,
-    );
 
   // /admin/login だけは未ログインでも通す
   if (pathname.startsWith("/admin") && pathname !== "/admin/login" && !user) {
@@ -81,23 +57,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const isPublicGuildRoute = pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/survey" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback";
-  if (pathname.startsWith("/guild") && !isPublicGuildRoute && !user) {
+  // 酒場の道の表は lib/guild/live-routes.ts（店の名前を外した形で照合する）。道の組み立ては lib/guild/store-path.ts
+  const inGuild = pathname.startsWith(GUILD_ROOT);
+  if (inGuild && !isPublicGuildPath(pathname) && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/guild/login";
+    url.pathname = outsideStorePath("login");
     url.search = "";
     url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     return NextResponse.redirect(url);
   }
 
-  if (
-    user &&
-    pathname.startsWith("/guild") &&
-    pathname !== "/guild/login" &&
-    !isLiveGuildRoute
-  ) {
+  if (user && inGuild && !isLoginPath(pathname) && !isLiveGuildPath(pathname)) {
     const url = request.nextUrl.clone();
-    url.pathname = "/guild/members";
+    url.pathname = GUILD_ROOT;
     url.search = "";
     return NextResponse.redirect(url);
   }

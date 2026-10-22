@@ -3,10 +3,12 @@ import { getMyGuildBilling } from "@/lib/guild/server-data";
 import { resolveSakabaPlan } from "@/lib/guild/billing-plans";
 import { createClient } from "@/lib/supabase/server";
 import { getConfiguredSakabaPrices, getSakabaStripeClient, getSakabaStripeMode } from "@/lib/stripe/client";
+import { currentStore } from "@/lib/guild/current-store";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
+  const store = await currentStore();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "ログインが必要です。" }, { status: 401 });
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
     if (switching && (!["standard", "dining"].includes(resolveSakabaPlan(billing, getConfiguredSakabaPrices())) || !billing.stripe_subscription_id)) {
       return NextResponse.json({ error: "変更できる契約がありません。" }, { status: 409 });
     }
-    const returnPath = request.nextUrl.searchParams.get("from") === "me" ? "/guild/me" : "/guild/plan";
+    const returnPath = request.nextUrl.searchParams.get("from") === "me" ? store.path("/me") : store.path("/plan");
     const session = await getSakabaStripeClient().billingPortal.sessions.create({
       customer: billing.stripe_customer_id,
       ...(switching && configuration ? { configuration } : {}),

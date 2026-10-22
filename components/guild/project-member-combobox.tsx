@@ -41,14 +41,14 @@ export function ProjectMemberCombobox({ members, label, selectedMemberId, onChan
       }}
     />
     {selectedMemberId && <p className="c-muted mt-1 text-xs">ギルドメンバーを選択中。名前を書き換えると自由入力になります。</p>}
-    {open && <div id={listId} role="listbox" aria-label="ギルドメンバー候補" className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto border-2 border-[#1b2a41] bg-[#fffdf6] shadow-[4px_4px_0_rgba(27,42,65,0.18)]">
+    {open && <div id={listId} role="listbox" aria-label="ギルドメンバー候補" className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto border-2 border-guild-ink bg-guild-paper shadow-[4px_4px_0_rgba(27,42,65,0.18)]">
       {visible.length === 0 ? <p className="c-muted px-3 py-3 text-xs">一致するメンバーはいません。この名前のまま追加できます。</p> : visible.map((member, index) => <button
         key={member.id} id={`${listId}-${index}`} type="button" role="option" aria-selected={active === index}
         onMouseDown={(event) => event.preventDefault()} onClick={() => select(member)}
-        className={`block w-full border-b border-[#1b2a41]/15 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-[#f3ecd9] ${active === index ? "bg-[#e8cf8e]" : ""}`}
+        className={`block w-full border-b border-guild-ink/15 px-3 py-2 text-left text-sm last:border-b-0 hover:bg-guild-bg ${active === index ? "bg-guild-accent-light" : ""}`}
       ><span className="block">{member.display_name}</span><span className="c-muted block text-xs">{[member.name_kana, member.job, member.region].filter(Boolean).join(" · ")}</span></button>)}
       {matches.length > visible.length && <p className="c-muted px-3 py-2 text-xs">ほかのメンバーは名前を入力して絞り込めます。</p>}
-      <p className="c-muted border-t border-[#1b2a41]/15 px-3 py-2 text-xs">候補を選ばず「追加」を押すと、自由入力の相手として保存します。</p>
+      <p className="c-muted border-t border-guild-ink/15 px-3 py-2 text-xs">候補を選ばず「追加」を押すと、自由入力の相手として保存します。</p>
     </div>}
   </div>;
 }

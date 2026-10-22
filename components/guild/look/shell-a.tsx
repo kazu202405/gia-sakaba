@@ -1,6 +1,8 @@
 // A案の外枠。背景と窓はRPG風、文字は要所（名前・見出し・メニュー）だけドット。
 
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { cn } from "@/lib/utils";
 
 const PX = "font-[family-name:var(--font-pixel-jp)]";
@@ -8,9 +10,9 @@ const PX = "font-[family-name:var(--font-pixel-jp)]";
 export const NAV_A = [
   { href: "/guild-look/a", label: "ホーム" },
   { href: "/guild-look/a/status", label: "なかま" },
-  { href: "/guild/quests", label: "クエスト" },
-  { href: "/guild/requests", label: "紹介依頼" },
-  { href: "/guild/me", label: "マイページ" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/quests"), label: "クエスト" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/requests"), label: "紹介依頼" },
+  { href: guildPath(DEFAULT_STORE_SLUG, "/me"), label: "マイページ" },
 ];
 
 export function ShellA({ active, children }: { active: string; children: React.ReactNode }) {

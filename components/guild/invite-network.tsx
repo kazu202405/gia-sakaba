@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { StoreLink } from "@/components/guild/store-link";
 import type { GuildInviteNetworkMember } from "@/lib/guild/server-data";
 import { formatDate } from "@/lib/guild/labels";
 import { Window } from "./cards";
@@ -13,13 +13,13 @@ function Branch({ person, childrenByInviter, path }: {
   const children = (childrenByInviter.get(person.user_id) ?? []).filter((child) => !nextPath.has(child.user_id));
   return <li>
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
-      <Link href={`/guild/members/${person.user_id}`} className="underline underline-offset-4">{person.display_name}</Link>
+      <StoreLink to={`/members/${person.user_id}`} className="underline underline-offset-4">{person.display_name}</StoreLink>
       {person.role === "owner" && <span className="c-chip text-[10px]">オーナー</span>}
       {person.role === "master" && <span className="c-chip text-[10px]">管理者</span>}
       <span className="c-muted text-xs">{formatDate(person.joined_at)} 入会{person.suspended ? "・停止中" : ""}</span>
       {children.length > 0 && <span className="c-muted text-xs">→ {children.length}人を招待</span>}
     </div>
-    {children.length > 0 && <ul className="ml-3 border-l-2 border-dashed border-[#1b2a41]/25 pl-4 sm:ml-5 sm:pl-5">
+    {children.length > 0 && <ul className="ml-3 border-l-2 border-dashed border-guild-ink/25 pl-4 sm:ml-5 sm:pl-5">
       {children.map((child) => <Branch key={child.user_id} person={child} childrenByInviter={childrenByInviter} path={nextPath} />)}
     </ul>}
   </li>;

@@ -29,7 +29,7 @@ export function JobAvatar({
       role="img"
       aria-label={name}
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden border-3 border-[#1b2a41] bg-[#1b2a41] shadow-[inset_0_0_0_2px_#fffdf6]",
+        "relative inline-flex shrink-0 items-center justify-center overflow-hidden border-3 border-guild-ink bg-guild-ink shadow-[inset_0_0_0_2px_#fffdf6]",
         s.box,
         className,
       )}

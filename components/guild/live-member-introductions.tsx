@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveMemberIntroductions({ targetId, targetName, currentUserId, initial }: {
   targetId: string;
@@ -14,6 +15,7 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
   currentUserId: string;
   initial: GuildMemberIntroduction[];
 }) {
+  const store = useGuildStore();
   const isMe = targetId === currentUserId;
   const [items, setItems] = useState(initial);
   const mine = items.find((item) => item.author_id === currentUserId);
@@ -24,7 +26,7 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
 
   async function refresh() {
     const { data, error: rpcError } = await createClient().rpc("sakaba_list_member_introductions", {
-      p_guild_slug: "gia",
+      p_guild_slug: store.slug,
       p_target_id: targetId,
     });
     if (rpcError) throw rpcError;
@@ -40,7 +42,7 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
     setPending(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_save_member_introduction", {
-        p_guild_slug: "gia",
+        p_guild_slug: store.slug,
         p_target_id: targetId,
         p_body: text,
       });
@@ -81,7 +83,7 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
   return <Window title="紹介状" action={<span className="c-muted text-xs">{items.length}通</span>}>
     <p className="c-muted mb-5 text-sm leading-relaxed">酒場で{isMe ? "あなた" : `${targetName}さん`}を知る仲間から見た、人柄や魅力の紹介です。</p>
     {!isMe && !editing && <button type="button" onClick={() => { setBody(mine?.body ?? ""); setEditing(true); }} className="rpg-button h-11 px-5 text-sm">{mine ? "▶ 自分の紹介文をなおす" : "▶ 紹介文を書く"}</button>}
-    {!isMe && editing && <div className="mb-6 border-2 border-dashed border-[#8f7337] bg-[#fffdf6] p-4">
+    {!isMe && editing && <div className="mb-6 border-2 border-dashed border-guild-accent-dark bg-guild-paper p-4">
       <label className="block"><span className="text-sm tracking-wider">{targetName}さんは、どんな仲間？</span>
         <textarea value={body} onChange={(event) => { setBody(event.target.value); setError(""); }} rows={5} maxLength={400} className="c-input mt-2 leading-relaxed" placeholder="話したときの印象や人柄、ほかの仲間に伝えたい魅力を書いてください" /></label>
       <p className="c-muted mt-1 text-right text-[11px] tabular-nums">{body.length}/400</p>
@@ -89,11 +91,11 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
     </div>}
     {error && <p role="alert" className="mb-4 text-sm text-[#c62828]">{error}</p>}
     {items.length === 0 ? <p className="c-card border-dashed px-4 py-8 text-center text-sm">紹介状はまだありません。</p> :
-      <ul className="grid gap-4 sm:grid-cols-2">{items.map((item) => <li key={item.id} className="relative border-2 border-[#1b2a41] bg-[#fffdf6] p-4 pt-5 shadow-[3px_3px_0_#c8a55a]">
-        <span className="absolute -top-2 left-4 bg-[#fffdf6] px-2 text-[10px] tracking-[0.14em] text-[#8f7337]">LETTER FROM ALLY</span>
+      <ul className="grid gap-4 sm:grid-cols-2">{items.map((item) => <li key={item.id} className="relative border-2 border-guild-ink bg-guild-paper p-4 pt-5 shadow-[3px_3px_0_#c8a55a]">
+        <span className="absolute -top-2 left-4 bg-guild-paper px-2 text-[10px] tracking-[0.14em] text-guild-accent-dark">LETTER FROM ALLY</span>
         <p className="whitespace-pre-line break-words text-sm leading-[1.9]">{item.body}</p>
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-2 border-t border-[#1b2a41]/15 pt-3">
-          <div><Link href={`/guild/members/${item.author_id}`} className="text-sm underline underline-offset-4">{item.author_name}</Link><p className="c-muted mt-0.5 text-[10px]">{formatDate(item.updated_at)}</p></div>
+        <div className="mt-4 flex flex-wrap items-end justify-between gap-2 border-t border-guild-ink/15 pt-3">
+          <div><Link href={store.path(`/members/${item.author_id}`)} className="text-sm underline underline-offset-4">{item.author_name}</Link><p className="c-muted mt-0.5 text-[10px]">{formatDate(item.updated_at)}</p></div>
           <div className="flex gap-2 text-xs">{item.can_edit && <button type="button" disabled={pending} onClick={() => { setBody(item.body); setEditing(true); }} className="c-button-sub h-9 px-3 text-xs disabled:opacity-50">編集</button>}{item.can_delete && <button type="button" disabled={pending} onClick={() => void remove(item)} className="c-button-danger h-9 px-3 text-xs disabled:opacity-50">削除</button>}</div>
         </div>
       </li>)}</ul>}

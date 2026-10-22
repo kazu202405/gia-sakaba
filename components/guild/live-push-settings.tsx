@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Window } from "./cards";
 import { uiToast } from "@/lib/ui-dialog";
+import { useGuildStore } from "@/components/guild/store-context";
+import { GUILD_ROOT } from "@/lib/guild/store-path";
 
 type Settings = {
   vapidPublicKey: string;
@@ -30,6 +32,7 @@ async function request(path: string, method: string, body?: unknown) {
 }
 
 export function LivePushSettings() {
+  const store = useGuildStore();
   const [settings, setSettings] = useState<Settings | null>(null);
   const [supported, setSupported] = useState(true);
   const [needsHomeScreen, setNeedsHomeScreen] = useState(false);
@@ -49,7 +52,7 @@ export function LivePushSettings() {
         if (!active) return;
         setSettings(next);
         if (compatible) {
-          const registration = await navigator.serviceWorker.getRegistration("/guild");
+          const registration = await navigator.serviceWorker.getRegistration(GUILD_ROOT);
           const subscription = await registration?.pushManager.getSubscription();
           if (active) setEnabled(Boolean(subscription && next.endpoints.includes(subscription.endpoint)));
         }
@@ -68,7 +71,7 @@ export function LivePushSettings() {
       // iOS requires the permission prompt to follow the user's tap directly.
       const permission = await Notification.requestPermission();
       if (permission !== "granted") throw new Error("通知が許可されていません。端末の通知設定を確認してください。");
-      await navigator.serviceWorker.register("/guild-sw.js", { scope: "/guild" });
+      await navigator.serviceWorker.register("/guild-sw.js", { scope: GUILD_ROOT });
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription() ?? await registration.pushManager.subscribe({
         userVisibleOnly: true, applicationServerKey: decodePublicKey(settings.vapidPublicKey),
@@ -89,7 +92,7 @@ export function LivePushSettings() {
     if (busy) return;
     setBusy(true); setError("");
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/guild");
+      const registration = await navigator.serviceWorker.getRegistration(GUILD_ROOT);
       const subscription = await registration?.pushManager.getSubscription();
       if (subscription) {
         await request("/api/guild/push/subscriptions", "DELETE", { endpoint: subscription.endpoint });
@@ -105,12 +108,12 @@ export function LivePushSettings() {
     if (busy || !enabled) return;
     setBusy(true); setError("");
     try {
-      const registration = await navigator.serviceWorker.getRegistration("/guild");
+      const registration = await navigator.serviceWorker.getRegistration(GUILD_ROOT);
       if (!registration) throw new Error("通知の準備ができていません。ページを再読み込みしてください。");
-      await registration.showNotification("GIAの酒場", {
+      await registration.showNotification(store.config.name, {
         body: "この端末で通知を表示できました。",
         icon: "/images/sakaba/guild-icon-20260929-192.png",
-        data: { href: "/guild/notifications" },
+        data: { href: store.path("/notifications") },
       });
       uiToast("端末にテスト通知を表示しました");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "テスト通知を表示できませんでした。"); }
@@ -144,8 +147,8 @@ export function LivePushSettings() {
         {enabled && <button type="button" disabled={busy} onClick={() => void testOnThisDevice()}
           className="c-button-sub ml-2 h-11 px-4 text-sm disabled:opacity-50">この端末で表示テスト</button>}
         {settings && <div className="space-y-3">
-          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-[#1b2a41]" />申込・承認・紹介などのおしらせ</label>
-          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-[#1b2a41]" />担当タスク・参加中のプロジェクト・クエストの締切前日</label>
+          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-guild-ink" />申込・承認・紹介などのおしらせ</label>
+          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-guild-ink" />担当タスク・参加中のプロジェクト・クエストの締切前日</label>
         </div>}
         <p className="c-muted text-xs">期限のおしらせは前日の午前9時以降に1回。クエストの期限は申込締切です。表示テストは端末だけの確認で、サーバーからの配信テストではありません。</p>
       </div>}

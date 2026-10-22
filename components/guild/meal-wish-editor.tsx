@@ -1,9 +1,12 @@
 "use client";
 
+import { useGuildStore } from "@/components/guild/store-context";
+import { guildApiPath } from "@/lib/guild/store-path";
 import { useState } from "react";
 import { MEAL_WISH_MAX_LENGTH } from "@/lib/guild/meal-wishes";
 
 export function MealWishEditor({ initialText }: { initialText: string }) {
+  const store = useGuildStore();
   const [text, setText] = useState(initialText);
   const [savedText, setSavedText] = useState(initialText);
   const [pending, setPending] = useState<"save" | "delete" | null>(null);
@@ -15,7 +18,7 @@ export function MealWishEditor({ initialText }: { initialText: string }) {
     if (pending) return;
     setPending("save"); setError(""); setMessage("");
     try {
-      const response = await fetch("/api/guild/meal-wish", {
+      const response = await fetch(guildApiPath(store.slug, "/meal-wish"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ wish_text: text }),
@@ -35,7 +38,7 @@ export function MealWishEditor({ initialText }: { initialText: string }) {
     if (pending) return;
     setPending("delete"); setError(""); setMessage("");
     try {
-      const response = await fetch("/api/guild/meal-wish", { method: "DELETE" });
+      const response = await fetch(guildApiPath(store.slug, "/meal-wish"), { method: "DELETE" });
       const result = await response.json() as { deleted?: boolean; error?: string };
       if (!response.ok || !result.deleted) throw new Error(result.error || "削除できませんでした。");
       setText(""); setSavedText(""); setConfirmDelete(false);

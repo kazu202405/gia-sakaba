@@ -30,8 +30,8 @@ export function FilterRow<T extends string>({
           aria-pressed={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "border-2 border-[#1b2a41] px-2.5 py-1.5 text-xs tabular-nums",
-            value === o.value ? "bg-[#1b2a41] text-[#fffdf6]" : "bg-[#fffdf6] text-[#1b2a41]",
+            "border-2 border-guild-ink px-2.5 py-1.5 text-xs tabular-nums",
+            value === o.value ? "bg-guild-ink text-guild-paper" : "bg-guild-paper text-guild-ink",
           )}
         >
           {o.label}

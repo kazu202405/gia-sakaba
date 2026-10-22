@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { ShellC } from "@/components/guild/look/shell-c";
 import { PixelIcon } from "@/components/guild/look/pixel-icon";
 import { closedStatuses, introStatusLabel, questCategoryLabel } from "@/lib/guild/labels";
@@ -24,7 +26,7 @@ export default function LookCHomePage() {
             <span className="inline-block">とどいています。</span>
           </p>
           <div className="mt-4 flex items-center justify-between gap-3">
-            <Link href="/guild/requests" className="rpg-button text-sm">
+            <Link href={guildPath(DEFAULT_STORE_SLUG, "/requests")} className="rpg-button text-sm">
               ▶ 見にいく
             </Link>
             <span className="rpg-blink text-[#1b2a41]" aria-hidden>
@@ -41,7 +43,7 @@ export default function LookCHomePage() {
                 const t = getProfile(r.target_id);
                 return (
                   <li key={r.id}>
-                    <Link href="/guild/requests" className="rpg-cursor-row flex items-center justify-between gap-3 py-1.5 text-[15px]">
+                    <Link href={guildPath(DEFAULT_STORE_SLUG, "/requests")} className="rpg-cursor-row flex items-center justify-between gap-3 py-1.5 text-[15px]">
                       <span className="flex min-w-0 items-center gap-1.5">
                         <span className="rpg-cursor text-[#b3261e]">▶</span>
                         <span className="truncate">{t?.display_name}さん</span>
@@ -59,7 +61,7 @@ export default function LookCHomePage() {
             <ul className="space-y-3">
               {newQuests.map((q) => (
                 <li key={q.id}>
-                  <Link href={`/guild/quests/${q.id}`} className="rpg-cursor-row block">
+                  <Link href={guildPath(DEFAULT_STORE_SLUG, `/quests/${q.id}`)} className="rpg-cursor-row block">
                     <span className="flex items-center gap-1.5 text-xs">
                       <span className="rpg-cursor text-[#b3261e]">▶</span>
                       <span className="text-[#8f7337]">{questCategoryLabel[q.category]}</span>

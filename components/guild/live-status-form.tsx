@@ -12,6 +12,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Snapshot = { draft: MyGuildProfile };
 
@@ -21,10 +22,10 @@ function validationError({ draft }: Snapshot): string | null {
   return null;
 }
 
-async function persist({ draft }: Snapshot) {
+async function persist(slug: string, { draft }: Snapshot) {
   const supabase = createClient();
   const profileResult = await supabase.rpc("sakaba_update_my_profile_simple", {
-    p_guild_slug: "gia",
+    p_guild_slug: slug,
     p_display_name: draft.display_name.trim(),
     p_photo_url: draft.photo_url ?? "",
     p_headline: draft.headline.trim(),
@@ -48,12 +49,12 @@ async function persist({ draft }: Snapshot) {
   });
   if (profileResult.error) return profileResult;
   const extrasResult = await supabase.rpc("sakaba_update_profile_extras", {
-    p_guild_slug: "gia",
+    p_guild_slug: slug,
     p_name_kana: draft.name_kana?.trim() ?? "",
   });
   if (extrasResult.error) return extrasResult;
   return supabase.rpc("sakaba_update_personal_profile", {
-    p_guild_slug: "gia",
+    p_guild_slug: slug,
     p_hometown: draft.hometown?.trim() ?? "",
     p_hobbies: draft.hobbies?.trim() ?? "",
     p_life_story: draft.life_story?.trim() ?? "",
@@ -70,6 +71,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
   contactEditor?: React.ReactNode;
   profileDraft?: { id: string; from: string; skipped: DraftField[] };
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const currentYear = new Date().getUTCFullYear();
   const [draft, setDraft] = useState(initial);
@@ -97,7 +99,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       if (issue) { setError(issue); setSaveState("error"); return false; }
       setSaveState("saving"); setError("");
       try {
-        const { error: rpcError } = await persist(snapshot);
+        const { error: rpcError } = await persist(store.slug, snapshot);
         if (rpcError) { setError("保存できませんでした。少し待ってもう一度お試しください。"); setSaveState("error"); return false; }
       } catch {
         setError("通信に失敗しました。接続を確認してもう一度お試しください。"); setSaveState("error"); return false;
@@ -114,7 +116,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
     });
     queueRef.current = next.catch(() => false);
     return next;
-  }, []);
+  }, [store.slug]);
 
   useEffect(() => {
     latestRef.current = { draft };
@@ -146,14 +148,14 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       }
       uiToast("ステータスに載せました");
     }
-    router.push("/guild/me"); router.refresh();
+    router.push(store.path("/me")); router.refresh();
   }
 
   /** 下書きから来たときの「戻る」。保存はしない（載せるのは、保存を押したときだけ） */
   function leaveWithoutSaving() {
     if (leaving) return;
     setLeaving(true);
-    router.push("/guild/me/status/draft");
+    router.push(store.path("/me/status/draft"));
   }
 
   function closeCropper() {
@@ -233,7 +235,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
         </div>
         <Field label="職業" optional hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
         <Field label="プロフィールのアイコン" optional hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
-          <button type="button" aria-expanded={iconPickerOpen} aria-controls="profile-icon-options" onClick={() => setIconPickerOpen((open) => !open)} className="c-input flex min-h-16 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41]">
+          <button type="button" aria-expanded={iconPickerOpen} aria-controls="profile-icon-options" onClick={() => setIconPickerOpen((open) => !open)} className="c-input flex min-h-16 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-guild-ink">
             <JobAvatar icon={draft.job_icon} name={jobIconLabel[draft.job_icon]} size="sm" />
             <span className="flex-1 text-sm">{jobIconLabel[draft.job_icon]}</span>
             <span className="c-muted text-xs">{iconPickerOpen ? "閉じる ▲" : "アイコンを選ぶ ▼"}</span>
@@ -242,7 +244,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
             {(Object.keys(jobIconLabel) as JobIconKey[]).map((key) => <button
               key={key} type="button" onClick={() => { set("job_icon", key); setIconPickerOpen(false); }}
               aria-pressed={draft.job_icon === key}
-              className={`flex min-h-24 flex-col items-center justify-center gap-2 border-2 p-2 text-center text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1b2a41] ${draft.job_icon === key ? "border-[#1b2a41] bg-[#e8cf8e]" : "border-[#1b2a41]/25 bg-[#fffdf6] hover:border-[#1b2a41]"}`}
+              className={`flex min-h-24 flex-col items-center justify-center gap-2 border-2 p-2 text-center text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-guild-ink ${draft.job_icon === key ? "border-guild-ink bg-guild-accent-light" : "border-guild-ink/25 bg-guild-paper hover:border-guild-ink"}`}
             >
               <JobAvatar icon={key} name={jobIconLabel[key]} size="sm" />
               <span>{jobIconLabel[key]}</span>

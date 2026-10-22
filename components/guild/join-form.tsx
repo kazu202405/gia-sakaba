@@ -24,10 +24,12 @@ import { Window } from "./cards";
 import { LegalLinks } from "./legal-consent";
 import { LoginGuide } from "./login-guide";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
 export function JoinForm({ inviterName, inviteCode, preview = false, initialName = "", prepared = null }: { inviterName: string; inviteCode: string; preview?: boolean; initialName?: string; prepared?: PreparedInvite | null }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [draft, setDraft] = useState<JoinDraft>({
     display_name: initialName.slice(0, JOIN_NAME_MAX),
@@ -54,7 +56,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
 
   return (
     <Window title="入会フォーム">
-      {preview ? <p className="mb-6 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
+      {preview ? <p className="mb-6 border-2 border-dashed border-guild-ink bg-guild-paper p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
         <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
       {!preview && <div className="mb-6"><LoginGuide /></div>}
       {prepared && <p className="c-card mb-6 px-4 py-3 text-sm leading-relaxed">招待した人が、お名前などを下書きしました。内容を確認し、違うところは直してください。入会するまでは名鑑に表示されません。</p>}
@@ -91,13 +93,13 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             // 承認が要る人は、申請後の画面（app/guild/layout.tsx が出す）へ。入会の祝いは出さない
             if ((data as { pending?: boolean } | null)?.pending) {
               uiToast(APPROVAL_COPY.appliedToast);
-              router.push("/guild");
+              router.push(store.path());
               router.refresh();
               return;
             }
-            uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : "GIAの酒場に入会しました");
+            uiToast((data as { already_member?: boolean } | null)?.already_member ? "すでに入会しています" : `${store.config.name}に入会しました`);
             // 入会した直後は、ホームで「はじめまして」を出す（すでに入会済みの人には出さない）
-            router.push((data as { already_member?: boolean } | null)?.already_member ? "/guild" : "/guild?welcome=1");
+            router.push((data as { already_member?: boolean } | null)?.already_member ? store.path() : store.path("?welcome=1"));
             router.refresh();
           } catch {
             setSaveError(needsApproval ? "申請できませんでした。招待リンクの期限や利用回数、入力内容を確認し、再度お試しください。" : "入会できませんでした。招待リンクの期限や利用回数を確認し、再度お試しください。");
@@ -218,7 +220,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
             </div>
           ))}
           <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
-          <div className="space-y-1 border-t border-[#1b2a41]/20 pt-3">
+          <div className="space-y-1 border-t border-guild-ink/20 pt-3">
             <p className="text-sm leading-relaxed">入会の前に、利用規約とプライバシーポリシーもお読みください。</p>
             <LegalLinks />
           </div>

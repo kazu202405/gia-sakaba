@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { GUILD_ROOT, outsideStorePath } from "@/lib/guild/store-path";
 
 function safeNext(value: string | null): string {
-  if (value === "/guild/reset-password") return value;
-  if (value?.startsWith("/guild/join?") && !value.startsWith("//")) return value;
+  if (value === outsideStorePath("reset-password")) return value;
+  if (value?.startsWith(outsideStorePath("join", "?")) && !value.startsWith("//")) return value;
   if (value && /^\/e\/[0-9a-f]{64}$/i.test(value)) return value;
   if (value && /^\/i\/[0-9a-f]{64}$/i.test(value)) return value;
-  return "/guild";
+  return GUILD_ROOT;
 }
 
 export async function GET(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
     if (!error) return response;
   }
 
-  const fallback = new URL(next === "/guild/reset-password" ? "/guild/forgot-password" : "/guild/login", request.url);
+  const fallback = new URL(next === outsideStorePath("reset-password") ? outsideStorePath("forgot-password") : outsideStorePath("login"), request.url);
   fallback.searchParams.set("auth_error", "1");
   return NextResponse.redirect(fallback);
 }

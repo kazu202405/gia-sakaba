@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { ShellB } from "@/components/guild/look/shell-b";
 import { PixelIcon } from "@/components/guild/look/pixel-icon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/8bit/card";
@@ -28,7 +30,7 @@ export default function LookBHomePage() {
               紹介の打診が {offers.length}件 届いています。
             </p>
             <Button asChild className="text-xs">
-              <Link href="/guild/requests">▶ 見にいく</Link>
+              <Link href={guildPath(DEFAULT_STORE_SLUG, "/requests")}>▶ 見にいく</Link>
             </Button>
           </CardContent>
         </Card>
@@ -61,7 +63,7 @@ export default function LookBHomePage() {
               <ul className="space-y-4">
                 {newQuests.map((q) => (
                   <li key={q.id}>
-                    <Link href={`/guild/quests/${q.id}`} className="block hover:underline">
+                    <Link href={guildPath(DEFAULT_STORE_SLUG, `/quests/${q.id}`)} className="block hover:underline">
                       <span className="flex flex-wrap items-center gap-3">
                         <Badge variant="secondary" className="text-[10px]">
                           {questCategoryLabel[q.category]}

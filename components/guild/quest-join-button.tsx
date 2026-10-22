@@ -12,10 +12,12 @@ import { gatheringApplyResult, isExecutive } from "@/lib/guild/join";
 import { ME_ID, applicantCount, getApplication, getProfile } from "@/lib/guild/mock-data";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { TextArea } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const MESSAGE_MAX = 200;
 
 export function QuestJoinButton({ quest }: { quest: Quest }) {
+  const store = useGuildStore();
   const initial = getApplication(quest.id, ME_ID);
   const me = getProfile(ME_ID)!;
   const gathering = quest.members_only;
@@ -28,7 +30,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
   if (quest.creator_id === ME_ID) {
     return (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <Link href={`/guild/quests/${quest.id}/applicants`} className="rpg-button h-12 w-full text-base sm:w-auto">
+        <Link href={store.path(`/quests/${quest.id}/applicants`)} className="rpg-button h-12 w-full text-base sm:w-auto">
           ▶ 参加したい人を見る（{applicantCount(quest.id)}人）
         </Link>
         <p className="c-muted text-xs">あなたが出した クエストです。</p>

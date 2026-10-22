@@ -10,12 +10,14 @@ import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
 // quota：今月の申請の残り（読めなかったら null。そのときは数を出さず、DBの判定に任せる）
 // inviteConnected：入会のつながりで、直接つながっている相手（招待した人・された人）。回数には数えないので、残りの表示は出さない
 export function LiveIntroRequestButton({ target, existing, quota: quotaProp = null, inviteConnected = false }: { target: Profile; existing: GuildIntroRequest | null; quota?: { plan: PlanKey; slot: QuotaSlot } | null; inviteConnected?: boolean }) {
+  const store = useGuildStore();
   const quota = inviteConnected ? null : quotaProp;
   const router = useGuildRouter();
   const [open, setOpen] = useState(false);
@@ -42,7 +44,7 @@ export function LiveIntroRequestButton({ target, existing, quota: quotaProp = nu
     setSaving(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_create_intro_request", {
-        p_guild_slug: "gia", p_target_id: target.id, p_purpose: purpose, p_message: message.trim(),
+        p_guild_slug: store.slug, p_target_id: target.id, p_purpose: purpose, p_message: message.trim(),
       });
       if (rpcError) {
         setError(rpcError.code === "23505" ? "この人へのつながり申請は進行中です。"
@@ -60,7 +62,7 @@ export function LiveIntroRequestButton({ target, existing, quota: quotaProp = nu
     }
   }
 
-  if (existing || sent) return <Link href="/guild/requests" className="c-button-sub h-12 w-full sm:w-auto">申請の状況を見る ▶</Link>;
+  if (existing || sent) return <Link href={store.path("/requests")} className="c-button-sub h-12 w-full sm:w-auto">申請の状況を見る ▶</Link>;
   if (!target.accept_intro) return <p className="c-card border-dashed px-4 py-3 text-sm">{target.display_name}さんは、いまつながり申請を受け付けていません。</p>;
 
   if (quota && isExhausted(quota.slot)) return <PlanQuotaExhausted kind="intro" plan={quota.plan} slot={quota.slot} />;
@@ -69,7 +71,7 @@ export function LiveIntroRequestButton({ target, existing, quota: quotaProp = nu
     <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{inviteConnected ? "▶ 連絡先を見せてもらう" : "▶ つながりを申請する"}</button>
     {quota && <PlanQuotaNote kind="intro" plan={quota.plan} slot={quota.slot} className="mt-2" />}
     {open && <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
-      <div className="absolute inset-0 bg-[#1b2a41]/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
+      <div className="absolute inset-0 bg-guild-ink/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
       <div role="dialog" aria-modal="true" aria-labelledby="intro-live-title" className="c-window relative w-full pt-9 sm:max-w-lg">
         <h2 id="intro-live-title" className="c-window-title">{inviteConnected ? "連絡先を見せてもらう" : "つながり申請"}</h2>
         <button type="button" disabled={saving} onClick={() => setOpen(false)} aria-label="閉じる" className="absolute top-1.5 right-2 px-2 text-xl leading-none disabled:opacity-50">×</button>

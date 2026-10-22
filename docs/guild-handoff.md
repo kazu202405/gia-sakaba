@@ -1,5 +1,15 @@
 # GIAの酒場 — 続きからの作業メモ
 
+## 酒場を複数の店に分けた（0131・0132・未適用／枝 feature/sakaba-multi-store）
+
+- URLは `/guild/<店>/…`（例 `/guild/gia/quests`・`/guild/kensetsu-fudosan/quests`）。昔の `/guild/quests` などは `/guild/gia/…` へ転送する（?以降も残す）。ログイン・パスワード再設定・入会・アンケート・manifest は店に属さないので `/guild/login` などのまま。道の組み立ては `lib/guild/store-path.ts` の1か所。
+- 店ごとの設定（見た目のテーマ・案内ページの文言・呼び名）は `lib/guild/stores.ts` の1か所。DBの `sakaba.guilds`（slug・名前・terms）と食い違わないよう `lib/guild/stores.test.ts` が migration と照合する。
+- 「今の店」：サーバーは `currentStore()`（proxy.ts が道から決めて x-guild-store に載せる）、ブラウザは `useGuildStore()`。画面コードに店の slug や `/guild/…` を直書きしない（`lib/guild/store-literal-guard.test.ts` が見張る）。店を足すときは stores.ts に1店分と、migration の行を足す。
+- 見た目：`guild-theme.css` の変数（`--guild-ink` など）を、店のラッパーの `data-theme`（形）と `data-store`（色）で上書きする。落ち着いた見た目は theme=plain。
+- DB：0131＝`sakaba_get_prepared_invite`／`sakaba_get_shared_profile` に店の引数（任意）を足し、`sakaba_push_candidates` の行き先を店の道にした。0132＝2店目の行。owner の付与は `supabase/manual/0132_grant_kensetsu_fudosan_owner.sql` を手で流す。
+- 権限の実測：`supabase/tests/multi_store_permissions.sql`（手元のPostgreSQL 16の複製で流す。手順は冒頭）。
+- 未対応：ゲストの集まり（/e/…）から入った人の行き先は入口（/guild）経由／決済後の `/guild/<店>/thanks` は middleware の一覧に昔から無く、入口へ戻される／通知の題名（public/guild-sw.js）は固定の「GIAの酒場」／ダイアログ・トーストは店の見た目に着替えない。
+
 ## 管理者が人をつなぐ紹介（0112・未適用）
 
 - 既存の入会招待・会員同士のつながり申請とは別に、管理者が会員同士、または会員と会員外の方を紹介する初期版を実装。少なくとも一方が酒場の会員であることを必須とし、会員外同士だけの紹介は扱わない。

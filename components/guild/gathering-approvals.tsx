@@ -14,8 +14,10 @@ import { gatheringDecisionNotification, notificationText } from "@/lib/guild/not
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { JobAvatar } from "./job-avatar";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function GatheringApprovals() {
+  const store = useGuildStore();
   const [apps, setApps] = useState<QuestApplication[]>(questApplications);
   const [sent, setSent] = useState<GuildNotification[]>([]);
   const pending = pendingGatheringApplications(quests, apps);
@@ -54,7 +56,7 @@ export function GatheringApprovals() {
                   <JobAvatar icon={p.job_icon} photoUrl={p.photo_url} name={p.job} />
                   <div className="min-w-0">
                     <Link
-                      href={`/guild/members/${p.id}`}
+                      href={store.path(`/members/${p.id}`)}
                       className="block text-base underline-offset-4 hover:underline"
                     >
                       {p.display_name}
@@ -119,6 +121,7 @@ export function GatheringApprovals() {
                     name: (id) => getProfile(id)?.display_name ?? "",
                     questTitle: (id) => getQuest(id)?.title ?? "",
                     intro: () => undefined,
+                    path: store.path,
                   }).text
                 }
               </li>

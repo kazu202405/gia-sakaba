@@ -1,0 +1,89 @@
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { MoreLink, Window } from "@/components/guild/cards";
+import { ShareUrlNudge } from "@/components/guild/share-url-nudge";
+import { TypeLines } from "@/components/guild/type-lines";
+import { dueLabel, upcomingTasks } from "@/lib/guild/projects";
+import {
+  getMyGuildProfile,
+  getMyShareNudgeDone,
+  listGuildNotifications,
+  listGuildProjects,
+} from "@/lib/guild/server-data";
+import { StoreLanding } from "@/components/guild/store-landing";
+import { currentStore } from "@/lib/guild/current-store";
+import { outsideStorePath } from "@/lib/guild/store-path";
+import { createClient } from "@/lib/supabase/server";
+
+// welcome=1 は、入会した直後だけ付く（初回のあいさつを出す）
+export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+  const store = await currentStore();
+  // 未ログインで開けるのは、案内ページを持つ店だけ（proxy も同じ判定）。持たない店はログインへ
+  const { data: { user } } = await (await createClient()).auth.getUser();
+  if (!user) {
+    if (store.config.landing) return <StoreLanding config={store.config} />;
+    redirect(outsideStorePath("login", `?next=${encodeURIComponent(store.path())}`));
+  }
+  const { welcome } = await searchParams;
+  const isFirstVisit = welcome === "1";
+  const [me, notifications, projects, shareNudgeDone] = await Promise.all([
+    getMyGuildProfile(),
+    listGuildNotifications(),
+    listGuildProjects(),
+    getMyShareNudgeDone(),
+  ]);
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
+  const active = projects.filter((project) => project.status === "active");
+  const upcoming = upcomingTasks(projects, projects.flatMap((project) => project.tasks), me.id, today);
+  const unread = notifications.filter((item) => item.read_at === null).length;
+
+  return <div className="space-y-10">
+    <Window title="おしらせ">
+      {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
+      <TypeLines
+        lines={[
+          { className: "text-[17px] leading-loose", segments: [{ text: isFirstVisit ? `はじめまして、${me.display_name}さん。` : `おかえりなさい、${me.display_name}さん。` }] },
+          {
+            className: "mt-1 text-sm leading-relaxed",
+            segments: isFirstVisit ? [{ text: "マイページから ステータスを うめてみましょう。" }] : unread > 0
+              ? [{ text: "まだ読んでいない おしらせが " }, { text: String(unread), className: "text-xl tabular-nums" }, { text: "件あります。" }]
+              : [{ text: "新しい おしらせはありません。" }],
+          },
+        ]}
+      />
+      {isFirstVisit
+        ? <Link href={store.path("/me")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ マイページを開く</Link>
+        : <Link href={store.path("/notifications")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>}
+    </Window>
+
+    {shareNudgeDone === false && <ShareUrlNudge />}
+
+    <div className="grid gap-10 md:grid-cols-2">
+      <Window title="すすめている プロジェクト" action={<MoreLink href={store.path("/projects")} />} className="order-2 md:order-1">
+        {active.length === 0 ? <p className="c-muted text-sm leading-relaxed">すすめている プロジェクトはありません。<Link href={store.path("/projects/new")} className="mt-1 block underline underline-offset-4">プロジェクトをつくる</Link></p> :
+          <ul className="space-y-5">{active.slice(0, 5).map((project) => {
+            const done = project.tasks.filter((task) => task.status === "done").length;
+            return <li key={project.id}>
+              <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block text-sm break-words">▶ {project.title}</Link>
+              <div className="c-gauge mt-2" aria-label={`タスク ${done}/${project.tasks.length} 完了`}>
+                {Array.from({ length: 10 }, (_, index) => <span key={index} data-on={index < (project.tasks.length ? Math.round(done / project.tasks.length * 10) : 0)} />)}
+              </div>
+            </li>;
+          })}</ul>}
+      </Window>
+
+      <Window title="しめきりが近い タスク" className="order-1 md:order-2">
+        {upcoming.length === 0 ? <p className="c-muted text-sm">7日以内の自分のタスクはありません。</p> :
+          <ul className="divide-y-2 divide-dashed divide-guild-ink/15">{upcoming.slice(0, 8).map(({ task, project }) => {
+            const due = dueLabel(task.due_date!, today);
+            return <li key={task.id}>
+              <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block py-3">
+                <span className="block text-sm break-words">▶ {task.title}</span>
+                <span className="mt-1 flex flex-wrap gap-x-3 text-xs"><span className="c-muted">{project.title}</span><span className={due.overdue ? "c-chip-strong" : "c-muted"}>{due.text}</span></span>
+              </Link>
+            </li>;
+          })}</ul>}
+      </Window>
+    </div>
+  </div>;
+}

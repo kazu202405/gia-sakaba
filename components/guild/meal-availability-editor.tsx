@@ -1,10 +1,13 @@
 "use client";
 
+import { useGuildStore } from "@/components/guild/store-context";
+import { guildApiPath } from "@/lib/guild/store-path";
 import { useState } from "react";
 import { formatScheduleShort, fromJstInputValue, toJstInputValue } from "@/lib/guild/gathering-schedule";
 import { MEAL_AVAILABILITY_LIMIT, MEAL_AVAILABILITY_NOTE_LIMIT, type MealAvailability } from "@/lib/guild/meal-availability";
 
 export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[] }) {
+  const store = useGuildStore();
   const [slots, setSlots] = useState(initial);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -22,7 +25,7 @@ export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[
     }
     setPending("add"); setError(""); setMessage("");
     try {
-      const response = await fetch("/api/guild/meal-availability", {
+      const response = await fetch(guildApiPath(store.slug, "/meal-availability"), {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ starts_at, ends_at, note }),
       });
@@ -39,7 +42,7 @@ export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[
     if (pending) return;
     setPending(id); setError(""); setMessage("");
     try {
-      const response = await fetch("/api/guild/meal-availability", {
+      const response = await fetch(guildApiPath(store.slug, "/meal-availability"), {
         method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id }),
       });
       const result = await response.json() as { deleted?: boolean; error?: string };

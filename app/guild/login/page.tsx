@@ -6,9 +6,10 @@ import Link from "next/link";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { AuthLinkError } from "@/components/guild/auth-link-error";
 import { createClient } from "@/lib/supabase/client";
+import { GUILD_ROOT, isGuildLocalPath, outsideStorePath } from "@/lib/guild/store-path";
 
 function safeNext(value: string | null): string {
-  return value?.startsWith("/guild") && !value.startsWith("//") ? value : "/guild";
+  return isGuildLocalPath(value) ? value : GUILD_ROOT;
 }
 
 const REMEMBER_EMAIL_KEY = "sakaba:remember-email";
@@ -91,7 +92,7 @@ export default function GuildLoginPage() {
       email: email.trim(),
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent("/guild")}`,
+        emailRedirectTo: `${window.location.origin}${outsideStorePath("auth/callback", `?next=${encodeURIComponent(GUILD_ROOT)}`)}`,
       },
     });
     setLinkBusy(false);
@@ -138,7 +139,7 @@ export default function GuildLoginPage() {
           <button type="button" disabled={busy || linkBusy || !email.trim()} onClick={() => void sendLoginLink()} className="c-button-sub mt-3 min-h-11 w-full disabled:opacity-50">{linkBusy ? "送信中…" : "▶ メールのリンクでログイン"}</button>
           {linkSent && <p role="status" className="mt-3 text-sm">ログイン用リンクを送りました。メールから酒場を開いてください。</p>}
         </div>
-        <Link href="/guild/forgot-password" className="mt-5 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">パスワードを忘れた方</Link>
+        <Link href={outsideStorePath("forgot-password")} className="mt-5 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">パスワードを忘れた方</Link>
       </section>
     </main>
   );

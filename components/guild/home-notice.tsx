@@ -9,10 +9,12 @@ import { ME_ID, getProfile, guild, introRequests, profiles, quests } from "@/lib
 import { getInitialNotifications, getNotifications, subscribeNotifications } from "@/lib/guild/notification-store";
 import { getInitialSeen, getSeen, subscribeSeen } from "@/lib/guild/seen-store";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const findIntro = (id: string) => introRequests.find((r) => r.id === id);
 
 export function HomeNotice() {
+  const store = useGuildStore();
   const me = getProfile(ME_ID)!;
   const items = useSyncExternalStore(subscribeNotifications, getNotifications, getInitialNotifications);
   const seen = useSyncExternalStore(subscribeSeen, getSeen, getInitialSeen);
@@ -23,7 +25,7 @@ export function HomeNotice() {
 
   const lines = [
     requests > 0 && {
-      href: "/guild/notifications",
+      href: store.path("/notifications"),
       body: (
         <>
           いらいが <Num n={requests} />けん <span className="inline-block">きています</span>
@@ -31,7 +33,7 @@ export function HomeNotice() {
       ),
     },
     newMembers > 0 && {
-      href: "/guild/members",
+      href: store.path("/members"),
       body: (
         <>
           しんき {guild.terms.member}が <Num n={newMembers} />人 <span className="inline-block">かにゅうしました</span>
@@ -39,7 +41,7 @@ export function HomeNotice() {
       ),
     },
     newQuests > 0 && {
-      href: "/guild/quests",
+      href: store.path("/quests"),
       body: (
         <>
           あたらしく <Num n={newQuests} />つの {guild.terms.quest}が <span className="inline-block">はっせいしています</span>

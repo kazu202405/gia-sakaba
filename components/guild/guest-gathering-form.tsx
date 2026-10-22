@@ -1,5 +1,6 @@
 "use client";
 
+import { GUILD_ROOT, authCallbackUrl } from "@/lib/guild/store-path";
 import { useRef, useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { APPROVAL_COPY, OTHER_TITLE_MAX, OTHER_WORK_MAX, requiresApproval } from "@/lib/guild/approval";
@@ -40,7 +41,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
     eventSubmit.preventDefault();
     if (busy) return;
     setBusy(true); setError("");
-    const callback = `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(`/e/${token}`)}`;
+    const callback = authCallbackUrl(window.location.origin, `/e/${token}`);
     const { error: authError } = await createClient().auth.signInWithOtp({
       email: email.trim(),
       options: { emailRedirectTo: callback, shouldCreateUser: true },
@@ -102,12 +103,13 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
     // 承認が要る人は、申請後の画面（app/guild/layout.tsx が出す）へ
     if ((data as { pending?: boolean } | null)?.pending) {
       uiToast(APPROVAL_COPY.appliedToast);
-      router.push("/guild");
+      // どの店に入ったかはここでは分からないので、入口（/guild）が入っている店へ送る
+      router.push(GUILD_ROOT);
       router.refresh();
       return;
     }
     uiToast("GIAの酒場に参加しました");
-    router.push("/guild/me/status?new=1");
+    router.push(`${GUILD_ROOT}?welcome=1`);
     router.refresh();
   }
 
@@ -141,7 +143,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
       {open ? <form onSubmit={(e) => void apply(e)} className="space-y-5">
         <label className="block text-sm">お名前 <span className="text-[#c62828]">必須</span><input className="c-input mt-2 h-12" value={name} onChange={(e) => setName(e.target.value)} maxLength={30} autoComplete="name" required /></label>
         <label className="block text-sm">短い自己紹介 <span className="c-muted text-xs">任意・240文字まで</span><textarea className="c-input mt-2 min-h-24" value={introduction} onChange={(e) => setIntroduction(e.target.value)} maxLength={240} placeholder="どんな仕事をしているか、最近興味のあることなど" /></label>
-        <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={showIntroduction} onChange={(e) => setShowIntroduction(e.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>名前とこの自己紹介を、この集まりの招待URLを知っている人に表示する。<span className="c-muted block text-xs">選ばない場合は表示しません。メールアドレスは表示されません。</span></span></label>
+        <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={showIntroduction} onChange={(e) => setShowIntroduction(e.target.checked)} className="mt-1 accent-guild-ink" /><span>名前とこの自己紹介を、この集まりの招待URLを知っている人に表示する。<span className="c-muted block text-xs">選ばない場合は表示しません。メールアドレスは表示されません。</span></span></label>
         {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
         <div className="flex flex-wrap items-center gap-4">
           <button type="submit" disabled={busy} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : applied ? "▶ 申込内容を保存" : "▶ 集まりに申し込む"}</button>
@@ -171,7 +173,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
         <label className="block text-sm">{APPROVAL_COPY.titleLabel}<input value={otherTitle} maxLength={OTHER_TITLE_MAX} onChange={(e) => { setOtherTitle(e.target.value); setError(""); }} className="c-input mt-2 h-12" /></label>
         <label className="block text-sm">{APPROVAL_COPY.workLabel}<input value={otherWork} maxLength={OTHER_WORK_MAX} onChange={(e) => { setOtherWork(e.target.value); setError(""); }} className="c-input mt-2 h-12" /></label>
       </div>}
-      <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-[#1b2a41]" /><span>酒場の約束をまもり、利用規約とプライバシーポリシーに同意して、会員として参加する</span></label>
+      <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-guild-ink" /><span>酒場の約束をまもり、利用規約とプライバシーポリシーに同意して、会員として参加する</span></label>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
       <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{requiresApproval(position) ? (busy ? APPROVAL_COPY.submittingLabel : `▶ ${APPROVAL_COPY.submitLabel}`) : (busy ? "登録中…" : "▶ 酒場に無料で参加する")}</button>
       <p className="c-muted mt-3 text-xs leading-relaxed">会社名は後からステータス画面で追加できます。登録時は公開されません。</p>

@@ -7,21 +7,49 @@
  * 色の役割：紺 #1b2a41＝文字・枠・カーソル／金 #c8a55a＝押すボタン／赤＝「急ぎ」と入力エラーだけ
  */
 
+/*
+ * ---------- 変数（色・書体・角・影） ----------
+ * 色・書体・角の丸み・影は、ここの変数で呼ぶ（画面に直接書かない。2026-10-01 決定）。
+ * 店ごとの見た目は、末尾の「店ごとの見た目」で同じ変数を上書きする（[data-theme] が形、[data-store] が色）。
+ * 下の既定値は GIAの酒場（夜の酒場）の見た目。
+ */
+:root {
+  --guild-ink: #1b2a41;
+  --guild-ink-rgb: 27 42 65;
+  --guild-paper: #fffdf6;
+  --guild-bg: #f3ecd9;
+  --guild-accent: #c8a55a;
+  --guild-accent-dark: #8f7337;
+  --guild-accent-light: #e8cf8e;
+  --guild-accent-hover: #d4b46a;
+  /* 金のボタンの上の文字色（GIAの酒場は紺） */
+  --guild-accent-ink: var(--guild-ink);
+  /* 夜の絵の上に重ねる文字・枠の色 */
+  --guild-scene-text: #efe6cf;
+  --guild-heading-font: var(--font-pixel-jp);
+  --guild-rule-image: linear-gradient(transparent 27px, rgb(var(--guild-ink-rgb) / 0.07) 27px, rgb(var(--guild-ink-rgb) / 0.07) 28px);
+  --guild-border-w: 3px;
+  --guild-radius: 0;
+  --guild-window-shadow: inset 0 0 0 3px var(--guild-paper), inset 0 0 0 4px rgb(var(--guild-ink-rgb) / 0.35), 5px 5px 0 0 rgb(var(--guild-ink-rgb) / 0.18);
+  --guild-card-shadow: 4px 4px 0 0 rgb(var(--guild-ink-rgb) / 0.18);
+}
+
+
 .guild-theme,
 .look-c {
   font-family: var(--font-jp-sans), system-ui, sans-serif;
-  color: #1b2a41;
+  color: var(--guild-ink);
   letter-spacing: 0.02em;
-  background-color: #f3ecd9;
+  background-color: var(--guild-bg);
   /* 帳面の罫線 */
-  background-image: linear-gradient(transparent 27px, rgba(27, 42, 65, 0.07) 27px, rgba(27, 42, 65, 0.07) 28px);
+  background-image: var(--guild-rule-image);
   background-size: 100% 28px;
 }
 
 /* ドット文字を使う所：見出し・窓の名札・小見出し（.c-label＝かいしゃ・しょくぎょう・出身地など）・コマンド（.guild-px）・ボタン・札・数字。中身の文章は普通の字 */
 .guild-theme :is(h1, h2, h3, .c-window-title, .c-label, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums),
 .look-c :is(h1, h2, h3, .c-window-title, .c-label, .guild-px, .rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-tag-urgent, .tabular-nums) {
-  font-family: var(--font-pixel-jp), system-ui, sans-serif;
+  font-family: var(--guild-heading-font), system-ui, sans-serif;
   letter-spacing: 0.06em;
 }
 
@@ -30,12 +58,10 @@
 /* 紺の太枠＋内側の細い線＋右下にずらした影 */
 .c-window {
   position: relative;
-  background: #fffdf6;
-  border: 3px solid #1b2a41;
-  box-shadow:
-    inset 0 0 0 3px #fffdf6,
-    inset 0 0 0 4px rgba(27, 42, 65, 0.35),
-    5px 5px 0 0 rgba(27, 42, 65, 0.18);
+  background: var(--guild-paper);
+  border: var(--guild-border-w) solid var(--guild-ink);
+  border-radius: var(--guild-radius);
+  box-shadow: var(--guild-window-shadow);
 }
 
 /* .c-window の position: relative より優先し、PCのコマンドをスクロールに追従させる */
@@ -53,8 +79,8 @@
   left: 0.9rem;
   margin: 0;
   padding: 0.1rem 0.65rem;
-  background: #1b2a41;
-  color: #fffdf6;
+  background: var(--guild-ink);
+  color: var(--guild-paper);
   font-size: 0.85rem;
   font-weight: 400;
   line-height: 1.45;
@@ -65,31 +91,32 @@
 
 .c-card {
   position: relative;
-  background: #fffdf6;
-  border: 3px solid #1b2a41;
-  box-shadow: 4px 4px 0 0 rgba(27, 42, 65, 0.18);
+  background: var(--guild-paper);
+  border: var(--guild-border-w) solid var(--guild-ink);
+  border-radius: var(--guild-radius);
+  box-shadow: var(--guild-card-shadow);
 }
 a.c-card:hover {
   background: #ffffff;
 }
 
 .c-dashed-top {
-  border-top: 2px dashed rgba(27, 42, 65, 0.3);
+  border-top: 2px dashed rgb(var(--guild-ink-rgb) / 0.3);
 }
 
 /* ---------- 文字 ---------- */
 
 .c-label {
-  color: #8f7337;
+  color: var(--guild-accent-dark);
 }
 .c-muted {
-  color: rgba(27, 42, 65, 0.62);
+  color: rgb(var(--guild-ink-rgb) / 0.62);
 }
 
 .c-chip {
   display: inline-block;
-  border: 2px solid #1b2a41;
-  background: #f3ecd9;
+  border: 2px solid var(--guild-ink);
+  background: var(--guild-bg);
   padding: 0.05rem 0.5rem;
   font-size: 0.75rem;
   line-height: 1.5;
@@ -104,7 +131,7 @@ a.c-card:hover {
   padding: 0 0.3rem;
   border-radius: 9999px;
   background: var(--guild-badge-bg, #c62828);
-  color: var(--guild-badge-fg, #fffdf6);
+  color: var(--guild-badge-fg, var(--guild-paper));
   font-size: 0.7rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -112,9 +139,9 @@ a.c-card:hover {
 
 .c-chip-strong {
   display: inline-block;
-  border: 2px solid #1b2a41;
-  background: #1b2a41;
-  color: #fffdf6;
+  border: 2px solid var(--guild-ink);
+  background: var(--guild-ink);
+  color: var(--guild-paper);
   padding: 0.05rem 0.5rem;
   font-size: 0.75rem;
   line-height: 1.5;
@@ -138,19 +165,19 @@ a.c-card:hover {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.55rem 1.1rem;
-  background: #c8a55a;
-  color: #1b2a41;
-  border: 3px solid #1b2a41;
+  background: var(--guild-accent);
+  color: var(--guild-accent-ink);
+  border: 3px solid var(--guild-ink);
   box-shadow:
-    inset -3px -3px 0 0 #8f7337,
-    inset 3px 3px 0 0 #e8cf8e;
+    inset -3px -3px 0 0 var(--guild-accent-dark),
+    inset 3px 3px 0 0 var(--guild-accent-light);
   font-family: inherit;
   letter-spacing: 0.06em;
   cursor: pointer;
   white-space: nowrap;
 }
 .rpg-button:hover:not(:disabled) {
-  background: #d4b46a;
+  background: var(--guild-accent-hover);
 }
 /* 押せないときは、色を抜いて へこみも出さない（押せるように見えたままだと、2度押しや「効いていない？」の元になる） */
 .rpg-button:disabled {
@@ -160,8 +187,8 @@ a.c-card:hover {
 .rpg-button:active:not(:disabled) {
   transform: translateY(2px);
   box-shadow:
-    inset 3px 3px 0 0 #8f7337,
-    inset -3px -3px 0 0 #e8cf8e;
+    inset 3px 3px 0 0 var(--guild-accent-dark),
+    inset -3px -3px 0 0 var(--guild-accent-light);
 }
 
 /* ログイン・パスワード再設定の決定ボタン。.rpg-button と同じ金のドットボタンで、頭に▶を付ける */
@@ -172,13 +199,13 @@ a.c-card:hover {
   gap: 0.5rem;
   min-height: 3rem;
   padding: 0.6rem 1.2rem;
-  background: #c8a55a;
-  color: #1b2a41;
-  border: 3px solid #1b2a41;
+  background: var(--guild-accent);
+  color: var(--guild-accent-ink);
+  border: 3px solid var(--guild-ink);
   box-shadow:
-    0 0 0 2px #efe6cf,
-    inset -3px -3px 0 0 #8f7337,
-    inset 3px 3px 0 0 #e8cf8e;
+    0 0 0 2px var(--guild-scene-text),
+    inset -3px -3px 0 0 var(--guild-accent-dark),
+    inset 3px 3px 0 0 var(--guild-accent-light);
   font-family: inherit;
   font-size: 1rem;
   letter-spacing: 0.1em;
@@ -189,14 +216,14 @@ a.c-card:hover {
   font-size: 0.8em;
 }
 .c-button:hover:not(:disabled) {
-  background: #d4b46a;
+  background: var(--guild-accent-hover);
 }
 .c-button:active:not(:disabled) {
   transform: translateY(2px);
   box-shadow:
-    0 0 0 2px #efe6cf,
-    inset 3px 3px 0 0 #8f7337,
-    inset -3px -3px 0 0 #e8cf8e;
+    0 0 0 2px var(--guild-scene-text),
+    inset 3px 3px 0 0 var(--guild-accent-dark),
+    inset -3px -3px 0 0 var(--guild-accent-light);
 }
 .c-button:disabled {
   cursor: not-allowed;
@@ -210,16 +237,16 @@ a.c-card:hover {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.45rem 1rem;
-  background: #fffdf6;
-  color: #1b2a41;
-  border: 3px solid #1b2a41;
-  box-shadow: inset -3px -3px 0 0 rgba(27, 42, 65, 0.12);
+  background: var(--guild-paper);
+  color: var(--guild-ink);
+  border: 3px solid var(--guild-ink);
+  box-shadow: inset -3px -3px 0 0 rgb(var(--guild-ink-rgb) / 0.12);
   font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
 }
 .c-button-sub:hover {
-  background: #f3ecd9;
+  background: var(--guild-bg);
 }
 .c-button-sub:active {
   transform: translateY(2px);
@@ -253,7 +280,7 @@ a.c-card:hover {
   background: #f9e5df;
 }
 .c-button-danger:focus-visible {
-  outline: 3px solid #1b2a41;
+  outline: 3px solid var(--guild-ink);
   outline-offset: 3px;
 }
 .c-button-danger:active:not(:disabled) {
@@ -262,26 +289,26 @@ a.c-card:hover {
 
 /* 選ぶボタン（目的・アイコン・件数カードなど）。押されている間は紺に反転 */
 .c-choice {
-  border: 2px solid #1b2a41;
-  background: #fffdf6;
-  color: #1b2a41;
+  border: 2px solid var(--guild-ink);
+  background: var(--guild-paper);
+  color: var(--guild-ink);
   font-family: inherit;
   cursor: pointer;
 }
 .c-choice:hover {
-  background: #f3ecd9;
+  background: var(--guild-bg);
 }
 .c-choice[aria-pressed="true"] {
-  background: #1b2a41;
-  color: #fffdf6;
+  background: var(--guild-ink);
+  color: var(--guild-paper);
 }
 
 .c-input {
   width: 100%;
   min-width: 0;
-  background: #fffdf6;
-  color: #1b2a41;
-  border: 2px solid #1b2a41;
+  background: var(--guild-paper);
+  color: var(--guild-ink);
+  border: 2px solid var(--guild-ink);
   border-radius: 0;
   padding: 0.5rem 0.75rem;
   font-family: inherit;
@@ -304,10 +331,10 @@ a.c-card:hover {
 }
 
 .c-input::placeholder {
-  color: rgba(27, 42, 65, 0.4);
+  color: rgb(var(--guild-ink-rgb) / 0.4);
 }
 .c-input:focus {
-  outline: 3px solid #c8a55a;
+  outline: 3px solid var(--guild-accent);
   outline-offset: 0;
 }
 
@@ -321,13 +348,13 @@ a.c-card:hover {
   width: 1.25rem;
   height: 1.25rem;
   margin: 0;
-  background: #fffdf6;
-  border: 2px solid #1b2a41;
+  background: var(--guild-paper);
+  border: 2px solid var(--guild-ink);
   border-radius: 0;
   cursor: pointer;
 }
 .guild-theme input[type="checkbox"]:not(.sr-only):checked {
-  background: #c8a55a;
+  background: var(--guild-accent);
   /* ドットの✓（紺） */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'%3E%3Cpath fill='%231b2a41' d='M6 1h1v2H6zM5 3h1v1H5zM4 4h1v1H4zM1 3h1v1H1zM2 4h1v1H2zM3 5h1v1H3z'/%3E%3C/svg%3E");
   background-size: 100% 100%;
@@ -338,12 +365,12 @@ a.c-card:hover {
   opacity: 0.5;
 }
 .guild-theme input[type="checkbox"]:not(.sr-only):focus-visible {
-  outline: 3px solid #c8a55a;
+  outline: 3px solid var(--guild-accent);
   outline-offset: 2px;
 }
 .guild-scene input[type="checkbox"]:not(.sr-only) {
   background-color: #0b0f1f;
-  border-color: #efe6cf;
+  border-color: var(--guild-scene-text);
 }
 .guild-scene input[type="checkbox"]:not(.sr-only):checked {
   background-color: #d9b45a;
@@ -356,8 +383,8 @@ a.c-card:hover {
   width: 3rem;
   height: 1.6rem;
   flex-shrink: 0;
-  border: 3px solid #1b2a41;
-  background: #fffdf6;
+  border: 3px solid var(--guild-ink);
+  background: var(--guild-paper);
   cursor: pointer;
 }
 .c-switch::after {
@@ -367,11 +394,11 @@ a.c-card:hover {
   left: 3px;
   width: calc(1.6rem - 12px);
   height: calc(1.6rem - 12px);
-  background: #1b2a41;
+  background: var(--guild-ink);
   transition: transform 0.12s steps(2);
 }
 .c-switch[aria-checked="true"] {
-  background: #c8a55a;
+  background: var(--guild-accent);
 }
 .c-switch[aria-checked="true"]::after {
   transform: translateX(1.4rem);
@@ -382,16 +409,16 @@ a.c-card:hover {
   display: flex;
   gap: 2px;
   padding: 2px;
-  border: 2px solid #1b2a41;
-  background: #fffdf6;
+  border: 2px solid var(--guild-ink);
+  background: var(--guild-paper);
 }
 .c-gauge > span {
   flex: 1;
   height: 8px;
-  background: rgba(27, 42, 65, 0.12);
+  background: rgb(var(--guild-ink-rgb) / 0.12);
 }
 .c-gauge > span[data-on="true"] {
-  background: #1b2a41;
+  background: var(--guild-ink);
 }
 
 /* ---------- カーソル・動き ---------- */
@@ -409,13 +436,13 @@ a.c-card:hover {
   visibility: visible;
 }
 .guild-theme .rpg-cursor {
-  color: #1b2a41;
+  color: var(--guild-ink);
 }
 
 .guild-theme a:focus-visible,
 .guild-theme button:focus-visible,
 .guild-theme select:focus-visible {
-  outline: 3px solid #c8a55a;
+  outline: 3px solid var(--guild-accent);
   outline-offset: 2px;
 }
 
@@ -443,21 +470,21 @@ a.c-card:hover {
 
 body:has(.guild-theme) [data-ui-dialog-card] {
   border-radius: 0 !important;
-  background: #fffdf6 !important;
-  border: 3px solid #1b2a41;
+  background: var(--guild-paper) !important;
+  border: 3px solid var(--guild-ink);
   box-shadow:
-    inset 0 0 0 3px #fffdf6,
-    inset 0 0 0 4px rgba(27, 42, 65, 0.35),
-    5px 5px 0 0 rgba(27, 42, 65, 0.25) !important;
+    inset 0 0 0 3px var(--guild-paper),
+    inset 0 0 0 4px rgb(var(--guild-ink-rgb) / 0.35),
+    5px 5px 0 0 rgb(var(--guild-ink-rgb) / 0.25) !important;
   font-family: var(--font-jp-sans), system-ui, sans-serif;
   letter-spacing: 0.02em;
-  color: #1b2a41;
+  color: var(--guild-ink);
 }
 body:has(.guild-theme) [data-ui-dialog-card] h2,
 body:has(.guild-theme) [data-ui-dialog-card] p,
 body:has(.guild-theme) [data-ui-dialog-card] input {
   font-family: inherit !important;
-  color: #1b2a41 !important;
+  color: var(--guild-ink) !important;
 }
 body:has(.guild-theme) [data-ui-dialog-card] h2 {
   font-family: var(--font-pixel-jp), system-ui, sans-serif !important;
@@ -472,16 +499,16 @@ body:has(.guild-theme) [data-ui-dialog-card] p.text-red-600 {
 }
 body:has(.guild-theme) [data-ui-dialog-card] input {
   border-radius: 0 !important;
-  border: 2px solid #1b2a41 !important;
+  border: 2px solid var(--guild-ink) !important;
 }
 body:has(.guild-theme) [data-ui-dialog-ok] {
   border-radius: 0 !important;
-  background: #c8a55a !important;
-  color: #1b2a41 !important;
-  border: 3px solid #1b2a41;
+  background: var(--guild-accent) !important;
+  color: var(--guild-ink) !important;
+  border: 3px solid var(--guild-ink);
   box-shadow:
-    inset -3px -3px 0 0 #8f7337,
-    inset 3px 3px 0 0 #e8cf8e;
+    inset -3px -3px 0 0 var(--guild-accent-dark),
+    inset 3px 3px 0 0 var(--guild-accent-light);
   font-family: inherit;
 }
 body:has(.guild-theme) [data-ui-dialog-ok][data-danger="true"] {
@@ -491,9 +518,9 @@ body:has(.guild-theme) [data-ui-dialog-ok][data-danger="true"] {
 }
 body:has(.guild-theme) [data-ui-dialog-cancel] {
   border-radius: 0 !important;
-  background: #fffdf6 !important;
-  color: #1b2a41 !important;
-  border: 3px solid #1b2a41;
+  background: var(--guild-paper) !important;
+  color: var(--guild-ink) !important;
+  border: 3px solid var(--guild-ink);
   font-family: inherit;
 }
 body:has(.guild-theme) [data-ui-dialog-close] {
@@ -510,10 +537,10 @@ body:has(.guild-theme) {
 }
 body:has(.guild-theme) [data-ui-toast] {
   border-radius: 0 !important;
-  background: #1b2a41 !important;
-  color: #fffdf6 !important;
-  border: 3px solid #fffdf6;
-  box-shadow: 0 0 0 3px #1b2a41 !important;
+  background: var(--guild-ink) !important;
+  color: var(--guild-paper) !important;
+  border: 3px solid var(--guild-paper);
+  box-shadow: 0 0 0 3px var(--guild-ink) !important;
   font-family: var(--font-jp-sans), system-ui, sans-serif;
   letter-spacing: 0.02em;
 }
@@ -567,7 +594,7 @@ body:has(.guild-theme) [data-ui-toast-action] {
 .guild-theme.guild-scene {
   position: relative;
   background: #0b0f1f;
-  color: #efe6cf;
+  color: var(--guild-scene-text);
 }
 
 /* 絵：スマホは上の約6割（横は中央だけ見える）、PCは画面いっぱいに固定 */
@@ -607,8 +634,8 @@ body:has(.guild-theme) [data-ui-toast-action] {
 .guild-scene .c-window,
 .guild-scene .c-card {
   background: #0b0f1f;
-  border-color: #efe6cf;
-  color: #efe6cf;
+  border-color: var(--guild-scene-text);
+  color: var(--guild-scene-text);
   box-shadow:
     0 0 0 2px #0b0f1f,
     inset 0 0 0 3px #0b0f1f,
@@ -616,8 +643,8 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 .guild-scene .c-window-title {
   background: #0b0f1f;
-  color: #efe6cf;
-  border: 2px solid #efe6cf;
+  color: var(--guild-scene-text);
+  border: 2px solid var(--guild-scene-text);
 }
 .guild-scene .c-muted {
   color: rgba(239, 230, 207, 0.62);
@@ -654,8 +681,8 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 .guild-scene .c-button-sub {
   background: #0b0f1f;
-  color: #efe6cf;
-  border-color: #efe6cf;
+  color: var(--guild-scene-text);
+  border-color: var(--guild-scene-text);
   box-shadow: none;
 }
 .guild-scene .c-button-sub:hover {
@@ -667,54 +694,54 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 
 /* 部品に直接書いてある紺・生成りの色を、夜の画面の中身（main）だけ入れ替える（部品のファイルは触らない。上の帯と下のメニューは別に指定） */
-.guild-scene main [class*="text-[#1b2a41]"] {
-  color: #efe6cf;
+.guild-scene main [class*="text-[var(--guild-ink)]"] {
+  color: var(--guild-scene-text);
 }
-.guild-scene main [class*="bg-[#fffdf6]"] {
+.guild-scene main [class*="bg-[var(--guild-paper)]"] {
   background-color: #0b0f1f;
 }
-.guild-scene main [class*="border-[#1b2a41]"] {
+.guild-scene main [class*="border-[var(--guild-ink)]"] {
   border-color: rgba(239, 230, 207, 0.55);
 }
-.guild-scene main [class*="divide-[#1b2a41]"] > * {
+.guild-scene main [class*="divide-[var(--guild-ink)]"] > * {
   border-color: rgba(239, 230, 207, 0.18);
 }
 /* 生成り・薄い金の地（担当者の選択肢・人ごとの進み具合など）は、文字が生成りになるので紺の地にする */
-.guild-scene main [class*="bg-[#f3ecd9]"] {
+.guild-scene main [class*="bg-[var(--guild-bg)]"] {
   background-color: #1b2340;
 }
-.guild-scene main [class*="bg-[#e8cf8e]"] {
+.guild-scene main [class*="bg-[var(--guild-accent-light)]"] {
   background-color: rgba(217, 180, 90, 0.28);
 }
-.guild-scene main [class*="text-[#8f7337]"] {
+.guild-scene main [class*="text-[var(--guild-accent-dark)]"] {
   color: #d9b45a;
 }
 .guild-scene main :is([class*="text-[#c62828]"], [class*="text-[#9d2929]"], .text-red-600) {
   color: #f4a09a;
 }
 /* 並び替えなどの切り替えボタン：選ばれている方を金にして、紺の中でも見分けられるようにする */
-.guild-scene main [class*="bg-[#1b2a41]"][class*="text-[#fffdf6]"] {
+.guild-scene main [class*="bg-[var(--guild-ink)]"][class*="text-[var(--guild-paper)]"] {
   background-color: #d9b45a;
   color: #0b0f1f;
 }
 .guild-scene main .c-switch {
-  border-color: #efe6cf;
+  border-color: var(--guild-scene-text);
 }
 .guild-scene main .c-choice {
-  border-color: #efe6cf;
+  border-color: var(--guild-scene-text);
 }
 
 /* スマホの下のメニュー */
 .guild-scene .guild-mobile-nav {
   background: #0b0f1f;
-  border-top-color: #efe6cf;
+  border-top-color: var(--guild-scene-text);
 }
 .guild-scene .guild-mobile-nav a {
   color: rgba(239, 230, 207, 0.7);
   border-color: rgba(239, 230, 207, 0.15);
 }
 .guild-scene .guild-mobile-nav a[aria-current="page"] {
-  color: #efe6cf;
+  color: var(--guild-scene-text);
   background: rgba(217, 180, 90, 0.18);
 }
 .guild-scene .guild-mobile-nav a[aria-current="page"] > .guild-mobile-active {
@@ -730,4 +757,61 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 .guild-scene .guild-mobile-nav a[aria-current="page"] .guild-mobile-icon {
   color: #d9b45a;
+}
+
+/* ---------- 店ごとの見た目 ---------- */
+/*
+ * 店のラッパー（app/guild/[store]/layout.tsx など）に data-store（店の名前）と data-theme（形）が付く。
+ * lib/guild/stores.ts の theme と同じ名前。ここで上書きするのは上の変数が中心。
+ * 新しい店を足すときは、色を変えたければ [data-store="新しい店"] を足す（形は theme で決まる）。
+ */
+
+/* theme=plain：落ち着いた普通の見た目。ドット文字・太枠の窓・段差のあるボタン・罫線の帳面・夜の絵を使わない */
+[data-theme="plain"] {
+  --guild-heading-font: var(--font-jp-sans);
+  --guild-rule-image: none;
+  --guild-border-w: 1px;
+  --guild-radius: 8px;
+  --guild-window-shadow: 0 1px 3px rgb(var(--guild-ink-rgb) / 0.12);
+  --guild-card-shadow: 0 1px 2px rgb(var(--guild-ink-rgb) / 0.1);
+}
+/* 窓の名札は、角に乗せず窓の中の見出しにする */
+[data-theme="plain"] .c-window-title {
+  position: static;
+  display: block;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  max-width: none;
+  background: transparent;
+  color: var(--guild-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+[data-theme="plain"] :is(.rpg-button, .c-button, .c-button-sub, .c-button-danger, .c-chip, .c-chip-strong, .c-input, .c-choice) {
+  border-width: 1px;
+  border-radius: 6px;
+  box-shadow: none;
+}
+[data-theme="plain"] .c-button::before {
+  content: none;
+}
+[data-theme="plain"] :is(.rpg-button, .c-button, .c-button-sub, .c-button-danger):active:not(:disabled) {
+  transform: none;
+}
+[data-theme="plain"] .rpg-cursor {
+  display: none;
+}
+
+/* 建設・不動産の酒場の色 */
+[data-store="kensetsu-fudosan"] {
+  --guild-ink: #1f2933;
+  --guild-ink-rgb: 31 41 51;
+  --guild-paper: #ffffff;
+  --guild-bg: #f3f5f7;
+  --guild-accent: #2b6cb0;
+  --guild-accent-dark: #1e4e82;
+  --guild-accent-light: #bcd6ef;
+  --guild-accent-hover: #245a94;
+  --guild-accent-ink: #ffffff;
 }

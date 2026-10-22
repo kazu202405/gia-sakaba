@@ -169,7 +169,7 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
                 name={`contact-visibility-${row.key}`}
                 checked={row.visibility === option.value}
                 onChange={() => update(row.key, { visibility: option.value })}
-                className="accent-[#1b2a41]"
+                className="accent-guild-ink"
               />
               {option.label}
             </label>)}

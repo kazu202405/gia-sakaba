@@ -19,9 +19,13 @@ import { countNavBadges, formatBadge, type NavBadgeKey, type NavBadges } from "@
 import { createClient } from "@/lib/supabase/client";
 import { setAppIconBadge } from "@/lib/guild/app-badge";
 import type { GuildNotification } from "@/lib/guild/types";
+import { useGuildStore } from "@/components/guild/store-context";
+import { outsideStorePath, parseGuildPath, storeRestOf } from "@/lib/guild/store-path";
+import type { StoreConfig } from "@/lib/guild/stores";
 
 type NavItem = {
-  href: string;
+  /** 店の中の道（""＝ホーム）。実際のリンクは store.path(to) で作る */
+  to: string;
   label: string;
   short: string;
   icon: "tavern" | "guild" | "scroll" | "map" | "hero" | "key";
@@ -32,34 +36,36 @@ type NavItem = {
   badge?: NavBadgeKey;
 };
 
-const NAV: NavItem[] = [
-  { href: "/guild", label: "ホーム", short: "ホーム", icon: "tavern", exact: true },
-  { href: "/guild/members", label: "ギルド", short: "ギルド", icon: "guild", also: ["/guild/requests"], badge: "guild" },
-  { href: "/guild/quests", label: "クエスト", short: "クエスト", icon: "scroll", badge: "quests" },
-  { href: "/guild/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
-  { href: "/guild/me", label: "マイページ", short: "マイ\nページ", icon: "hero" },
-];
-
-const MASTER_NAV: NavItem = { href: "/guild/master", label: "管理者", short: "管理者", icon: "key", badge: "master" };
-
-function isUnder(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(href + "/");
+// メニューの呼び名は店の設定（lib/guild/stores.ts）から。「クエスト」は DB の terms.quest と同じ
+function buildNav(config: StoreConfig): { main: NavItem[]; master: NavItem } {
+  return {
+    main: [
+      { to: "", label: "ホーム", short: "ホーム", icon: "tavern", exact: true },
+      { to: "/members", label: config.rosterLabel, short: config.rosterLabel, icon: "guild", also: ["/requests"], badge: "guild" },
+      { to: "/quests", label: config.terms.quest, short: config.terms.quest, icon: "scroll", badge: "quests" },
+      { to: "/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
+      { to: "/me", label: "マイページ", short: "マイ\nページ", icon: "hero" },
+    ],
+    master: { to: "/master", label: "管理者", short: "管理者", icon: "key", badge: "master" },
+  };
 }
 
-function isActive(pathname: string, item: NavItem) {
-  if (item.exact) return pathname === item.href;
-  return isUnder(pathname, item.href) || (item.also ?? []).some((h) => isUnder(pathname, h));
+function isUnder(rest: string, to: string) {
+  return rest === to || rest.startsWith(to + "/");
 }
 
+/** rest＝今いる（または移ろうとしている）店の中の道 */
+function isActive(rest: string, item: NavItem) {
+  if (item.exact) return rest === item.to;
+  return isUnder(rest, item.to) || (item.also ?? []).some((h) => isUnder(rest, h));
+}
 
 // コマンドを押してから、行き先の画面が届くまで仮の画面を出しておく上限。届かなければ元の画面に戻す
 const PENDING_LIMIT_MS = 15000;
 
 
-// 画面を移った・アプリに戻ったときに数字を読み直す。上限なしに待たず、失敗したら今の数字のまま
-const AUTH_PATHS = ["/guild/login", "/guild/join", "/guild/forgot-password", "/guild/reset-password", "/guild/auth/callback"];
-
 export function GuildShell({ children, isMaster, initialBadges }: { children: React.ReactNode; isMaster: boolean; initialBadges: NavBadges }) {
+  const store = useGuildStore();
   const pathname = usePathname();
   // メニューの数字。はじめはサーバーが数えた値。layout は画面を移っても作り直されないので、移るたびにここで読み直す
   const [badges, setBadges] = useState(initialBadges);
@@ -70,10 +76,9 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
     setBadges(initialBadges);
   }
   useEffect(() => {
-    if (AUTH_PATHS.includes(pathname)) return;
     let cancelled = false;
     const reload = () => {
-      void createClient().rpc("sakaba_list_my_notifications", { p_guild_slug: "gia" }).then(({ data, error }) => {
+      void createClient().rpc("sakaba_list_my_notifications", { p_guild_slug: store.slug }).then(({ data, error }) => {
         if (cancelled || error || !Array.isArray(data)) return;
         setBadges(countNavBadges(data as GuildNotification[]));
       });
@@ -85,9 +90,9 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
       cancelled = true;
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [pathname]);
-  // ホーム画面のアイコンの数字も、メニューの数字（合計）に合わせる。ログイン前の画面では消す
-  const iconTotal = AUTH_PATHS.includes(pathname) ? 0 : badges.total;
+  }, [pathname, store.slug]);
+  // ホーム画面のアイコンの数字も、メニューの数字（合計）に合わせる
+  const iconTotal = badges.total;
   useEffect(() => {
     setAppIconBadge(iconTotal);
   }, [iconTotal]);
@@ -113,7 +118,7 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
       const anchor = event.target instanceof Element ? event.target.closest("a[href]") : null;
       if (!(anchor instanceof HTMLAnchorElement) || (anchor.target && anchor.target !== "_self")) return;
       const url = new URL(anchor.href, window.location.href);
-      if (url.origin !== window.location.origin || (url.pathname !== "/guild" && !url.pathname.startsWith("/guild/"))) return;
+      if (url.origin !== window.location.origin || parseGuildPath(url.pathname).kind === "none") return;
       if (url.pathname === window.location.pathname) return;
       setPending(url.pathname);
     };
@@ -130,28 +135,30 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
     };
   }, []);
 
-  if (pathname === "/guild/login" || pathname === "/guild/join" || pathname === "/guild/forgot-password" || pathname === "/guild/reset-password" || pathname === "/guild/auth/callback") return <>{children}</>;
-  const mobileNav = isMaster ? [...NAV, MASTER_NAV] : NAV;
+  const nav = buildNav(store.config);
+  const mobileNav = isMaster ? [...nav.main, nav.master] : nav.main;
   // 仮の画面を出している間は、行き先の道として背景とメニューを描く
   const shownPath = pending ?? pathname;
-  const art = sceneArtOf(shownPath);
+  const shownRest = storeRestOf(shownPath) ?? "";
+  // 夜の酒場の絵は「酒場」の見た目の店だけ。落ち着いた見た目の店には敷かない
+  const art = store.config.theme === "tavern" ? sceneArtOf(shownPath) : undefined;
   const scene = art !== undefined;
 
   return (
     <div className={cn("guild-theme min-h-screen", scene && "guild-scene")}>
-      {scene && <GuildSceneArt art={art} dim={shownPath !== "/guild"} />}
-      <header className="sticky top-0 z-30 bg-[#1b2a41] text-[#fffdf6]">
+      {scene && <GuildSceneArt art={art} dim={shownRest !== ""} />}
+      <header className="sticky top-0 z-30 bg-guild-ink text-guild-paper">
         <div className="guild-px mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/guild" className="text-lg tracking-[0.2em]">
-            GIAの酒場
+          <Link href={store.path()} className="text-lg tracking-[0.2em]">
+            {store.config.name}
           </Link>
           <div className="flex items-center gap-4">
-            <FeedbackButton label="ご意見" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
-            <Link href="/guild/notifications" className="inline-flex items-center gap-1 text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]">
+            <FeedbackButton label="ご意見" className="text-xs text-guild-paper/80 hover:text-guild-accent-light" />
+            <Link href={store.path("/notifications")} className="inline-flex items-center gap-1 text-xs text-guild-paper/80 hover:text-guild-accent-light">
               おしらせ
               <NavBadge count={badges.total} />
             </Link>
-            <LogoutButton redirectTo="/guild/login" showIcon={false} label="ログアウト" className="text-xs text-[#fffdf6]/80 hover:text-[#e8cf8e]" />
+            <LogoutButton redirectTo={outsideStorePath("login")} showIcon={false} label="ログアウト" className="text-xs text-guild-paper/80 hover:text-guild-accent-light" />
           </div>
         </div>
       </header>
@@ -161,15 +168,15 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
         <nav className="c-window guild-sidebar guild-px hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
           <span className="c-window-title">コマンド</span>
           <ul className="space-y-1">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <CommandLink item={item} active={isActive(shownPath, item)} count={item.badge ? badges[item.badge] : 0} />
+            {nav.main.map((item) => (
+              <li key={item.to}>
+                <CommandLink item={item} href={store.path(item.to)} active={isActive(shownRest, item)} count={item.badge ? badges[item.badge] : 0} />
               </li>
             ))}
           </ul>
           {isMaster && <div className="c-dashed-top mt-4 pt-3">
             <p className="c-muted mb-1 text-[11px]">管理者のみ</p>
-            <CommandLink item={MASTER_NAV} active={isActive(shownPath, MASTER_NAV)} count={badges.master} />
+            <CommandLink item={nav.master} href={store.path(nav.master.to)} active={isActive(shownRest, nav.master)} count={badges.master} />
           </div>}
         </nav>
 
@@ -185,27 +192,27 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
       {/* スマホ：下のコマンド */}
       <nav
         className={cn(
-          "guild-mobile-nav guild-px fixed inset-x-0 bottom-0 z-30 grid border-t-4 border-[#1b2a41] bg-[#fffdf6] pb-[env(safe-area-inset-bottom)] lg:hidden",
+          "guild-mobile-nav guild-px fixed inset-x-0 bottom-0 z-30 grid border-t-4 border-guild-ink bg-guild-paper pb-[env(safe-area-inset-bottom)] lg:hidden",
           isMaster ? "grid-cols-6" : "grid-cols-5",
         )}
         aria-label="メニュー"
       >
         {mobileNav.map((item) => {
-          const active = isActive(shownPath, item);
+          const active = isActive(shownRest, item);
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={item.to}
+              href={store.path(item.to)}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "group relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 border-r border-[#1b2a41]/15 px-0.5 py-1.5 text-center leading-tight tracking-normal whitespace-pre-line last:border-r-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-[#1b2a41] focus-visible:outline-offset-[-4px]",
+                "group relative flex min-h-[4.5rem] min-w-0 flex-col items-center justify-center gap-1 border-r border-guild-ink/15 px-0.5 py-1.5 text-center leading-tight tracking-normal whitespace-pre-line last:border-r-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-guild-ink focus-visible:outline-offset-[-4px]",
                 isMaster ? "text-[11px]" : "text-xs",
-                active ? "bg-[#e8cf8e]/35 text-[#1b2a41]" : "text-[#1b2a41]/70",
+                active ? "bg-guild-accent-light/35 text-guild-ink" : "text-guild-ink/70",
               )}
             >
               {/* いる所は金の線とアイコンで示す。文字も残し、初めての人にも行き先が伝わるようにする */}
-              {active && <span className="guild-mobile-active absolute inset-x-3 top-0 h-1 bg-[#1b2a41]" aria-hidden />}
+              {active && <span className="guild-mobile-active absolute inset-x-3 top-0 h-1 bg-guild-ink" aria-hidden />}
               <span className="relative">
                 <MobileNavIcon kind={item.icon} />
                 <NavBadge count={item.badge ? badges[item.badge] : 0} className="absolute -top-1.5 -right-3.5" />
@@ -238,10 +245,10 @@ function MobileNavIcon({ kind }: { kind: NavItem["icon"] }) {
   return <svg {...common}><path d="M2 2h6v1h1v5H8v1H6v2h3v2H7v2H4V9H2V8H1V3h1V2Zm1 2v3h3V4H3Zm6 6h5v2H9v-2Z" /></svg>;
 }
 
-function CommandLink({ item, active, count }: { item: NavItem; active: boolean; count: number }) {
+function CommandLink({ item, href, active, count }: { item: NavItem; href: string; active: boolean; count: number }) {
   return (
     <Link
-      href={item.href}
+      href={href}
       data-active={active}
       aria-current={active ? "page" : undefined}
       className="rpg-cursor-row flex items-center gap-1.5 py-1.5 text-[15px] tracking-wider"

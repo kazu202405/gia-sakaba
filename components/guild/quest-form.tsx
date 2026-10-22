@@ -17,6 +17,7 @@ import { diffQuestFields, pickQuestFields, questFieldLabel, type QuestFields } f
 import { uiToast } from "@/lib/ui-dialog";
 import { BackLink, questCategoryMark } from "./cards";
 import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Draft = {
   category: QuestCategory | "";
@@ -102,6 +103,7 @@ export function QuestForm({
   /** ギルドマスターが「集まり」（有料会員だけの リアルの集まり）を ひらくとき。しゅるいと急ぎは出さない */
   gathering?: boolean;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [step, setStep] = useState<"form" | "confirm">("form");
   const [draft, setDraft] = useState<Draft>(() =>
@@ -152,27 +154,27 @@ export function QuestForm({
   const submit = () => {
     if (quest) {
       uiToast("なおしました（見本のため保存はされません）");
-      router.push(`/guild/quests/${quest.id}`);
+      router.push(store.path(`/quests/${quest.id}`));
       return;
     }
     if (gathering) {
       uiToast("集まりを ひらきました（見本のため保存はされません）");
-      router.push("/guild/master");
+      router.push(store.path("/master"));
       return;
     }
     uiToast(`${guild.terms.quest}を出しました（見本のため保存はされません）`);
-    router.push("/guild/quests");
+    router.push(store.path("/quests"));
   };
 
   return (
     <div ref={topRef} className="mx-auto max-w-2xl scroll-mt-24">
       <div className="mb-9">
         {quest ? (
-          <BackLink href={`/guild/quests/${quest.id}`} label={`${guild.terms.quest}に もどる`} />
+          <BackLink href={store.path(`/quests/${quest.id}`)} label={`${guild.terms.quest}に もどる`} />
         ) : gathering ? (
-          <BackLink href="/guild/master" label={guild.terms.master} />
+          <BackLink href={store.path("/master")} label={guild.terms.master} />
         ) : (
-          <BackLink href="/guild/quests" label={`${guild.terms.quest} けいじばん`} />
+          <BackLink href={store.path("/quests")} label={`${guild.terms.quest} けいじばん`} />
         )}
       </div>
 

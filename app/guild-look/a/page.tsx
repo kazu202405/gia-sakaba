@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { guildPath } from "@/lib/guild/store-path";
+import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 import { ShellA } from "@/components/guild/look/shell-a";
 import { PixelIcon } from "@/components/guild/look/pixel-icon";
 import { closedStatuses, introStatusLabel, questCategoryLabel } from "@/lib/guild/labels";
@@ -26,7 +28,7 @@ export default function LookAHomePage() {
             紹介の打診が <span className={cn(PX, "text-xl text-[#c8a55a]")}>{offers.length}</span> 件 届いています。
           </p>
           <div className="mt-4 flex items-center justify-between gap-3">
-            <Link href="/guild/requests" className={cn(PX, "rpg-button text-sm")}>
+            <Link href={guildPath(DEFAULT_STORE_SLUG, "/requests")} className={cn(PX, "rpg-button text-sm")}>
               ▶ 見にいく
             </Link>
             <span className="rpg-blink text-[#c8a55a]" aria-hidden>
@@ -59,7 +61,7 @@ export default function LookAHomePage() {
             <ul className="space-y-3">
               {newQuests.map((q) => (
                 <li key={q.id}>
-                  <Link href={`/guild/quests/${q.id}`} className="rpg-cursor-row block">
+                  <Link href={guildPath(DEFAULT_STORE_SLUG, `/quests/${q.id}`)} className="rpg-cursor-row block">
                     <span className="flex items-center gap-1.5 text-[11px]">
                       <span className="rpg-cursor text-[#c8a55a]">▶</span>
                       <span className={cn(PX, "text-[#c8a55a]")}>{questCategoryLabel[q.category]}</span>

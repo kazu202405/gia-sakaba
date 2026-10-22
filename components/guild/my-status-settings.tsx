@@ -21,7 +21,7 @@ export function MyStatusSettings({ me }: { me: Profile }) {
 
   return (
     <div>
-      <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/20">
+      <ul className="divide-y-2 divide-dashed divide-guild-ink/20">
         <Row title="きほん" note="名前・職業アイコン・肩書・業種・地域" right={<span className="c-muted text-xs">いつも公開</span>} />
         {GROUPS.map((g) => (
           <Row

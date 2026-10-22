@@ -2,9 +2,11 @@
 //
 // 送る手段はリンクのコピーだけ（2026-09-29 五島さん。共有画面・招待文のコピーは外した）。
 
+import { joinInvitePath } from "./store-path";
+
 /** 入会画面のURL。招待コードはURLに入れるので必ずエンコードする。 */
 export function inviteUrl(origin: string, code: string): string {
-  return `${origin.replace(/\/+$/, "")}/guild/join?invite=${encodeURIComponent(code)}`;
+  return `${origin.replace(/\/+$/, "")}${joinInvitePath(code)}`;
 }
 
 /**

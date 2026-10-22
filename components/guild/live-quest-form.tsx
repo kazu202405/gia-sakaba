@@ -12,6 +12,7 @@ import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/l
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { BackLink, questCategoryMark } from "./cards";
 import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Draft = {
   category: QuestCategory | "";
@@ -57,6 +58,7 @@ function daysBetween(from: string, to: string): number {
 
 // quota：新しく出すときだけ渡す（今月の残り）
 export function LiveQuestForm({ questTerm, gathering = false, quest, quota = null }: { questTerm: string; gathering?: boolean; quest?: GuildQuest; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const fixedGathering = gathering || quest?.members_only === true;
   // 新しく出すときだけ、今月の残りを見せる（使い切ったら確認に進めない。最後はDBが止める）
@@ -126,7 +128,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
     };
     const { data, error } = quest
       ? await createClient().rpc("sakaba_update_quest_v2", { p_quest_id: quest.id, ...fields, p_members_only: fixedGathering })
-      : await createClient().rpc("sakaba_create_quest", { p_guild_slug: "gia", ...fields, p_members_only: fixedGathering });
+      : await createClient().rpc("sakaba_create_quest", { p_guild_slug: store.slug, ...fields, p_members_only: fixedGathering });
 
     if (error || (!quest && typeof data !== "string")) {
       setSaveError(quest ? "保存できませんでした。内容を確認して再度お試しください。"
@@ -137,13 +139,13 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
     }
 
     if (quest) uiToast(`${questTerm}を保存しました`);
-    router.push(`/guild/quests/${quest?.id ?? data}`);
+    router.push(store.path(`/quests/${quest?.id ?? data}`));
     router.refresh();
   }
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-9"><BackLink href={quest ? `/guild/quests/${quest.id}` : fixedGathering ? "/guild/master" : "/guild/quests"} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : `${questTerm} けいじばん`} /></div>
+      <div className="mb-9"><BackLink href={quest ? store.path(`/quests/${quest.id}`) : fixedGathering ? store.path("/master") : store.path("/quests")} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : `${questTerm} けいじばん`} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : "かくにん"}</span>
         {showQuota && quota && step === "form" && (quotaExhausted ? <div className="mb-6"><PlanQuotaExhausted kind="quest" plan={quota.plan} slot={quota.slot} /></div> : <PlanQuotaNote kind="quest" plan={quota.plan} slot={quota.slot} className="mb-5" />)}

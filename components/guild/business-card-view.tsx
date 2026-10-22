@@ -1,6 +1,6 @@
 // メンバーのステータス画面：その人の名刺の表と裏（会員だけが見られる）。押すと大きく開く。
 
-import Link from "next/link";
+import { StoreLink } from "@/components/guild/store-link";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { Window } from "./cards";
 
@@ -11,7 +11,7 @@ export function BusinessCardView({ card, urls, isMe, footnote = "押すと大き
   if (sides.length === 0) {
     if (!isMe) return null;
     return <Window title="名刺">
-      <p className="c-muted text-sm">名刺はまだ登録されていません。<Link href="/guild/me/status" className="ml-2 underline underline-offset-4">▶ 名刺を登録する</Link></p>
+      <p className="c-muted text-sm">名刺はまだ登録されていません。<StoreLink to="/me/status" className="ml-2 underline underline-offset-4">▶ 名刺を登録する</StoreLink></p>
     </Window>;
   }
   return <Window title="名刺">

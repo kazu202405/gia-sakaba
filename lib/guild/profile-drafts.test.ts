@@ -1,3 +1,4 @@
+import { guildPath } from "./store-path";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -106,13 +107,13 @@ describe("おしらせ", () => {
     id: kind, user_id: "me", kind, actor_id: "a", quest_id: null, intro_request_id: null, intro_status: null,
     changed_fields: [], read_at: null, created_at: "2026-10-19",
   });
-  const ctx: NotificationContext = { name: () => "五島", questTitle: () => "", intro: () => undefined };
+  const ctx: NotificationContext = { name: () => "五島", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest) };
   it("届いた下書きは、本人が選ぶ画面（承認の入口）へ案内する", () => {
-    expect(notificationText(note("profile_draft_waiting"), ctx).href).toBe("/guild/me/status/draft");
+    expect(notificationText(note("profile_draft_waiting"), ctx).href).toBe("/guild/gia/me/status/draft");
   });
   it("返事は、書いた人が相手の画面を開ける", () => {
-    expect(notificationText(note("profile_draft_applied"), ctx).href).toBe("/guild/members/a");
-    expect(notificationText(note("profile_draft_declined"), ctx).href).toBe("/guild/members/a");
+    expect(notificationText(note("profile_draft_applied"), ctx).href).toBe("/guild/gia/members/a");
+    expect(notificationText(note("profile_draft_declined"), ctx).href).toBe("/guild/gia/members/a");
   });
   it("メニューの数字に数える", () => {
     expect(countNavBadges(kinds.map(note)).total).toBe(3);

@@ -1,3 +1,4 @@
+import { guildPath } from "./store-path";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -78,8 +79,8 @@ describe("役職「その他」の承認制：管理画面の申請", () => {
       id: "n1", user_id: "owner", kind: "member_pending", actor_id: "u1", quest_id: null, intro_request_id: null,
       intro_status: null, changed_fields: [], read_at: null, created_at: "2026-10-03",
     };
-    const ctx: NotificationContext = { name: () => "メンバー", questTitle: () => "", intro: () => undefined };
-    expect(notificationText(n, ctx)).toEqual({ text: "参加の申請が 届きました", href: "/guild/master#master-pending-members-title" });
+    const ctx: NotificationContext = { name: () => "メンバー", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest) };
+    expect(notificationText(n, ctx)).toEqual({ text: "参加の申請が 届きました", href: "/guild/gia/master#master-pending-members-title" });
   });
 });
 
@@ -89,7 +90,7 @@ describe("役職「その他」の承認制：画面が判定を1か所に頼っ
   const read = (p: string) => readFileSync(p, "utf-8");
 
   it("layout は DB の入口の状態を読み、申請後の画面に切り替える", () => {
-    const src = read("app/guild/layout.tsx");
+    const src = read("app/guild/[store]/layout.tsx");
     expect(src).toContain('rpc("sakaba_get_my_gate_status"');
     expect(src).toContain("isHeldOutside(gate)");
     expect(src).toContain("<ApprovalGate");

@@ -16,8 +16,10 @@ import {
 } from "@/lib/guild/recurrence";
 import { DateInput } from "./form-parts";
 import { LiveProjectPeople } from "./live-project-people";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveProjectDetail({ project, pipeline, members, canEdit, today }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean; today: string }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [taskTitle, setTaskTitle] = useState("");
   const [taskDue, setTaskDue] = useState("");
@@ -281,7 +283,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       const { error: rpcError } = await createClient().rpc("sakaba_delete_project", { p_project_id: project.id });
       if (rpcError) throw rpcError;
       uiToast("プロジェクトを削除しました");
-      router.replace("/guild/projects");
+      router.replace(store.path("/projects"));
     } catch {
       setProjectError("プロジェクトを削除できませんでした。画面を読み直して再度お試しください。");
       setPendingAction("");
@@ -290,7 +292,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
   }
 
   return <div className="space-y-6">
-    <Link href="/guild/projects" className="c-muted inline-block text-sm">◀ プロジェクト一覧</Link>
+    <Link href={store.path("/projects")} className="c-muted inline-block text-sm">◀ プロジェクト一覧</Link>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">{project.status === "done" ? "完了" : "進行中"}</span>
       <h1 className="break-words text-2xl">{project.title}</h1>
@@ -298,7 +300,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       {project.memo && <p className="c-muted mt-3 whitespace-pre-line break-words text-sm">メモ：{project.memo}</p>}
       <p className="c-muted mt-4 text-xs">開始 {project.start_date}{project.due_date ? ` · 期限 ${project.due_date}` : ""} · タスク {done}/{project.tasks.length} 完了</p>
       {canEdit && <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={`/guild/projects/${project.id}/edit`} className="c-button-sub px-4 py-2">内容をなおす</Link>
+        <Link href={store.path(`/projects/${project.id}/edit`)} className="c-button-sub px-4 py-2">内容をなおす</Link>
         <button type="button" disabled={busy} aria-busy={pendingAction === "project-status"} onClick={() => void setProjectStatus(project.status === "done" ? "active" : "done")} className="c-button-sub px-4 py-2 disabled:opacity-50">
           {pendingAction === "project-status" ? "更新中…" : project.status === "done" ? "進行中に戻す" : "プロジェクトを完了する"}
         </button>

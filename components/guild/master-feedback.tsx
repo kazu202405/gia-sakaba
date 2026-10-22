@@ -8,10 +8,12 @@ import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { FEEDBACK_STATUS_LABEL, deviceLabel, feedbackKindTitle, type FeedbackReport, type FeedbackStatus } from "@/lib/guild/feedback";
 import { formatJstDate } from "@/lib/guild/labels";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const STATUSES: FeedbackStatus[] = ["new", "done"];
 
 export function MasterFeedback({ initial }: { initial: FeedbackReport[] }) {
+  const store = useGuildStore();
   const [items, setItems] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
 
@@ -36,7 +38,7 @@ export function MasterFeedback({ initial }: { initial: FeedbackReport[] }) {
       const device = deviceLabel(item.user_agent);
       return <article key={item.id} className={`c-card min-w-0 p-5 ${item.status === "done" ? "opacity-70" : ""}`}>
         <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-          <Link href={`/guild/members/${item.user_id}`} className="underline underline-offset-4">{item.display_name}</Link>
+          <Link href={store.path(`/members/${item.user_id}`)} className="underline underline-offset-4">{item.display_name}</Link>
           <span className="flex items-center gap-2">
             <time className="c-muted text-xs tabular-nums" dateTime={item.created_at}>{formatJstDate(item.created_at)}</time>
             <span className={item.status === "new" ? "c-chip-strong" : "c-chip"}>{FEEDBACK_STATUS_LABEL[item.status]}</span>

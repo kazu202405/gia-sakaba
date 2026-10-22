@@ -20,7 +20,7 @@ export default function SurveyPage() {
     <main className="guild-theme guild-scene min-h-screen px-4 py-8 pb-16 sm:px-6 sm:py-12">
       <GuildSceneArt art="tavern" dim />
       <div className="relative z-10 mx-auto max-w-3xl space-y-9">
-        <header className="flex items-center justify-between gap-4 border-2 border-[#efe6cf]/70 px-4 py-3 text-sm">
+        <header className="flex items-center justify-between gap-4 border-2 border-guild-scene-text/70 px-4 py-3 text-sm">
           <Link href="/" className="guild-px tracking-widest hover:underline">GIAの酒場</Link>
         </header>
         <PageTitle title={SURVEY_COPY.pageTitle} lead={SURVEY_COPY.pageLead} />

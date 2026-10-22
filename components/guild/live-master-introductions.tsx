@@ -19,6 +19,7 @@ import { formatDate, formatJstDate } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const emptyPerson: MasterIntroductionPersonDraft = { member_id: "", name: "", company: "", preview: "" };
 const emptyDraft: MasterIntroductionDraft = { reason: "", a: { ...emptyPerson }, b: { ...emptyPerson } };
@@ -70,6 +71,7 @@ function PersonFields({ label, value, members, onChange }: {
 }
 
 export function LiveMasterIntroductions({ initial, members }: { initial: MasterIntroduction[]; members: Profile[] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [items, setItems] = useState(initial);
   const [draft, setDraft] = useState<MasterIntroductionDraft>(emptyDraft);
@@ -78,7 +80,7 @@ export function LiveMasterIntroductions({ initial, members }: { initial: MasterI
   const [error, setError] = useState("");
 
   async function reload() {
-    const { data, error: listError } = await createClient().rpc("sakaba_list_master_introductions", { p_guild_slug: "gia" });
+    const { data, error: listError } = await createClient().rpc("sakaba_list_master_introductions", { p_guild_slug: store.slug });
     if (listError) throw listError;
     setItems(Array.isArray(data) ? data as MasterIntroduction[] : []);
   }
@@ -90,7 +92,7 @@ export function LiveMasterIntroductions({ initial, members }: { initial: MasterI
     if (validation) { setError(validation); return; }
     setPending("create"); setError(""); setLinks(null);
     const fields = {
-      p_guild_slug: "gia",
+      p_guild_slug: store.slug,
       p_reason: draft.reason.trim(),
       p_a_member_id: draft.a.member_id || null,
       p_a_name: draft.a.name.trim(),
@@ -219,7 +221,7 @@ export function LiveMasterIntroductions({ initial, members }: { initial: MasterI
         return <li key={item.id} className="c-card p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-base break-words">{a?.name ?? "Aさん"} <span className="c-label">⇄</span> {b?.name ?? "Bさん"}</p><p className="c-muted mt-1 text-xs">{formatDate(item.created_at)} 作成 ・ {item.status === "waiting" ? `${accepted}/2人承諾 ・ ${formatJstDate(item.expires_at)}まで` : masterIntroductionStatusLabel[item.status]}</p></div><span className={item.status === "connected" ? "c-chip-strong" : "c-chip"}>{masterIntroductionStatusLabel[item.status]}</span></div>
           <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{item.reason}</p>
-          <div className="mt-4 grid gap-2 text-xs sm:grid-cols-2">{item.participants.map((person) => <div key={person.id} className="border border-[#1b2a41]/20 px-3 py-2"><p>{person.name}{person.member_user_id ? "（会員）" : "（会員外）"}</p><p className="c-muted mt-1">{person.response_status === "accepted" ? "承諾済み" : person.response_status === "declined" ? "見送り" : person.viewed_at ? "URL確認済み・返事待ち" : "未確認"}</p></div>)}</div>
+          <div className="mt-4 grid gap-2 text-xs sm:grid-cols-2">{item.participants.map((person) => <div key={person.id} className="border border-guild-ink/20 px-3 py-2"><p>{person.name}{person.member_user_id ? "（会員）" : "（会員外）"}</p><p className="c-muted mt-1">{person.response_status === "accepted" ? "承諾済み" : person.response_status === "declined" ? "見送り" : person.viewed_at ? "URL確認済み・返事待ち" : "未確認"}</p></div>)}</div>
           {item.status === "waiting" && <div className="mt-4 flex flex-wrap gap-2">{item.participants.map((person) => <button key={person.id} type="button" disabled={pending !== null} onClick={() => void rotate(person.id, person.name)} className="c-button-sub min-h-10 px-3 text-xs disabled:opacity-50">{person.name}さん用URLを再発行</button>)}<button type="button" disabled={pending !== null} onClick={() => void cancel(item)} className="c-button-sub min-h-10 px-3 text-xs disabled:opacity-50">紹介を取り消す</button></div>}
           {item.status === "connected" && <div className="c-dashed-top mt-4 pt-4"><p className="c-muted mb-2 text-xs">紹介後の結果</p><div className="flex flex-wrap gap-2">{(Object.keys(masterIntroductionOutcomeLabel) as MasterIntroductionOutcome[]).map((outcome) => <button key={outcome} type="button" disabled={pending !== null} aria-pressed={item.outcome === outcome} onClick={() => void setOutcome(item, outcome)} className="c-choice min-h-10 px-3 text-xs disabled:opacity-50">{masterIntroductionOutcomeLabel[outcome]}</button>)}</div></div>}
         </li>;

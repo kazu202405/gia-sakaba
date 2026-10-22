@@ -11,11 +11,13 @@ import { formatDate } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 // 一覧の読み直しが返ってこなくても、ボタンが押せないままにならないための上限
 const UNLOCK_FALLBACK_MS = 8000;
 
 export function LivePendingMembers({ initial }: { initial: PendingMember[] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   // 錠は押した瞬間に ref でかける（state は反映が遅れるので、続けて押されると2回通ってしまう）
   const lockRef = useRef(false);
@@ -53,7 +55,7 @@ export function LivePendingMembers({ initial }: { initial: PendingMember[] }) {
       const { error: rpcError } = await createClient().rpc("sakaba_decide_pending_member", {
         p_user_id: item.user_id,
         p_approve: approve,
-        p_guild_slug: "gia",
+        p_guild_slug: store.slug,
       });
       if (rpcError) throw rpcError;
       setDecided((current) => [...current, item.user_id]);

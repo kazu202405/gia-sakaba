@@ -6,6 +6,7 @@ import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
 import { LoginGuide } from "./login-guide";
+import { authCallbackUrl, outsideStorePath } from "@/lib/guild/store-path";
 
 export function InviteSignup({ inviteCode, inviterName, preview = false, initialName = "" }: { inviteCode: string; inviterName: string; preview?: boolean; initialName?: string }) {
   const router = useGuildRouter();
@@ -24,8 +25,8 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
   const [linkError, setLinkError] = useState("");
   const linkLock = useRef(false);
 
-  const joinPath = `/guild/join?invite=${encodeURIComponent(inviteCode)}`;
-  const loginPath = `/guild/login?next=${encodeURIComponent(joinPath)}`;
+  const joinPath = outsideStorePath("join", `?invite=${encodeURIComponent(inviteCode)}`);
+  const loginPath = outsideStorePath("login", `?next=${encodeURIComponent(joinPath)}`);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +58,7 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
       password,
       options: {
         data: { name: name.trim() },
-        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(joinPath)}`,
+        emailRedirectTo: authCallbackUrl(window.location.origin, joinPath),
       },
     });
     // 登録済みか：ふつうはエラーで返る。メール確認が必須の設定だと、エラーにならず identities が空で返る
@@ -100,7 +101,7 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
       email: email.trim(),
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent(joinPath)}`,
+        emailRedirectTo: authCallbackUrl(window.location.origin, joinPath),
       },
     });
     setLinkBusy(false);
@@ -115,7 +116,7 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
 
   return <div className="grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-start">
     <Window title="新規登録">
-      {preview && <p className="mb-4 border-2 border-dashed border-[#1b2a41] bg-[#fffdf6] p-3 text-sm">新規アカウント作成画面のプレビューです。送信はできません。</p>}
+      {preview && <p className="mb-4 border-2 border-dashed border-guild-ink bg-guild-paper p-3 text-sm">新規アカウント作成画面のプレビューです。送信はできません。</p>}
       <p className="mb-5 text-sm leading-relaxed"><span className="tracking-wider">{inviterName || "酒場のメンバー"}さんから招待状が届いています。</span><br /><span className="c-muted">GIAのアカウントを作成して、入会フォームへ進みます。</span></p>
       {initialName && <p className="c-card mb-5 px-3 py-2 text-sm">お名前は招待した人が入力済みです。違う場合は下で直してください。</p>}
       <form onSubmit={submit} className="space-y-4">

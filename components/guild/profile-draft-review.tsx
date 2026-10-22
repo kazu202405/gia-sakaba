@@ -10,10 +10,12 @@ import { createClient } from "@/lib/supabase/client";
 import { DRAFT_FIELDS, draftFieldLabel, type MyProfileDraft } from "@/lib/guild/profile-drafts";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Action = "apply" | "edit" | "decline";
 
 export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [busy, setBusy] = useState<Action | null>(null);
   const [error, setError] = useState("");
@@ -39,7 +41,7 @@ export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
       const { error: rpcError } = await createClient().rpc("sakaba_decide_my_profile_draft", { p_draft_id: draft.id, p_decision: decision });
       if (rpcError) throw rpcError;
       uiToast(decision === "apply" ? "ステータスに載せました" : "下書きは載せませんでした");
-      router.push(decision === "apply" ? "/guild/me" : "/guild");
+      router.push(decision === "apply" ? store.path("/me") : store.path());
       router.refresh();
     } catch {
       setError("できませんでした。すでに選んだ下書きかもしれません。画面を読み直して、もう一度お試しください。");
@@ -52,7 +54,7 @@ export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
     if (lockRef.current) return;
     lockRef.current = true;
     setBusy("edit");
-    router.push(`/guild/me/status?draft=${encodeURIComponent(draft.id)}`);
+    router.push(store.path(`/me/status?draft=${encodeURIComponent(draft.id)}`));
   }
 
   const disabled = busy !== null;

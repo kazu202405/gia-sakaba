@@ -17,14 +17,16 @@ import {
 import { getInitialMembership, getMembership, setMembership, subscribeMembership } from "@/lib/guild/membership-store";
 import { cn } from "@/lib/utils";
 import { CheckBox } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function useMembership() {
   return useSyncExternalStore(subscribeMembership, getMembership, getInitialMembership);
 }
 
 function PlanButton() {
+  const store = useGuildStore();
   return (
-    <Link href="/guild/plan" className="rpg-button h-11 w-full px-5 text-sm sm:w-auto">
+    <Link href={store.path("/plan")} className="rpg-button h-11 w-full px-5 text-sm sm:w-auto">
       ▶ 有料会員について 見る
     </Link>
   );
@@ -153,7 +155,7 @@ export function AchievementsView({
                 key={b.key}
                 className={cn(
                   "border-2 px-2 py-1 text-xs",
-                  b.earned ? "border-[#1b2a41] bg-[#f3ecd9]" : "c-muted border-dashed border-[#1b2a41]/30",
+                  b.earned ? "border-guild-ink bg-guild-bg" : "c-muted border-dashed border-guild-ink/30",
                 )}
                 title={b.earned ? undefined : b.howTo}
               >

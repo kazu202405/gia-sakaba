@@ -8,6 +8,7 @@ import type { MasterIntroduction } from "@/lib/guild/master-introductions";
 import { parsePlanUsage, type PlanUsage } from "@/lib/guild/plan-usage";
 import { applyProjectOrder, parseProjectOrder } from "@/lib/guild/project-order";
 import { parsePendingMembers, type PendingMember } from "@/lib/guild/approval";
+import { currentStore } from "@/lib/guild/current-store";
 
 type GuildContext = {
   guild: Guild;
@@ -129,8 +130,9 @@ type ProfileExtra = {
 };
 
 async function getProfileExtras(): Promise<ProfileExtra[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_get_profile_extras", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_get_profile_extras", { p_guild_slug: store.slug });
   if (error) throw rpcError("プロフィールの公開設定を取得できませんでした", error.message);
   return Array.isArray(data) ? data as ProfileExtra[] : [];
 }
@@ -140,9 +142,10 @@ function rpcError(message: string, detail?: string): Error {
 }
 
 export async function getGuildContext(): Promise<GuildContext> {
+  const store = await currentStore();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("sakaba_get_my_context", {
-    p_guild_slug: "gia",
+    p_guild_slug: store.slug,
   });
 
   if (error) throw rpcError("酒場の会員情報を取得できませんでした", error.message);
@@ -150,9 +153,10 @@ export async function getGuildContext(): Promise<GuildContext> {
 }
 
 export async function listGuildMembers(): Promise<Profile[]> {
+  const store = await currentStore();
   const supabase = await createClient();
   const [{ data, error }, extras] = await Promise.all([
-    supabase.rpc("sakaba_list_members", { p_guild_slug: "gia" }),
+    supabase.rpc("sakaba_list_members", { p_guild_slug: store.slug }),
     getProfileExtras(),
   ]);
 
@@ -174,9 +178,10 @@ export async function listGuildMembers(): Promise<Profile[]> {
 }
 
 export async function listGuildQuests(): Promise<GuildQuest[]> {
+  const store = await currentStore();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("sakaba_list_quests", {
-    p_guild_slug: "gia",
+    p_guild_slug: store.slug,
   });
 
   if (error) throw rpcError("クエストを取得できませんでした", error.message);
@@ -191,37 +196,42 @@ export async function listGuildQuestApplicants(questId: string): Promise<GuildQu
 }
 
 export async function listGuildIntroRequests(): Promise<GuildIntroRequest[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_intro_requests", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_intro_requests", { p_guild_slug: store.slug });
   if (error) throw rpcError("紹介依頼を取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildIntroRequest[] : [];
 }
 
 export async function listPendingGatheringApplications(): Promise<GuildPendingGatheringApplication[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_pending_gathering_applications", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_pending_gathering_applications", { p_guild_slug: store.slug });
   if (error) throw rpcError("集まりの承認待ちを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildPendingGatheringApplication[] : [];
 }
 
 export async function listGuildMasterInvites(): Promise<GuildMasterInvite[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: store.slug });
   if (error) throw rpcError("招待リンクを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildMasterInvite[] : [];
 }
 
 /** 役職「その他」で参加を申請した人（オーナーだけ読める・0126） */
 export async function listPendingMembers(): Promise<PendingMember[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_pending_members", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_pending_members", { p_guild_slug: store.slug });
   if (error) throw rpcError("参加の申請を取得できませんでした", error.message);
   return parsePendingMembers(data);
 }
 
 export async function listPreparedInvites(): Promise<MasterPreparedInvite[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_prepared_invites", { p_guild_slug: store.slug });
   if (error) throw rpcError("仮登録の招待状を取得できませんでした", error.message);
   return Array.isArray(data) ? data as MasterPreparedInvite[] : [];
 }
@@ -231,64 +241,73 @@ export async function listPreparedInvites(): Promise<MasterPreparedInvite[]> {
  * 「下書きが無い」と区別する（読めないのを「無い」と見せない）。
  */
 export async function getMyProfileDraft(): Promise<{ ok: true; draft: MyProfileDraft | null } | { ok: false }> {
-  const { data, error } = await (await createClient()).rpc("sakaba_get_my_profile_draft", { p_guild_slug: "gia" });
+  const store = await currentStore();
+  const { data, error } = await (await createClient()).rpc("sakaba_get_my_profile_draft", { p_guild_slug: store.slug });
   if (error) { console.warn("[guild] ステータスの下書きを読めませんでした", error.message); return { ok: false }; }
   return { ok: true, draft: parseMyProfileDraft(data) };
 }
 
 /** 書いたオーナー・マスターが、その人あての下書きを読む */
 export async function getMemberProfileDraft(memberId: string): Promise<{ ok: true; draft: MemberProfileDraft | null } | { ok: false }> {
-  const { data, error } = await (await createClient()).rpc("sakaba_get_member_profile_draft", { p_guild_slug: "gia", p_member_id: memberId });
+  const store = await currentStore();
+  const { data, error } = await (await createClient()).rpc("sakaba_get_member_profile_draft", { p_guild_slug: store.slug, p_member_id: memberId });
   if (error) { console.warn("[guild] 書いた下書きを読めませんでした", error.message); return { ok: false }; }
   return { ok: true, draft: parseMemberProfileDraft(data) };
 }
 
 /** 入会前（招待状にひもづく）の、自分が書いた下書き。読めなかったときは null */
 export async function listInviteProfileDrafts(): Promise<InviteProfileDraft[] | null> {
-  const { data, error } = await (await createClient()).rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: "gia" });
+  const store = await currentStore();
+  const { data, error } = await (await createClient()).rpc("sakaba_list_invite_profile_drafts", { p_guild_slug: store.slug });
   if (error) { console.warn("[guild] 入会前の下書きを読めませんでした", error.message); return null; }
   return parseInviteProfileDrafts(data);
 }
 
 export async function listMasterIntroductions(): Promise<MasterIntroduction[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_master_introductions", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_master_introductions", { p_guild_slug: store.slug });
   if (error) throw rpcError("人をつないだ記録を取得できませんでした", error.message);
   return Array.isArray(data) ? data as MasterIntroduction[] : [];
 }
 
 export async function getMyMemberInvite(): Promise<MyMemberInvite> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_get_my_member_invite", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_get_my_member_invite", { p_guild_slug: store.slug });
   if (error) throw rpcError("自分の招待リンクを取得できませんでした", error.message);
   return data as MyMemberInvite;
 }
 
 /** 段・上限・使った数（0114）。読めなかったら null（画面は数を出さないだけ。止めるのはDB） */
 export async function getMyPlanUsage(): Promise<PlanUsage | null> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_get_my_plan_usage", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_get_my_plan_usage", { p_guild_slug: store.slug });
   return error ? null : parsePlanUsage(data);
 }
 
 export async function getMyGuildBilling(): Promise<GuildBilling> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_get_my_billing", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_get_my_billing", { p_guild_slug: store.slug });
   if (error) throw rpcError("有料会員の状態を取得できませんでした", error.message);
   return data as GuildBilling;
 }
 
 export async function listGuildInviteNetwork(): Promise<GuildInviteNetworkMember[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_invite_network", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_invite_network", { p_guild_slug: store.slug });
   if (error) throw rpcError("招待のつながりを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildInviteNetworkMember[] : [];
 }
 
 export async function listGuildMemberIntroductions(targetId: string): Promise<GuildMemberIntroduction[]> {
+  const store = await currentStore();
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("sakaba_list_member_introductions", {
-    p_guild_slug: "gia",
+    p_guild_slug: store.slug,
     p_target_id: targetId,
   });
   if (error) throw rpcError("仲間からの紹介文を取得できませんでした", error.message);
@@ -296,18 +315,20 @@ export async function listGuildMemberIntroductions(targetId: string): Promise<Gu
 }
 
 export async function listGuildNotifications(): Promise<GuildNotification[]> {
+  const store = await currentStore();
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("sakaba_list_my_notifications", { p_guild_slug: "gia" });
+  const { data, error } = await supabase.rpc("sakaba_list_my_notifications", { p_guild_slug: store.slug });
   if (error) throw rpcError("おしらせを取得できませんでした", error.message);
   return Array.isArray(data) ? data as GuildNotification[] : [];
 }
 
 export async function listGuildProjects(): Promise<GuildProject[]> {
+  const store = await currentStore();
   const supabase = await createClient();
   const [{ data, error }, order, visibility] = await Promise.all([
-    supabase.rpc("sakaba_list_my_projects", { p_guild_slug: "gia" }),
-    supabase.rpc("sakaba_list_my_project_order", { p_guild_slug: "gia" }),
-    supabase.rpc("sakaba_list_task_visibility", { p_guild_slug: "gia" }),
+    supabase.rpc("sakaba_list_my_projects", { p_guild_slug: store.slug }),
+    supabase.rpc("sakaba_list_my_project_order", { p_guild_slug: store.slug }),
+    supabase.rpc("sakaba_list_task_visibility", { p_guild_slug: store.slug }),
   ]);
   if (error) throw rpcError("プロジェクトを取得できませんでした", error.message);
   const projects = Array.isArray(data) ? (data as GuildProject[]) : [];
@@ -326,14 +347,16 @@ export async function listGuildProjects(): Promise<GuildProject[]> {
 
 /** ホームの共有URLの案内をもう出さなくてよいか（使いはじめた／「使わない」を選んだ）。読めなかったとき（0123が未適用など）は null＝案内を出さない */
 export async function getMyShareNudgeDone(): Promise<boolean | null> {
-  const { data, error } = await (await createClient()).rpc("sakaba_get_my_share_nudge_done", { p_guild_slug: "gia" });
+  const store = await currentStore();
+  const { data, error } = await (await createClient()).rpc("sakaba_get_my_share_nudge_done", { p_guild_slug: store.slug });
   return error || typeof data !== "boolean" ? null : data;
 }
 
 export async function getMyGuildProfile(): Promise<MyGuildProfile> {
+  const store = await currentStore();
   const supabase = await createClient();
   const [{ data, error }, extras] = await Promise.all([
-    supabase.rpc("sakaba_get_my_profile", { p_guild_slug: "gia" }),
+    supabase.rpc("sakaba_get_my_profile", { p_guild_slug: store.slug }),
     getProfileExtras(),
   ]);
   if (error) throw rpcError("マイページを取得できませんでした", error.message);

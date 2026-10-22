@@ -10,6 +10,8 @@ import { PHRASE_WRAP, Ph } from "./phrase";
 import { EnterprisePlan } from "./enterprise-plan";
 import { CheckBox } from "./form-parts";
 import { BillingPoints, LegalLinks } from "./legal-consent";
+import { useGuildStore } from "@/components/guild/store-context";
+import { guildApiPath } from "@/lib/guild/store-path";
 
 type Props = {
   role: "owner" | "master" | "member";
@@ -24,6 +26,7 @@ type Props = {
 };
 
 export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan, companyNoteBenefit, diningEnabled, availabilityEnabled, checkoutResult }: Props) {
+  const store = useGuildStore();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState("");
   const exempt = role === "owner" || role === "master" || billingStatus === "exempt";
@@ -47,7 +50,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     if (pending || needsConsent()) return;
     setPending(`checkout-${plan}`); setError("");
     try {
-      const response = await fetch("/api/guild/billing/checkout", {
+      const response = await fetch(guildApiPath(store.slug, "/billing/checkout"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ plan }),
@@ -65,7 +68,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     if (pending || (switchPlan && needsConsent())) return;
     setPending(switchPlan ? "switch" : "portal"); setError("");
     try {
-      const response = await fetch(`/api/guild/billing/portal${switchPlan ? "?switch=1" : ""}`, { method: "POST" });
+      const response = await fetch(guildApiPath(store.slug, "/billing/portal", switchPlan ? { switch: "1" } : {}), { method: "POST" });
       const result = await response.json() as { url?: string; error?: string };
       if (!response.ok || !result.url) throw new Error(result.error || "支払い管理を開けませんでした。");
       window.location.assign(result.url);
@@ -95,12 +98,12 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
   }
 
   return <div className="space-y-9">
-    <BackLink href="/guild/me" label="マイページ" />
+    <BackLink href={store.path("/me")} label="マイページ" />
     <PageTitle title="会員プラン" lead={<span className={PHRASE_WRAP}><Ph text="酒場は無料で|使い始められます。|使いたい機能に|合わせて|選んでください。" /></span>} />
 
-    {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] px-4 py-3 text-sm">
+    {checkoutResult === "success" && <div role="status" className="c-card border-guild-accent-dark px-4 py-3 text-sm">
       <p>お申し込みを受け付けました。会員状態の反映まで少し時間がかかることがあります。プロジェクトは削除されていません。</p>
-      <Link href="/guild/projects" className="c-button-sub mt-3 h-10 px-4">▶ プロジェクト一覧を見る</Link>
+      <Link href={store.path("/projects")} className="c-button-sub mt-3 h-10 px-4">▶ プロジェクト一覧を見る</Link>
     </div>}
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
 
@@ -116,12 +119,12 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     </Window></div>}
 
     <section aria-label="3つの会員プラン" className="grid gap-4 lg:grid-cols-3">
-      {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${PHRASE_WRAP} ${plan.key === "dining" ? "border-[#8f7337]" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
+      {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${PHRASE_WRAP} ${plan.key === "dining" ? "border-guild-accent-dark" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
         {/* 名前と同じドット文字の大きさ（16pxの倍数だと升目どおりに出る） */}
         <h2 className="guild-px text-[32px] leading-none tracking-[0.15em]">{plan.label}</h2>
         <p className="mt-4 text-[28px] leading-none tracking-wide">{plan.price}<span className="ml-1 text-xs">{plan.key !== "free" && "（税込）"}</span></p>
         <p className="mt-5 min-h-14 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text={plan.lead} /></p>
-        <ul className="mt-4 flex-1 space-y-4 border-t border-[#1b2a41]/25 pt-4">
+        <ul className="mt-4 flex-1 space-y-4 border-t border-guild-ink/25 pt-4">
           {[...plan.features, ...(plan.key === "dining" && availabilityEnabled ? [F.availability] : [])].map((feature) => <li key={feature.title} className="flex gap-2">
             <span aria-hidden="true" className="text-sm leading-relaxed">▶</span>
             <span className="min-w-0">

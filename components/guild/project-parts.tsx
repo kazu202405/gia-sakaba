@@ -11,6 +11,7 @@ import { reopenTask, toggleTask, type ProjectState } from "@/lib/guild/project-s
 import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { questCategoryMark } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const GAUGE_CELLS = 10;
 
@@ -50,10 +51,11 @@ export function QuestOriginChip({ project }: { project: Project }) {
 
 /** くわしい画面の「はじまりの クエスト」。押すとクエストの画面へ */
 export function QuestOriginCard({ project }: { project: Project }) {
+  const store = useGuildStore();
   const quest = project.source_quest_id ? getQuest(project.source_quest_id) : undefined;
   if (!quest) return null;
   return (
-    <Link href={`/guild/quests/${quest.id}`} className="c-card rpg-cursor-row mt-4 flex items-start gap-1.5 p-3">
+    <Link href={store.path(`/quests/${quest.id}`)} className="c-card rpg-cursor-row mt-4 flex items-start gap-1.5 p-3">
       <span className="rpg-cursor mt-0.5">▶</span>
       <span className="min-w-0 flex-1">
         <span className="c-label block text-xs">
@@ -86,8 +88,8 @@ export function ProjectProgressView({ project, state }: { project: Project; stat
             </span>
             {due && <span className={due.overdue ? "c-chip-strong" : ""}>{due.text}</span>}
           </span>
-          <span className="relative mt-1.5 block h-3.5 border-2 border-[#1b2a41] bg-[#fffdf6]" aria-hidden>
-            <span className="absolute inset-y-0 left-0 bg-[#1b2a41]" style={{ width: `${schedule.donePct}%` }} />
+          <span className="relative mt-1.5 block h-3.5 border-2 border-guild-ink bg-guild-paper" aria-hidden>
+            <span className="absolute inset-y-0 left-0 bg-guild-ink" style={{ width: `${schedule.donePct}%` }} />
             {project.status === "active" && (
               <span
                 className="absolute -top-1.5 -bottom-1.5 w-[3px] -translate-x-1/2 bg-[#b58a2a]"
@@ -130,8 +132,9 @@ export function ProjectRow({
   /** かんたん表示：なまえと札だけ（1画面に入る数を増やす） */
   compact?: boolean;
 }) {
+  const store = useGuildStore();
   return (
-    <Link href={`/guild/projects/${project.id}`} className="rpg-cursor-row flex items-start gap-1.5">
+    <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row flex items-start gap-1.5">
       <span className="rpg-cursor mt-0.5">▶</span>
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -164,6 +167,7 @@ export function TaskLine({
   onOpen?: () => void;
   opened?: boolean;
 }) {
+  const store = useGuildStore();
   const isDone = task.status === "done";
   const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY) : null;
   const assignee = task.assignee_id ? getProfile(task.assignee_id)?.display_name : null;
@@ -176,7 +180,7 @@ export function TaskLine({
       </span>
       <span className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
         {projectTitle && !onOpen && (
-          <Link href={`/guild/projects/${projectTitle.id}`} className="c-muted underline underline-offset-4">
+          <Link href={store.path(`/projects/${projectTitle.id}`)} className="c-muted underline underline-offset-4">
             {projectTitle.title}
           </Link>
         )}
@@ -210,7 +214,7 @@ export function TaskLine({
         // 見た目は24pxの□、押せる範囲は指で押しやすい40px
         className="-m-2 flex h-10 w-10 shrink-0 items-center justify-center"
       >
-        <span className="flex h-6 w-6 items-center justify-center border-2 border-[#1b2a41] bg-[#fffdf6] text-sm leading-none">
+        <span className="flex h-6 w-6 items-center justify-center border-2 border-guild-ink bg-guild-paper text-sm leading-none">
           {isDone ? "✓" : ""}
         </span>
       </button>

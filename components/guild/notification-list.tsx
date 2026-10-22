@@ -21,6 +21,8 @@ const ctx: NotificationContext = {
   name: (id) => getProfile(id)?.display_name ?? guild.terms.member,
   questTitle: (id) => getQuest(id)?.title ?? "クエスト",
   intro: (id) => introRequests.find((r) => r.id === id),
+  // 見本用の一覧。本番の画面は live-notification-list.tsx で今の店の道を使う
+  path: (rest) => rest,
 };
 
 export function NotificationList() {
@@ -41,7 +43,7 @@ export function NotificationList() {
       {items.length === 0 ? (
         <p className="c-muted text-sm">おしらせは ありません。</p>
       ) : (
-        <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+        <ul className="divide-y-2 divide-dashed divide-guild-ink/15">
           {items.map((n) => {
             const { text, href } = notificationText(n, ctx);
             const isUnread = n.read_at === null;

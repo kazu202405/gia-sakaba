@@ -12,6 +12,7 @@ import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/la
 import { questCategoryMark } from "./cards";
 import { FilterRow, ViewModeSwitch, useViewMode } from "./list-controls";
 import { cn } from "@/lib/utils";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const FILTERS = Object.keys(questFilterLabel) as QuestFilter[];
 const CATEGORIES = Object.keys(questCategoryLabel) as QuestCategory[];
@@ -89,11 +90,12 @@ function LiveQuestCard({
   creatorName?: string;
   compact: boolean;
 }) {
+  const store = useGuildStore();
   const done = quest.status === "completed";
 
   return (
     <Link
-      href={`/guild/quests/${quest.id}`}
+      href={store.path(`/quests/${quest.id}`)}
       className={cn("c-card rpg-cursor-row block p-3 sm:p-4", done && "opacity-75")}
     >
       <div className="flex items-start gap-1.5">

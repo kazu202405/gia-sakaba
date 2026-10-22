@@ -15,10 +15,12 @@ import { Window } from "./cards";
 import { FilterRow, ViewModeSwitch, useViewMode } from "./list-controls";
 import { useMembership } from "./membership-parts";
 import { ProjectRow } from "./project-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const FILTERS = Object.keys(projectFilterLabel) as ProjectFilter[];
 
 export function ProjectList() {
+  const store = useGuildStore();
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const { isPaid } = useMembership();
   const [filter, setFilter] = useState<ProjectFilter>("active");
@@ -30,7 +32,7 @@ export function ProjectList() {
   return (
     <div className="space-y-7">
       <div className="space-y-2">
-        <Link href="/guild/projects/new" className="rpg-button h-12 w-full text-base sm:w-auto">
+        <Link href={store.path("/projects/new")} className="rpg-button h-12 w-full text-base sm:w-auto">
           ▶ プロジェクトを つくる
         </Link>
         <p className="c-muted text-xs tabular-nums">

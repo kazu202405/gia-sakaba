@@ -8,6 +8,7 @@ import { formatDate, introStatusLabel } from "@/lib/guild/labels";
 import { notificationText, unreadCount, type NotificationContext } from "@/lib/guild/notifications";
 import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function LiveNotificationList({ initial, members, quests, intros }: {
   initial: GuildNotification[];
@@ -15,6 +16,7 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
   quests: GuildQuest[];
   intros: GuildIntroRequest[];
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -25,6 +27,7 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
     name: (id) => names.get(id) ?? "メンバー",
     questTitle: (id) => titles.get(id) ?? "クエスト",
     intro: (id) => byIntroId.get(id),
+    path: store.path,
   };
 
   async function markRead(id?: string, href?: string) {
@@ -35,13 +38,13 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
     // 押せないままにしておくのは、画面が変わるまで（この部品ごと入れ替わる）
     if (href && new URL(href, window.location.href).pathname !== window.location.pathname) {
       router.push(href);
-      void createClient().rpc("sakaba_mark_notifications_read", { p_guild_slug: "gia", p_notification_id: id })
+      void createClient().rpc("sakaba_mark_notifications_read", { p_guild_slug: store.slug, p_notification_id: id })
         .then(({ error: rpcError }) => { if (rpcError) console.warn("[guild] 既読にできませんでした", rpcError.message); });
       return;
     }
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_mark_notifications_read", {
-        p_guild_slug: "gia", p_notification_id: id,
+        p_guild_slug: store.slug, p_notification_id: id,
       });
       if (rpcError) throw rpcError;
       if (href) router.push(href);
@@ -55,12 +58,12 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
 
   return <Window title="あなたあて" action={unreadCount(initial) > 0 ? <button type="button" disabled={pendingId !== null} onClick={() => void markRead()} className="c-muted text-xs underline disabled:opacity-50">すべて既読にする</button> : undefined}>
     {error && <p role="alert" className="mb-3 text-sm text-[#c62828]">{error}</p>}
-    {initial.length === 0 ? <p className="c-muted text-sm">おしらせはありません。</p> : <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">{initial.map((item) => {
+    {initial.length === 0 ? <p className="c-muted text-sm">おしらせはありません。</p> : <ul className="divide-y-2 divide-dashed divide-guild-ink/15">{initial.map((item) => {
       const intro = item.intro_request_id ? byIntroId.get(item.intro_request_id) : undefined;
       let { text, href } = notificationText(item, ctx);
       if (item.kind === "intro_progress" && intro && item.user_id !== intro.requester_id && item.user_id !== intro.target_id) {
         text = item.intro_status === "requested" ? "新しい紹介依頼が届きました" : `紹介依頼：${introStatusLabel[item.intro_status ?? intro.status].master}`;
-        href = "/guild/master";
+        href = store.path("/master");
       } else if (item.kind === "intro_progress" && intro && item.user_id === intro.target_id && item.intro_status === "introduced") {
         text = "紹介済みになりました";
       }

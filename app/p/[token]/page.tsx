@@ -76,7 +76,7 @@ export default async function SharedProfilePage({ params }: Props) {
       </Window>
 
       {(sections.length > 0 || keywords.length > 0) && <Window title="プロフィール">
-        <div className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+        <div className="divide-y-2 divide-dashed divide-guild-ink/15">
           {sections.map((section) => <section key={section.label} className="py-5 first:pt-0 last:pb-0">
             <p className="c-label text-base tracking-[0.12em]">▶ {section.label}</p>
             <p className="mt-1.5 whitespace-pre-line break-words text-[15px] leading-relaxed">{section.value}</p>
@@ -89,7 +89,7 @@ export default async function SharedProfilePage({ params }: Props) {
       </Window>}
 
       {personal.length > 0 && <Window title="人となり">
-        <dl className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+        <dl className="divide-y-2 divide-dashed divide-guild-ink/15">
           {personal.map((item) => <div key={item.label} className="py-4 first:pt-0 last:pb-0">
             <dt className="c-label text-base">{item.label}</dt>
             <dd className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed">{item.value}</dd>
@@ -100,7 +100,7 @@ export default async function SharedProfilePage({ params }: Props) {
       {card && <BusinessCardView card={card} urls={cardUrls} isMe={false} footnote="押すと大きく開きます。" />}
 
       {introductions.length > 0 && <Window title="紹介状">
-        <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+        <ul className="divide-y-2 divide-dashed divide-guild-ink/15">
           {introductions.map((item, index) => <li key={index} className="py-4 first:pt-0 last:pb-0">
             <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">{item.body}</p>
             <p className="c-muted mt-2 text-xs">{item.author_name ? `${item.author_name}さん ・ ` : ""}{formatDate(item.created_at)}</p>

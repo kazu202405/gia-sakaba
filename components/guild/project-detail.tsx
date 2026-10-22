@@ -33,10 +33,12 @@ import { ProjectProgressView, QuestOriginCard, QuestOriginChip, TaskLine, Visibi
 import { ProjectParty } from "./project-party";
 import { ProjectPeople } from "./project-people";
 import { AddTaskForm, TaskEditor } from "./task-editor";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type TaskView = "list" | "gantt";
 
 export function ProjectDetail({ id }: { id: string }) {
+  const store = useGuildStore();
   const state = useSyncExternalStore(subscribeProjects, getProjectState, getInitialProjectState);
   const router = useGuildRouter();
   const [view, setView] = useState<TaskView>("list");
@@ -48,7 +50,7 @@ export function ProjectDetail({ id }: { id: string }) {
   if (!project || !canSeeProject(project, ME_ID)) {
     return (
       <div className="space-y-9">
-        <BackLink href="/guild/projects" label="プロジェクト" />
+        <BackLink href={store.path("/projects")} label="プロジェクト" />
         <Window>
           <p className="text-sm">このプロジェクトは 見つかりませんでした。</p>
         </Window>
@@ -69,7 +71,7 @@ export function ProjectDetail({ id }: { id: string }) {
 
   // なおす枠は 1つだけ開く。同じ行を もう一度押すと閉じる
   const renderTasks = (tasks: typeof list) => (
-    <ul className="divide-y-2 divide-dashed divide-[#1b2a41]/15">
+    <ul className="divide-y-2 divide-dashed divide-guild-ink/15">
       {tasks.map((t) => (
         <li key={t.id}>
           <TaskLine
@@ -88,7 +90,7 @@ export function ProjectDetail({ id }: { id: string }) {
 
   return (
     <div className="space-y-11">
-      <BackLink href="/guild/projects" label="プロジェクト" />
+      <BackLink href={store.path("/projects")} label="プロジェクト" />
 
       <Window title={project.status === "done" ? "おわった プロジェクト" : "プロジェクト"}>
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -97,7 +99,7 @@ export function ProjectDetail({ id }: { id: string }) {
             <VisibilityChip project={project} />
           </span>
           {isOwner && (
-            <Link href={`/guild/projects/${project.id}/edit`} className="c-muted text-xs underline underline-offset-4">
+            <Link href={store.path(`/projects/${project.id}/edit`)} className="c-muted text-xs underline underline-offset-4">
               なおす
             </Link>
           )}
@@ -244,7 +246,7 @@ export function ProjectDetail({ id }: { id: string }) {
               if (!ok) return;
               removeProject(project.id);
               uiToast("プロジェクトを 消しました");
-              router.push("/guild/projects");
+              router.push(store.path("/projects"));
             }}
           >
             このプロジェクトを 消す

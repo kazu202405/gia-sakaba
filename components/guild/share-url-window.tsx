@@ -10,6 +10,7 @@ import { applyShareChange, shareUrl, type ShareSettings, type ShareSwitch } from
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { CheckBox } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const SWITCHES: { key: ShareSwitch; label: string; note?: string }[] = [
   { key: "show_profile", label: "プロフィール", note: "仕事内容・おもい・さがしているもの・キーワード" },
@@ -19,6 +20,7 @@ const SWITCHES: { key: ShareSwitch; label: string; note?: string }[] = [
 ];
 
 export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
+  const store = useGuildStore();
   const [settings, setSettings] = useState(initial);
   const [origin, setOrigin] = useState("");
   const [saving, setSaving] = useState(false);
@@ -30,7 +32,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
 
   // 使いはじめた印（ホームの「共有URLを作りましょう」を消す）。失敗しても本体の操作は止めない
   function acknowledge() {
-    void createClient().rpc("sakaba_ack_my_share", { p_guild_slug: "gia" });
+    void createClient().rpc("sakaba_ack_my_share", { p_guild_slug: store.slug });
   }
   const url = origin ? shareUrl(origin, settings.token) : "";
 
@@ -44,7 +46,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
     setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_update_my_share", {
-        p_guild_slug: "gia", p_enabled: next.enabled, p_show_profile: next.show_profile, p_show_personal: next.show_personal,
+        p_guild_slug: store.slug, p_enabled: next.enabled, p_show_profile: next.show_profile, p_show_personal: next.show_personal,
         p_show_card: next.show_card, p_show_intros: next.show_intros, p_show_intro_authors: next.show_intro_authors,
       });
       if (rpcError) throw rpcError;
@@ -72,7 +74,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
     setSaving(true);
     setError("");
     try {
-      const { data, error: rpcError } = await createClient().rpc("sakaba_rotate_my_share", { p_guild_slug: "gia" });
+      const { data, error: rpcError } = await createClient().rpc("sakaba_rotate_my_share", { p_guild_slug: store.slug });
       if (rpcError || typeof data !== "string") throw rpcError ?? new Error("token missing");
       setSettings((current) => ({ ...current, token: data }));
       uiToast("URLを作り直しました");

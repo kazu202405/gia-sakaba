@@ -5,6 +5,7 @@ import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { FormEvent, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AuthLinkError } from "@/components/guild/auth-link-error";
+import { outsideStorePath } from "@/lib/guild/store-path";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,7 +18,7 @@ export default function ForgotPasswordPage() {
     if (busy || !email.trim()) return;
     setBusy(true);
     setError("");
-    const redirectTo = `${window.location.origin}/guild/auth/callback?next=${encodeURIComponent("/guild/reset-password")}`;
+    const redirectTo = `${window.location.origin}${outsideStorePath("auth/callback", `?next=${encodeURIComponent(outsideStorePath("reset-password"))}`)}`;
     const { error: sendError } = await createClient().auth.resetPasswordForEmail(email.trim(), { redirectTo });
     setBusy(false);
     if (sendError) {
@@ -43,7 +44,7 @@ export default function ForgotPasswordPage() {
           <button type="submit" className="c-button w-full" disabled={busy || !email.trim()}>{busy ? "送信中..." : "再設定メールを送る"}</button>
         </form>
       </>}
-      <Link href="/guild/login" className="mt-6 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">ログインへ戻る</Link>
+      <Link href={outsideStorePath("login")} className="mt-6 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">ログインへ戻る</Link>
     </section>
   </main>;
 }

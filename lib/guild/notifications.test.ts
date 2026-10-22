@@ -1,3 +1,4 @@
+import { guildPath } from "./store-path";
 import { describe, expect, it } from "vitest";
 import type { GuildNotification, IntroRequest, Quest, QuestApplication } from "./types";
 import {
@@ -122,19 +123,20 @@ describe("notificationText", () => {
     name: (id: string) => ({ a: "小松 由佳", owner: "森田 陽介" })[id] ?? "?",
     questTitle: (id: string) => (id === "q1" ? "LPの文章" : "?"),
     intro: (id: string) => (id === "r1" ? intro("r1", "proposed") : undefined),
+    path: (rest: string) => guildPath("gia", rest),
   };
 
   it("参加の希望は、参加したい人の一覧へ", () => {
     expect(notificationText(note({ actor_id: "a" }), ctx)).toEqual({
       text: "小松 由佳さんが「LPの文章」に 参加したいと伝えました",
-      href: "/guild/quests/q1/applicants",
+      href: "/guild/gia/quests/q1/applicants",
     });
   });
 
   it("なおされた知らせには、変わった項目が入力画面の順で付く（保存された順に左右されない）", () => {
     const t = notificationText(note({ kind: "quest_updated", changed_fields: ["deadline", "body"] }), ctx);
     expect(t.text).toBe("「LPの文章」の内容が なおされました（くわしく・しめきり）");
-    expect(t.href).toBe("/guild/quests/q1");
+    expect(t.href).toBe("/guild/gia/quests/q1");
   });
 
   it("変わった項目が無ければ、かっこを付けない", () => {
@@ -161,16 +163,16 @@ describe("notificationText", () => {
   });
 
   it("日にちが決まった知らせは、その集まりへ", () => {
-    expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/master#master-consults-title");
+    expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/gia/master#master-consults-title");
     expect(notificationText(note({ kind: "consult_request", quest_id: null, actor_id: "a" }), ctx).text).toContain("エンタープライズの相談");
-    expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/master#master-feedback-title");
+    expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).href).toBe("/guild/gia/master#master-feedback-title");
     expect(notificationText(note({ kind: "feedback_report", quest_id: null, actor_id: "a" }), ctx).text).toContain("ご意見・不具合");
     const joined = notificationText(note({ kind: "member_joined", quest_id: null, actor_id: "a" }), ctx);
     expect(joined.text).toContain("入会しました");
-    expect(joined.href).toBe("/guild/members/a");
+    expect(joined.href).toBe("/guild/gia/members/a");
     expect(notificationText(note({ kind: "schedule_decided" }), ctx)).toEqual({
       text: "「LPの文章」の 日にちが 決まりました",
-      href: "/guild/quests/q1",
+      href: "/guild/gia/quests/q1",
     });
   });
 
@@ -179,7 +181,7 @@ describe("notificationText", () => {
       note({ kind: "intro_progress", intro_request_id: "none", intro_status: "accepted" }),
       ctx,
     );
-    expect(t.href).toBe("/guild/requests");
+    expect(t.href).toBe("/guild/gia/requests");
   });
 });
 
@@ -194,6 +196,7 @@ describe("限定の集まりの 承認・見送りの知らせ", () => {
     name: () => "?",
     questTitle: (id: string) => (id === "g1" ? "酒場の夜" : "?"),
     intro: () => undefined,
+    path: (rest: string) => guildPath("gia", rest),
   };
 
   it("申し込んだ本人に、承認なら「決まりました」、見送りなら「見送りになりました」を送る", () => {
@@ -201,7 +204,7 @@ describe("限定の集まりの 承認・見送りの知らせ", () => {
     expect(ok).toMatchObject({ user_id: "u", kind: "gathering_approved", actor_id: "master", read_at: null });
     expect(notificationText(ok, ctx)).toEqual({
       text: "「酒場の夜」への 参加が 決まりました",
-      href: "/guild/quests/g1",
+      href: "/guild/gia/quests/g1",
     });
 
     const ng = gatheringDecisionNotification({ quest_id: "g1", user_id: "u" }, false, "master", "2026-09-18", "n2");

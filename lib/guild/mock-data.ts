@@ -1,6 +1,7 @@
 // 見本用の架空データ。実在の人物ではない（ギルドマスターの五島さんだけ本人）。
 // Supabase につなぐときは、このファイルの関数を同じ名前・同じ戻り値のまま中身だけ差し替える。
 
+import { DEFAULT_STORE_SLUG } from "./stores";
 import type {
   GiaApplicantImport,
   Guild,
@@ -108,7 +109,7 @@ export const myGiaApplicant: GiaApplicantImport = {
 
 export const guild: Guild = {
   id: "g-gia",
-  slug: "gia",
+  slug: DEFAULT_STORE_SLUG,
   name: "GIAギルド",
   terms: {
     member: "ギルドメンバー",

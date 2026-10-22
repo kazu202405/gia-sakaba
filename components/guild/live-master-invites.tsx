@@ -8,6 +8,8 @@ import { formatDate } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { inviteUrl as sharedInviteUrl } from "@/lib/guild/invite-share";
+import { useGuildStore } from "@/components/guild/store-context";
 
 function inviteStatus(invite: GuildMasterInvite) {
   if (invite.revoked_at) return "無効";
@@ -17,10 +19,11 @@ function inviteStatus(invite: GuildMasterInvite) {
 }
 
 function inviteUrl(code: string) {
-  return `${window.location.origin}/guild/join?invite=${encodeURIComponent(code)}`;
+  return sharedInviteUrl(window.location.origin, code);
 }
 
 export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: GuildMasterInvite[]; excludedIds?: string[] }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [invites, setInvites] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
@@ -31,9 +34,9 @@ export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: Guil
     setPending("create"); setError("");
     try {
       const supabase = createClient();
-      const { data, error: rpcError } = await supabase.rpc("sakaba_create_master_invite", { p_guild_slug: "gia" });
+      const { data, error: rpcError } = await supabase.rpc("sakaba_create_master_invite", { p_guild_slug: store.slug });
       if (rpcError) throw rpcError;
-      const { data: list, error: listError } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: "gia" });
+      const { data: list, error: listError } = await supabase.rpc("sakaba_list_master_invites", { p_guild_slug: store.slug });
       if (listError) throw listError;
       setInvites(Array.isArray(list) ? (list as GuildMasterInvite[]).filter((invite) => !excludedIds.includes(invite.id)) : []);
       try {
@@ -99,10 +102,10 @@ export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: Guil
             <button type="button" onClick={() => void copyInvite(invite.code)} className="c-button-sub h-10 px-4 text-sm">リンクをコピー</button>
             <button type="button" disabled={pending !== null} onClick={() => void revokeInvite(invite)} className="c-button-sub h-10 px-4 text-sm disabled:opacity-50">{pending === invite.id ? "無効化中…" : "無効にする"}</button>
           </div>}
-          {invite.members.length > 0 && <div className="mt-4 border-t border-[#1b2a41]/20 pt-3">
+          {invite.members.length > 0 && <div className="mt-4 border-t border-guild-ink/20 pt-3">
             <p className="c-muted mb-2 text-xs">このリンクで参加した人</p>
             <ul className="space-y-1">{invite.members.map((member) => <li key={member.user_id} className="flex flex-wrap items-center gap-x-3 text-sm">
-              <Link href={`/guild/members/${member.user_id}`} className="underline underline-offset-4">{member.display_name}</Link>
+              <Link href={store.path(`/members/${member.user_id}`)} className="underline underline-offset-4">{member.display_name}</Link>
               <span className="c-muted text-xs">{formatDate(member.joined_at)} 参加{member.suspended ? "・停止中" : ""}</span>
             </li>)}</ul>
           </div>}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { currentStore } from "@/lib/guild/current-store";
 import type { GuildProject } from "@/lib/guild/server-data";
 import { ENTRY_PLAN_PRICE_LABEL, FREE_ACTIVE_PROJECT_LIMIT } from "@/lib/guild/membership";
 import { Window } from "./cards";
@@ -6,7 +7,8 @@ import { isExhausted, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usag
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { ProjectCard, ProjectOrderList } from "./project-order-list";
 
-export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
+export async function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
+  const store = await currentStore();
   const ownedCount = projects.filter((project) => project.owner_id === userId).length;
   // 段ごとの上限（0114）。読めなかったときだけ前の判定
   const canCreate = quota ? !isExhausted(quota.slot) : isPaid || ownedCount < FREE_ACTIVE_PROJECT_LIMIT;
@@ -17,9 +19,9 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
   const finished = projects.filter((project) => project.status === "done");
   return (
     <div className="space-y-5">
-      {checkoutResult === "success" && <div role="status" className="c-card border-[#8f7337] p-4 text-sm leading-relaxed">
+      {checkoutResult === "success" && <div role="status" className="c-card border-guild-accent-dark p-4 text-sm leading-relaxed">
         <p>{isPaid ? "有料会員の登録が反映されました。プロジェクトは下に表示されています。" : "お申し込みを受け付けました。プロジェクトは下に表示されています。会員状態の反映まで少し時間がかかることがあります。"}</p>
-        {!isPaid && <form action="/guild/projects" method="get" className="mt-3">
+        {!isPaid && <form action={store.path("/projects")} method="get" className="mt-3">
           <input type="hidden" name="checkout" value="success" />
           <button type="submit" className="c-button-sub h-10 px-4">表示を更新する</button>
         </form>}
@@ -27,7 +29,7 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
       {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed p-4 text-sm">申し込みはキャンセルされました。プロジェクトはそのままです。</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="c-muted text-sm">自分と参加中のプロジェクトだけが表示されます。</p>
-        {canCreate && <Link href="/guild/projects/new" className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link>}
+        {canCreate && <Link href={store.path("/projects/new")} className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link>}
       </div>
       {canCreate && quota && <PlanQuotaNote kind="project" plan={quota.plan} slot={quota.slot} />}
       {!canCreate && !showFreeUpsell && quota && <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} />}
@@ -42,7 +44,7 @@ export function LiveProjectList({ projects, userId, isPaid, checkoutResult, quot
             <li>▶ 有料会員限定（不定期開催）の懇親会などに申し込める</li>
           </ul>
           <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}からの月額制です。無料体験期間はありません。</p>
-          <Link href="/guild/plan" className="rpg-button mt-5 h-12 w-full px-6 text-base sm:w-auto">▶ 有料会員について</Link>
+          <Link href={store.path("/plan")} className="rpg-button mt-5 h-12 w-full px-6 text-base sm:w-auto">▶ 有料会員について</Link>
         </Window>
       </>}
       {projects.length === 0 ? (

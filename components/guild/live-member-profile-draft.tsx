@@ -10,6 +10,7 @@ import { draftHasContent, draftRpcArgs, emptyDraftFields, validateProfileDraft, 
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { ProfileDraftInputs } from "./profile-draft-fields";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const stateText: Record<DraftState, string> = {
   waiting: "本人の返事を待っています。書き直して届けると、いまの下書きに置き換わります。",
@@ -18,6 +19,7 @@ const stateText: Record<DraftState, string> = {
 };
 
 export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memberId: string; memberName: string; initial: MemberProfileDraft | null }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [fields, setFields] = useState(initial?.state === "waiting" && initial.fields ? initial.fields : emptyDraftFields);
   const [state, setState] = useState<DraftState | null>(initial?.state ?? null);
@@ -36,7 +38,7 @@ export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memb
     setSaving(true); setError("");
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_save_member_profile_draft", {
-        p_guild_slug: "gia", p_member_id: memberId, ...draftRpcArgs(fields),
+        p_guild_slug: store.slug, p_member_id: memberId, ...draftRpcArgs(fields),
       });
       if (rpcError) throw rpcError;
       setState("waiting");

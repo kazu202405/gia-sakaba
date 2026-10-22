@@ -84,13 +84,13 @@ export function ProjectPeople({
     <div className="space-y-5">
       {/* スマホは 名前を ます目の上の行に出して、ステップの列だけを横に並べる（4列なら横に動かさずに収まる）。
           PCは 名前の列を左に置く。それでも入りきらないときは、この枠の中だけで横に動かす */}
-      <div className="overflow-x-auto border-2 border-[#1b2a41]">
+      <div className="overflow-x-auto border-2 border-guild-ink">
         <table className="w-full border-collapse text-sm">
           <thead>
-            <tr className="bg-[#f3ecd9]">
+            <tr className="bg-guild-bg">
               <th
                 scope="col"
-                className="hidden bg-[#f3ecd9] px-2 py-2 text-left text-xs font-normal sm:sticky sm:left-0 sm:z-10 sm:table-cell"
+                className="hidden bg-guild-bg px-2 py-2 text-left text-xs font-normal sm:sticky sm:left-0 sm:z-10 sm:table-cell"
               >
                 相手
               </th>
@@ -126,15 +126,15 @@ export function ProjectPeople({
               );
               return (
                 <Fragment key={c.id}>
-                  <tr className="border-t-2 border-dashed border-[#1b2a41]/15 sm:hidden">
+                  <tr className="border-t-2 border-dashed border-guild-ink/15 sm:hidden">
                     <th scope="row" colSpan={steps.length} className="px-2 pt-2 text-left font-normal">
                       {name}
                     </th>
                   </tr>
-                  <tr className="sm:border-t-2 sm:border-dashed sm:border-[#1b2a41]/15">
+                  <tr className="sm:border-t-2 sm:border-dashed sm:border-guild-ink/15">
                     <th
                       scope="row"
-                      className="hidden w-32 max-w-32 bg-[#fffdf6] px-2 py-1.5 text-left align-top font-normal sm:sticky sm:left-0 sm:z-10 sm:table-cell"
+                      className="hidden w-32 max-w-32 bg-guild-paper px-2 py-1.5 text-left align-top font-normal sm:sticky sm:left-0 sm:z-10 sm:table-cell"
                     >
                       {name}
                     </th>
@@ -157,7 +157,7 @@ export function ProjectPeople({
                             aria-label={`${c.label}の ${s.name}：${cellText(r)}`}
                             className={cn(
                               "flex min-h-10 w-full items-center justify-center px-0.5 text-[11px] whitespace-nowrap tabular-nums",
-                              active && "outline-2 outline-[#1b2a41]",
+                              active && "outline-2 outline-guild-ink",
                             )}
                           >
                             <CellMark record={r} />
@@ -216,7 +216,7 @@ function cellText(r: { planned_on: string | null; done_on: string | null } | und
 }
 
 function CellMark({ record }: { record: { planned_on: string | null; done_on: string | null } | undefined }) {
-  if (record?.done_on) return <span className="bg-[#1b2a41] px-1 text-[#fffdf6]">✓{short(record.done_on)}</span>;
+  if (record?.done_on) return <span className="bg-guild-ink px-1 text-guild-paper">✓{short(record.done_on)}</span>;
   if (record?.planned_on) {
     // 予定日を過ぎても終わっていないものは、濃紺の枠で目立たせる（赤は急ぎと入力エラーだけ）
     const late = record.planned_on < TODAY;

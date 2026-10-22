@@ -1,6 +1,7 @@
 // 窓・見出し・仲間カード・クエストカード。サーバー側でもブラウザ側でも使える。
 
 import Link from "next/link";
+import { StoreLink } from "./store-link";
 import type { ReactNode } from "react";
 import type { Profile, Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
@@ -66,7 +67,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
 /** 名鑑のカード（枠つき） */
 export function MemberCard({ profile }: { profile: Profile }) {
   return (
-    <Link href={`/guild/members/${profile.id}`} className="c-card rpg-cursor-row flex items-center gap-2 p-3 sm:p-4">
+    <StoreLink to={`/members/${profile.id}`} className="c-card rpg-cursor-row flex items-center gap-2 p-3 sm:p-4">
       <span className="rpg-cursor">▶</span>
       <JobAvatar icon={profile.job_icon} photoUrl={profile.photo_url} name={profile.job} />
       <div className="min-w-0 flex-1">
@@ -79,14 +80,14 @@ export function MemberCard({ profile }: { profile: Profile }) {
         <p className="mt-0.5 text-sm break-words">{profile.headline}</p>
         {!profile.accept_intro && <p className="c-muted mt-2 text-[11px]">しょうかいは お休み中</p>}
       </div>
-    </Link>
+    </StoreLink>
   );
 }
 
 /** 窓の中に並べる1行（枠なし） */
 export function MemberRow({ profile }: { profile: Profile }) {
   return (
-    <Link href={`/guild/members/${profile.id}`} className="rpg-cursor-row flex items-center gap-2">
+    <StoreLink to={`/members/${profile.id}`} className="rpg-cursor-row flex items-center gap-2">
       <span className="rpg-cursor">▶</span>
       <JobAvatar icon={profile.job_icon} photoUrl={profile.photo_url} name={profile.job} />
       <span className="min-w-0">
@@ -96,7 +97,7 @@ export function MemberRow({ profile }: { profile: Profile }) {
         </span>
         <span className="block truncate text-xs">{profile.headline}</span>
       </span>
-    </Link>
+    </StoreLink>
   );
 }
 
@@ -105,8 +106,8 @@ export function QuestCard({ quest, compact = false }: { quest: Quest; compact?: 
   const creator = getProfile(quest.creator_id);
   const done = quest.status === "completed";
   return (
-    <Link
-      href={`/guild/quests/${quest.id}`}
+    <StoreLink
+      to={`/quests/${quest.id}`}
       className={cn("c-card rpg-cursor-row block p-3 sm:p-4", done && "opacity-75")}
     >
       <div className="flex items-start gap-1.5">
@@ -128,20 +129,20 @@ export function QuestCard({ quest, compact = false }: { quest: Quest; compact?: 
           )}
         </div>
       </div>
-    </Link>
+    </StoreLink>
   );
 }
 
 /** 窓の中に並べる1行（枠なし） */
 export function QuestRow({ quest }: { quest: Quest }) {
   return (
-    <Link href={`/guild/quests/${quest.id}`} className="rpg-cursor-row flex items-start gap-1.5">
+    <StoreLink to={`/quests/${quest.id}`} className="rpg-cursor-row flex items-start gap-1.5">
       <span className="rpg-cursor mt-0.5">▶</span>
       <span className="min-w-0">
         <QuestMeta quest={quest} />
         <span className="mt-0.5 block text-[15px] leading-snug break-words">{quest.title}</span>
       </span>
-    </Link>
+    </StoreLink>
   );
 }
 

@@ -9,6 +9,7 @@ import type { SearchLevel } from "@/lib/guild/plan-usage";
 import { memberMatchesQuery } from "@/lib/guild/member-search";
 import { MemberCard, Window } from "./cards";
 import { CheckBox } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function MemberDirectory({ members, memberTerm = "ギルドメンバー", cardUrls = {}, searchLevel = "keyword" }: {
   members: Profile[];
@@ -18,6 +19,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
   /** 人ごとの名刺の表面の署名URL（「めいし」表示で使う） */
   cardUrls?: Record<string, string>;
 }) {
+  const store = useGuildStore();
   // いつもの一覧 と 名刺の表面を並べる「めいし」を切り替える
   const [view, setView] = useState<"list" | "cards">("list");
   const [keyword, setKeyword] = useState("");
@@ -54,7 +56,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             className="c-input h-11"
           />
         </label>
-        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスプランからです。" : "業種・地域での絞り込みと「めいし」表示はプラスプラン、本文まで探すのはビジネスプランからです。"}<Link href="/guild/plan" className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
+        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスプランからです。" : "業種・地域での絞り込みと「めいし」表示はプラスプラン、本文まで探すのはビジネスプランからです。"}<Link href={store.path("/plan")} className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
         {canFilter && <>
         {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
         <div className="mt-3 grid grid-cols-2 gap-2">
@@ -122,7 +124,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {filtered.map((m) => (
               <li key={m.id}>
-                <Link href={`/guild/members/${m.id}`} className="block">
+                <Link href={store.path(`/members/${m.id}`)} className="block">
                   {cardUrls[m.id] ? (
                     <span className="c-card block aspect-[91/55] overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element -- 期限つきの署名URLの画像なので next/image を通さない */}
