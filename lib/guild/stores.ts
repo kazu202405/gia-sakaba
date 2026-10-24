@@ -10,6 +10,10 @@
 // 店に属さない画面（ログインなど）や、店が決まらないときの既定は DEFAULT_STORE_SLUG。
 // 店を作る画面はまだ無い（2号店以降は SQL で行を足し、ここにも1店分を足す）。
 
+import { GIA_WORDS } from "./words/gia";
+import { KENSETSU_FUDOSAN_WORDS } from "./words/kensetsu-fudosan";
+import type { StoreWords } from "./store-words";
+
 export type StoreTheme = "tavern" | "plain";
 
 /** DB の guilds.terms と同じ5つの呼び名 */
@@ -42,6 +46,8 @@ export type StoreConfig = {
   terms: StoreTerms;
   /** メニューの「名簿」の呼び名（terms.member とは別。GIAの酒場は昔から「ギルド」） */
   rosterLabel: string;
+  /** 画面の言葉の表（terms の5語で足りない言い回し。lib/guild/words/）。キーは全店で同じ */
+  words: StoreWords;
   /** LINE などでURLを送ったときの説明・ブラウザのアプリ名の説明 */
   description: string;
   /** ホーム画面に追加したときのアプリの id と開始位置。GIAの酒場は昔の値のまま（入れ直しにならないように） */
@@ -58,6 +64,7 @@ const GIA: StoreConfig = {
   theme: "tavern",
   terms: { member: "仲間", quest: "クエスト", party: "パーティ", master: "ギルドマスター", status: "ステータス" },
   rosterLabel: "ギルド",
+  words: GIA_WORDS,
   description: "仕事の話が、次の一歩になる場所。仲間・クエスト・プロジェクトをひとつの酒場に。",
   pwa: { id: "/guild", startPath: "/guild" },
 };
@@ -66,19 +73,20 @@ const KENSETSU_FUDOSAN: StoreConfig = {
   slug: "kensetsu-fudosan",
   name: "建設・不動産の酒場",
   theme: "plain",
-  // 呼び名は仮。五島さんが実画面を見て直す（直すときは migration 0132 の terms と一緒に）
-  terms: { member: "仲間", quest: "案件・探しもの", party: "チーム", master: "マスター", status: "プロフィール" },
-  rosterLabel: "仲間",
-  description: "建設・不動産の仲間どうしで、案件・探しもの・紹介を持ち寄る、招待制の集まりです。",
+  // 呼び名は五島さんが決めた（2026-10-24）。直すときは DB の terms（migration 0133）と一緒に
+  terms: { member: "メンバー", quest: "案件", party: "チーム", master: "管理者", status: "プロフィール" },
+  rosterLabel: "名簿",
+  words: KENSETSU_FUDOSAN_WORDS,
+  description: "建設・不動産のメンバーどうしで、案件・探しもの・紹介を持ち寄る、招待制の集まりです。",
   pwa: { id: "/guild/kensetsu-fudosan", startPath: "/guild/kensetsu-fudosan" },
   // 案内ページの文言は仮。物件の掲載や広告に読めない書き方にしている（宅建業法・五島さんと詰める）
   landing: {
     eyebrow: "招待制のコミュニティ",
     headline: "現場と不動産の仕事の話が、次の一歩になる場所。",
-    lead: "建設・不動産に関わる仲間どうしで、案件・探しもの・人の紹介を持ち寄ります。顔の見える相手とだけ、落ち着いて相談できる場です。",
+    lead: "建設・不動産に関わるメンバーどうしで、案件・探しもの・人の紹介を持ち寄ります。顔の見える相手とだけ、落ち着いて相談できる場です。",
     points: [
-      { title: "案件・探しものを出せる", body: "「こんな工事の相手を探している」「この分野に詳しい人はいないか」を、仲間に向けて出せます。" },
-      { title: "仲間を紹介してもらえる", body: "マスターが間に入り、合いそうな仲間どうしをつなぎます。連絡先は、お互いが了承してから開きます。" },
+      { title: "案件・探しものを出せる", body: "「こんな工事の相手を探している」「この分野に詳しい人はいないか」を、メンバーに向けて出せます。" },
+      { title: "メンバーを紹介してもらえる", body: "管理者が間に入り、合いそうなメンバーどうしをつなぎます。連絡先は、お互いが了承してから開きます。" },
       { title: "進行をひとつの場所で", body: "話が動き出したら、プロジェクトとして期限や担当を共有できます。" },
     ],
     inviteNote: "会員は招待制です。招待リンクを受け取った方は、そのリンクから入会してください。",

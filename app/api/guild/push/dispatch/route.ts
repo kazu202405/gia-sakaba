@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import webPush from "web-push";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { validPushEndpoint } from "@/lib/guild/push-endpoint";
+import { pushTitleFor } from "@/lib/guild/push-title";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -60,7 +61,7 @@ async function dispatch(eventKey?: string) {
       if (claim.error) { failed++; console.error("[sakaba.push] claim", claim.error); continue; }
       try {
         await webPush.sendNotification(device.subscription, JSON.stringify({
-          body: candidate.body, href: candidate.href, tag: candidate.event_key,
+          title: pushTitleFor(candidate.href), body: candidate.body, href: candidate.href, tag: candidate.event_key,
         }), { TTL: 3600, urgency: candidate.category === "actions" ? "normal" : "low" });
         sent++;
       } catch (sendError) {

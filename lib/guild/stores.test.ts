@@ -17,10 +17,14 @@ function giaFromMigration0077() {
   return { slug: row?.[1], name: row?.[2], terms };
 }
 
-function kensetsuFromMigration0132() {
+// 建設・不動産の店：店の行は 0132、呼び名は 0133 で直した最新（後の migration が先の terms を上書きする）
+function kensetsuFromMigrations() {
   const sql = read("supabase/migrations/0132_sakaba_second_store_kensetsu_fudosan.sql");
   const row = /insert into sakaba\.guilds \(id, slug, name, terms\)\s*values \(\s*'[^']+',\s*'([^']+)',\s*'([^']+)',\s*'(\{[^']*\})'::jsonb/.exec(sql);
-  return { slug: row?.[1], name: row?.[2], terms: row ? JSON.parse(row[3]) as Record<string, string> : undefined };
+  const fix = read("supabase/migrations/0133_sakaba_kensetsu_fudosan_terms.sql");
+  const update = /update sakaba\.guilds\s*set terms = '(\{[^']*\})'::jsonb\s*where slug = '([^']+)'/.exec(fix);
+  const terms = update && update[2] === row?.[1] ? JSON.parse(update[1]) as Record<string, string> : row ? JSON.parse(row[3]) as Record<string, string> : undefined;
+  return { slug: row?.[1], name: row?.[2], terms, updatedBy0133: Boolean(update) };
 }
 
 describe("店の設定とDB（migration）が食い違わない", () => {
@@ -33,8 +37,8 @@ describe("店の設定とDB（migration）が食い違わない", () => {
     expect(db.terms).toEqual(code.terms);
   });
 
-  it("建設・不動産の酒場：slug・名前・呼び名（0132）", () => {
-    const db = kensetsuFromMigration0132();
+  it("建設・不動産の酒場：slug・名前・呼び名（0132＋0133）", () => {
+    const db = kensetsuFromMigrations();
     const code = STORES["kensetsu-fudosan"];
     expect(db.slug).toBe(code.slug);
     expect(db.name).toBe(code.name);
@@ -42,19 +46,20 @@ describe("店の設定とDB（migration）が食い違わない", () => {
   });
 
   it("コードに登録した店は、すべて migration に店の行がある（片方だけ足すと落ちる）", () => {
-    const sqlFiles = [read("supabase/migrations/0077_sakaba_core_schema.sql"), read("supabase/migrations/0132_sakaba_second_store_kensetsu_fudosan.sql")].join("\n");
+    const sqlFiles = [read("supabase/migrations/0077_sakaba_core_schema.sql"), read("supabase/migrations/0132_sakaba_second_store_kensetsu_fudosan.sql"), read("supabase/migrations/0133_sakaba_kensetsu_fudosan_terms.sql")].join("\n");
     for (const slug of STORE_SLUGS) expect([slug, sqlFiles.includes(`'${slug}'`)]).toEqual([slug, true]);
   });
 
   it("見張り自身：migration から読めている（空振りで通らない）", () => {
     expect(giaFromMigration0077().slug).toBe("gia");
     expect(Object.keys(giaFromMigration0077().terms)).toHaveLength(5);
-    expect(kensetsuFromMigration0132().slug).toBe("kensetsu-fudosan");
-    expect(Object.keys(kensetsuFromMigration0132().terms ?? {})).toHaveLength(5);
+    expect(kensetsuFromMigrations().slug).toBe("kensetsu-fudosan");
+    expect(Object.keys(kensetsuFromMigrations().terms ?? {})).toHaveLength(5);
+    expect(kensetsuFromMigrations().updatedBy0133).toBe(true);
   });
 
   it("呼び名が違うとちゃんと見つかる（わざとずらして確かめる）", () => {
-    const db = kensetsuFromMigration0132();
+    const db = kensetsuFromMigrations();
     const shifted = { ...STORES["kensetsu-fudosan"].terms, quest: "クエスト" };
     expect(db.terms).not.toEqual(shifted);
   });

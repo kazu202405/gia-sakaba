@@ -2,7 +2,8 @@
 self.addEventListener("push", (event) => {
   let payload = {};
   try { payload = event.data ? event.data.json() : {}; } catch { /* Show the generic notification. */ }
-  const title = "GIAの酒場";
+  // 題名は送信側（app/api/guild/push/dispatch）が店の名前を入れる。届かなかったときだけ昔のまま
+  const title = typeof payload.title === "string" && payload.title ? payload.title : "GIAの酒場";
   const body = typeof payload.body === "string" ? payload.body : "新しいおしらせがあります";
   const href = typeof payload.href === "string" && payload.href.startsWith("/guild/")
     ? payload.href : "/guild/notifications";
