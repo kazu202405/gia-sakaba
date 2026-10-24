@@ -15,6 +15,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { JobAvatar } from "./job-avatar";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function GatheringApprovals() {
   const store = useGuildStore();
@@ -83,7 +84,7 @@ export function GatheringApprovals() {
                       uiToast(`${p.display_name}さんを 承認し、知らせました`);
                     }}
                   >
-                    ▶ 承認する
+                    <Go />承認する
                   </button>
                   <button
                     type="button"

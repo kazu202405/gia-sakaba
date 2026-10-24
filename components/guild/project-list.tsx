@@ -16,6 +16,7 @@ import { FilterRow, ViewModeSwitch, useViewMode } from "./list-controls";
 import { useMembership } from "./membership-parts";
 import { ProjectRow } from "./project-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const FILTERS = Object.keys(projectFilterLabel) as ProjectFilter[];
 
@@ -33,7 +34,7 @@ export function ProjectList() {
     <div className="space-y-7">
       <div className="space-y-2">
         <Link href={store.path("/projects/new")} className="rpg-button h-12 w-full text-base sm:w-auto">
-          ▶ プロジェクトを つくる
+          <Go />プロジェクトを つくる
         </Link>
         <p className="c-muted text-xs tabular-nums">
           {isPaid

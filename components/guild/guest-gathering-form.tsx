@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { LegalLinks } from "./legal-consent";
+import { Go } from "./go-mark";
 
 export function GuestGatheringForm({ token, event, authenticated, accountEmail, initialName }: {
   token: string;
@@ -128,7 +129,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
       <form onSubmit={(e) => void sendLoginLink(e)} className="mt-5 space-y-4">
         <label className="block text-sm">メールアドレス<input type="email" required maxLength={200} autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="c-input mt-2 h-12" placeholder="example@example.com" /></label>
         {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-        <button type="submit" disabled={busy || !open} className="rpg-button min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "送信中…" : "▶ 確認メールを送る"}</button>
+        <button type="submit" disabled={busy || !open} className="rpg-button min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "送信中…" : <><Go />確認メールを送る</>}</button>
       </form>}
     {!open && <p className="c-muted mt-4 text-sm">この集まりの募集は終了しました。</p>}
   </Window>;
@@ -146,7 +147,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
         <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={showIntroduction} onChange={(e) => setShowIntroduction(e.target.checked)} className="mt-1 accent-guild-ink" /><span>名前とこの自己紹介を、この集まりの招待URLを知っている人に表示する。<span className="c-muted block text-xs">選ばない場合は表示しません。メールアドレスは表示されません。</span></span></label>
         {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
         <div className="flex flex-wrap items-center gap-4">
-          <button type="submit" disabled={busy} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : applied ? "▶ 申込内容を保存" : "▶ 集まりに申し込む"}</button>
+          <button type="submit" disabled={busy} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : applied ? <><Go />申込内容を保存</> : <><Go />集まりに申し込む</>}</button>
           {applied && <button type="button" disabled={busy} onClick={() => void withdraw()} className="c-muted min-h-11 text-sm underline disabled:opacity-50">申込を取り消す</button>}
         </div>
       </form> : <p className="text-sm">募集は終了しました。</p>}
@@ -175,7 +176,7 @@ export function GuestGatheringForm({ token, event, authenticated, accountEmail, 
       </div>}
       <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm"><input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 accent-guild-ink" /><span>酒場の約束をまもり、利用規約とプライバシーポリシーに同意して、会員として参加する</span></label>
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
-      <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{requiresApproval(position) ? (busy ? APPROVAL_COPY.submittingLabel : `▶ ${APPROVAL_COPY.submitLabel}`) : (busy ? "登録中…" : "▶ 酒場に無料で参加する")}</button>
+      <button type="button" onClick={() => void joinGuild()} disabled={busy || !agreed} className="rpg-button mt-5 min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{requiresApproval(position) ? (busy ? APPROVAL_COPY.submittingLabel : <><Go />{APPROVAL_COPY.submitLabel}</>) : (busy ? "登録中…" : <><Go />酒場に無料で参加する</>)}</button>
       <p className="c-muted mt-3 text-xs leading-relaxed">会社名は後からステータス画面で追加できます。登録時は公開されません。</p>
     </Window></div>}
   </div>;

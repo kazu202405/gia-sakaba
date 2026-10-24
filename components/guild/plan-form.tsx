@@ -12,6 +12,7 @@ import { CheckBox } from "./form-parts";
 import { BillingPoints, LegalLinks } from "./legal-consent";
 import { useGuildStore } from "@/components/guild/store-context";
 import { guildApiPath } from "@/lib/guild/store-path";
+import { Go } from "./go-mark";
 
 type Props = {
   role: "owner" | "master" | "member";
@@ -93,7 +94,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     }
     if (isPaid) return null;
     return <button type="button" disabled={pending !== null} onClick={() => void openCheckout(plan)} className="rpg-button inline-flex min-h-11 items-center px-4 text-sm disabled:opacity-50">
-      {pending === `checkout-${plan}` ? "決済画面を準備中…" : <Ph text={`▶ ${SAKABA_PLAN_NAMES[plan]}|（月${plan === "dining" ? "880" : "480"}円）に|申し込む`} />}
+      {pending === `checkout-${plan}` ? "決済画面を準備中…" : <><Go /><Ph text={`${SAKABA_PLAN_NAMES[plan]}|（月${plan === "dining" ? "880" : "480"}円）に|申し込む`} /></>}
     </button>;
   }
 
@@ -103,7 +104,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
 
     {checkoutResult === "success" && <div role="status" className="c-card border-guild-accent-dark px-4 py-3 text-sm">
       <p>お申し込みを受け付けました。会員状態の反映まで少し時間がかかることがあります。プロジェクトは削除されていません。</p>
-      <Link href={store.path("/projects")} className="c-button-sub mt-3 h-10 px-4">▶ プロジェクト一覧を見る</Link>
+      <Link href={store.path("/projects")} className="c-button-sub mt-3 h-10 px-4"><Go />プロジェクト一覧を見る</Link>
     </div>}
     {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed px-4 py-3 text-sm">申し込みはキャンセルされました。料金は発生していません。</p>}
 
@@ -126,7 +127,7 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
         <p className="mt-5 min-h-14 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text={plan.lead} /></p>
         <ul className="mt-4 flex-1 space-y-4 border-t border-guild-ink/25 pt-4">
           {[...plan.features, ...(plan.key === "dining" && availabilityEnabled ? [featuresFor(store.w).availability] : [])].map((feature) => <li key={feature.title} className="flex gap-2">
-            <span aria-hidden="true" className="text-sm leading-relaxed">▶</span>
+            <span aria-hidden="true" className="text-sm leading-relaxed"><Go bullet /></span>
             <span className="min-w-0">
               <span className="block text-[15px] leading-relaxed">{feature.title}</span>
               <span className="c-muted block text-xs leading-relaxed"><Ph text={feature.desc} /></span>
@@ -149,19 +150,19 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
       <div>
         <p className="c-label text-base">{store.w("plan.countTitle")}</p>
         <ul className="c-muted mt-2 space-y-1.5">
-          <li>▶ <Ph text="回数は毎月1日|（日本時間）に|戻ります。" /></li>
-          <li>▶ <Ph text="出した時点で数え、|取り下げ・期限切れ・|見送りになっても|戻りません。" /></li>
-          <li>▶ <Ph text={store.w("plan.countApplicants", { quest: store.config.terms.quest })} /></li>
+          <li><Go bullet /><Ph text="回数は毎月1日|（日本時間）に|戻ります。" /></li>
+          <li><Go bullet /><Ph text="出した時点で数え、|取り下げ・期限切れ・|見送りになっても|戻りません。" /></li>
+          <li><Go bullet /><Ph text={store.w("plan.countApplicants", { quest: store.config.terms.quest })} /></li>
         </ul>
       </div>
       <div>
         <p className="c-label text-base">{store.w("plan.payTitle")}</p>
         <ul className="c-muted mt-2 space-y-1.5">
-          <li>▶ <Ph text="プラスプラン・|ビジネスプランは|月額制で、|無料体験は|ありません。" /></li>
-          <li>▶ <Ph text="有料会員向けの集まりは|不定期開催で、|申し込み後に|承認が必要な場合が|あります。" /></li>
-          <li>▶ <Ph text="会食の開催・参加・|希望どおりの出会いは|保証されません。" /></li>
-          <li>▶ <Ph text="今後はビジネスプラン限定の|交流会も|予定しています|（開催時期未定）。" /></li>
-          <li>▶ <Ph text="プラン変更時の請求額は、|Stripeの確認画面で|お確かめください。" /></li>
+          <li><Go bullet /><Ph text="プラスプラン・|ビジネスプランは|月額制で、|無料体験は|ありません。" /></li>
+          <li><Go bullet /><Ph text="有料会員向けの集まりは|不定期開催で、|申し込み後に|承認が必要な場合が|あります。" /></li>
+          <li><Go bullet /><Ph text="会食の開催・参加・|希望どおりの出会いは|保証されません。" /></li>
+          <li><Go bullet /><Ph text="今後はビジネスプラン限定の|交流会も|予定しています|（開催時期未定）。" /></li>
+          <li><Go bullet /><Ph text="プラン変更時の請求額は、|Stripeの確認画面で|お確かめください。" /></li>
         </ul>
       </div>
     </div>

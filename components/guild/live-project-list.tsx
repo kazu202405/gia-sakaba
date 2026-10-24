@@ -6,6 +6,7 @@ import { Window } from "./cards";
 import { isExhausted, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { ProjectCard, ProjectOrderList } from "./project-order-list";
+import { Go } from "./go-mark";
 
 export async function LiveProjectList({ projects, userId, isPaid, checkoutResult, quota = null }: { projects: GuildProject[]; userId: string; isPaid: boolean; checkoutResult?: "success" | "canceled"; quota?: { plan: PlanKey; slot: QuotaSlot } | null }) {
   const store = await currentStore();
@@ -40,11 +41,11 @@ export async function LiveProjectList({ projects, userId, isPaid, checkoutResult
           <p className="mt-2 text-[15px] leading-relaxed">{store.w("proj.freeBefore", { roster: store.config.rosterLabel, quest: store.config.terms.quest })}<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>
           <p className="c-label mt-5 text-sm">{store.w("proj.contents")}</p>
           <ul className="mt-2 space-y-2 text-[15px] leading-relaxed">
-            <li>▶ プロジェクトをいくつでも作って、記録を残せる</li>
-            <li>▶ 有料会員限定（不定期開催）の懇親会などに申し込める</li>
+            <li><Go bullet />プロジェクトをいくつでも作って、記録を残せる</li>
+            <li><Go bullet />有料会員限定（不定期開催）の懇親会などに申し込める</li>
           </ul>
           <p className="mt-5 text-[15px] leading-relaxed">{ENTRY_PLAN_PRICE_LABEL}からの月額制です。無料体験期間はありません。</p>
-          <Link href={store.path("/plan")} className="rpg-button mt-5 h-12 w-full px-6 text-base sm:w-auto">▶ 有料会員について</Link>
+          <Link href={store.path("/plan")} className="rpg-button mt-5 h-12 w-full px-6 text-base sm:w-auto"><Go />有料会員について</Link>
         </Window>
       </>}
       {projects.length === 0 ? (

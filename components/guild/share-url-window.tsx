@@ -12,6 +12,7 @@ import { Window } from "./cards";
 import { CheckBox } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
 import type { Wording } from "@/lib/guild/store-words";
+import { Go } from "./go-mark";
 
 const switchesFor = (w: Wording): { key: ShareSwitch; label: string; note?: string }[] => [
   { key: "show_profile", label: "プロフィール", note: w("share.profileNote") },
@@ -113,7 +114,7 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
       <label className="c-label block text-base" htmlFor="share-url">URL</label>
       <input id="share-url" readOnly value={url} onFocus={(event) => event.currentTarget.select()} className="c-input mt-1 w-full text-xs" aria-label="共有URL" />
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button type="button" disabled={!url || !settings.enabled} onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">▶ URLをコピー</button>
+        <button type="button" disabled={!url || !settings.enabled} onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50"><Go />URLをコピー</button>
         {url && settings.enabled && <a href={url} onClick={acknowledge} target="_blank" rel="noopener noreferrer" className="c-button-sub inline-flex h-11 items-center px-4 text-sm">見え方を確認する ↗</a>}
       </div>
     </div>

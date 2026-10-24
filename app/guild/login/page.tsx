@@ -7,6 +7,7 @@ import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { AuthLinkError } from "@/components/guild/auth-link-error";
 import { createClient } from "@/lib/supabase/client";
 import { GUILD_ROOT, isGuildLocalPath, outsideStorePath } from "@/lib/guild/store-path";
+import { Go } from "@/components/guild/go-mark";
 
 function safeNext(value: string | null): string {
   return isGuildLocalPath(value) ? value : GUILD_ROOT;
@@ -136,7 +137,7 @@ export default function GuildLoginPage() {
         </form>
         <div className="c-dashed-top mt-6 pt-5 text-center">
           <p className="c-muted text-xs leading-relaxed">パスワードを設定していない方は、メールのリンクでもログインできます。</p>
-          <button type="button" disabled={busy || linkBusy || !email.trim()} onClick={() => void sendLoginLink()} className="c-button-sub mt-3 min-h-11 w-full disabled:opacity-50">{linkBusy ? "送信中…" : "▶ メールのリンクでログイン"}</button>
+          <button type="button" disabled={busy || linkBusy || !email.trim()} onClick={() => void sendLoginLink()} className="c-button-sub mt-3 min-h-11 w-full disabled:opacity-50">{linkBusy ? "送信中…" : <><Go />メールのリンクでログイン</>}</button>
           {linkSent && <p role="status" className="mt-3 text-sm">ログイン用リンクを送りました。メールから酒場を開いてください。</p>}
         </div>
         <Link href={outsideStorePath("forgot-password")} className="mt-5 block text-center text-sm underline underline-offset-4 hover:text-[#98752c]">パスワードを忘れた方</Link>

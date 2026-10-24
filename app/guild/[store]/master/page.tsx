@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getGuildContext, listGuildInviteNetwork, listGuildMasterInvites, listGuildMembers, listInviteProfileDrafts, listMasterIntroductions, listPendingGatheringApplications, listPendingMembers, listPreparedInvites } from "@/lib/guild/server-data";
 import { currentStore } from "@/lib/guild/current-store";
 import { outsideStorePath } from "@/lib/guild/store-path";
+import { Go } from "@/components/guild/go-mark";
 
 export const metadata: Metadata = { title: "管理者" };
 
@@ -157,7 +158,7 @@ export default async function MasterPage() {
       <section aria-labelledby="master-gatherings-title" className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 id="master-gatherings-title" className="text-xl tracking-wider">限定の集まり</h2>
-          <Link href={store.path("/master/gathering/new")} className="rpg-button inline-flex h-11 items-center px-5 text-sm">▶ 集まりを開く</Link>
+          <Link href={store.path("/master/gathering/new")} className="rpg-button inline-flex h-11 items-center px-5 text-sm"><Go />集まりを開く</Link>
         </div>
         <LiveGatheringApprovals initial={pendingGatherings} />
       </section>

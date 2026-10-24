@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSakabaStripeClient } from "@/lib/stripe/client";
 import { currentStore } from "@/lib/guild/current-store";
 import { outsideStorePath } from "@/lib/guild/store-path";
+import { Go } from "@/components/guild/go-mark";
 
 export const metadata: Metadata = { title: "お申し込みありがとうございます" };
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ export default async function GuildThanksPage({ searchParams }: Props) {
 
   const returnToProjects = query.from === "projects";
   const primaryHref = returnToProjects ? store.path("/projects") : store.path("/me");
-  const primaryLabel = returnToProjects ? "▶ プロジェクトを見る" : "▶ マイページへ";
+  const primaryLabel = returnToProjects ? <><Go />プロジェクトを見る</> : <><Go />マイページへ</>;
 
   return <div className="mx-auto max-w-2xl space-y-9">
     <PageTitle title={confirmed ? "ありがとうございました" : "決済状況を確認しています"} lead={confirmed

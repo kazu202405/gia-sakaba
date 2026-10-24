@@ -13,6 +13,7 @@ import { ME_ID, applicantCount, getApplication, getProfile } from "@/lib/guild/m
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { TextArea } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const MESSAGE_MAX = 200;
 
@@ -31,7 +32,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
     return (
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
         <Link href={store.path(`/quests/${quest.id}/applicants`)} className="rpg-button h-12 w-full text-base sm:w-auto">
-          ▶ 参加したい人を見る（{applicantCount(quest.id)}人）
+          <Go />参加したい人を見る（{applicantCount(quest.id)}人）
         </Link>
         <p className="c-muted text-xs">あなたが出した クエストです。</p>
       </div>
@@ -51,16 +52,16 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
     return (
       <div className="space-y-3">
         {!gathering ? (
-          <p className="text-base">▶ 参加したいと つたえました</p>
+          <p className="text-base"><Go />参加したいと つたえました</p>
         ) : pending ? (
           <div>
-            <p className="text-base">▶ 申し込みました。管理者の 承認を お待ちください</p>
+            <p className="text-base"><Go />申し込みました。管理者の 承認を お待ちください</p>
             <p className="c-muted mt-1 text-xs leading-relaxed">
               承認があるのは はじめての ときだけです。次からは そのまま 参加できます。
             </p>
           </div>
         ) : (
-          <p className="text-base">▶ 参加します</p>
+          <p className="text-base"><Go />参加します</p>
         )}
         {sentMessage && (
           <p className="c-card px-4 py-3 text-sm leading-relaxed whitespace-pre-line break-words">{sentMessage}</p>
@@ -133,7 +134,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
             }}
             className="rpg-button h-11"
           >
-            {gathering ? "▶ 申し込む" : "▶ 参加したいと伝える"}
+            {gathering ? <><Go />申し込む</> : <><Go />参加したいと伝える</>}
           </button>
         </div>
       </div>
@@ -148,7 +149,7 @@ export function QuestJoinButton({ quest }: { quest: Quest }) {
         </p>
       )}
       <button type="button" onClick={() => setWriting(true)} className="rpg-button h-12 w-full text-base sm:w-auto">
-        {gathering ? "▶ 参加を 申し込む" : "▶ 参加したい"}
+        {gathering ? <><Go />参加を 申し込む</> : <><Go />参加したい</>}
       </button>
     </div>
   );

@@ -18,6 +18,7 @@ import { getInitialMembership, getMembership, setMembership, subscribeMembership
 import { cn } from "@/lib/utils";
 import { CheckBox } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function useMembership() {
   return useSyncExternalStore(subscribeMembership, getMembership, getInitialMembership);
@@ -27,7 +28,7 @@ function PlanButton() {
   const store = useGuildStore();
   return (
     <Link href={store.path("/plan")} className="rpg-button h-11 w-full px-5 text-sm sm:w-auto">
-      ▶ 有料会員について 見る
+      <Go />有料会員について 見る
     </Link>
   );
 }

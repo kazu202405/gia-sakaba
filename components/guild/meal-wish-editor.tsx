@@ -4,6 +4,7 @@ import { useGuildStore } from "@/components/guild/store-context";
 import { guildApiPath } from "@/lib/guild/store-path";
 import { useState } from "react";
 import { MEAL_WISH_MAX_LENGTH } from "@/lib/guild/meal-wishes";
+import { Go } from "./go-mark";
 
 export function MealWishEditor({ initialText }: { initialText: string }) {
   const store = useGuildStore();
@@ -57,7 +58,7 @@ export function MealWishEditor({ initialText }: { initialText: string }) {
     <p className="c-muted text-xs">自由に書けます。見られるのはあなたと管理者だけです。{text.length}/{MEAL_WISH_MAX_LENGTH}字</p>
     <div className="flex flex-wrap items-center gap-3">
       <button type="button" disabled={pending !== null || !text.trim() || text.trim() === savedText} onClick={() => void save()}
-        className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending === "save" ? "保存中…" : savedText ? "▶ 希望を書き直す" : "▶ 希望を送る"}</button>
+        className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending === "save" ? "保存中…" : savedText ? <><Go />希望を書き直す</> : <><Go />希望を送る</>}</button>
       {savedText && !confirmDelete && <button type="button" disabled={pending !== null} onClick={() => setConfirmDelete(true)} className="c-button-sub min-h-11 px-4 text-sm disabled:opacity-50">希望を削除</button>}
       {confirmDelete && <div className="flex flex-wrap items-center gap-2 text-sm"><span>この希望を削除しますか？</span><button type="button" disabled={pending !== null} onClick={() => void remove()} className="c-button-sub min-h-10 px-3 disabled:opacity-50">{pending === "delete" ? "削除中…" : "削除する"}</button><button type="button" disabled={pending !== null} onClick={() => setConfirmDelete(false)} className="c-button-sub min-h-10 px-3">やめる</button></div>}
     </div>

@@ -12,6 +12,7 @@ import { Window } from "./cards";
 import { ContactItemsView } from "./contact-items-view";
 import type { ViewContactItem } from "@/lib/guild/contact-items";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 // 承諾し合った相手の連絡先。contacts が null＝読み込めなかった
 export function LiveContactDetails({ name, items }: {
@@ -94,13 +95,13 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
                 <p className="c-muted text-xs">承諾すると、{name}さんにこのひとことと、あなたが「承諾後に見せる」にした連絡先が見えます。</p>
                 <div className="flex flex-wrap justify-end gap-2">
                   <button type="button" disabled={pendingId !== null} onClick={() => setAccepting(null)} className="c-button-sub h-11 disabled:opacity-50">やめる</button>
-                  <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "accept", accepting.message)} className="rpg-button h-11 disabled:opacity-50">{pendingId === request.id ? "更新中…" : "▶ 承諾する"}</button>
+                  <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "accept", accepting.message)} className="rpg-button h-11 disabled:opacity-50">{pendingId === request.id ? "更新中…" : <><Go />承諾する</>}</button>
                 </div>
               </div>
             ) : (
               <div className="mt-4 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" disabled={pendingId !== null} onClick={() => setAccepting({ id: request.id, message: "" })} className="rpg-button h-11 disabled:opacity-50">▶ 会ってみる</button>
+                  <button type="button" disabled={pendingId !== null} onClick={() => setAccepting({ id: request.id, message: "" })} className="rpg-button h-11 disabled:opacity-50"><Go />会ってみる</button>
                   <button type="button" disabled={pendingId !== null} onClick={() => void act(request, "decline_target")} className="c-button-sub h-11 disabled:opacity-50">今回は見送る</button>
                 </div>
                 {request.expires_at && <p className="c-muted text-xs">お返事の期限：{formatJstDate(request.expires_at)}（見送っても、相手には伝わりません）</p>}

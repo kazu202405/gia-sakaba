@@ -20,6 +20,7 @@ import {
 } from "@/lib/guild/gathering-schedule";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Props =
   | { mode: "member"; questId: string; initial: Schedule; open: boolean }
@@ -171,12 +172,12 @@ export function GatheringSchedule(props: Props) {
             {editingOptions.length < SCHEDULE_OPTION_LIMIT && <button type="button" onClick={() => setEditingOptions((current) => current && [...current, current.at(-1) ?? ""])} className="c-button-sub h-10 px-4 text-sm">＋ 候補日を足す</button>}
             <span className="grow" />
             <button type="button" onClick={() => { setEditingOptions(null); setError(""); }} className="c-button-sub h-10 px-4 text-sm">やめる</button>
-            <button type="button" disabled={busy} onClick={() => void saveOptions()} className="rpg-button h-10 px-5 text-sm disabled:opacity-50">▶ 候補日を保存する</button>
+            <button type="button" disabled={busy} onClick={() => void saveOptions()} className="rpg-button h-10 px-5 text-sm disabled:opacity-50"><Go />候補日を保存する</button>
           </div>
         </div>
       ) : (
         <button type="button" onClick={() => setEditingOptions(schedule.options.length > 0 ? schedule.options.map((option) => toJstInputValue(option.starts_at)) : [""])} className="c-button-sub mt-4 h-10 px-4 text-sm">
-          {schedule.options.length > 0 ? store.w("sched.editOptions") : "▶ 候補日を出す"}
+          {schedule.options.length > 0 ? store.w("sched.editOptions") : <><Go />候補日を出す</>}
         </button>
       )
     )}
@@ -224,7 +225,7 @@ export function GatheringSchedule(props: Props) {
           <input value={comment} onChange={(event) => setComment(event.target.value)} maxLength={SCHEDULE_COMMENT_LIMIT} placeholder="例：19時半ごろ着きます" className="c-input h-11" />
         </label>
         <div className="flex justify-end">
-          <button type="submit" disabled={busy} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{busy ? "保存中…" : "▶ 回答を保存する"}</button>
+          <button type="submit" disabled={busy} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{busy ? "保存中…" : <><Go />回答を保存する</>}</button>
         </div>
       </form>
     )}

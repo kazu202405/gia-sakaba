@@ -9,6 +9,7 @@ import { applicantCount, getProfile } from "@/lib/guild/mock-data";
 import { JobAvatar } from "./job-avatar";
 import { useGuildStore } from "./store-context";
 import { cn } from "@/lib/utils";
+import { Go } from "./go-mark";
 
 /** クエストの種類は色ではなく記号の形で見分ける（色が付くのは「急ぎ」だけ） */
 export const questCategoryMark: Record<QuestCategory, string> = {
@@ -43,7 +44,7 @@ export function Window({
 export function PageTitle({ title, lead }: { title: string; lead?: ReactNode }) {
   return (
     <div className="mb-9">
-      <h1 className="text-2xl tracking-[0.12em]">▶ {title}</h1>
+      <h1 className="text-2xl tracking-[0.12em]"><Go />{title}</h1>
       {lead && <p className="c-muted mt-2 text-sm leading-relaxed">{lead}</p>}
     </div>
   );
@@ -52,7 +53,7 @@ export function PageTitle({ title, lead }: { title: string; lead?: ReactNode }) 
 export function MoreLink({ href, label = "すべて見る" }: { href: string; label?: string }) {
   return (
     <Link href={href} className="c-muted text-xs hover:underline">
-      {label} ▶
+      {label}<Go after />
     </Link>
   );
 }
@@ -60,7 +61,7 @@ export function MoreLink({ href, label = "すべて見る" }: { href: string; la
 export function BackLink({ href, label }: { href: string; label: string }) {
   return (
     <Link href={href} className="c-muted inline-flex items-center gap-1 text-sm hover:underline">
-      ◀ {label}
+      <Go back />{label}
     </Link>
   );
 }

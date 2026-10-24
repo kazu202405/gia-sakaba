@@ -4,6 +4,7 @@ import { Window } from "@/components/guild/cards";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { GUILD_ROOT, outsideStorePath } from "@/lib/guild/store-path";
 import "@/components/guild/guild-theme.css";
+import { Go } from "./go-mark";
 
 // ログインはしているが、この店の会員ではない人に出す画面。
 // 入る道（招待リンク）と、ほかの店の会員なら /guild（入っている店へ移る入口）への戻り道を必ず出す。
@@ -23,7 +24,7 @@ export function NotMemberNotice({ storeName, showEntryLink = true, tavern = true
             {showEntryLink && <p>ほかの酒場の会員の方は、下のリンクから入っている酒場に移れます。</p>}
           </div>
           {showEntryLink && <div className="mt-6">
-            <Link href={GUILD_ROOT} className="c-button-sub inline-flex min-h-12 items-center px-5">▶ 入っている酒場へ</Link>
+            <Link href={GUILD_ROOT} className="c-button-sub inline-flex min-h-12 items-center px-5"><Go />入っている酒場へ</Link>
           </div>}
         </Window>
       </div>

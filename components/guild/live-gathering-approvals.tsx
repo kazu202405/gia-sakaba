@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGatheringApplication[] }) {
   const store = useGuildStore();
@@ -66,7 +67,7 @@ export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGathe
           {item.message && <p className="mt-3 whitespace-pre-line break-words text-sm">申込時のひとこと：{item.message}</p>}
           {item.want_to_solve && <p className="c-muted mt-2 break-words text-xs">いま解決したいこと：{item.want_to_solve}</p>}
           <div className="mt-4 flex flex-wrap gap-3">
-            <button type="button" disabled={pendingKey !== null} onClick={() => void decide(item, true)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pendingKey === key ? "処理中…" : "▶ 承認する"}</button>
+            <button type="button" disabled={pendingKey !== null} onClick={() => void decide(item, true)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pendingKey === key ? "処理中…" : <><Go />承認する</>}</button>
             <button type="button" disabled={pendingKey !== null} onClick={() => void decide(item, false)} className="c-button-sub h-11 px-5 text-sm disabled:opacity-50">見送る</button>
           </div>
         </li>;

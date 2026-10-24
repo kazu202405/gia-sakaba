@@ -22,6 +22,7 @@ import { contactsOf, recordOf, stepsOf } from "@/lib/guild/projects";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { DateInput, TextInput } from "./form-parts";
+import { Go } from "./go-mark";
 
 const LABEL_MAX = 30;
 const CONTACT_MEMO_MAX = 100;
@@ -70,7 +71,7 @@ export function ProjectPeople({
         </p>
         {editable && (
           <button type="button" className="c-button-sub h-11 px-4 text-sm" onClick={() => startSteps(project.id)}>
-            ▶ あいてごとの じょうきょうを はじめる
+            <Go />あいてごとの じょうきょうを はじめる
           </button>
         )}
       </div>
@@ -269,7 +270,7 @@ function CellEditor({
             save({ planned_on: planned || null, done_on: TODAY }, `${step.name}を きょう おわりにしました`)
           }
         >
-          ▶ きょう おわった
+          <Go />きょう おわった
         </button>
         <button
           type="button"
@@ -332,7 +333,7 @@ function ContactEditor({ contact, onClose }: { contact: ProjectContact; onClose:
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="rpg-button h-11 px-4 text-sm">
-          ▶ なおす
+          <Go />なおす
         </button>
         <button
           type="button"
@@ -390,7 +391,7 @@ function AddContactForm({ projectId }: { projectId: string }) {
           />
         </div>
         <button type="submit" className="rpg-button h-11 shrink-0 px-4 text-sm">
-          ▶ 足す
+          <Go />足す
         </button>
       </div>
       {error && <p className="text-xs text-[#c62828]">{error}</p>}

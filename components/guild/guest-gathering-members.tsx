@@ -7,6 +7,7 @@ import type { JobIconKey } from "@/lib/guild/types";
 import { formatDate } from "@/lib/guild/labels";
 import { JobAvatar } from "./job-avatar";
 import { Window } from "./cards";
+import { Go } from "./go-mark";
 
 export function GuestGatheringMembersWindow({ data, isMember }: { data: GuestGatheringMembers; isMember: boolean }) {
   if (!data.can_view) {
@@ -68,7 +69,7 @@ export function GuestGatheringMembersWindow({ data, isMember }: { data: GuestGat
     {!isMember && data.other_member_count !== null && data.other_member_count > 0 && (
       <div className="c-dashed-top mt-6 pt-5 text-sm leading-relaxed">
         <p>ギルドには、ほかに <span className="tabular-nums text-base">{data.other_member_count}</span>人の会員がいます。会員になると、全員のプロフィールが見られます。</p>
-        <a href="#join-guild" className="rpg-button mt-3 inline-flex min-h-11 px-4 text-sm">▶ 会員登録を希望する</a>
+        <a href="#join-guild" className="rpg-button mt-3 inline-flex min-h-11 px-4 text-sm"><Go />会員登録を希望する</a>
       </div>
     )}
   </Window>;

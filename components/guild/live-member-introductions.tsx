@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function LiveMemberIntroductions({ targetId, targetName, currentUserId, initial }: {
   targetId: string;
@@ -82,12 +83,12 @@ export function LiveMemberIntroductions({ targetId, targetName, currentUserId, i
 
   return <Window title="紹介状" action={<span className="c-muted text-xs">{items.length}通</span>}>
     <p className="c-muted mb-5 text-sm leading-relaxed">{store.w("intros.lead", { who: isMe ? "あなた" : `${targetName}さん` })}</p>
-    {!isMe && !editing && <button type="button" onClick={() => { setBody(mine?.body ?? ""); setEditing(true); }} className="rpg-button h-11 px-5 text-sm">{mine ? store.w("intros.editMine") : "▶ 紹介文を書く"}</button>}
+    {!isMe && !editing && <button type="button" onClick={() => { setBody(mine?.body ?? ""); setEditing(true); }} className="rpg-button h-11 px-5 text-sm">{mine ? store.w("intros.editMine") : <><Go />紹介文を書く</>}</button>}
     {!isMe && editing && <div className="mb-6 border-2 border-dashed border-guild-accent-dark bg-guild-paper p-4">
       <label className="block"><span className="text-sm tracking-wider">{store.w("intros.askAbout", { name: targetName })}</span>
         <textarea value={body} onChange={(event) => { setBody(event.target.value); setError(""); }} rows={5} maxLength={400} className="c-input mt-2 leading-relaxed" placeholder={store.w("intros.placeholder")} /></label>
       <p className="c-muted mt-1 text-right text-[11px] tabular-nums">{body.length}/400</p>
-      <div className="mt-3 flex flex-wrap justify-end gap-2"><button type="button" disabled={pending} onClick={() => { setEditing(false); setBody(mine?.body ?? ""); setError(""); }} className="c-button-sub h-10 px-4 text-sm">閉じる</button><button type="button" disabled={pending} onClick={() => void save()} className="rpg-button h-10 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : mine ? "▶ 更新する" : "▶ 紹介状を贈る"}</button></div>
+      <div className="mt-3 flex flex-wrap justify-end gap-2"><button type="button" disabled={pending} onClick={() => { setEditing(false); setBody(mine?.body ?? ""); setError(""); }} className="c-button-sub h-10 px-4 text-sm">閉じる</button><button type="button" disabled={pending} onClick={() => void save()} className="rpg-button h-10 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : mine ? <><Go />更新する</> : <><Go />紹介状を贈る</>}</button></div>
     </div>}
     {error && <p role="alert" className="mb-4 text-sm text-[#c62828]">{error}</p>}
     {items.length === 0 ? <p className="c-card border-dashed px-4 py-8 text-center text-sm">紹介状はまだありません。</p> :

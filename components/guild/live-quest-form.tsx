@@ -12,6 +12,7 @@ import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { BackLink, questCategoryMark } from "./cards";
 import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Draft = {
   category: QuestCategory | "";
@@ -193,7 +194,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
             </div>
             {!isGathering && <p className="c-muted mt-8 text-xs leading-relaxed">{store.w("rules.promiseNote")}</p>}
             <div className="mt-5 flex justify-end">
-              <button type="button" disabled={quotaExhausted} onClick={() => { if (validate()) setStep("confirm"); }} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">▶ 確認する</button>
+              <button type="button" disabled={quotaExhausted} onClick={() => { if (validate()) setStep("confirm"); }} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto"><Go />確認する</button>
             </div>
           </>
         ) : (
@@ -209,7 +210,7 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
             {saveError && <p role="alert" className="mt-5 text-sm text-[#c62828]">{saveError}</p>}
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setStep("form")} disabled={saving} className="c-button-sub h-12">{store.w("form.backToEdit")}</button>
-              <button type="button" onClick={submit} disabled={saving} className="rpg-button h-12 px-6 text-base">{saving ? quest ? "保存中…" : isFreeGathering ? "作成中…" : "公開中…" : quest ? "▶ 保存する" : isFreeGathering ? "▶ 集まりを作る" : "▶ 公開する"}</button>
+              <button type="button" onClick={submit} disabled={saving} className="rpg-button h-12 px-6 text-base">{saving ? quest ? "保存中…" : isFreeGathering ? "作成中…" : "公開中…" : quest ? <><Go />保存する</> : isFreeGathering ? <><Go />集まりを作る</> : <><Go />公開する</>}</button>
             </div>
           </>
         )}

@@ -14,6 +14,7 @@ import { formatJstDate } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
+import { Go } from "./go-mark";
 
 function Contact({ kind, value }: { kind: MasterIntroductionContactKind; value: string }) {
   if (kind === "via_admin") return <p className="text-sm">管理者を通して連絡します。</p>;
@@ -114,7 +115,7 @@ export function MasterIntroductionResponse({ token, introduction, authenticated,
     {mailSent ? <p role="status" className="c-card mt-5 border-dashed px-4 py-3 text-sm">確認メールを送りました。メール内のリンクから、この紹介ページへ戻ってください。</p> : <form onSubmit={(event) => void sendLoginLink(event)} className="mt-5 space-y-4">
       <label className="block text-sm">メールアドレス<input type="email" required maxLength={200} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} className="c-input mt-2 h-12" placeholder="example@example.com" /></label>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
-      <button type="submit" disabled={busy} className="rpg-button min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "送信中…" : "▶ 確認メールを送る"}</button>
+      <button type="submit" disabled={busy} className="rpg-button min-h-12 w-full px-5 disabled:opacity-50 sm:w-auto">{busy ? "送信中…" : <><Go />確認メールを送る</>}</button>
     </form>}
   </Window>;
 
@@ -148,7 +149,7 @@ export function MasterIntroductionResponse({ token, introduction, authenticated,
       </div>
       <label className="flex cursor-pointer items-start gap-3 text-sm leading-relaxed"><input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} className="mt-1 accent-guild-ink" /><span>双方が承諾した場合に限り、この名前・会社名・選んだ連絡先を相手だけに表示する。<span className="c-muted block text-xs">名鑑や公開プロフィールには掲載されません。</span></span></label>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
-      <div className="flex flex-wrap gap-3"><button type="submit" disabled={busy || !agreed} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : "▶ つながってみる"}</button><button type="button" disabled={busy} onClick={() => void respond(false)} className="c-button-sub min-h-12 px-5 text-sm disabled:opacity-50">今回は見送る</button></div>
+      <div className="flex flex-wrap gap-3"><button type="submit" disabled={busy || !agreed} className="rpg-button min-h-12 px-5 disabled:opacity-50">{busy ? "保存中…" : <><Go />つながってみる</>}</button><button type="button" disabled={busy} onClick={() => void respond(false)} className="c-button-sub min-h-12 px-5 text-sm disabled:opacity-50">今回は見送る</button></div>
     </form>
   </Window>;
 }

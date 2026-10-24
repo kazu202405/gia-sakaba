@@ -20,6 +20,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const emptyPerson: MasterIntroductionPersonDraft = { member_id: "", name: "", company: "", preview: "" };
 const emptyDraft: MasterIntroductionDraft = { reason: "", a: { ...emptyPerson }, b: { ...emptyPerson } };
@@ -202,7 +203,7 @@ export function LiveMasterIntroductions({ initial, members }: { initial: MasterI
         </div>
         <p className="c-muted text-xs">少なくとも一方は酒場の会員を選んでください。会員外の方も、酒場へ入会せずメール確認だけで回答できます。</p>
         {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
-        <button type="submit" disabled={pending !== null} className="rpg-button min-h-12 px-5 text-sm disabled:opacity-50">{pending === "create" ? "作成中…" : "▶ 2人分の紹介URLを作る"}</button>
+        <button type="submit" disabled={pending !== null} className="rpg-button min-h-12 px-5 text-sm disabled:opacity-50">{pending === "create" ? "作成中…" : <><Go />2人分の紹介URLを作る</>}</button>
       </form>
       {links && <div role="status" className="c-card mt-6 space-y-4 border-dashed p-4 sm:p-5">
         <p className="text-sm leading-relaxed">専用URLを作成しました。それぞれ本人にだけ送ってください。この画面を離れた後は、必要に応じてURLを再発行できます。</p>

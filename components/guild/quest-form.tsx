@@ -18,6 +18,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { BackLink, questCategoryMark } from "./cards";
 import { CheckBox, DateInput, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Draft = {
   category: QuestCategory | "";
@@ -327,7 +328,7 @@ export function QuestForm({
               }}
               className="rpg-button h-12 w-full px-6 text-base sm:w-auto"
             >
-              ▶ 確認する
+              <Go />確認する
             </button>
           </div>
         </section>
@@ -378,11 +379,11 @@ export function QuestForm({
 
           <div className="mt-9 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setStep("form")} className="c-button-sub h-12">
-              ◀ なおす
+              <Go back />なおす
             </button>
             {(!quest || changed.length > 0) && (
               <button type="button" onClick={submit} className="rpg-button h-12 px-6 text-base">
-                {quest ? "▶ この内容に なおす" : `▶ ${guild.terms.quest}を出す`}
+                {quest ? <><Go />この内容に なおす</> : <><Go />{guild.terms.quest}を出す</>}
               </button>
             )}
           </div>

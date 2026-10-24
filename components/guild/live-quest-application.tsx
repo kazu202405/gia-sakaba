@@ -7,6 +7,7 @@ import type { GuildQuest } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/client";
 import { CheckBox, TextArea } from "./form-parts";
 import { GUEST_VISIBILITY_NOTE, GatheringGuestVisibility } from "./gathering-guest-visibility";
+import { Go } from "./go-mark";
 
 export function LiveQuestApplication({
   quest,
@@ -108,7 +109,7 @@ export function LiveQuestApplication({
       {error && <p role="alert" className="mb-4 text-sm text-[#c62828]">{error}</p>}
       {application?.status === "applied" ? (
         <div className="space-y-3">
-          <p className="text-base">▶ {quest.members_only ? application.approved_at ? "参加が決まりました" : "申込中（承認待ち）" : "参加したいと伝えました"}</p>
+          <p className="text-base"><Go />{quest.members_only ? application.approved_at ? "参加が決まりました" : "申込中（承認待ち）" : "参加したいと伝えました"}</p>
           {application.message && <p className="c-card whitespace-pre-line break-words px-4 py-3 text-sm">{application.message}</p>}
           {guestCapable && <GatheringGuestVisibility questId={quest.id} initial={guestVisible ?? showToGuests} />}
           {confirmWithdraw ? (
@@ -136,11 +137,11 @@ export function LiveQuestApplication({
           )}
           <div className="flex flex-wrap justify-end gap-3">
             <button type="button" onClick={() => setWriting(false)} disabled={busy} className="c-button-sub h-11">やめる</button>
-            <button type="button" onClick={apply} disabled={busy} className="rpg-button h-11">{busy ? "申込中…" : quest.members_only ? "▶ 申し込む" : "▶ 参加したいと伝える"}</button>
+            <button type="button" onClick={apply} disabled={busy} className="rpg-button h-11">{busy ? "申込中…" : quest.members_only ? <><Go />申し込む</> : <><Go />参加したいと伝える</>}</button>
           </div>
         </div>
       ) : (
-        <button type="button" onClick={() => setWriting(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{quest.members_only ? "▶ 参加を申し込む" : "▶ 参加したい"}</button>
+        <button type="button" onClick={() => setWriting(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{quest.members_only ? <><Go />参加を申し込む</> : <><Go />参加したい</>}</button>
       )}
     </div>
   );

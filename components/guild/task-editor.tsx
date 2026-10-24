@@ -10,6 +10,7 @@ import { validateTaskDraft } from "@/lib/guild/projects";
 import { addTask, removeTask, updateTask } from "@/lib/guild/project-store";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { DateInput, Select, TextInput } from "./form-parts";
+import { Go } from "./go-mark";
 
 const TASK_TITLE_MAX = 60;
 
@@ -104,7 +105,7 @@ export function AddTaskForm({ projectId, memberIds }: { projectId: string; membe
       <TaskFields value={fields} onChange={setFields} memberIds={memberIds} />
       {error && <p className="text-xs text-[#c62828]">{error}</p>}
       <button type="submit" className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
-        ▶ 足す
+        <Go />足す
       </button>
     </form>
   );
@@ -147,7 +148,7 @@ export function TaskEditor({
       {error && <p className="text-xs text-[#c62828]">{error}</p>}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="rpg-button h-11 px-4 text-sm">
-          ▶ なおす
+          <Go />なおす
         </button>
         <button
           type="button"

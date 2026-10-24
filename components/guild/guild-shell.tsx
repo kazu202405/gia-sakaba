@@ -8,6 +8,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ClipboardList, FolderKanban, House, KeyRound, UserRound, Users, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { GuildSceneArt } from "@/components/guild/guild-scene-art";
@@ -147,7 +148,7 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
   return (
     <div className={cn("guild-theme min-h-screen", scene && "guild-scene")}>
       {scene && <GuildSceneArt art={art} dim={shownRest !== ""} />}
-      <header className="sticky top-0 z-30 bg-guild-ink text-guild-paper">
+      <header className="guild-header sticky top-0 z-30 bg-guild-ink text-guild-paper">
         <div className="guild-px mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href={store.path()} className="text-lg tracking-[0.2em]">
             {store.config.name}
@@ -214,7 +215,7 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
               {/* いる所は金の線とアイコンで示す。文字も残し、初めての人にも行き先が伝わるようにする */}
               {active && <span className="guild-mobile-active absolute inset-x-3 top-0 h-1 bg-guild-ink" aria-hidden />}
               <span className="relative">
-                <MobileNavIcon kind={item.icon} />
+                <MobileNavIcon kind={item.icon} plain={store.config.theme === "plain"} />
                 <NavBadge count={item.badge ? badges[item.badge] : 0} className="absolute -top-1.5 -right-3.5" />
               </span>
               <span className="leading-[1.05]">{item.short}</span>
@@ -226,8 +227,23 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
   );
 }
 
+/** plain の店の下のメニューのアイコン（ドット絵と同じ並び） */
+const PLAIN_NAV_ICONS: Record<NavItem["icon"], LucideIcon> = {
+  tavern: House,
+  guild: Users,
+  scroll: ClipboardList,
+  map: FolderKanban,
+  hero: UserRound,
+  key: KeyRound,
+};
+
 /** 下のコマンド専用の16pxピクセル絵。線画アイコンではなく、酒場の道具として形をそろえる。 */
-function MobileNavIcon({ kind }: { kind: NavItem["icon"] }) {
+function MobileNavIcon({ kind, plain }: { kind: NavItem["icon"]; plain: boolean }) {
+  // 落ち着いた見た目の店は、ドット絵ではなく普通の線のアイコン
+  if (plain) {
+    const Icon = PLAIN_NAV_ICONS[kind];
+    return <Icon className="guild-mobile-icon shrink-0" size={22} strokeWidth={1.75} aria-hidden />;
+  }
   const common = {
     viewBox: "0 0 16 16",
     width: 22,

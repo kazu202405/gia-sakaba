@@ -11,6 +11,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
@@ -62,13 +63,13 @@ export function LiveIntroRequestButton({ target, existing, quota: quotaProp = nu
     }
   }
 
-  if (existing || sent) return <Link href={store.path("/requests")} className="c-button-sub h-12 w-full sm:w-auto">申請の状況を見る ▶</Link>;
+  if (existing || sent) return <Link href={store.path("/requests")} className="c-button-sub h-12 w-full sm:w-auto">申請の状況を見る<Go after /></Link>;
   if (!target.accept_intro) return <p className="c-card border-dashed px-4 py-3 text-sm">{target.display_name}さんは、いまつながり申請を受け付けていません。</p>;
 
   if (quota && isExhausted(quota.slot)) return <PlanQuotaExhausted kind="intro" plan={quota.plan} slot={quota.slot} />;
 
   return <>
-    <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{inviteConnected ? "▶ 連絡先を見せてもらう" : "▶ つながりを申請する"}</button>
+    <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">{inviteConnected ? <><Go />連絡先を見せてもらう</> : <><Go />つながりを申請する</>}</button>
     {quota && <PlanQuotaNote kind="intro" plan={quota.plan} slot={quota.slot} className="mt-2" />}
     {open && <div className="fixed inset-0 z-[90] flex items-end justify-center sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-guild-ink/50" onClick={() => { if (!saving) setOpen(false); }} aria-hidden />
@@ -84,7 +85,7 @@ export function LiveIntroRequestButton({ target, existing, quota: quotaProp = nu
           </fieldset>
           <label className="mt-5 block"><span className="text-[15px]">相手へのひとこと</span><span className="c-muted ml-1 text-xs">任意</span><textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} maxLength={400} className="c-input mt-2" placeholder="例：採用ページの件で一度お話を伺いたいです" /></label>
           {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
-          <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" disabled={saving} onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button><button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : "▶ 申請を送る"}</button></div>
+          <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" disabled={saving} onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button><button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : <><Go />申請を送る</>}</button></div>
         </div>
       </div>
     </div>}

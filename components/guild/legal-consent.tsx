@@ -5,6 +5,8 @@
 // ⚠️ 要点は申し込みの最後の画面で見せる内容（特商法の最終確認画面の表示）。
 //    料金・更新・解約・返金は /terms 第5・6条と /tokushoho と揃える。変えたら3か所とも直す。
 
+import { Go } from "./go-mark";
+
 const LINKS = [
   { href: "/terms", label: "利用規約" },
   { href: "/privacy", label: "プライバシーポリシー" },
@@ -28,6 +30,6 @@ export const BILLING_POINTS = [
 
 export function BillingPoints() {
   return <ul className="space-y-1.5 text-sm leading-relaxed">
-    {BILLING_POINTS.map((point) => <li key={point} className="flex gap-2"><span aria-hidden="true">▶</span><span className="min-w-0">{point}</span></li>)}
+    {BILLING_POINTS.map((point) => <li key={point} className="flex gap-2"><span aria-hidden="true"><Go bullet /></span><span className="min-w-0">{point}</span></li>)}
   </ul>;
 }

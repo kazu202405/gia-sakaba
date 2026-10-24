@@ -12,6 +12,7 @@ import { connectedPeople } from "@/lib/guild/projects";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { MemberRow } from "./cards";
 import { Select } from "./form-parts";
+import { Go } from "./go-mark";
 
 export function ProjectParty({ project, people, isOwner }: { project: Project; people: Profile[]; isOwner: boolean }) {
   const [adding, setAdding] = useState("");
@@ -98,7 +99,7 @@ export function ProjectParty({ project, people, isOwner }: { project: Project; p
                   <Select value={adding} onChange={setAdding} options={options} label="足す人" />
                 </div>
                 <button type="button" onClick={add} className="rpg-button h-11 shrink-0 px-4 text-sm">
-                  ▶ 足す
+                  <Go />足す
                 </button>
               </div>
               {error && <p className="text-xs text-[#c62828]">{error}</p>}

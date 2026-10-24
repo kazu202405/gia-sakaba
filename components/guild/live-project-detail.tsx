@@ -17,6 +17,7 @@ import {
 import { DateInput } from "./form-parts";
 import { LiveProjectPeople } from "./live-project-people";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function LiveProjectDetail({ project, pipeline, members, canEdit, today }: { project: GuildProject; pipeline: GuildProjectPipeline; members: Profile[]; canEdit: boolean; today: string }) {
   const store = useGuildStore();
@@ -225,7 +226,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
         {editingTask.error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{editingTask.error}</p>}
         <div className="mt-3 flex justify-end gap-2">
           <button type="button" onClick={() => setEditingTask(null)} className="c-button-sub h-9 px-3 text-xs">やめる</button>
-          <button type="button" onClick={() => void saveTaskTitle()} className="rpg-button h-9 px-4 text-xs">▶ 保存する</button>
+          <button type="button" onClick={() => void saveTaskTitle()} className="rpg-button h-9 px-4 text-xs"><Go />保存する</button>
         </div>
       </li>;
     }
@@ -292,7 +293,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
   }
 
   return <div className="space-y-6">
-    <Link href={store.path("/projects")} className="c-muted inline-block text-sm">◀ プロジェクト一覧</Link>
+    <Link href={store.path("/projects")} className="c-muted inline-block text-sm"><Go back />プロジェクト一覧</Link>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">{project.status === "done" ? "完了" : "進行中"}</span>
       <h1 className="break-words text-2xl">{project.title}</h1>

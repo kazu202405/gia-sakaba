@@ -21,6 +21,7 @@ import type { Wording } from "@/lib/guild/store-words";
 import { getAuthenticatedUserId, getGuildContext, getMemberProfileDraft, getMyPlanUsage, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 import { currentStore } from "@/lib/guild/current-store";
+import { Go } from "@/components/guild/go-mark";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -170,7 +171,7 @@ function ProfileWindow({
         <div className="divide-y-2 divide-dashed divide-guild-ink/15">
           {shown.map((section) => (
             <section key={section.group} className="py-5 first:pt-0 last:pb-0">
-              <h2 className="c-label text-base tracking-[0.12em]">▶ {groupLabelFor(w)[section.group].title}</h2>
+              <h2 className="c-label text-base tracking-[0.12em]"><Go />{groupLabelFor(w)[section.group].title}</h2>
               {profile.visible_groups.includes(section.group) && !section.value.trim() ? (
                 <p className="c-muted mt-1.5 text-sm">
                   まだ入力されていません。

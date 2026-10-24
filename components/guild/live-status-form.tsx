@@ -13,6 +13,7 @@ import { ImageCropDialog } from "@/components/profile/ImageCropDialog";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Snapshot = { draft: MyGuildProfile };
 
@@ -205,7 +206,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
   }
 
   return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => profileDraft ? leaveWithoutSaving() : void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">{profileDraft ? "◀ 下書きの画面へ戻る（保存しません）" : "◀ マイページへ戻る"}</button>
+    <button type="button" onClick={() => profileDraft ? leaveWithoutSaving() : void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">{profileDraft ? <><Go back />下書きの画面へ戻る（保存しません）</> : <><Go back />マイページへ戻る</>}</button>
     <div><h1 className="text-2xl tracking-[0.12em]">{store.w("status.editButton")}</h1><p className="mt-2 text-sm">{store.w("status.formLead")}</p>{profileDraft
       ? <div className="c-card mt-3 space-y-1 px-4 py-3 text-sm leading-relaxed">
         <p>{profileDraft.from}さんが書いた下書きを入れてあります。直したいところは直してください。<strong>{store.w("status.draftNotice")}</strong>この画面では自動保存しません。</p>
@@ -259,7 +260,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       <details className="c-window p-5 pt-10 sm:p-7 sm:pt-11" open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
         <span className="c-window-title">人となり</span>
         <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-[15px] tracking-wider">
-          <span>▶ 出身地・誕生日・趣味などを書く</span>
+          <span><Go />出身地・誕生日・趣味などを書く</span>
           <span className="c-muted text-xs">任意</span>
         </summary>
         <div className="mt-5 space-y-5">
@@ -295,7 +296,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       {contactEditor}
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || photoUploading ? (profileDraft ? "載せています…" : "保存を確認中…") : profileDraft ? "▶ 保存して載せる" : "▶ 保存して戻る"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || photoUploading ? (profileDraft ? "載せています…" : "保存を確認中…") : profileDraft ? <><Go />保存して載せる</> : <><Go />保存して戻る</>}</button></div>
     </form>
     <ImageCropDialog open={cropSrc !== null} src={cropSrc} onCancel={closeCropper} onConfirm={(blob) => void uploadPhoto(blob)} />
   </div>;

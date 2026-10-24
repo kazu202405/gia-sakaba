@@ -12,6 +12,7 @@ import { JobAvatar } from "./job-avatar";
 import { Window } from "./cards";
 import { cn } from "@/lib/utils";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const STEP_SHORT = ["そうしん", "かくにん", "だしん", "しょうだく", "しょうかい"];
 
@@ -178,7 +179,7 @@ function ReceivedCard({
             }}
             className="rpg-button h-11"
           >
-            ▶ 会ってみる
+            <Go />会ってみる
           </button>
           <button type="button" onClick={decline} className="c-button-sub h-11">
             今回は辞退する

@@ -8,6 +8,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function ApplicantChooseButton({
   applicantName,
@@ -43,7 +44,7 @@ export function ApplicantChooseButton({
       }}
       className="rpg-button h-11 w-full text-sm sm:w-auto"
     >
-      ▶ この人に お願いしたい
+      <Go />この人に お願いしたい
     </button>
   );
 }

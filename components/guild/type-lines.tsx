@@ -2,6 +2,7 @@
 
 // 文を1文字ずつ出す（見た目の演出だけ）。行は上から順に出て、出しきったら ▼ が点滅する。
 // 押すと残りを全部出す。動きを減らす設定の人には最初から全部出す。読み上げには最初から全文を渡す。
+// instant（落ち着いた見た目の店）は演出なし：最初から全部出し、▼ も出さない。
 
 import { useEffect, useState } from "react";
 
@@ -11,9 +12,9 @@ export type TypeLine = { segments: TypeSegment[]; className?: string };
 
 const STEP_MS = 40;
 
-export function TypeLines({ lines, className }: { lines: TypeLine[]; className?: string }) {
+export function TypeLines({ lines, className, instant = false }: { lines: TypeLine[]; className?: string; instant?: boolean }) {
   const total = lines.reduce((sum, line) => sum + line.segments.reduce((s, seg) => s + seg.text.length, 0), 0);
-  const [shown, setShown] = useState(0);
+  const [shown, setShown] = useState(instant ? total : 0);
   const done = shown >= total;
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export function TypeLines({ lines, className }: { lines: TypeLine[]; className?:
       </div>
       {/* ▼は文の下の行の右端に出す（文の横に置くと、行末が1〜2文字だけ折り返されるため） */}
       <p className="flex h-4 justify-end leading-none" aria-hidden>
-        {done && <span className="rpg-blink text-[#d9b45a]">▼</span>}
+        {done && !instant && <span className="rpg-blink text-[#d9b45a]">▼</span>}
       </p>
     </div>
   );

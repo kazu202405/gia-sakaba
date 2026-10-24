@@ -9,6 +9,7 @@ import {
   listGuildQuests,
 } from "@/lib/guild/server-data";
 import { currentStore } from "@/lib/guild/current-store";
+import { Go } from "@/components/guild/go-mark";
 
 export async function generateMetadata() {
   const store = await currentStore();
@@ -41,7 +42,7 @@ export default async function QuestsPage() {
 
       <div className="mb-9">
         <Link href={store.path("/quests/new")} className="rpg-button h-12 w-full text-base sm:w-auto">
-          ▶ {questTerm}を出す
+          <Go />{questTerm}を出す
         </Link>
       </div>
       <QuestBoard quests={quests} members={members} currentUserId={currentUserId} />

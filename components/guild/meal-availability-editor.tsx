@@ -5,6 +5,7 @@ import { guildApiPath } from "@/lib/guild/store-path";
 import { useState } from "react";
 import { formatScheduleShort, fromJstInputValue, toJstInputValue } from "@/lib/guild/gathering-schedule";
 import { MEAL_AVAILABILITY_LIMIT, MEAL_AVAILABILITY_NOTE_LIMIT, type MealAvailability } from "@/lib/guild/meal-availability";
+import { Go } from "./go-mark";
 
 export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[] }) {
   const store = useGuildStore();
@@ -68,7 +69,7 @@ export function MealAvailabilityEditor({ initial }: { initial: MealAvailability[
       <label className="block text-sm">終了<input type="datetime-local" value={end} onChange={(event) => setEnd(event.target.value)} className="c-input c-date mt-1" /></label>
     </div>
     <label className="block text-sm">ひとこと（任意）<input type="text" value={note} onChange={(event) => setNote(event.target.value)} maxLength={MEAL_AVAILABILITY_NOTE_LIMIT} placeholder="例：梅田周辺なら参加しやすいです" className="c-input mt-1" /></label>
-    <div className="flex flex-wrap items-center gap-3"><button type="button" disabled={pending !== null || !start || !end || slots.length >= MEAL_AVAILABILITY_LIMIT} onClick={() => void add()} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending === "add" ? "追加中…" : "▶ 空き日時を追加"}</button><span className="c-muted text-xs">{slots.length}/{MEAL_AVAILABILITY_LIMIT}件・今後180日以内</span></div>
+    <div className="flex flex-wrap items-center gap-3"><button type="button" disabled={pending !== null || !start || !end || slots.length >= MEAL_AVAILABILITY_LIMIT} onClick={() => void add()} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending === "add" ? "追加中…" : <><Go />空き日時を追加</>}</button><span className="c-muted text-xs">{slots.length}/{MEAL_AVAILABILITY_LIMIT}件・今後180日以内</span></div>
     {message && <p role="status" className="text-sm">{message}</p>}
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
   </div>;

@@ -18,6 +18,7 @@ import { canSendMealWish, resolveSakabaAccessPlan, resolveSakabaPlan } from "@/l
 import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, getMyProfileDraft, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 import { currentStore } from "@/lib/guild/current-store";
+import { Go } from "@/components/guild/go-mark";
 
 export const metadata: Metadata = { title: "マイページ" };
 
@@ -47,7 +48,7 @@ export default async function MyPage() {
     <PageTitle title="マイページ" lead={store.w("me.lead")} />
     {profileDraft.ok && profileDraft.draft && <Window title={store.w("me.draftTitle")}>
       <p className="text-sm leading-relaxed">{store.w("me.draftBody", { name: profileDraft.draft.drafted_by_name })}</p>
-      <p className="mt-4"><Link href={store.path("/me/status/draft")} className="rpg-button inline-flex h-11 items-center px-5 text-sm">▶ 下書きを見る</Link></p>
+      <p className="mt-4"><Link href={store.path("/me/status/draft")} className="rpg-button inline-flex h-11 items-center px-5 text-sm"><Go />下書きを見る</Link></p>
     </Window>}
     <Window title={context.guild.terms.status}>
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
@@ -88,16 +89,16 @@ export default async function MyPage() {
     <div className="grid gap-6 md:grid-cols-2">
       <Window title={store.w("me.postedQuests", { quest: context.guild.terms.quest })}>
         {myQuests.length === 0 ? <p className="c-muted text-sm">まだありません。<Link href={store.path("/quests/new")} className="underline">{context.guild.terms.quest}を出す</Link></p> :
-          <ul className="space-y-2">{myQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm">▶ {quest.title}</Link></li>)}</ul>}
+          <ul className="space-y-2">{myQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm"><Go />{quest.title}</Link></li>)}</ul>}
       </Window>
       <Window title={store.w("me.joinedQuests", { quest: context.guild.terms.quest })}>
         {joinedQuests.length === 0 ? <p className="c-muted text-sm">まだありません。</p> :
-          <ul className="space-y-2">{joinedQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm">▶ {quest.title}</Link></li>)}</ul>}
+          <ul className="space-y-2">{joinedQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm"><Go />{quest.title}</Link></li>)}</ul>}
       </Window>
     </div>
     <Window title="自分のプロジェクト">
       {myProjects.length === 0 ? <p className="c-muted text-sm">まだありません。<Link href={store.path("/projects/new")} className="underline">プロジェクトをつくる</Link></p> :
-        <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block break-words text-sm">▶ {project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
+        <ul className="space-y-2">{myProjects.map((project) => <li key={project.id}><Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block break-words text-sm"><Go />{project.title} <span className="c-muted text-xs">{project.status === "done" ? "完了" : "進行中"}</span></Link></li>)}</ul>}
     </Window>
     <LiveMemberIntroductions targetId={me.id} targetName={me.display_name} currentUserId={currentUserId} initial={introductions} />
     {process.env.SAKABA_880_ENABLED === "true" && canSendMealWish(accessPlan) && <Window title="会食の希望">
@@ -107,7 +108,7 @@ export default async function MyPage() {
     <LivePushSettings />
     <Window title="ご意見・不具合">
       <p className="text-sm leading-relaxed">おかしな動きや「こうだったら使いやすい」を、管理者に送れます。画面上の「ご意見」からも、いつでも送れます。</p>
-      <FeedbackButton label="▶ 送る" className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm" />
+      <FeedbackButton label={<><Go />送る</>} className="c-button-sub mt-4 inline-flex min-h-11 items-center px-5 text-sm" />
     </Window>
     <Window title="会員・お支払い">
       <p className="text-sm leading-relaxed">

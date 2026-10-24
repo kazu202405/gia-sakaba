@@ -14,6 +14,7 @@ import { StoreLanding } from "@/components/guild/store-landing";
 import { currentStore } from "@/lib/guild/current-store";
 import { outsideStorePath } from "@/lib/guild/store-path";
 import { createClient } from "@/lib/supabase/server";
+import { Go } from "@/components/guild/go-mark";
 
 // welcome=1 は、入会した直後だけ付く（初回のあいさつを出す）
 export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
@@ -41,6 +42,7 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
     <Window title={store.w("notifications.title")}>
       {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
       <TypeLines
+        instant={store.config.theme === "plain"}
         lines={[
           { className: "text-[17px] leading-loose", segments: [{ text: isFirstVisit ? `はじめまして、${me.display_name}さん。` : `おかえりなさい、${me.display_name}さん。` }] },
           {
@@ -52,7 +54,7 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
         ]}
       />
       {isFirstVisit
-        ? <Link href={store.path("/me")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ マイページを開く</Link>
+        ? <Link href={store.path("/me")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm"><Go />マイページを開く</Link>
         : <Link href={store.path("/notifications")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">{store.w("home.seeNotices")}</Link>}
     </Window>
 
@@ -64,7 +66,7 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
           <ul className="space-y-5">{active.slice(0, 5).map((project) => {
             const done = project.tasks.filter((task) => task.status === "done").length;
             return <li key={project.id}>
-              <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block text-sm break-words">▶ {project.title}</Link>
+              <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block text-sm break-words"><Go />{project.title}</Link>
               <div className="c-gauge mt-2" aria-label={`タスク ${done}/${project.tasks.length} 完了`}>
                 {Array.from({ length: 10 }, (_, index) => <span key={index} data-on={index < (project.tasks.length ? Math.round(done / project.tasks.length * 10) : 0)} />)}
               </div>
@@ -78,7 +80,7 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
             const due = dueLabel(task.due_date!, today, store.w);
             return <li key={task.id}>
               <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block py-3">
-                <span className="block text-sm break-words">▶ {task.title}</span>
+                <span className="block text-sm break-words"><Go />{task.title}</span>
                 <span className="mt-1 flex flex-wrap gap-x-3 text-xs"><span className="c-muted">{project.title}</span><span className={due.overdue ? "c-chip-strong" : "c-muted"}>{due.text}</span></span>
               </Link>
             </li>;

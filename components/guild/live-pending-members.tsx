@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 // 一覧の読み直しが返ってこなくても、ボタンが押せないままにならないための上限
 const UNLOCK_FALLBACK_MS = 8000;
@@ -88,7 +89,7 @@ export function LivePendingMembers({ initial }: { initial: PendingMember[] }) {
             <div className="flex gap-2"><dt className="c-muted w-24 shrink-0 text-xs leading-6">招待した人</dt><dd className="min-w-0 break-words">{item.invited_by_name || "—"}</dd></div>
           </dl>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button type="button" disabled={busyKey !== null} aria-busy={busyKey === approveKey} onClick={() => void decide(item, true)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{busyKey === approveKey ? "処理中…" : "▶ 承認する"}</button>
+            <button type="button" disabled={busyKey !== null} aria-busy={busyKey === approveKey} onClick={() => void decide(item, true)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{busyKey === approveKey ? "処理中…" : <><Go />承認する</>}</button>
             <button type="button" disabled={busyKey !== null} onClick={() => void decide(item, false)} className="c-button-sub h-11 px-5 text-sm disabled:opacity-50">{busyKey === `${item.user_id}:decline` ? "処理中…" : "見送る"}</button>
           </div>
         </li>;

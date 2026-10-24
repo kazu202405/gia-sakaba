@@ -4,6 +4,7 @@ import { StoreLink } from "@/components/guild/store-link";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { currentStore } from "@/lib/guild/current-store";
 import { Window } from "./cards";
+import { Go } from "./go-mark";
 
 export async function BusinessCardView({ card, urls, isMe, footnote }: { card: BusinessCard | null; urls: Record<string, string>; isMe: boolean; footnote?: string }) {
   const store = await currentStore();
@@ -14,7 +15,7 @@ export async function BusinessCardView({ card, urls, isMe, footnote }: { card: B
   if (sides.length === 0) {
     if (!isMe) return null;
     return <Window title="名刺">
-      <p className="c-muted text-sm">名刺はまだ登録されていません。<StoreLink to="/me/status" className="ml-2 underline underline-offset-4">▶ 名刺を登録する</StoreLink></p>
+      <p className="c-muted text-sm">名刺はまだ登録されていません。<StoreLink to="/me/status" className="ml-2 underline underline-offset-4"><Go />名刺を登録する</StoreLink></p>
     </Window>;
   }
   return <Window title="名刺">

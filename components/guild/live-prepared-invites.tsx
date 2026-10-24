@@ -12,6 +12,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import type { Position } from "@/lib/guild/types";
 import { inviteUrl as sharedInviteUrl } from "@/lib/guild/invite-share";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const emptyDraft: PreparedInvite = { display_name: "", company_name: "", position: "", introduction: "" };
 
@@ -167,7 +168,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
       </details> : <p className="c-muted text-xs">{store.w("prep.unreadable")}</p>}
       <p className="c-muted text-xs">メールアドレスやパスワードは本人が入力します。招待状は1人用・30日間有効です。</p>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
-      <div className="flex flex-wrap gap-2"><button type="submit" disabled={pending !== null} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : editingId ? "▶ 下書きを保存する" : "▶ 仮登録の招待状を作る"}</button>
+      <div className="flex flex-wrap gap-2"><button type="submit" disabled={pending !== null} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : editingId ? <><Go />下書きを保存する</> : <><Go />仮登録の招待状を作る</>}</button>
         {editingId && <button type="button" disabled={pending !== null} onClick={() => { setEditingId(null); setDraft(emptyDraft); setStatusDraft(emptyDraftFields); setError(""); }} className="c-button-sub min-h-11 px-4 text-sm">編集をやめる</button>}
       </div>
     </form>

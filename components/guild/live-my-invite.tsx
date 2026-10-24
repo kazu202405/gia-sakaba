@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
   const store = useGuildStore();
@@ -73,7 +74,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
       <p className="mt-4 text-base tracking-wider">酒場への招待状</p>
       <p className="c-muted mt-2 text-xs leading-relaxed">このリンクを受け取った人は、入会フォームを開けます。</p>
       <div className="mt-4 flex flex-wrap gap-2">
-        <button type="button" onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm">▶ リンクをコピー</button>
+        <button type="button" onClick={() => void copy()} className="rpg-button h-11 px-5 text-sm"><Go />リンクをコピー</button>
       </div>
       <details className="mt-4 border-t border-guild-ink/20 pt-3">
         <summary className="c-muted cursor-pointer text-xs underline underline-offset-4">{ROTATE_COPY.summary}</summary>
@@ -83,7 +84,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
         </ul>
         <button type="button" disabled={pending} onClick={() => void issue(true)} className="c-button-sub mt-3 h-11 px-4 text-sm disabled:opacity-50">{pending ? ROTATE_COPY.busy : ROTATE_COPY.button}</button>
       </details>
-    </div> : <button type="button" disabled={pending} onClick={() => void issue(false)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending ? "発行中…" : "▶ 自分の招待リンクを作る"}</button>}
+    </div> : <button type="button" disabled={pending} onClick={() => void issue(false)} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending ? "発行中…" : <><Go />自分の招待リンクを作る</>}</button>}
     {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
     <div className="mt-6 border-t-2 border-dashed border-guild-ink/20 pt-4">
       <p className="text-sm tracking-wider">あなたの招待から入った人 <span className="c-muted">{invite.people.length}人</span></p>

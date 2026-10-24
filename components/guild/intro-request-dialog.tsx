@@ -10,6 +10,7 @@ import { closedStatuses, introStatusLabel, purposeLabel } from "@/lib/guild/labe
 import { ME_ID, introRequests } from "@/lib/guild/mock-data";
 import { uiToast } from "@/lib/ui-dialog";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const PURPOSES = Object.keys(purposeLabel) as IntroPurpose[];
 
@@ -43,7 +44,7 @@ export function IntroRequestButton({ target }: { target: Profile }) {
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className="rpg-button h-12 w-full text-base sm:w-auto">
-        ▶ 紹介を依頼する
+        <Go />紹介を依頼する
       </button>
       {open && (
         <IntroRequestDialog
@@ -158,7 +159,7 @@ function IntroRequestDialog({
               キャンセル
             </button>
             <button type="button" onClick={submit} className="rpg-button h-11">
-              ▶ 依頼を送る
+              <Go />依頼を送る
             </button>
           </div>
         </div>

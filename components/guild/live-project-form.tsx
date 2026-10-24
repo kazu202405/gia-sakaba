@@ -9,6 +9,7 @@ import { isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan
 import { PlanQuotaExhausted, PlanQuotaNote } from "./plan-quota";
 import { CheckBox, DateInput, Field, TextArea, TextInput } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 function todayInJapan() {
   const parts = new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
@@ -61,7 +62,7 @@ export function LiveProjectForm({ project, canCreate = true, quota = null }: { p
   }
 
   return <div className="mx-auto max-w-2xl">
-    <Link href={project ? store.path(`/projects/${project.id}`) : store.path("/projects")} className="c-muted mb-8 inline-block text-sm">◀ プロジェクトへ戻る</Link>
+    <Link href={project ? store.path(`/projects/${project.id}`) : store.path("/projects")} className="c-muted mb-8 inline-block text-sm"><Go back />プロジェクトへ戻る</Link>
     <form onSubmit={submit} className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">{project ? store.w("projects.editTitle") : store.w("projects.newTitle")}</span>
       {!project && !canCreate && (quota ? <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} /> : <p className="text-sm text-[#c62828]">プロジェクトの作成枠を使い切りました。</p>)}
@@ -79,7 +80,7 @@ export function LiveProjectForm({ project, canCreate = true, quota = null }: { p
       </CheckBox>}
       <p className="c-muted text-xs">作成したプロジェクトは、いまは自分だけに表示されます。</p>
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}{createdId && <Link href={store.path(`/projects/${createdId}`)} className="ml-2 underline">詳細へ進む</Link>}</p>}
-      <button type="submit" disabled={saving || !canCreate || !!createdId} aria-busy={saving} className="rpg-button w-full px-6 py-3 disabled:opacity-50 sm:w-auto">{saving ? project ? "保存中…" : "作成中…" : project ? "▶ 保存する" : "▶ 作成する"}</button>
+      <button type="submit" disabled={saving || !canCreate || !!createdId} aria-busy={saving} className="rpg-button w-full px-6 py-3 disabled:opacity-50 sm:w-auto">{saving ? project ? "保存中…" : "作成中…" : project ? <><Go />保存する</> : <><Go />作成する</>}</button>
     </form>
   </div>;
 }

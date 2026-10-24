@@ -25,6 +25,7 @@ import { LegalLinks } from "./legal-consent";
 import { LoginGuide } from "./login-guide";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const POSITIONS = Object.keys(positionLabel) as Position[];
 
@@ -235,8 +236,8 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         {saveError && <p role="alert" className="text-sm text-[#c62828]">{saveError}</p>}
         <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
           {preview ? "プレビュー中（送信できません）" : requiresApproval(draft.position)
-            ? (saving ? APPROVAL_COPY.submittingLabel : `▶ ${APPROVAL_COPY.submitLabel}`)
-            : (saving ? "入会手続き中…" : "▶ 入会する")}
+            ? (saving ? APPROVAL_COPY.submittingLabel : <><Go />{APPROVAL_COPY.submitLabel}</>)
+            : (saving ? "入会手続き中…" : <><Go />入会する</>)}
         </button>
       </form>
     </Window>

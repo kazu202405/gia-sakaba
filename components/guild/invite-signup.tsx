@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Window } from "./cards";
 import { LoginGuide } from "./login-guide";
 import { authCallbackUrl, outsideStorePath } from "@/lib/guild/store-path";
+import { Go } from "./go-mark";
 
 export function InviteSignup({ inviteCode, inviterName, preview = false, initialName = "" }: { inviteCode: string; inviterName: string; preview?: boolean; initialName?: string }) {
   const router = useGuildRouter();
@@ -127,9 +128,9 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
         {error && <div role="alert" className="space-y-3 border border-[#c62828]/40 bg-red-50 p-3 text-sm text-[#c62828]">
           <p>{error}</p>
           {alreadyRegistered && <>
-            <Link href={loginPath} className="c-button inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして続ける</Link>
+            <Link href={loginPath} className="c-button inline-flex h-12 w-full items-center justify-center text-sm"><Go />ログインして続ける</Link>
             <p>パスワードを思い出せないときは、このメールアドレスにログイン用のリンクを送れます。</p>
-            <button type="button" disabled={linkBusy || linkSent} onClick={() => void sendLoginLink()} className="c-button-sub min-h-12 w-full text-sm disabled:cursor-not-allowed disabled:opacity-50">{linkSent ? "ログイン用リンクを送信済み" : linkBusy ? "送信中…" : "▶ メールのリンクでログインする"}</button>
+            <button type="button" disabled={linkBusy || linkSent} onClick={() => void sendLoginLink()} className="c-button-sub min-h-12 w-full text-sm disabled:cursor-not-allowed disabled:opacity-50">{linkSent ? "ログイン用リンクを送信済み" : linkBusy ? "送信中…" : <><Go />メールのリンクでログインする</>}</button>
             {linkSent && <p role="status">ログイン用リンクを送りました。メールのリンクを開くと、この招待状に戻って入会へ進めます。</p>}
             {linkError && <p>{linkError}</p>}
           </>}
@@ -146,14 +147,14 @@ export function InviteSignup({ inviteCode, inviterName, preview = false, initial
         <label className="block"><span className="mb-1 block text-sm">パスワード（確認） <span className="text-[#c62828]">必須</span></span>
           <input className="c-input h-11" type={showPassword ? "text" : "password"} value={passwordAgain} onChange={(event) => setPasswordAgain(event.target.value)} minLength={8} autoComplete="new-password" required /></label>
         <label className="flex cursor-pointer items-center gap-2 text-sm"><input type="checkbox" checked={showPassword} onChange={(event) => setShowPassword(event.target.checked)} /> パスワードを表示する</label>
-        <button type="submit" disabled={busy || preview || mailSent} className="rpg-button h-12 w-full text-sm disabled:opacity-50">{preview ? "プレビュー中（送信できません）" : mailSent ? "確認メールを送信済み" : busy ? "登録中…" : "▶ アカウントを作成して次へ"}</button>
+        <button type="submit" disabled={busy || preview || mailSent} className="rpg-button h-12 w-full text-sm disabled:opacity-50">{preview ? "プレビュー中（送信できません）" : mailSent ? "確認メールを送信済み" : busy ? "登録中…" : <><Go />アカウントを作成して次へ</>}</button>
       </form>
     </Window>
     <div className="order-first lg:order-none">
     <Window title="すでに登録した方はこちら">
       <p className="c-muted mb-5 text-sm leading-relaxed">以前にこのリンクから登録した方・Company Note をお使いの方（GIAのアカウントがある方）は、同じメールアドレスとパスワードでログインすると、この招待状へ戻れます。</p>
-      {preview ? <span className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm opacity-50">▶ ログインして酒場へ</span> :
-        <Link href={loginPath} className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm">▶ ログインして酒場へ</Link>}
+      {preview ? <span className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm opacity-50"><Go />ログインして酒場へ</span> :
+        <Link href={loginPath} className="c-button-sub inline-flex h-12 w-full items-center justify-center text-sm"><Go />ログインして酒場へ</Link>}
     </Window>
     </div>
   </div>;

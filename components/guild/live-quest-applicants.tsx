@@ -9,6 +9,7 @@ import { formatDate, introStatusLabel } from "@/lib/guild/labels";
 import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function LiveQuestApplicants({ questId, questTerm, applicants, members, canChoose }: {
   questId: string;
@@ -67,8 +68,8 @@ export function LiveQuestApplicants({ questId, questTerm, applicants, members, c
           </div>
           {applicant.message && <p className="mt-4 whitespace-pre-line break-words border-2 border-dashed border-guild-ink/25 px-3 py-2 text-sm">{applicant.message}</p>}
           <div className="mt-4">
-            {hasRequest ? <Link href={store.path("/requests")} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">{applicant.intro_status ? introStatusLabel[applicant.intro_status].requester : "紹介依頼済み"}・状況を見る ▶</Link>
-              : canChoose && member?.accept_intro ? <button type="button" onClick={() => void choose(applicant.user_id, name)} disabled={pendingId !== null} className="rpg-button h-11 px-4 text-sm disabled:opacity-50">{pendingId === applicant.user_id ? "依頼中…" : "▶ この人にお願いしたい"}</button>
+            {hasRequest ? <Link href={store.path("/requests")} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">{applicant.intro_status ? introStatusLabel[applicant.intro_status].requester : "紹介依頼済み"}・状況を見る<Go after /></Link>
+              : canChoose && member?.accept_intro ? <button type="button" onClick={() => void choose(applicant.user_id, name)} disabled={pendingId !== null} className="rpg-button h-11 px-4 text-sm disabled:opacity-50">{pendingId === applicant.user_id ? "依頼中…" : <><Go />この人にお願いしたい</>}</button>
                 : canChoose && member && !member.accept_intro ? <p className="c-muted text-xs">この人は現在、紹介を受け付けていません。</p> : null}
           </div>
         </article>;

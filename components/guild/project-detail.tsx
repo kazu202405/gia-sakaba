@@ -34,6 +34,7 @@ import { ProjectParty } from "./project-party";
 import { ProjectPeople } from "./project-people";
 import { AddTaskForm, TaskEditor } from "./task-editor";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type TaskView = "list" | "gantt";
 
@@ -214,7 +215,7 @@ export function ProjectDetail({ id }: { id: string }) {
                 uiToast("プロジェクトを おわりにしました");
               }}
             >
-              ▶ このプロジェクトを おわりにする
+              <Go />このプロジェクトを おわりにする
             </button>
           ) : (
             <button
@@ -226,7 +227,7 @@ export function ProjectDetail({ id }: { id: string }) {
                 uiToast("すすめている プロジェクトに もどしました");
               }}
             >
-              ▶ すすめている に もどす
+              <Go />すすめている に もどす
             </button>
           )}
           <button

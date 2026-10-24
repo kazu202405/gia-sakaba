@@ -6,14 +6,15 @@
 // 窓の形はエンタープライズの「相談する」（enterprise-plan.tsx）と同じ。
 // 書いたら一度「この内容で送りますか？」を見せてから送る（押してすぐ送られると不安、と五島さん 2026-09-28）。
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { FEEDBACK_KINDS, FEEDBACK_MESSAGE_MAX, feedbackError, type FeedbackKind } from "@/lib/guild/feedback";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
-export function FeedbackButton({ className, label = "ご意見・不具合" }: { className?: string; label?: string }) {
+export function FeedbackButton({ className, label = "ご意見・不具合" }: { className?: string; label?: ReactNode }) {
   const store = useGuildStore();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -90,7 +91,7 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button>
-              <button type="button" onClick={review} className="rpg-button h-11">▶ 確認する</button>
+              <button type="button" onClick={review} className="rpg-button h-11"><Go />確認する</button>
             </div>
           </> : <>
             <p className="text-[15px]">この内容で送りますか？</p>
@@ -101,7 +102,7 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" disabled={saving} onClick={() => { setStep("edit"); setError(""); }} className="c-button-sub h-11">{store.w("common.backToFix")}</button>
-              <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11">{saving ? "送信中…" : "▶ この内容で送る"}</button>
+              <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11">{saving ? "送信中…" : <><Go />この内容で送る</>}</button>
             </div>
           </>}
         </div>

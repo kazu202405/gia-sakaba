@@ -8,6 +8,7 @@ import { searchLevelOf } from "@/lib/guild/plan-usage";
 import { signBusinessCards } from "@/lib/guild/business-card-server";
 import { createClient } from "@/lib/supabase/server";
 import { currentStore } from "@/lib/guild/current-store";
+import { Go } from "@/components/guild/go-mark";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await currentStore()).w("members.metaTitle") };
@@ -38,7 +39,7 @@ export default async function MembersPage() {
         lead={store.w("members.lead")}
       />
       <Link href={store.path("/requests")} className="c-button-sub mb-6 inline-flex min-h-11 items-center px-4 text-sm">
-        つながり申請の状況を見る ▶
+        つながり申請の状況を見る<Go after />
       </Link>
       <MemberDirectory members={members} memberTerm={memberTerm} cardUrls={cardUrls} searchLevel={searchLevel} />
     </div>

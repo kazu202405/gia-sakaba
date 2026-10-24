@@ -10,6 +10,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { inviteUrl as sharedInviteUrl } from "@/lib/guild/invite-share";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 function inviteStatus(invite: GuildMasterInvite) {
   if (invite.revoked_at) return "無効";
@@ -87,7 +88,7 @@ export function LiveMasterInvites({ initial, excludedIds = [] }: { initial: Guil
 
   return <Window title="招待リンク" action={<span className="c-muted text-xs">発行済み {invites.length}件</span>}>
     <p className="c-muted mb-4 text-sm leading-relaxed">ここで発行するリンクは1人用・30日間有効です。メンバーがマイページで作った個人リンクも、参加した人と一緒にここへ表示されます。招待を受けた人は、新しくアカウントを作るか、既存のアカウントでログインして参加できます。</p>
-    <button type="button" disabled={pending !== null} onClick={() => void createInvite()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending === "create" ? "発行中…" : "▶ 招待リンクを発行"}</button>
+    <button type="button" disabled={pending !== null} onClick={() => void createInvite()} className="rpg-button h-11 px-5 text-sm disabled:opacity-50">{pending === "create" ? "発行中…" : <><Go />招待リンクを発行</>}</button>
     {error && <p role="alert" className="mt-4 text-sm text-[#c62828]">{error}</p>}
     {invites.length === 0 ? <p className="c-muted mt-5 text-sm">招待リンクはまだありません。</p> :
       <ul className="mt-5 space-y-4">{invites.map((invite) => {

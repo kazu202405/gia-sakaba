@@ -9,6 +9,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { CONSULT_MESSAGE_MAX, CONSULT_TOPICS, consultError, type ConsultTopic } from "@/lib/guild/enterprise";
 import { PHRASE_WRAP, Ph } from "./phrase";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
   const store = useGuildStore();
@@ -78,7 +79,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
         <p className="text-[15px] leading-relaxed"><Ph text="アプリの機能だけでは|届かないところを、|管理者が直接|手伝います。|事業の状況を伺って、|必要なことだけを|ご提案します。" /></p>
         <ul className="mt-4 grid gap-4 border-t border-guild-ink/25 pt-4 sm:grid-cols-2">
           {CONSULT_TOPICS.filter((topic) => topic.key !== "other").map((topic) => <li key={topic.key} className="flex gap-2">
-            <span aria-hidden="true" className="text-sm leading-relaxed">▶</span>
+            <span aria-hidden="true" className="text-sm leading-relaxed"><Go bullet /></span>
             <span className="min-w-0">
               <span className="block text-[15px] leading-relaxed"><Ph text={topic.title.replace("・", "・|").replace("／", "／|")} /></span>
               <span className="c-muted block text-xs leading-relaxed"><Ph text={topic.desc} /></span>
@@ -89,7 +90,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
           {isMaster
             ? <span className="c-chip">相談は管理者画面に届きます</span>
             : <div className="flex flex-wrap items-center gap-3">
-              <button type="button" onClick={() => { setOpen(true); setError(""); setStep("edit"); }} className="rpg-button inline-flex min-h-11 items-center px-5 text-sm">▶ 相談する</button>
+              <button type="button" onClick={() => { setOpen(true); setError(""); setStep("edit"); }} className="rpg-button inline-flex min-h-11 items-center px-5 text-sm"><Go />相談する</button>
               {sent && <p role="status" className="c-muted text-xs"><Ph text="相談を受け付けました。|管理者から|ご連絡します。" /></p>}
             </div>}
         </div>
@@ -115,7 +116,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setOpen(false)} className="c-button-sub h-11">キャンセル</button>
-              <button type="button" onClick={review} className="rpg-button h-11">▶ 確認する</button>
+              <button type="button" onClick={review} className="rpg-button h-11"><Go />確認する</button>
             </div>
           </> : <>
             <p className="text-[15px]">この内容で送りますか？</p>
@@ -126,7 +127,7 @@ export function EnterprisePlan({ isMaster }: { isMaster: boolean }) {
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" disabled={saving} onClick={() => { setStep("edit"); setError(""); }} className="c-button-sub h-11">{store.w("common.backToFix")}</button>
-              <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : "▶ この内容で送る"}</button>
+              <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11 disabled:opacity-50">{saving ? "送信中…" : <><Go />この内容で送る</>}</button>
             </div>
           </>}
         </div>

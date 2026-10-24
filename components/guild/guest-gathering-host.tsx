@@ -9,6 +9,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { GatheringGuestVisibility } from "./gathering-guest-visibility";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
   questId: string;
@@ -54,10 +55,10 @@ export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
 
   return <Window title="ゲスト向け招待リンク">
     <p className="text-sm leading-relaxed">{store.w("gathHost.note")}</p>
-    {!href ? <button type="button" disabled={busy} onClick={() => void publish(false)} className="rpg-button mt-5 min-h-12 px-5 disabled:opacity-50">{busy ? "作成中…" : "▶ 招待リンクを作る"}</button> : <div className="mt-5 space-y-3">
+    {!href ? <button type="button" disabled={busy} onClick={() => void publish(false)} className="rpg-button mt-5 min-h-12 px-5 disabled:opacity-50">{busy ? "作成中…" : <><Go />招待リンクを作る</>}</button> : <div className="mt-5 space-y-3">
       <label className="block text-sm">共有するURL<input readOnly value={`${origin}${href}`} onFocus={(e) => e.currentTarget.select()} className="c-input mt-2 w-full text-xs" /></label>
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={() => void copy()} className="rpg-button min-h-11 px-4">▶ URLをコピー</button>
+        <button type="button" onClick={() => void copy()} className="rpg-button min-h-11 px-4"><Go />URLをコピー</button>
         <Link href={href} target="_blank" rel="noopener noreferrer" className="c-button-sub inline-flex min-h-11 items-center px-4">招待ページを見る ↗</Link>
         <button type="button" disabled={busy} onClick={() => void publish(true)} className="c-muted min-h-11 text-xs underline disabled:opacity-50">リンクを作り直す</button>
       </div>

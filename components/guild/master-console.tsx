@@ -13,6 +13,7 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { JobAvatar } from "./job-avatar";
 import { cn } from "@/lib/utils";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type GroupKey = "inbox" | "proposed" | "connected" | "closed";
 
@@ -214,7 +215,7 @@ function RequestRow({
         {isInbox && !choosing && (
           <div className="flex flex-wrap gap-3">
             <ActionButton primary onClick={propose}>
-              ▶ 紹介する
+              <Go />紹介する
             </ActionButton>
             <ActionButton onClick={() => setChoosing(true)}>別の人を提案</ActionButton>
             <ActionButton onClick={decline}>見送る</ActionButton>
@@ -296,7 +297,7 @@ function RequestRow({
                 uiToast("紹介済みにしました");
               }}
             >
-              ▶ 紹介済みにする
+              <Go />紹介済みにする
             </ActionButton>
           </div>
         )}

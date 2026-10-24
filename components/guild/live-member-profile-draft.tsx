@@ -12,6 +12,7 @@ import { Window } from "./cards";
 import { ProfileDraftInputs } from "./profile-draft-fields";
 import { useGuildStore } from "@/components/guild/store-context";
 import type { Wording } from "@/lib/guild/store-words";
+import { Go } from "./go-mark";
 
 const stateTextFor = (w: Wording): Record<DraftState, string> => ({
   waiting: "本人の返事を待っています。書き直して届けると、いまの下書きに置き換わります。",
@@ -59,7 +60,7 @@ export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memb
     <form onSubmit={(event) => void send(event)} className="mt-5 space-y-5">
       <ProfileDraftInputs value={fields} onChange={(next) => { setFields(next); setError(""); }} />
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <button type="submit" disabled={saving} aria-busy={saving} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{saving ? "届けています…" : state === "waiting" ? "▶ 書き直して届ける" : "▶ 下書きを届ける"}</button>
+      <button type="submit" disabled={saving} aria-busy={saving} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{saving ? "届けています…" : state === "waiting" ? <><Go />書き直して届ける</> : <><Go />下書きを届ける</>}</button>
     </form>
   </Window>;
 }

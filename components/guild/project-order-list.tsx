@@ -12,13 +12,14 @@ import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 export function ProjectCard({ project, userId }: { project: GuildProject; userId: string }) {
   const store = useGuildStore();
   const done = project.tasks.filter((task) => task.status === "done").length;
   return <Link href={store.path(`/projects/${project.id}`)} className="c-card rpg-cursor-row block p-4">
     <p className="c-label text-xs">{project.status === "done" ? "完了" : "進行中"} · {project.owner_id === userId ? "自分のプロジェクト" : "参加中"}</p>
-    <h2 className="mt-1 break-words text-lg">▶ {project.title}</h2>
+    <h2 className="mt-1 break-words text-lg"><Go />{project.title}</h2>
     {project.goal && <p className="c-muted mt-1 break-words text-sm">{project.goal}</p>}
     <p className="c-muted mt-2 text-xs">タスク {done}/{project.tasks.length} 完了{project.due_date ? ` · 期限 ${project.due_date}` : ""}</p>
   </Link>;
@@ -60,7 +61,7 @@ export function ProjectOrderList({ projects, userId }: { projects: GuildProject[
     {projects.length >= 2 && <div className="flex flex-wrap items-center justify-end gap-2">
       {ordering ? <>
         <button type="button" disabled={saving} onClick={() => { setOrdering(false); setDraft(projects); setError(""); }} className="c-button-sub h-10 px-4 text-sm">やめる</button>
-        <button type="button" disabled={saving} aria-busy={saving} onClick={() => void save()} className="rpg-button h-10 px-4 text-sm">{saving ? "保存中…" : "▶ この順にする"}</button>
+        <button type="button" disabled={saving} aria-busy={saving} onClick={() => void save()} className="rpg-button h-10 px-4 text-sm">{saving ? "保存中…" : <><Go />この順にする</>}</button>
       </> : <button type="button" onClick={() => { setDraft(projects); setOrdering(true); }} className="c-button-sub h-10 px-4 text-sm">並べ替え</button>}
     </div>}
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}

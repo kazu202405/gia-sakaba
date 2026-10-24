@@ -21,6 +21,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import { CheckBox, TextInput } from "./form-parts";
 import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const TITLE_MAX = 40;
 
@@ -40,7 +41,7 @@ export function QuestToProject({ quest }: { quest: Quest }) {
         <div className="mt-2 space-y-2">
           <p className="text-sm leading-relaxed">プロジェクト「{existing.title}」で すすめています。</p>
           <Link href={store.path(`/projects/${existing.id}`)} className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5">
-            ▶ プロジェクトを 見る
+            <Go />プロジェクトを 見る
           </Link>
         </div>
       ) : !canActivateProject(projects, ME_ID, isPaid) ? (
@@ -59,7 +60,7 @@ export function QuestToProject({ quest }: { quest: Quest }) {
             className="rpg-button h-11 w-full text-sm sm:w-auto sm:px-5"
             onClick={() => setOpen(true)}
           >
-            ▶ プロジェクトにする
+            <Go />プロジェクトにする
           </button>
         </div>
       )}
@@ -139,7 +140,7 @@ function QuestToProjectForm({ quest, onCancel }: { quest: Quest; onCancel: () =>
 
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className="rpg-button h-11 px-5 text-sm">
-          ▶ プロジェクトを つくる
+          <Go />プロジェクトを つくる
         </button>
         <button type="button" className="c-muted h-11 px-2 text-xs" onClick={onCancel}>
           やめる

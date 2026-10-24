@@ -802,16 +802,130 @@ body:has(.guild-theme) [data-ui-toast-action] {
 [data-theme="plain"] .rpg-cursor {
   display: none;
 }
+/* 目印（components/guild/go-mark.tsx）：酒場は ▶、plain は矢印か無し */
+.guild-go-plain {
+  display: none;
+}
+[data-theme="plain"] .guild-go-tavern {
+  display: none;
+}
+[data-theme="plain"] .guild-go-plain {
+  display: inline;
+}
+/* ゲームのコマンドのように字の間を広げない（見出し・メニュー・店の名前） */
+[data-theme="plain"] :is(.tracking-wider, .tracking-widest, .tracking-\[0\.12em\], .tracking-\[0\.2em\]) {
+  letter-spacing: 0.02em;
+}
+/* 帳面の点線の区切りは、普通の細い線に */
+[data-theme="plain"] .c-dashed-top {
+  border-top-style: solid;
+}
+[data-theme="plain"] .divide-dashed > * {
+  border-style: solid;
+}
+/* スマホの下のメニュー：太い上線をやめ、いる所の色は変数で */
+[data-theme="plain"] .guild-mobile-nav {
+  border-top-width: 1px;
+}
+[data-theme="plain"] .guild-mobile-nav a[aria-current="page"] .guild-mobile-icon {
+  color: var(--guild-accent);
+  transform: none;
+}
+[data-theme="plain"] .guild-mobile-nav a[aria-current="page"] > .guild-mobile-active {
+  background: var(--guild-accent);
+}
 
-/* 建設・不動産の酒場の色 */
+/*
+ * plain は箱（カード）を使わない（2026-10-24 五島さん「カードを使うとAIで作ったっぽくなる」）。
+ * 窓は「細い線＋見出し」の段落に、カードは「下線で区切った行」にする。確認・入力の窓（role="dialog"）だけは箱のまま。
+ */
+[data-theme="plain"] .c-window:not([role="dialog"]) {
+  background: transparent;
+  border: 0;
+  border-top: 1px solid rgb(var(--guild-ink-rgb) / 0.14);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 1.25rem 0 0;
+}
+/* PCの左のメニューは線を引かず、項目だけ並べる */
+[data-theme="plain"] .c-window.guild-sidebar {
+  border-top: 0;
+  padding-top: 0;
+}
+[data-theme="plain"] .c-card {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgb(var(--guild-ink-rgb) / 0.12);
+  border-radius: 0;
+  box-shadow: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+[data-theme="plain"] a.c-card:hover {
+  background: rgb(var(--guild-ink-rgb) / 0.03);
+}
+/* お知らせの一文（role="status"・p 要素）は、左の色の線で示す */
+[data-theme="plain"] :is(p.c-card, [role="status"].c-card) {
+  border-bottom: 0;
+  border-left: 3px solid var(--guild-accent);
+  padding-left: 0.875rem;
+  padding-right: 0;
+}
+/* 名刺の画像は名刺の形が分かるよう、細い枠だけ残す */
+[data-theme="plain"] .c-card.aspect-\[91\/55\] {
+  border: 1px solid rgb(var(--guild-ink-rgb) / 0.18);
+  border-radius: 4px;
+}
+/* 上のヘッダー：白地に店の色の線 */
+[data-theme="plain"] .guild-header {
+  background: var(--guild-paper);
+  color: var(--guild-ink);
+  border-bottom: 3px solid var(--guild-accent);
+}
+[data-theme="plain"] .guild-header :is(a, button) {
+  color: var(--guild-ink);
+}
+[data-theme="plain"] .guild-header :is(a, button):hover {
+  color: var(--guild-accent);
+}
+
+/* 店の案内ページ（components/guild/store-landing.tsx）の上の帯と番号 */
+.guild-landing-hero {
+  background: var(--guild-hero-bg, var(--guild-ink));
+  color: var(--guild-hero-ink, var(--guild-paper));
+  border-bottom: 4px solid var(--guild-accent);
+}
+.guild-landing-eyebrow {
+  color: var(--guild-hero-sub, var(--guild-accent-light));
+  letter-spacing: 0.08em;
+}
+.guild-landing-no {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 6px;
+  background: var(--guild-accent-light);
+  color: var(--guild-accent-dark);
+  font-weight: 700;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 建設・不動産の酒場の色（C案・2026-10-24 五島さん決定：白＋深い緑） */
 [data-store="kensetsu-fudosan"] {
-  --guild-ink: #1f2933;
-  --guild-ink-rgb: 31 41 51;
+  --guild-ink: #1d2925;
+  --guild-ink-rgb: 29 41 37;
   --guild-paper: #ffffff;
-  --guild-bg: #f3f5f7;
-  --guild-accent: #2b6cb0;
-  --guild-accent-dark: #1e4e82;
-  --guild-accent-light: #bcd6ef;
-  --guild-accent-hover: #245a94;
+  --guild-bg: #f5f7f6;
+  --guild-accent: #1f6b4f;
+  --guild-accent-dark: #17543e;
+  --guild-accent-light: #cfe6dc;
+  --guild-accent-hover: #1a5c44;
   --guild-accent-ink: #ffffff;
+  /* 案内ページの上の帯 */
+  --guild-hero-bg: #1f4d3c;
+  --guild-hero-ink: #ffffff;
+  --guild-hero-sub: #a9d8c3;
 }

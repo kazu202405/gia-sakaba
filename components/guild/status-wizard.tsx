@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Draft = Pick<
   Profile,
@@ -251,7 +252,7 @@ export function StatusWizard({
         <>
           <div className="mb-8 flex items-center gap-3">
             <button type="button" onClick={goBack} aria-label="戻る" className="c-button-sub size-10 shrink-0 px-0">
-              ◀
+              <Go back />
             </button>
             <div className="min-w-0 flex-1">
               <div className="c-muted flex justify-between text-xs">
@@ -374,11 +375,11 @@ export function StatusWizard({
               )}
               {step === "confirm" ? (
                 <button type="button" onClick={finish} className="rpg-button h-12 px-6 text-base">
-                  ▶ {isNew ? "酒場に入る" : "保存する"}
+                  <Go />{isNew ? "酒場に入る" : "保存する"}
                 </button>
               ) : (
                 <button type="button" onClick={goNext} className="rpg-button h-12 px-6 text-base">
-                  ▶ 次へ
+                  <Go />次へ
                 </button>
               )}
             </div>
@@ -407,7 +408,7 @@ function IntroStep({ hasGia, onImport, onFresh }: { hasGia: boolean; onImport: (
       <div className="mt-8 flex flex-col gap-4">
         {hasGia && (
           <button type="button" onClick={onImport} className="c-choice border-3 px-5 py-4 text-left">
-            <span className="block text-base">▶ GIAで書いた内容を ひきつぐ</span>
+            <span className="block text-base"><Go />GIAで書いた内容を ひきつぐ</span>
             <span className="c-muted mt-1 block text-xs leading-relaxed">
               名前・肩書・職業・拠点・サービス内容・つながりたい人を写します。写したあとで直せます。
             </span>
@@ -415,7 +416,7 @@ function IntroStep({ hasGia, onImport, onFresh }: { hasGia: boolean; onImport: (
         )}
         <button type="button" onClick={onFresh} className="rpg-button justify-start px-5 py-4 text-left">
           <span>
-            <span className="block text-base">▶ あたらしく書く</span>
+            <span className="block text-base"><Go />あたらしく書く</span>
             <span className="mt-1 block text-xs">5分ほどで おわります</span>
           </span>
         </button>

@@ -11,6 +11,7 @@ import { DRAFT_FIELDS, draftFieldLabelFor, type MyProfileDraft } from "@/lib/gui
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 type Action = "apply" | "edit" | "decline";
 
@@ -72,7 +73,7 @@ export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
     </Window>
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     <div className="flex flex-wrap gap-3">
-      {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "apply"} onClick={() => void decide("apply")} className="rpg-button min-h-12 px-6 text-base disabled:opacity-50">{busy === "apply" ? "載せています…" : "▶ このまま載せる"}</button>}
+      {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "apply"} onClick={() => void decide("apply")} className="rpg-button min-h-12 px-6 text-base disabled:opacity-50">{busy === "apply" ? "載せています…" : <><Go />このまま載せる</>}</button>}
       {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "edit"} onClick={edit} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "edit" ? "開いています…" : store.w("draft.editFirst")}</button>}
       <button type="button" disabled={disabled} aria-busy={busy === "decline"} onClick={() => void decide("decline")} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "decline" ? "処理しています…" : store.w("draft.decline")}</button>
     </div>

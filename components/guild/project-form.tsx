@@ -19,6 +19,7 @@ import { ProjectLimitNotice, useMembership } from "./membership-parts";
 import { BackLink, PageTitle, Window } from "./cards";
 import { CheckBox, DateInput, Field, TextArea, TextInput, scrollToFirstError } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { Go } from "./go-mark";
 
 const TITLE_MAX = 40;
 const GOAL_MAX = 200;
@@ -151,7 +152,7 @@ function ProjectFormBody({ editing }: { editing?: ReturnType<typeof getProjectSt
             </CheckBox>
           )}
           <button type="submit" className="rpg-button h-12 w-full text-base sm:w-auto">
-            ▶ {editing ? "なおす" : "つくる"}
+            <Go />{editing ? "なおす" : "つくる"}
           </button>
         </form>
       </Window>
