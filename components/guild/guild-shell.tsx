@@ -155,7 +155,7 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
           <div className="flex items-center gap-4">
             <FeedbackButton label="ご意見" className="text-xs text-guild-paper/80 hover:text-guild-accent-light" />
             <Link href={store.path("/notifications")} className="inline-flex items-center gap-1 text-xs text-guild-paper/80 hover:text-guild-accent-light">
-              おしらせ
+              {store.w("shell.notices")}
               <NavBadge count={badges.total} />
             </Link>
             <LogoutButton redirectTo={outsideStorePath("login")} showIcon={false} label="ログアウト" className="text-xs text-guild-paper/80 hover:text-guild-accent-light" />
@@ -166,7 +166,7 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
       <div className="guild-main-grid relative mx-auto grid max-w-6xl gap-8 px-4 pt-9 pb-28 sm:px-6 lg:grid-cols-[200px_1fr] lg:pb-14">
         {/* PC：コマンドの窓 */}
         <nav className="c-window guild-sidebar guild-px hidden self-start p-4 pt-7 lg:block" aria-label="メニュー">
-          <span className="c-window-title">コマンド</span>
+          <span className="c-window-title">{store.w("shell.menuTitle")}</span>
           <ul className="space-y-1">
             {nav.main.map((item) => (
               <li key={item.to}>

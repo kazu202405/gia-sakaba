@@ -17,6 +17,7 @@ import {
 } from "@/lib/guild/business-card";
 import { Window } from "./cards";
 import { CheckBox } from "./form-parts";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const SIDE_LABEL: Record<BusinessCardSide, string> = { front: "表", back: "裏" };
 
@@ -25,6 +26,7 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
   initial: BusinessCard;
   initialUrls: Record<string, string>;
 }) {
+  const store = useGuildStore();
   const [card, setCard] = useState<BusinessCard>(initial);
   const [urls, setUrls] = useState<Record<string, string>>(initialUrls);
   const [agreed, setAgreed] = useState(Boolean(initial.agreed_at));
@@ -98,7 +100,7 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
   }
 
   return <Window title="名刺">
-    <p className="text-sm leading-relaxed">名刺の表と裏を登録すると、ギルドの会員があなたのページとギルドの「めいし」表示で見られます。ゲストには見えません。</p>
+    <p className="text-sm leading-relaxed">{store.w("card.editorLead")}</p>
     <div className="mt-5 grid gap-5 sm:grid-cols-2">
       {(["front", "back"] as const).map((side) => {
         const path = card[side];
@@ -123,10 +125,10 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
     </div>
     <div className="c-dashed-top mt-6 pt-4">
       {alreadyAgreed ? (
-        <p className="c-muted text-xs leading-relaxed">名刺の画像は、ギルドの会員全員に見えています（電話・メール・住所なども写ります）。見せたくなくなったら、表と裏を消してください。</p>
+        <p className="c-muted text-xs leading-relaxed">{store.w("card.visibleNote")}</p>
       ) : (
         <CheckBox checked={agreed} onChange={setAgreed}>
-          <span className="text-sm">名刺の画像が、ギルドの会員全員に見えることに同意する</span>
+          <span className="text-sm">{store.w("card.agree")}</span>
           <span className="c-muted block text-xs leading-relaxed">名刺に写っている電話・メール・住所なども見えます。ゲストや会員でない人には見えません。</span>
         </CheckBox>
       )}

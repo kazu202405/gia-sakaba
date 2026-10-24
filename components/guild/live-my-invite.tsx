@@ -64,7 +64,7 @@ export function LiveMyInvite({ initial }: { initial: MyMemberInvite }) {
     }
   }
 
-  return <Window title="仲間を招く">
+  return <Window title={store.w("invite.title")}>
     <p className="c-muted mb-5 text-sm leading-relaxed">あなたから酒場へ招くためのリンクです。</p>
     {invite.link ? <div className="border-2 border-dashed border-guild-ink bg-guild-paper p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-guild-ink/20 pb-3 text-xs tracking-wider">

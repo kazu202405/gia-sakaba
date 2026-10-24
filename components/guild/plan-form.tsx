@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import type { GuildBillingStatus } from "@/lib/guild/server-data";
 import { SAKABA_PLAN_NAMES, type PaidSakabaPlan, type SakabaPlan } from "@/lib/guild/billing-plans";
-import { F, plans } from "@/lib/guild/plan-catalog";
+import { featuresFor, plansFor } from "@/lib/guild/plan-catalog";
 import { BackLink, PageTitle, Window } from "./cards";
 import { PHRASE_WRAP, Ph } from "./phrase";
 import { EnterprisePlan } from "./enterprise-plan";
@@ -119,13 +119,13 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
     </Window></div>}
 
     <section aria-label="3つの会員プラン" className="grid gap-4 lg:grid-cols-3">
-      {plans.map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${PHRASE_WRAP} ${plan.key === "dining" ? "border-guild-accent-dark" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
+      {plansFor(store.w).map((plan) => <div key={plan.key} className={`c-window flex min-w-0 flex-col p-5 sm:p-6 ${PHRASE_WRAP} ${plan.key === "dining" ? "border-guild-accent-dark" : ""} ${(companyNoteBenefit ? plan.key === "dining" : currentPlan === plan.key) && !exempt ? "bg-[#f4ecd7]" : ""}`}>
         {/* 名前と同じドット文字の大きさ（16pxの倍数だと升目どおりに出る） */}
         <h2 className="guild-px text-[32px] leading-none tracking-[0.15em]">{plan.label}</h2>
         <p className="mt-4 text-[28px] leading-none tracking-wide">{plan.price}<span className="ml-1 text-xs">{plan.key !== "free" && "（税込）"}</span></p>
         <p className="mt-5 min-h-14 text-[15px] leading-relaxed"><span className="c-label mb-1 block w-fit text-base">こんな人に</span><Ph text={plan.lead} /></p>
         <ul className="mt-4 flex-1 space-y-4 border-t border-guild-ink/25 pt-4">
-          {[...plan.features, ...(plan.key === "dining" && availabilityEnabled ? [F.availability] : [])].map((feature) => <li key={feature.title} className="flex gap-2">
+          {[...plan.features, ...(plan.key === "dining" && availabilityEnabled ? [featuresFor(store.w).availability] : [])].map((feature) => <li key={feature.title} className="flex gap-2">
             <span aria-hidden="true" className="text-sm leading-relaxed">▶</span>
             <span className="min-w-0">
               <span className="block text-[15px] leading-relaxed">{feature.title}</span>
@@ -143,19 +143,19 @@ export function PlanForm({ role, billingStatus, isPaid, hasCustomer, currentPlan
 
     <div className={`space-y-5 text-sm leading-relaxed ${PHRASE_WRAP}`}>
       <div className="space-y-2">
-        <p><Ph text="プランで変わるのは、|自分から動く回数|（つながり申請・|クエストを出す）と、|人を探す・|仕事を記録する|道具です。" /></p>
-        <p><Ph text="つながり申請を受ける・|クエストや集まりに|参加する・|名刺を載せる・|入会のつながりは、|どの⁠「プラン」⁠でも|使えます。" /></p>
+        <p><Ph text={store.w("plan.changes", { quest: store.config.terms.quest })} /></p>
+        <p><Ph text={store.w("plan.alwaysOk", { quest: store.config.terms.quest })} /></p>
       </div>
       <div>
-        <p className="c-label text-base">かいすうの かぞえかた</p>
+        <p className="c-label text-base">{store.w("plan.countTitle")}</p>
         <ul className="c-muted mt-2 space-y-1.5">
           <li>▶ <Ph text="回数は毎月1日|（日本時間）に|戻ります。" /></li>
           <li>▶ <Ph text="出した時点で数え、|取り下げ・期限切れ・|見送りになっても|戻りません。" /></li>
-          <li>▶ <Ph text="クエストの参加希望者へ|出すつながり申請は|数えません。" /></li>
+          <li>▶ <Ph text={store.w("plan.countApplicants", { quest: store.config.terms.quest })} /></li>
         </ul>
       </div>
       <div>
-        <p className="c-label text-base">おしはらい について</p>
+        <p className="c-label text-base">{store.w("plan.payTitle")}</p>
         <ul className="c-muted mt-2 space-y-1.5">
           <li>▶ <Ph text="プラスプラン・|ビジネスプランは|月額制で、|無料体験は|ありません。" /></li>
           <li>▶ <Ph text="有料会員向けの集まりは|不定期開催で、|申し込み後に|承認が必要な場合が|あります。" /></li>

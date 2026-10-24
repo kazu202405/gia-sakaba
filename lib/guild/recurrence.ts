@@ -2,6 +2,8 @@
 // DB 側（supabase/migrations/0125 の sakaba.recurrence_next_date / recurrence_first_date）と
 // 同じ決まりで書いている。直すときは両方。日付はすべて "YYYY-MM-DD"（日本時間のきょうを呼ぶ側が渡す）。
 
+import type { Wording } from "./store-words";
+
 export type RecurrenceKind = "weekly" | "monthly" | "month_end";
 
 export type Recurrence = { kind: RecurrenceKind; day: number | null };
@@ -121,9 +123,9 @@ export function toDraft(kind: RecurrenceKind | null | undefined, day: number | n
 }
 
 /** 入力チェック。問題なければ null（日にちが範囲外のときだけ理由を返す） */
-export function validateRecurrenceDraft(draft: RecurrenceDraft): string | null {
-  if (draft.choice === "weekly" && !isValidRecurrence("weekly", Number(draft.weekday))) return "曜日を えらんでください。";
-  if (draft.choice === "monthly" && !isValidRecurrence("monthly", Number(draft.monthDay))) return "日にちは 1〜31 のあいだで えらんでください。";
+export function validateRecurrenceDraft(draft: RecurrenceDraft, w: Wording): string | null {
+  if (draft.choice === "weekly" && !isValidRecurrence("weekly", Number(draft.weekday))) return w("recur.err.weekday");
+  if (draft.choice === "monthly" && !isValidRecurrence("monthly", Number(draft.monthDay))) return w("recur.err.monthDay");
   return null;
 }
 

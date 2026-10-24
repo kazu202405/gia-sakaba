@@ -9,7 +9,9 @@ import { signBusinessCards } from "@/lib/guild/business-card-server";
 import { createClient } from "@/lib/supabase/server";
 import { currentStore } from "@/lib/guild/current-store";
 
-export const metadata: Metadata = { title: "ギルドメンバー めいかん" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await currentStore()).w("members.metaTitle") };
+}
 
 export default async function MembersPage() {
   const store = await currentStore();
@@ -32,8 +34,8 @@ export default async function MembersPage() {
     <div>
       <MarkSeen list="members" />
       <PageTitle
-        title={`${memberTerm} めいかん`}
-        lead="だれが なにをしている人かを 知る場所です。気になる人がいたら、つながりの申請をしてみましょう。"
+        title={store.w("members.title", { member: memberTerm })}
+        lead={store.w("members.lead")}
       />
       <Link href={store.path("/requests")} className="c-button-sub mb-6 inline-flex min-h-11 items-center px-4 text-sm">
         つながり申請の状況を見る ▶

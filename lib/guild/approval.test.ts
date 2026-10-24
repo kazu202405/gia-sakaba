@@ -11,6 +11,8 @@ import {
 } from "./approval";
 import { notificationText, type NotificationContext } from "./notifications";
 import type { GuildNotification } from "./types";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 describe("役職「その他」の承認制：入口の状態", () => {
   it("承認待ち・見送りだけが、酒場の中を見られない。会員・停止中・まだ会員でない人は今まで通り", () => {
@@ -79,7 +81,7 @@ describe("役職「その他」の承認制：管理画面の申請", () => {
       id: "n1", user_id: "owner", kind: "member_pending", actor_id: "u1", quest_id: null, intro_request_id: null,
       intro_status: null, changed_fields: [], read_at: null, created_at: "2026-10-03",
     };
-    const ctx: NotificationContext = { name: () => "メンバー", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest) };
+    const ctx: NotificationContext = { name: () => "メンバー", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest), w: makeWording(GIA_WORDS) };
     expect(notificationText(n, ctx)).toEqual({ text: "参加の申請が 届きました", href: "/guild/gia/master#master-pending-members-title" });
   });
 });

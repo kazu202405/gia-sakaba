@@ -47,7 +47,7 @@ export default async function GuildThanksPage({ searchParams }: Props) {
 
   return <div className="mx-auto max-w-2xl space-y-9">
     <PageTitle title={confirmed ? "ありがとうございました" : "決済状況を確認しています"} lead={confirmed
-      ? "GIAの酒場の有料会員にお申し込みいただき、ありがとうございます。"
+      ? `${store.config.name}の有料会員にお申し込みいただき、ありがとうございます。`
       : "決済の確認に少し時間がかかっています。この画面を再読み込みしてください。"} />
     <Window title={confirmed ? "お申し込みの確認" : "確認中"}>
       {confirmed ? <>

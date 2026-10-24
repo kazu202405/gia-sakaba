@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { currentStore } from "@/lib/guild/current-store";
 import { BusinessCardEditor } from "@/components/guild/business-card-editor";
 import { ContactItemsEditor } from "@/components/guild/contact-items-editor";
 import { LiveStatusForm } from "@/components/guild/live-status-form";
@@ -9,7 +10,9 @@ import { mergeDraftIntoProfile } from "@/lib/guild/profile-drafts";
 import { getMyGuildProfile, getMyProfileDraft } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata: Metadata = { title: "ステータスをなおす" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await currentStore()).w("status.editTitle") };
+}
 
 export default async function StatusEditPage({ searchParams }: { searchParams: Promise<{ draft?: string }> }) {
   const { draft: draftId } = await searchParams;

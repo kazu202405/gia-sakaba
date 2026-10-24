@@ -11,6 +11,8 @@ import {
   shouldNotifyIntro,
   unreadCount,
 } from "./notifications";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 const quest: Quest = {
   id: "q1",
@@ -124,6 +126,7 @@ describe("notificationText", () => {
     questTitle: (id: string) => (id === "q1" ? "LPの文章" : "?"),
     intro: (id: string) => (id === "r1" ? intro("r1", "proposed") : undefined),
     path: (rest: string) => guildPath("gia", rest),
+    w: makeWording(GIA_WORDS),
   };
 
   it("参加の希望は、参加したい人の一覧へ", () => {
@@ -197,6 +200,7 @@ describe("限定の集まりの 承認・見送りの知らせ", () => {
     questTitle: (id: string) => (id === "g1" ? "酒場の夜" : "?"),
     intro: () => undefined,
     path: (rest: string) => guildPath("gia", rest),
+    w: makeWording(GIA_WORDS),
   };
 
   it("申し込んだ本人に、承認なら「決まりました」、見送りなら「見送りになりました」を送る", () => {

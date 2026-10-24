@@ -7,8 +7,8 @@ import { useState } from "react";
 import Link from "next/link";
 import type { Profile, QuestApplication, QuestCategory } from "@/lib/guild/types";
 import type { GuildQuest } from "@/lib/guild/server-data";
-import { filterQuests, questFilterLabel, type QuestFilter } from "@/lib/guild/filters";
-import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
+import { filterQuests, questFilterLabel, questFilterLabelFor, type QuestFilter } from "@/lib/guild/filters";
+import { formatDate, questCategoryLabel, questStatusLabelFor } from "@/lib/guild/labels";
 import { questCategoryMark } from "./cards";
 import { FilterRow, ViewModeSwitch, useViewMode } from "./list-controls";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,7 @@ export function QuestBoard({
   members: Profile[];
   currentUserId: string;
 }) {
+  const store = useGuildStore();
   const [filter, setFilter] = useState<QuestFilter>("open");
   const [category, setCategory] = useState<QuestCategory | "">("");
   const [mode, setMode] = useViewMode();
@@ -39,17 +40,17 @@ export function QuestBoard({
   return (
     <div className="space-y-5">
       <FilterRow
-        label="じょうたい"
+        label={store.w("board.state")}
         value={filter}
         onChange={setFilter}
         options={FILTERS.map((f) => ({
           value: f,
-          label: questFilterLabel[f],
+          label: questFilterLabelFor(store.w)[f],
           count: filterQuests(quests, applications, currentUserId, f, category).length,
         }))}
       />
       <FilterRow
-        label="しゅるい"
+        label={store.w("form.fieldKind")}
         value={category}
         onChange={setCategory}
         options={[
@@ -64,7 +65,7 @@ export function QuestBoard({
       </div>
 
       {list.length === 0 ? (
-        <p className="c-card border-dashed px-4 py-10 text-center text-sm">この じょうけんの クエストは ありません。</p>
+        <p className="c-card border-dashed px-4 py-10 text-center text-sm">{store.w("board.none", { quest: store.config.terms.quest })}</p>
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {list.map((q) => (
@@ -109,7 +110,7 @@ function LiveQuestCard({
               <span className="c-tag-urgent">急ぎ</span>
             )}
             {quest.members_only && <span className="c-chip">有料会員限定</span>}
-            {quest.status !== "open" && <span className="c-chip">{questStatusLabel[quest.status]}</span>}
+            {quest.status !== "open" && <span className="c-chip">{questStatusLabelFor(store.w)[quest.status]}</span>}
           </span>
           <p className="mt-1 text-[15px] leading-snug break-words">{quest.title}</p>
           {!compact && (
@@ -117,9 +118,9 @@ function LiveQuestCard({
               {quest.summary && <p className="c-muted mt-1 text-sm break-words">{quest.summary}</p>}
               <p className="c-muted mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
                 {creatorName && <span>{creatorName}</span>}
-                {quest.region && <span>ばしょ：{quest.region}</span>}
-                {quest.deadline && <span>しめきり：{formatDate(quest.deadline)}</span>}
-                <span>参加したい {quest.applicant_count}人</span>
+                {quest.region && <span>{store.w("board.place", { region: quest.region })}</span>}
+                {quest.deadline && <span>{store.w("board.deadline", { date: formatDate(quest.deadline) })}</span>}
+                <span>{store.w("board.applicants", { count: quest.applicant_count })}</span>
               </p>
             </>
           )}

@@ -133,7 +133,7 @@ export function LivePushSettings() {
   }
 
   return <Window title="プッシュ通知">
-    <p className="text-sm leading-relaxed">酒場を開いていないときも、関係するおしらせをこの端末へ届けます。通知はいつでもオフにできます。</p>
+    <p className="text-sm leading-relaxed">酒場を開いていないときも、{store.w("push.lead")}</p>
     {needsHomeScreen ? <div className="c-dashed-top mt-4 space-y-2 pt-4 text-sm leading-relaxed">
       <p>いまはSafariで開いているため、通知をオンにできません。</p>
       <p className="c-muted">画面下の共有ボタン（□↑）から「ホーム画面に追加」を選び、追加したアイコンから酒場を開いてください。そこで通知をオンにできます。</p>
@@ -147,10 +147,10 @@ export function LivePushSettings() {
         {enabled && <button type="button" disabled={busy} onClick={() => void testOnThisDevice()}
           className="c-button-sub ml-2 h-11 px-4 text-sm disabled:opacity-50">この端末で表示テスト</button>}
         {settings && <div className="space-y-3">
-          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-guild-ink" />申込・承認・紹介などのおしらせ</label>
-          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-guild-ink" />担当タスク・参加中のプロジェクト・クエストの締切前日</label>
+          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-guild-ink" />{store.w("push.actions")}</label>
+          <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-guild-ink" />{store.w("push.deadlines", { quest: store.config.terms.quest })}</label>
         </div>}
-        <p className="c-muted text-xs">期限のおしらせは前日の午前9時以降に1回。クエストの期限は申込締切です。表示テストは端末だけの確認で、サーバーからの配信テストではありません。</p>
+        <p className="c-muted text-xs">{store.w("push.deadlineNote", { quest: store.config.terms.quest })}</p>
       </div>}
     {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
   </Window>;

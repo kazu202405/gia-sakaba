@@ -76,7 +76,7 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
 
   return <div className="space-y-9">
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-    <Window title="あなたへの つながり申請">
+    <Window title={store.w("requests.received")}>
       {received.length === 0 ? <p className="c-muted text-sm">いまはつながり申請が来ていません。</p> : <div className="space-y-4">{received.map((request) => {
         const name = names.get(request.requester_id) ?? "メンバー";
         return <article key={request.id} className="c-card p-4 sm:p-5">
@@ -113,8 +113,8 @@ export function LiveRequests({ initial, members, currentUserId, contacts }: {
         </article>;
       })}</div>}
     </Window>
-    <Window title="あなたが出した いらい">
-      {sent.length === 0 ? <p className="c-muted text-sm">まだつながり申請を送っていません。<Link href={store.path("/members")} className="underline">メンバー名鑑から探す</Link></p> : <div className="space-y-4">{sent.map((request) => {
+    <Window title={store.w("requests.sent")}>
+      {sent.length === 0 ? <p className="c-muted text-sm">まだつながり申請を送っていません。<Link href={store.path("/members")} className="underline">{store.w("requests.findInDirectory")}</Link></p> : <div className="space-y-4">{sent.map((request) => {
         const name = names.get(request.target_id) ?? "メンバー";
         const closed = closedStatuses.includes(request.status);
         return <article key={request.id} className={`c-card p-4 sm:p-5 ${closed ? "opacity-75" : ""}`}>

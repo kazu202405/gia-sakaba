@@ -115,7 +115,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     if (title.length > 100) { setEditingTask({ ...editingTask, error: "100文字以内で入力してください。" }); return; }
     const { id } = editingTask;
     // くり返しの日にちが範囲外のときも、閉じずに理由を赤字で出す
-    const recProblem = validateRecurrenceDraft(editingTask.rec);
+    const recProblem = validateRecurrenceDraft(editingTask.rec, store.w);
     if (recProblem) { setEditingTask({ ...editingTask, error: recProblem }); return; }
     const recurrence = toRecurrence(editingTask.rec);
     const showDays = recurrence && editingTask.showDays !== "" ? Number(editingTask.showDays) : null;
@@ -125,7 +125,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     const shown = tasks.find((task) => task.id === id);
     const sameRecurrence = (shown?.recurrence_kind ?? null) === (recurrence?.kind ?? null) && (shown?.recurrence_day ?? null) === (recurrence?.day ?? null);
     if (shown && title === shown.title && due === shown.due_date && sameRecurrence && showDays === (shown.show_before_days ?? null)) { setEditingTask(null); return; }
-    if (due && shown?.start_date && due < shown.start_date) { setEditingTask({ ...editingTask, error: `しめきりは、はじめる日（${shown.start_date}）より後にしてください。` }); return; }
+    if (due && shown?.start_date && due < shown.start_date) { setEditingTask({ ...editingTask, error: store.w("proj.err.dueAfterStart", { date: shown.start_date }) }); return; }
     setError("");
     setTitleOverride((current) => ({ ...current, [id]: title }));
     setDueOverride((current) => ({ ...current, [id]: due }));
@@ -154,7 +154,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
         delete next[id];
         return next;
       });
-      setError("タスクをなおせませんでした。");
+      setError(store.w("proj.err.taskEdit"));
     } else {
       startTransition(() => router.refresh());
     }
@@ -205,9 +205,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
           />
         </label>
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="c-muted text-xs">しめきり（空でも可）</span>
-          <div className="w-44"><DateInput value={editingTask.due} onChange={(due) => setEditingTask({ ...editingTask, due, error: "" })} label="しめきり" /></div>
-          {editingTask.due && <button type="button" onClick={() => setEditingTask({ ...editingTask, due: "", error: "" })} className="c-muted h-9 px-1 text-xs underline underline-offset-4">しめきりを消す</button>}
+          <span className="c-muted text-xs">{store.w("proj.dueOptional")}</span>
+          <div className="w-44"><DateInput value={editingTask.due} onChange={(due) => setEditingTask({ ...editingTask, due, error: "" })} label={store.w("common.deadline")} /></div>
+          {editingTask.due && <button type="button" onClick={() => setEditingTask({ ...editingTask, due: "", error: "" })} className="c-muted h-9 px-1 text-xs underline underline-offset-4">{store.w("proj.clearDue")}</button>}
         </div>
         <RecurrenceFields value={editingTask.rec} due={editingTask.due} today={today} onChange={(rec) => setEditingTask({ ...editingTask, rec, error: "" })} />
         {editingTask.rec.choice !== "" && task.show_before_days !== undefined && <div className="mt-3 space-y-2">
@@ -218,9 +218,9 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
             </select>
           </label>
           {!["", "0", "3", "7"].includes(editingTask.showDays) && <label className="flex items-center gap-2 text-sm">
-            <span>しめきりの</span><input aria-label="表示開始までの日数" type="number" min={0} max={365} step={1} className="c-input h-11 w-24" value={editingTask.showDays} onChange={(event) => setEditingTask({ ...editingTask, showDays: event.target.value, error: "" })} /><span>日前から</span>
+            <span>{store.w("proj.dueOf")}</span><input aria-label="表示開始までの日数" type="number" min={0} max={365} step={1} className="c-input h-11 w-24" value={editingTask.showDays} onChange={(event) => setEditingTask({ ...editingTask, showDays: event.target.value, error: "" })} /><span>日前から</span>
           </label>}
-          <p className="c-muted text-xs">表示前は「今後の予定」にまとめます。しめきりを過ぎたタスクは表示し続けます。次の回にも引き継ぎます。</p>
+          <p className="c-muted text-xs">{store.w("proj.futureNote")}</p>
         </div>}
         {editingTask.error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{editingTask.error}</p>}
         <div className="mt-3 flex justify-end gap-2">
@@ -241,7 +241,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       </span>
       {editable && <span className="flex shrink-0 gap-1.5">
         {/* 文字だと行が詰まるのでアイコンにする。読み上げ用の名前と、マウスを乗せたときの説明は残す */}
-        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, due: task.due_date ?? "", rec: toDraft(task.recurrence_kind, task.recurrence_day, task.due_date ?? today), showDays: task.show_before_days == null ? "" : String(task.show_before_days), error: "" })} aria-label={`${task.title}をなおす`} title="名前・しめきり・くり返しをなおす" className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
+        <button type="button" disabled={saving} onClick={() => setEditingTask({ id: task.id, title: task.title, due: task.due_date ?? "", rec: toDraft(task.recurrence_kind, task.recurrence_day, task.due_date ?? today), showDays: task.show_before_days == null ? "" : String(task.show_before_days), error: "" })} aria-label={store.w("proj.editTaskAria", { title: task.title })} title={store.w("proj.editTaskTitle")} className="c-button-sub h-9 w-9 !px-0 disabled:opacity-50"><Pencil size={15} aria-hidden="true" /></button>
         <button type="button" disabled={saving} onClick={() => void deleteTask(task)} aria-label={`${task.title}を削除する`} title="削除する" className="c-button-danger h-9 w-9 disabled:opacity-50"><Trash2 size={15} aria-hidden="true" /></button>
       </span>}
     </li>;
@@ -300,7 +300,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       {project.memo && <p className="c-muted mt-3 whitespace-pre-line break-words text-sm">メモ：{project.memo}</p>}
       <p className="c-muted mt-4 text-xs">開始 {project.start_date}{project.due_date ? ` · 期限 ${project.due_date}` : ""} · タスク {done}/{project.tasks.length} 完了</p>
       {canEdit && <div className="mt-5 flex flex-wrap gap-3">
-        <Link href={store.path(`/projects/${project.id}/edit`)} className="c-button-sub px-4 py-2">内容をなおす</Link>
+        <Link href={store.path(`/projects/${project.id}/edit`)} className="c-button-sub px-4 py-2">{store.w("owner.edit")}</Link>
         <button type="button" disabled={busy} aria-busy={pendingAction === "project-status"} onClick={() => void setProjectStatus(project.status === "done" ? "active" : "done")} className="c-button-sub px-4 py-2 disabled:opacity-50">
           {pendingAction === "project-status" ? "更新中…" : project.status === "done" ? "進行中に戻す" : "プロジェクトを完了する"}
         </button>
@@ -316,13 +316,13 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
       <span className="c-window-title">タスク</span>
       {tasks.length === 0 && addingTasks.length === 0 ? <p className="c-muted text-sm">まだタスクはありません。</p> : <>
-        {openTasks.length === 0 && addingTasks.length === 0 ? <p className="c-muted text-sm">のこっているタスクはありません。</p> : <ul className="space-y-2">
+        {openTasks.length === 0 && addingTasks.length === 0 ? <p className="c-muted text-sm">{store.w("proj.noOpenTasks")}</p> : <ul className="space-y-2">
           {openTasks.map(taskRow)}
           {addingTasks.map((task) => <li key={task.key} className="c-card flex items-center gap-3 p-3 opacity-60" aria-busy="true">
             <input type="checkbox" disabled aria-label={`${task.title}を追加中`} />
             <span className="min-w-0 flex-1">
               <span className="block break-words text-sm">{task.title}</span>
-              <span className="c-muted text-xs">追加中…{task.due ? `（しめきり ${task.due}）` : ""}</span>
+              <span className="c-muted text-xs">追加中…{task.due ? store.w("proj.addingDue", { date: task.due }) : ""}</span>
             </span>
           </li>)}
         </ul>}
@@ -332,7 +332,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
         </details>}
         {/* 完了したタスクは下にまとめて、たたんでおく（押すと開く） */}
         {doneTasks.length > 0 && <details className="c-dashed-top mt-5 pt-4">
-          <summary className="c-muted cursor-pointer text-sm">おわったタスク（{doneTasks.length}件）</summary>
+          <summary className="c-muted cursor-pointer text-sm">{store.w("proj.doneTasks", { count: doneTasks.length })}</summary>
           <ul className="mt-3 space-y-2">{doneTasks.map(taskRow)}</ul>
         </details>}
       </>}
@@ -342,8 +342,8 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
           <button type="submit" disabled={busy || !taskTitle.trim()} aria-busy={pendingAction === "task-add"} className="rpg-button shrink-0 px-4">{pendingAction === "task-add" ? "追加中…" : "追加"}</button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="c-muted text-xs">しめきり（空でも可）</span>
-          <div className="w-44"><DateInput value={taskDue} onChange={setTaskDue} label="新しいタスクのしめきり" /></div>
+          <span className="c-muted text-xs">{store.w("proj.dueOptional")}</span>
+          <div className="w-44"><DateInput value={taskDue} onChange={setTaskDue} label={store.w("proj.newTaskDue")} /></div>
           {taskDue && <button type="button" onClick={() => setTaskDue("")} className="c-muted h-9 px-1 text-xs underline underline-offset-4">消す</button>}
         </div>
       </form>}
@@ -351,7 +351,7 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
       {error && <p role="alert" className="mt-3 text-sm text-[#c62828]">{error}</p>}
     </section>
     <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
-      <span className="c-window-title">あいてごとの じょうきょうを きろくする</span>
+      <span className="c-window-title">{store.w("proj.pipelineLabel")}</span>
       <LiveProjectPeople projectId={project.id} pipeline={pipeline} members={members} editable={canEdit && project.status === "active"} />
     </section>
   </div>;
@@ -359,15 +359,17 @@ export function LiveProjectDetail({ project, pipeline, members, canEdit, today }
 
 /** タスクの行に出す しめきり。すぎたものだけ赤（赤は「急ぎ・エラー」だけに使う決まり） */
 function DueText({ due, today }: { due: string; today: string }) {
-  const label = dueLabel(due, today);
+  const store = useGuildStore();
+  const label = dueLabel(due, today, store.w);
   const [, m, d] = due.split("-");
-  return <span className={`mt-0.5 block text-xs ${label.overdue ? "text-[#c62828]" : "c-muted"}`}>しめきり {Number(m)}/{Number(d)}・{label.text}</span>;
+  return <span className={`mt-0.5 block text-xs ${label.overdue ? "text-[#c62828]" : "c-muted"}`}>{store.w("proj.dueText", { m: Number(m), d: Number(d) })}・{label.text}</span>;
 }
 
 /** 編集の枠の「くり返し」欄。なし／毎週［曜日］／毎月［日にち］／毎月末 */
 function RecurrenceFields({ value, due, today, onChange }: { value: RecurrenceDraft; due: string; today: string; onChange: (v: RecurrenceDraft) => void }) {
+  const store = useGuildStore();
   const rec = toRecurrence(value);
-  const first = rec && !validateRecurrenceDraft(value) && !due ? firstDueDate(rec.kind, rec.day, today) : null;
+  const first = rec && !validateRecurrenceDraft(value, store.w) && !due ? firstDueDate(rec.kind, rec.day, today) : null;
   return <div className="mt-3">
     <div className="flex flex-wrap items-center gap-2">
       <span className="c-muted text-xs">くり返し</span>
@@ -385,7 +387,7 @@ function RecurrenceFields({ value, due, today, onChange }: { value: RecurrenceDr
       </select>}
     </div>
     {value.choice !== "" && <p className="c-muted mt-1 text-xs">
-      済にすると、次の回のタスクが自動でできます。{first ? `しめきりが空なので、${Number(first.slice(5, 7))}/${Number(first.slice(8, 10))} を入れます。` : ""}
+      済にすると、次の回のタスクが自動でできます。{first ? store.w("proj.recurFirst", { m: Number(first.slice(5, 7)), d: Number(first.slice(8, 10)) }) : ""}
     </p>}
   </div>;
 }

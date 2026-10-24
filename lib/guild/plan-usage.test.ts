@@ -1,5 +1,10 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
+import { KENSETSU_FUDOSAN_WORDS } from "./words/kensetsu-fudosan";
+const giaWording = makeWording(GIA_WORDS);
+const kensetsuWording = makeWording(KENSETSU_FUDOSAN_WORDS);
 import { exhaustedLine, isExhausted, isPlanLimitError, parsePlanUsage, PLAN_LIMITS, quotaLine, remainingOf, searchLevelOf } from "./plan-usage";
 
 const raw = {
@@ -29,10 +34,13 @@ describe("料金の段の使用状況", () => {
   });
 
   it("画面の言葉", () => {
-    expect(quotaLine("intro", "free", { limit: 1, used: 0 })).toBe("今月あと1件（フリープラン：つながり申請は月1件まで）");
-    expect(quotaLine("project", "standard", { limit: 5, used: 3 })).toBe("あと2つ作れます（プラスプラン：プロジェクトは5つまで）");
-    expect(quotaLine("quest", "dining", { limit: null, used: 3 })).toBeNull();
-    expect(exhaustedLine("intro", "dining", { limit: 10, used: 10 })).toContain("ビジネスプラン");
+    expect(quotaLine("intro", "free", { limit: 1, used: 0 }, giaWording)).toBe("今月あと1件（フリープラン：つながり申請は月1件まで）");
+    expect(quotaLine("project", "standard", { limit: 5, used: 3 }, giaWording)).toBe("あと2つ作れます（プラスプラン：プロジェクトは5つまで）");
+    expect(quotaLine("quest", "dining", { limit: null, used: 3 }, giaWording)).toBeNull();
+    expect(exhaustedLine("intro", "dining", { limit: 10, used: 10 }, giaWording)).toContain("ビジネスプラン");
+    // 建設・不動産の店の言葉（ゲームの言葉が入らない）
+    expect(exhaustedLine("quest", "free", { limit: 1, used: 1 }, kensetsuWording)).toBe("フリープランの今月の案件・集まり（1件）を使い切りました。毎月1日に戻ります。");
+    expect(exhaustedLine("project", "free", { limit: 2, used: 2 }, kensetsuWording)).toBe("フリープランでは、プロジェクトは2つまでです。終わったものを消すと空きます。");
   });
 
   it("DBが上限で断ったことを見分ける", () => {

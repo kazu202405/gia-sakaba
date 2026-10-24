@@ -24,7 +24,7 @@ export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGathe
       title: approve ? "参加を承認します" : "申し込みを見送ります",
       message: approve
         ? `${item.display_name}さんの参加を承認します。初回の承認は、次回以降の限定の集まりにも適用されます。`
-        : `${item.display_name}さんには「今回は見送りになりました」とおしらせします。`,
+        : store.w("gathApprove.declineMsg", { name: item.display_name }),
       okLabel: approve ? "承認する" : "見送る",
       danger: !approve,
     });
@@ -50,7 +50,7 @@ export function LiveGatheringApprovals({ initial }: { initial: GuildPendingGathe
   }
 
   return <Window title="集まりの申し込み" action={<span className="c-muted text-xs">承認待ち {applications.length}件</span>}>
-    <p className="c-muted mb-4 text-xs leading-relaxed">はじめて申し込んだ人だけが並びます。承認または見送りの結果は、本人のおしらせに届きます。</p>
+    <p className="c-muted mb-4 text-xs leading-relaxed">{store.w("gathApprove.lead")}</p>
     {error && <p role="alert" className="mb-4 text-sm text-[#c62828]">{error}</p>}
     {applications.length === 0 ? <p className="c-muted text-sm">承認待ちはありません。</p> :
       <ul className="space-y-4">{applications.map((item) => {

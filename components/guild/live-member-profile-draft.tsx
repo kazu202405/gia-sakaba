@@ -11,12 +11,13 @@ import { uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { ProfileDraftInputs } from "./profile-draft-fields";
 import { useGuildStore } from "@/components/guild/store-context";
+import type { Wording } from "@/lib/guild/store-words";
 
-const stateText: Record<DraftState, string> = {
+const stateTextFor = (w: Wording): Record<DraftState, string> => ({
   waiting: "本人の返事を待っています。書き直して届けると、いまの下書きに置き換わります。",
-  applied: "本人が、下書きをステータスに載せました。新しく書いて届けることもできます。",
+  applied: w("draft.applied"),
   declined: "本人は、前回の下書きを載せませんでした。新しく書いて届けることもできます。",
-};
+});
 
 export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memberId: string; memberName: string; initial: MemberProfileDraft | null }) {
   const store = useGuildStore();
@@ -32,7 +33,7 @@ export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memb
     event.preventDefault();
     if (lockRef.current) return;
     if (!draftHasContent(fields)) { setError("どれか1つは書いてください。"); return; }
-    const issue = validateProfileDraft(fields);
+    const issue = validateProfileDraft(fields, store.w);
     if (issue) { setError(issue); return; }
     lockRef.current = true;
     setSaving(true); setError("");
@@ -52,9 +53,9 @@ export function LiveMemberProfileDraft({ memberId, memberName, initial }: { memb
     }
   }
 
-  return <Window title="ステータスの下書き">
-    <p className="text-sm leading-relaxed">{memberName}さんの代わりに、ステータスの中身を下書きできます。本人が見て「載せる」を選ぶまで、ほかのメンバーには見えません。本人が書いている項目は上書きしません。</p>
-    {state && <p role="status" className="c-card mt-4 px-3 py-2 text-sm">{stateText[state]}</p>}
+  return <Window title={store.w("status.draftTitle")}>
+    <p className="text-sm leading-relaxed">{store.w("draft.memberLead", { name: memberName })}</p>
+    {state && <p role="status" className="c-card mt-4 px-3 py-2 text-sm">{stateTextFor(store.w)[state]}</p>}
     <form onSubmit={(event) => void send(event)} className="mt-5 space-y-5">
       <ProfileDraftInputs value={fields} onChange={(next) => { setFields(next); setError(""); }} />
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}

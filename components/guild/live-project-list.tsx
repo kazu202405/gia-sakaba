@@ -29,7 +29,7 @@ export async function LiveProjectList({ projects, userId, isPaid, checkoutResult
       {checkoutResult === "canceled" && <p role="status" className="c-card border-dashed p-4 text-sm">申し込みはキャンセルされました。プロジェクトはそのままです。</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="c-muted text-sm">自分と参加中のプロジェクトだけが表示されます。</p>
-        {canCreate && <Link href={store.path("/projects/new")} className="rpg-button px-5 py-2.5">▶ プロジェクトをつくる</Link>}
+        {canCreate && <Link href={store.path("/projects/new")} className="rpg-button px-5 py-2.5">{store.w("proj.createButton")}</Link>}
       </div>
       {canCreate && quota && <PlanQuotaNote kind="project" plan={quota.plan} slot={quota.slot} />}
       {!canCreate && !showFreeUpsell && quota && <PlanQuotaExhausted kind="project" plan={quota.plan} slot={quota.slot} />}
@@ -37,8 +37,8 @@ export async function LiveProjectList({ projects, userId, isPaid, checkoutResult
         <p className="c-muted text-sm">フリープランの作成枠（{quota?.slot.limit ?? FREE_ACTIVE_PROJECT_LIMIT}つ）を使い切りました</p>
         <Window title="有料会員">
           <p className="text-[15px] leading-relaxed">データベースを拡張して<span className="whitespace-nowrap">プロジェクト</span>の保存枠を広げることができます。</p>
-          <p className="mt-2 text-[15px] leading-relaxed">ギルド・クエスト・<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>
-          <p className="c-label mt-5 text-sm">ないよう</p>
+          <p className="mt-2 text-[15px] leading-relaxed">{store.w("proj.freeBefore", { roster: store.config.rosterLabel, quest: store.config.terms.quest })}<span className="whitespace-nowrap">プロジェクト{FREE_ACTIVE_PROJECT_LIMIT}件</span>までは無料で使えます。</p>
+          <p className="c-label mt-5 text-sm">{store.w("proj.contents")}</p>
           <ul className="mt-2 space-y-2 text-[15px] leading-relaxed">
             <li>▶ プロジェクトをいくつでも作って、記録を残せる</li>
             <li>▶ 有料会員限定（不定期開催）の懇親会などに申し込める</li>
@@ -53,7 +53,7 @@ export async function LiveProjectList({ projects, userId, isPaid, checkoutResult
         {active.length === 0 ? <p className="c-muted text-sm">進行中のプロジェクトはありません。</p> : <ProjectOrderList key={active.map((project) => project.id).join(",")} projects={active} userId={userId} />}
         {/* 完了したものは下にまとめて、たたんでおく（押すと開く。タスクと同じ形） */}
         {finished.length > 0 && <details className="c-dashed-top pt-4">
-          <summary className="c-muted cursor-pointer text-sm">おわったプロジェクト（{finished.length}件）</summary>
+          <summary className="c-muted cursor-pointer text-sm">{store.w("proj.finished", { count: finished.length })}</summary>
           <ul className="mt-3 space-y-3">{finished.map((project) => <li key={project.id}><ProjectCard project={project} userId={userId} /></li>)}</ul>
         </details>}
       </>}

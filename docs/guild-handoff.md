@@ -1,5 +1,15 @@
 # GIAの酒場 — 続きからの作業メモ
 
+## 建設・不動産の店の画面の言葉をふつうの言葉にした（0133・未適用／枝 feature/sakaba-store-wording）
+
+- 呼び名（五島さん決定 2026-10-24）：クエスト→案件／パーティ→チーム／仲間→メンバー／ギルドマスター→管理者／ステータス→プロフィール／名簿のメニュー＝名簿（`rosterLabel`）／ひらがな見出しは漢字。GIAの酒場の見える文字は変えていない。
+- 画面の言葉は店の設定の「言葉の表」`lib/guild/words/`（`gia.ts`・`kensetsu-fudosan.ts`）。画面コードは文字を直書きせず `store.w("キー")`（サーバーは `currentStore()`、ブラウザは `useGuildStore()`）。値の「{名前}」は `store.w("キー", { 名前: 値 })` で差し込む。文を語の差し込みで作ると日本語が崩れる所は、文ごと表に持つ。
+- 店の言葉を足す・直すとき：両店の同じキーに書く（キーが片方だけだと `store-words.test.ts` が落ちる）。GIAの値を変えるとスナップショット（`lib/guild/__snapshots__/`）が落ちる＝意図して変えるときだけ更新。建設・不動産の値に旧語（クエスト・ギルドなど）やひらがなの区切りがあると落ちる。
+- 日付・状態などを返す lib の関数（`dueLabel`・`quotaLine`・`notificationText` など）は最後の引数に `store.w` を受ける。店の名前付き定数（`groupLabel`・`questStatusLabel` など）は GIAの言葉で、店を持たない昔の見本画面（app/guild-look）用。店の画面は `…For(w)` を使う。
+- DB：0133＝建設・不動産の `guilds.terms` を新しい呼び名に更新（店の行が無ければ止まる）。`stores.test.ts` が 0132＋0133 とコードの terms を照合する。
+- プッシュ通知の題名：送信側（`app/api/guild/push/dispatch`）が行き先の店の名前を入れる（`lib/guild/push-title.ts`）。service worker は題名が来なければ昔のまま「GIAの酒場」。
+- 未対応（店の言葉に直していない）：店に属さない画面（ログイン・入会 `/guild/join`・事前アンケート・パスワード再設定）／ゲスト集まり `/e/…` と紹介回答 `/i/…`／DB側の通知本文（`sakaba_push_candidates`）／使われていない昔の見本部品（`dead` 一覧は作業報告）。
+
 ## 酒場を複数の店に分けた（0131・0132・未適用／枝 feature/sakaba-multi-store）
 
 - URLは `/guild/<店>/…`（例 `/guild/gia/quests`・`/guild/kensetsu-fudosan/quests`）。昔の `/guild/quests` などは `/guild/gia/…` へ転送する（?以降も残す）。ログイン・パスワード再設定・入会・アンケート・manifest は店に属さないので `/guild/login` などのまま。道の組み立ては `lib/guild/store-path.ts` の1か所。

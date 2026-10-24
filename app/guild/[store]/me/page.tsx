@@ -44,9 +44,9 @@ export default async function MyPage() {
   const accessPlan = resolveSakabaAccessPlan(billing, getConfiguredSakabaPrices());
 
   return <div className="space-y-9">
-    <PageTitle title="マイページ" lead="自分のステータスと、酒場で進めていることを確認できます。" />
-    {profileDraft.ok && profileDraft.draft && <Window title="ステータスの下書きが届いています">
-      <p className="text-sm leading-relaxed">{profileDraft.draft.drafted_by_name}さんが、あなたのステータスの下書きを書きました。載せるまで、ほかのメンバーには見えません。</p>
+    <PageTitle title="マイページ" lead={store.w("me.lead")} />
+    {profileDraft.ok && profileDraft.draft && <Window title={store.w("me.draftTitle")}>
+      <p className="text-sm leading-relaxed">{store.w("me.draftBody", { name: profileDraft.draft.drafted_by_name })}</p>
       <p className="mt-4"><Link href={store.path("/me/status/draft")} className="rpg-button inline-flex h-11 items-center px-5 text-sm">▶ 下書きを見る</Link></p>
     </Window>}
     <Window title={context.guild.terms.status}>
@@ -58,14 +58,14 @@ export default async function MyPage() {
           <p className="mt-1 break-words text-[15px]">{me.headline || "ひとことはまだありません"}</p>
           <p className="c-muted mt-2 text-xs">{me.company_name} · {me.job || "職業未設定"} · {me.region || "地域未設定"}</p>
           <div className="mt-4">
-            <div className="c-muted flex justify-between text-xs"><span>ステータスの かんせいど</span><span>{filled}/4</span></div>
+            <div className="c-muted flex justify-between text-xs"><span>{store.w("me.completeness")}</span><span>{filled}/4</span></div>
             <div className="c-gauge mt-1" aria-label={`4項目中${filled}項目が入力済み`}>
               {Array.from({ length: 4 }, (_, index) => <span key={index} data-on={index < filled} />)}
             </div>
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:w-44">
-          <Link href={store.path("/me/status")} className="rpg-button h-11 text-sm">▶ ステータスをなおす</Link>
+          <Link href={store.path("/me/status")} className="rpg-button h-11 text-sm">{store.w("status.editButton")}</Link>
           <Link href={store.path(`/members/${me.id}`)} className="c-button-sub h-11 text-sm">みんなからの見え方</Link>
         </div>
       </div>
@@ -86,11 +86,11 @@ export default async function MyPage() {
     </Window>
 
     <div className="grid gap-6 md:grid-cols-2">
-      <Window title={`出した ${context.guild.terms.quest}`}>
+      <Window title={store.w("me.postedQuests", { quest: context.guild.terms.quest })}>
         {myQuests.length === 0 ? <p className="c-muted text-sm">まだありません。<Link href={store.path("/quests/new")} className="underline">{context.guild.terms.quest}を出す</Link></p> :
           <ul className="space-y-2">{myQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm">▶ {quest.title}</Link></li>)}</ul>}
       </Window>
-      <Window title={`参加したい${context.guild.terms.quest}`}>
+      <Window title={store.w("me.joinedQuests", { quest: context.guild.terms.quest })}>
         {joinedQuests.length === 0 ? <p className="c-muted text-sm">まだありません。</p> :
           <ul className="space-y-2">{joinedQuests.map((quest) => <li key={quest.id}><Link href={store.path(`/quests/${quest.id}`)} className="rpg-cursor-row block break-words text-sm">▶ {quest.title}</Link></li>)}</ul>}
       </Window>

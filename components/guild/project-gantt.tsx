@@ -8,6 +8,8 @@ import { formatDate } from "@/lib/guild/labels";
 import { TODAY } from "@/lib/guild/mock-data";
 import { datePct, dueLabel, ganttRange, taskBar } from "@/lib/guild/projects";
 import { cn } from "@/lib/utils";
+import { makeWording } from "@/lib/guild/store-words";
+import { GIA_WORDS } from "@/lib/guild/words/gia";
 
 export function ProjectGantt({ project, tasks }: { project: Project; tasks: ProjectTask[] }) {
   const range = ganttRange(project, tasks);
@@ -69,7 +71,7 @@ export function ProjectGantt({ project, tasks }: { project: Project; tasks: Proj
 function GanttRow({ task, range }: { task: ProjectTask; range: { from: string; to: string } }) {
   const isDone = task.status === "done";
   const bar = taskBar(range, task);
-  const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY) : null;
+  const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY, makeWording(GIA_WORDS)) : null;
   const period = [task.start_date, task.due_date]
     .filter((d): d is string => d !== null)
     .map(formatDate)

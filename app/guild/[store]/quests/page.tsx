@@ -12,7 +12,7 @@ import { currentStore } from "@/lib/guild/current-store";
 
 export async function generateMetadata() {
   const store = await currentStore();
-  return { title: `${store.config.terms.quest} けいじばん` };
+  return { title: store.w("quests.title", { quest: store.config.terms.quest }) };
 }
 
 export default async function QuestsPage() {
@@ -29,12 +29,12 @@ export default async function QuestsPage() {
     <div>
       <MarkSeen list="quests" />
       <PageTitle
-        title={`${questTerm} けいじばん`}
+        title={store.w("quests.title", { quest: questTerm })}
         lead={
           <>
-            手伝ってほしいこと・お願いしたい仕事を出して、できる人を探す場所です。
-            <span className="mt-1 block">例：「LPを作れる人を探しています」「来月の勉強会で話せる方いませんか」</span>
-            <span className="mt-1 block">（自分のサービスの紹介は、プロフィールに書いてください）</span>
+            {store.w("quests.lead1")}
+            <span className="mt-1 block">{store.w("quests.lead2")}</span>
+            <span className="mt-1 block">{store.w("quests.lead3")}</span>
           </>
         }
       />

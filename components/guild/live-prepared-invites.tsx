@@ -44,7 +44,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
     if (pending) return;
     const validation = validatePreparedInvite(draft);
     if (validation) { setError(validation); return; }
-    const statusValidation = statusDrafts ? validateProfileDraft(statusDraft) : null;
+    const statusValidation = statusDrafts ? validateProfileDraft(statusDraft, store.w) : null;
     if (statusValidation) { setError(statusValidation); return; }
     setPending(editingId ?? "create"); setError(""); setNewUrl("");
     try {
@@ -78,7 +78,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
       if (statusDraftFailed) {
         // 招待状はできている。下書きだけ保存し直せるよう、この招待状の編集に切り替えて入力を残す
         setEditingId(inviteId);
-        setError("招待状は保存しましたが、ステータスの下書きを保存できませんでした。そのまま「下書きを保存する」を押すと、もう一度保存します。");
+        setError(store.w("prep.saveFailed"));
         router.refresh();
         return;
       }
@@ -158,13 +158,13 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
       </label>
       {statusDrafts ? <details className="c-card p-4" open={draftHasContent(statusDraft)}>
         <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-sm">
-          <span>▶ ステータスの下書きを書く</span><span className="c-muted text-xs">任意</span>
+          <span>{store.w("prep.write")}</span><span className="c-muted text-xs">任意</span>
         </summary>
         <div className="mt-4 space-y-4">
           <p className="c-muted text-xs leading-relaxed">仕事内容などを、本人の代わりに下書きできます。入会したあと、本人が見て「載せる」を選ぶまで、誰にも見えません。本人が書いた項目は上書きしません。</p>
           <ProfileDraftInputs value={statusDraft} onChange={(next) => { setStatusDraft(next); setError(""); }} />
         </div>
-      </details> : <p className="c-muted text-xs">ステータスの下書きを読み込めませんでした（migration 0130 が適用済みか確認してください）。招待状は作れます。</p>}
+      </details> : <p className="c-muted text-xs">{store.w("prep.unreadable")}</p>}
       <p className="c-muted text-xs">メールアドレスやパスワードは本人が入力します。招待状は1人用・30日間有効です。</p>
       {error && <p role="alert" className="text-sm text-[#b52a2a]">{error}</p>}
       <div className="flex flex-wrap gap-2"><button type="submit" disabled={pending !== null} className="rpg-button min-h-11 px-5 text-sm disabled:opacity-50">{pending ? "保存中…" : editingId ? "▶ 下書きを保存する" : "▶ 仮登録の招待状を作る"}</button>
@@ -182,7 +182,7 @@ export function LivePreparedInvites({ initial, initialDrafts }: { initial: Maste
           {invite.introduction && <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed">{invite.introduction}</p>}
           {status === "招待中" && (() => {
             const saved = statusDrafts?.find((item) => item.invite_id === invite.id);
-            return saved && draftHasContent(saved) ? <p className="c-muted mt-2 text-xs">ステータスの下書きあり（{countDraftFields(saved)}項目）。入会後に本人が見て選びます。</p> : null;
+            return saved && draftHasContent(saved) ? <p className="c-muted mt-2 text-xs">{store.w("prep.exists", { count: countDraftFields(saved) })}</p> : null;
           })()}
           {status === "招待中" && <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void copy(invite.code)} className="c-button-sub min-h-10 px-4 text-sm">リンクをコピー</button><button type="button" disabled={pending !== null} onClick={() => edit(invite)} className="c-button-sub min-h-10 px-4 text-sm">下書きを直す</button><button type="button" disabled={pending !== null} onClick={() => void revoke(invite)} className="c-button-sub min-h-10 px-4 text-sm disabled:opacity-50">{pending === invite.id ? "無効化中…" : "無効にする"}</button></div>}
         </li>;

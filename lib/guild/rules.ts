@@ -1,3 +1,6 @@
+import type { Wording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
+
 // ギルドの約束。画面にもDBにも依存しない決まりだけを置き、テスト（rules.test.ts）で見張る。
 //
 // 「儲かるなら何でもいい、ではない」は クエストの種類ではなく、入会で同意する「ギルドの約束」にする。
@@ -12,12 +15,14 @@ export const GUILD_PROMISES = [
 /**
  * 話すときの約束（グランドルール）。集まり・紹介で会うときの 場の決まり。
  * 「否定しない」は 反対意見を言うなという意味ではないので、「まず受け止める」を先に書く
+ * 文字は店ごとの言葉の表（lib/guild/words/）。GROUND_RULES・PROMISE_NOTE は GIAの酒場の言葉で、店を持たない入会の画面が使う。
+ * 店の画面は groundRulesFor(store.w)・store.w("rules.promiseNote") を使う。
  */
-export const GROUND_RULES = [
-  "相手の話を さえぎらない",
-  "相手の意見を まず受け止める（頭から 否定しない）",
-  "自分ばかり 話さない",
-] as const;
+export const GROUND_RULES = [GIA_WORDS["rules.ground.1"], GIA_WORDS["rules.ground.2"], GIA_WORDS["rules.ground.3"]] as const;
+
+export function groundRulesFor(w: Wording): string[] {
+  return [w("rules.ground.1"), w("rules.ground.2"), w("rules.ground.3")];
+}
 
 /** 約束に反するクエストは ギルドマスターが取り下げる（出すときの注意にも使う） */
-export const PROMISE_NOTE = "ギルドの約束に 反する クエストは、管理者が 取り下げることが あります。";
+export const PROMISE_NOTE = GIA_WORDS["rules.promiseNote"];

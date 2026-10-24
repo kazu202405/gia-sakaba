@@ -2,9 +2,12 @@
 
 import { StoreLink } from "@/components/guild/store-link";
 import type { BusinessCard } from "@/lib/guild/business-card";
+import { currentStore } from "@/lib/guild/current-store";
 import { Window } from "./cards";
 
-export function BusinessCardView({ card, urls, isMe, footnote = "押すと大きく開きます。名刺はギルドの会員だけが見られます。" }: { card: BusinessCard | null; urls: Record<string, string>; isMe: boolean; footnote?: string }) {
+export async function BusinessCardView({ card, urls, isMe, footnote }: { card: BusinessCard | null; urls: Record<string, string>; isMe: boolean; footnote?: string }) {
+  const store = await currentStore();
+  footnote ??= store.w("card.footnote");
   const sides = ([["front", "表"], ["back", "裏"]] as const)
     .map(([side, label]) => ({ label, path: card?.[side] ?? null }))
     .filter((item) => item.path);

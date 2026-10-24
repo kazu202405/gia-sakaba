@@ -16,6 +16,8 @@ import {
 import { notificationText, unreadCount, type NotificationContext } from "@/lib/guild/notifications";
 import { cn } from "@/lib/utils";
 import { Window } from "./cards";
+import { makeWording } from "@/lib/guild/store-words";
+import { GIA_WORDS } from "@/lib/guild/words/gia";
 
 const ctx: NotificationContext = {
   name: (id) => getProfile(id)?.display_name ?? guild.terms.member,
@@ -23,6 +25,7 @@ const ctx: NotificationContext = {
   intro: (id) => introRequests.find((r) => r.id === id),
   // 見本用の一覧。本番の画面は live-notification-list.tsx で今の店の道を使う
   path: (rest) => rest,
+  w: makeWording(GIA_WORDS),
 };
 
 export function NotificationList() {

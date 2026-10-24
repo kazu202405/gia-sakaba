@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LiveQuestForm } from "@/components/guild/live-quest-form";
 import { getGuildContext } from "@/lib/guild/server-data";
+import { currentStore } from "@/lib/guild/current-store";
 
-export const metadata: Metadata = { title: "集まりを ひらく" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await currentStore()).w("gathering.newTitle") };
+}
 
 export default async function NewGatheringPage() {
   const context = await getGuildContext();

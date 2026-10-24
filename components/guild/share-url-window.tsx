@@ -11,11 +11,12 @@ import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { CheckBox } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import type { Wording } from "@/lib/guild/store-words";
 
-const SWITCHES: { key: ShareSwitch; label: string; note?: string }[] = [
-  { key: "show_profile", label: "プロフィール", note: "仕事内容・おもい・さがしているもの・キーワード" },
-  { key: "show_personal", label: "しゅみ・すきなこと／これまでの あゆみ" },
-  { key: "show_card", label: "名刺", note: "ステータスの画面で登録した名刺が出ます" },
+const switchesFor = (w: Wording): { key: ShareSwitch; label: string; note?: string }[] => [
+  { key: "show_profile", label: "プロフィール", note: w("share.profileNote") },
+  { key: "show_personal", label: w("share.personal") },
+  { key: "show_card", label: "名刺", note: w("share.cardNote") },
   { key: "show_intros", label: "紹介状", note: "ほかの会員が書いてくれた文章です" },
 ];
 
@@ -98,12 +99,12 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
   }
 
   return <Window title="紹介してもらうための共有URL">
-    <p className="text-[15px] leading-relaxed">あなたを紹介してもらうときに、LINEなどで貼ってもらうURLです。会員でない方にも、ステータスが見えます。</p>
+    <p className="text-[15px] leading-relaxed">あなたを紹介してもらうときに、LINEなどで貼ってもらうURLです。{store.w("share.lead")}</p>
     <p className="c-muted mt-1 text-xs leading-relaxed">連絡先と、出身地・誕生日は、どの設定でも出ません。</p>
 
     <div className="mt-5">
       <CheckBox checked={settings.enabled} disabled={saving} onChange={(value) => void change({ enabled: value })}>
-        <span className="block text-[15px]">このURLで、ステータスを見せる</span>
+        <span className="block text-[15px]">{store.w("share.show")}</span>
         <span className="c-muted block text-xs">{settings.enabled ? "URLを知っている人が見られます。オフにすると、すぐに見られなくなります。" : "いまは誰も見られません。"}</span>
       </CheckBox>
     </div>
@@ -119,9 +120,9 @@ export function ShareUrlWindow({ initial }: { initial: ShareSettings }) {
 
     <div className="c-dashed-top mt-6 pt-5">
       <p className="c-label text-base">見せるもの</p>
-      <p className="c-muted mt-1 text-xs">名前・写真・ひとこと・しょくぎょう・ぎょうしゅ・ちいきは、いつも出ます。会社名は「名鑑に出す」の設定に従います。</p>
+      <p className="c-muted mt-1 text-xs">{store.w("share.always")}</p>
       <div className="mt-4 space-y-4">
-        {SWITCHES.map((item) => <div key={item.key}>
+        {switchesFor(store.w).map((item) => <div key={item.key}>
           <CheckBox checked={settings[item.key]} disabled={saving || !settings.enabled} onChange={(value) => void change({ [item.key]: value })}>
             <span className="block text-[15px]">{item.label}</span>
             {item.note && <span className="c-muted block text-xs">{item.note}</span>}

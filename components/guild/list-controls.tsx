@@ -7,6 +7,7 @@ import { useSyncExternalStore } from "react";
 import type { ViewMode } from "@/lib/guild/filters";
 import { getServerViewMode, getViewMode, setViewMode, subscribeViewMode } from "@/lib/guild/view-mode-store";
 import { cn } from "@/lib/utils";
+import { useGuildStore } from "@/components/guild/store-context";
 
 /** 選ぶボタンの列。選んでいるものは 濃紺、そうでなければ 枠だけ */
 export function FilterRow<T extends string>({
@@ -49,12 +50,13 @@ export function useViewMode(): [ViewMode, (m: ViewMode) => void] {
 }
 
 export function ViewModeSwitch({ value, onChange }: { value: ViewMode; onChange: (m: ViewMode) => void }) {
+  const store = useGuildStore();
   return (
     <div className="flex gap-3 text-xs" role="group" aria-label="見せ方">
       {(
         [
-          { mode: "full", label: "くわしく" },
-          { mode: "compact", label: "かんたん" },
+          { mode: "full", label: store.w("view.full") },
+          { mode: "compact", label: store.w("view.compact") },
         ] as const
       ).map((o) => (
         <button

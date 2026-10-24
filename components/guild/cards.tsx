@@ -7,6 +7,7 @@ import type { Profile, Quest, QuestCategory } from "@/lib/guild/types";
 import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
 import { applicantCount, getProfile } from "@/lib/guild/mock-data";
 import { JobAvatar } from "./job-avatar";
+import { useGuildStore } from "./store-context";
 import { cn } from "@/lib/utils";
 
 /** クエストの種類は色ではなく記号の形で見分ける（色が付くのは「急ぎ」だけ） */
@@ -66,6 +67,7 @@ export function BackLink({ href, label }: { href: string; label: string }) {
 
 /** 名鑑のカード（枠つき） */
 export function MemberCard({ profile }: { profile: Profile }) {
+  const store = useGuildStore();
   return (
     <StoreLink to={`/members/${profile.id}`} className="c-card rpg-cursor-row flex items-center gap-2 p-3 sm:p-4">
       <span className="rpg-cursor">▶</span>
@@ -78,7 +80,7 @@ export function MemberCard({ profile }: { profile: Profile }) {
           </span>
         </p>
         <p className="mt-0.5 text-sm break-words">{profile.headline}</p>
-        {!profile.accept_intro && <p className="c-muted mt-2 text-[11px]">しょうかいは お休み中</p>}
+        {!profile.accept_intro && <p className="c-muted mt-2 text-[11px]">{store.w("memberCard.introPaused")}</p>}
       </div>
     </StoreLink>
   );

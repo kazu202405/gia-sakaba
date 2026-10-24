@@ -4,16 +4,22 @@
 // ①しぼる ②1件を短くする（かんたん表示）の2つで 1画面に入る数を増やす。
 
 import type { Project, Quest, QuestApplication, QuestCategory } from "./types";
+import { makeWording, type Wording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 export type QuestFilter = "open" | "mine" | "joined" | "done" | "all";
 
-export const questFilterLabel: Record<QuestFilter, string> = {
-  open: "ぼしゅう中",
-  mine: "自分が出した",
-  joined: "参加したい",
-  done: "クリア",
-  all: "すべて",
-};
+export function questFilterLabelFor(w: Wording): Record<QuestFilter, string> {
+  return {
+    open: w("filter.quest.open"),
+    mine: "自分が出した",
+    joined: w("filter.quest.joined"),
+    done: w("filter.quest.done"),
+    all: "すべて",
+  };
+}
+/** GIAの酒場の言葉。店の画面は questFilterLabelFor(store.w) を使う（ここは選択肢の種類を数えるのにも使う） */
+export const questFilterLabel: Record<QuestFilter, string> = questFilterLabelFor(makeWording(GIA_WORDS));
 
 /** けいじばんに出す並び：急ぎが先、次に新しい順 */
 function sortForBoard(list: Quest[]): Quest[] {

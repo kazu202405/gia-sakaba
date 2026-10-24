@@ -54,7 +54,7 @@ export function ShareUrlNudge() {
 
   return <Window title="紹介してもらうために">
     <p className="text-[15px] leading-relaxed">あなたを紹介してもらうための「共有URL」を、まだ使っていません。</p>
-    <p className="c-muted mt-2 text-sm leading-relaxed">LINEなどで貼ってもらうだけで、会員でない方にもステータスが見えます。ボタンを押すとURLが用意され、そのままコピーできます。連絡先・出身地・誕生日は出ません。</p>
+    <p className="c-muted mt-2 text-sm leading-relaxed">{store.w("nudge.lead")}</p>
     <div className="mt-5 flex flex-wrap items-center gap-3">
       <Link href={store.path("/me#share")} className="rpg-button inline-flex min-h-12 items-center px-5 text-sm">▶ 共有URLを用意する</Link>
       <button type="button" disabled={saving} onClick={later} className="c-button-sub inline-flex min-h-12 items-center px-4 text-sm disabled:opacity-50">あとで</button>

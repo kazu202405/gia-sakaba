@@ -1,14 +1,16 @@
 import type { Profile } from "@/lib/guild/types";
 import { birthdayLabel } from "@/lib/guild/birthday";
+import { currentStore } from "@/lib/guild/current-store";
 import { Window } from "./cards";
 
-export function PersonalProfileWindow({ profile }: { profile: Profile }) {
+export async function PersonalProfileWindow({ profile }: { profile: Profile }) {
+  const store = await currentStore();
   const birthday = birthdayLabel(profile.birth_month, profile.birth_day, profile.birth_year);
   const items = [
-    { label: "しゅっしんち", value: profile.hometown?.trim() ?? "" },
-    { label: "たんじょうび", value: birthday },
-    { label: "しゅみ・すきなこと", value: profile.hobbies?.trim() ?? "" },
-    { label: "これまでの あゆみ", value: profile.life_story?.trim() ?? "" },
+    { label: store.w("personal.hometown"), value: profile.hometown?.trim() ?? "" },
+    { label: store.w("personal.birthday"), value: birthday },
+    { label: store.w("personal.hobbies"), value: profile.hobbies?.trim() ?? "" },
+    { label: store.w("personal.lifeStory"), value: profile.life_story?.trim() ?? "" },
   ].filter((item) => item.value);
 
   if (items.length === 0) return null;

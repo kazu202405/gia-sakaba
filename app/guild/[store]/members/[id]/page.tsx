@@ -1,4 +1,5 @@
 import { StoreLink } from "@/components/guild/store-link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BackLink, Window } from "@/components/guild/cards";
 import { JobAvatar } from "@/components/guild/job-avatar";
@@ -15,14 +16,17 @@ import { signBusinessCards } from "@/lib/guild/business-card-server";
 import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
-import { groupLabel, positionLabel } from "@/lib/guild/labels";
+import { groupLabelFor, positionLabel } from "@/lib/guild/labels";
+import type { Wording } from "@/lib/guild/store-words";
 import { getAuthenticatedUserId, getGuildContext, getMemberProfileDraft, getMyPlanUsage, listGuildIntroRequests, listGuildMemberIntroductions, listGuildMembers } from "@/lib/guild/server-data";
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 import { currentStore } from "@/lib/guild/current-store";
 
 type Props = { params: Promise<{ id: string }> };
 
-export const metadata = { title: "ギルドメンバー" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await currentStore()).w("member.metaTitle") };
+}
 
 export default async function MemberStatusPage({ params }: Props) {
   const store = await currentStore();
@@ -65,7 +69,7 @@ export default async function MemberStatusPage({ params }: Props) {
 
   return (
     <div className="space-y-11">
-      <BackLink href={store.path("/members")} label={`${memberTerm} めいかん`} />
+      <BackLink href={store.path("/members")} label={store.w("members.title", { member: memberTerm })} />
 
       <Window title={context.guild.terms.status}>
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
@@ -78,17 +82,17 @@ export default async function MemberStatusPage({ params }: Props) {
               {/* 会社名と役職は、本人が「出す」を選んだときだけ */}
               {p.show_company && (
                 <>
-                  <dt className="c-label text-base">かいしゃ</dt>
+                  <dt className="c-label text-base">{store.w("member.company")}</dt>
                   <dd className="break-words">
                     {p.company_name}（{positionLabel[p.position]}）
                   </dd>
                 </>
               )}
-              <dt className="c-label text-base">しょくぎょう</dt>
+              <dt className="c-label text-base">{store.w("member.job")}</dt>
               <dd>{p.job}</dd>
-              <dt className="c-label text-base">ぎょうしゅ</dt>
+              <dt className="c-label text-base">{store.w("member.industry")}</dt>
               <dd>{p.industry}</dd>
-              <dt className="c-label text-base">ちいき</dt>
+              <dt className="c-label text-base">{store.w("member.region")}</dt>
               <dd>{p.region}</dd>
             </dl>
             {contactError
@@ -96,7 +100,7 @@ export default async function MemberStatusPage({ params }: Props) {
               : <ContactItemsView items={contactItems} className="c-dashed-top mt-4 pt-4" />}
             {p.want_to_solve && (
               <p className="c-card mt-4 px-3 py-2 text-sm leading-relaxed break-words">
-                <span className="c-label mr-2 text-base">いま かいけつしたいこと</span>
+                <span className="c-label mr-2 text-base">{store.w("member.wantToSolve")}</span>
                 {p.want_to_solve}
               </p>
             )}
@@ -120,14 +124,15 @@ export default async function MemberStatusPage({ params }: Props) {
         isMe={isMe}
         sections={[
           { group: "work", label: "仕事内容・できること", value: p.bio },
-          { group: "values", label: "だいじにしていること・これから", value: p.values_text },
-          { group: "connect", label: "さがしているもの・であいたい人", value: p.looking_for },
+          { group: "values", label: store.w("member.valuesLabel"), value: p.values_text },
+          { group: "connect", label: store.w("member.connectLabel"), value: p.looking_for },
         ]}
+        w={store.w}
       />
 
       {memberDraft && (memberDraft.ok
         ? <LiveMemberProfileDraft key={memberDraft.draft?.id ?? "none"} memberId={p.id} memberName={p.display_name} initial={memberDraft.draft} />
-        : <Window title="ステータスの下書き"><p className="text-sm">下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>)}
+        : <Window title={store.w("status.draftTitle")}><p className="text-sm">下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>)}
 
       <BusinessCardView card={card} urls={cardUrls} isMe={isMe} />
 
@@ -149,25 +154,27 @@ function ProfileWindow({
   profile,
   isMe,
   sections,
+  w,
 }: {
   profile: Profile;
   isMe: boolean;
+  w: Wording;
   sections: { group: VisibleGroup; label: string; value: string }[];
 }) {
   const shown = isMe ? sections : sections.filter((section) => !profile.visible_groups.includes(section.group) || section.value.trim());
   return (
-    <Window title="プロフィール">
+    <Window title={w("member.profileWindow")}>
       {shown.length === 0 ? (
         <p className="c-muted text-sm">まだ書かれていません。</p>
       ) : (
         <div className="divide-y-2 divide-dashed divide-guild-ink/15">
           {shown.map((section) => (
             <section key={section.group} className="py-5 first:pt-0 last:pb-0">
-              <h2 className="c-label text-base tracking-[0.12em]">▶ {groupLabel[section.group].title}</h2>
+              <h2 className="c-label text-base tracking-[0.12em]">▶ {groupLabelFor(w)[section.group].title}</h2>
               {profile.visible_groups.includes(section.group) && !section.value.trim() ? (
                 <p className="c-muted mt-1.5 text-sm">
                   まだ入力されていません。
-                  <StoreLink to="/me/status" className="ml-2 underline underline-offset-4">▶ ステータスをなおす</StoreLink>
+                  <StoreLink to="/me/status" className="ml-2 underline underline-offset-4">{w("status.editButton")}</StoreLink>
                 </p>
               ) : profile.visible_groups.includes(section.group) ? (
                 <>
@@ -175,7 +182,7 @@ function ProfileWindow({
                   <p className="mt-1.5 text-[15px] leading-relaxed break-words whitespace-pre-line">{section.value}</p>
                 </>
               ) : (
-                <p className="c-muted mt-1.5 text-sm">※ ひこうかいに しています</p>
+                <p className="c-muted mt-1.5 text-sm">{w("member.hidden")}</p>
               )}
             </section>
           ))}

@@ -15,6 +15,7 @@ import {
   type GuildContactItem,
 } from "@/lib/guild/contact-items";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 const MAX_ITEMS = 10;
 // ステータスの他の窓と余白をそろえる
@@ -52,6 +53,7 @@ const toPayload = (rows: Row[]) => filled(rows).map((row) => ({
 }));
 
 export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | null }) {
+  const store = useGuildStore();
   const nextKey = useRef(0);
   const [rows, setRows] = useState<Row[]>(() => (initial ?? []).map((item) => ({ ...item, key: nextKey.current++ })));
   const [state, setState] = useState<"saved" | "editing" | "saving" | "error">("saved");
@@ -95,7 +97,7 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
 
   // 読み込みに失敗したときは編集させない（空のまま保存すると、登録済みの連絡先を消してしまうため）
   if (initial === null) {
-    return <Window title="れんらく先" className={WINDOW_CLASS}>
+    return <Window title={store.w("contact.title")} className={WINDOW_CLASS}>
       <p role="alert" className="text-sm text-[#c62828]">連絡先を読み込めませんでした。ページを開き直してください。</p>
     </Window>;
   }
@@ -114,7 +116,7 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
     setState("editing");
   };
 
-  return <Window title="れんらく先" className={WINDOW_CLASS}>
+  return <Window title={store.w("contact.title")} className={WINDOW_CLASS}>
     <p className="c-muted text-xs leading-relaxed">
       メール・SNS・ウェブサイトを{MAX_ITEMS}件まで載せられます。「つながった人だけ」にしたものは、つながり申請を承諾し合った相手にだけ表示されます。それまでは種類（Instagram など）があることだけが見え、URLやアドレスは渡りません。
     </p>

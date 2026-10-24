@@ -4,8 +4,8 @@ import { LiveQuestApplication } from "@/components/guild/live-quest-application"
 import { GuestGatheringHost } from "@/components/guild/guest-gathering-host";
 import { GatheringSchedule } from "@/components/guild/gathering-schedule";
 import { LiveQuestOwnerActions } from "@/components/guild/live-quest-owner-actions";
-import { GROUND_RULES } from "@/lib/guild/rules";
-import { formatDate, questCategoryLabel, questStatusLabel } from "@/lib/guild/labels";
+import { groundRulesFor } from "@/lib/guild/rules";
+import { formatDate, questCategoryLabel, questStatusLabelFor } from "@/lib/guild/labels";
 import type { GuestGatheringHost as GuestGatheringHostData } from "@/lib/guild/guest-gathering";
 import { formatScheduleLong, type GatheringSchedule as GatheringScheduleData } from "@/lib/guild/gathering-schedule";
 import { createClient } from "@/lib/supabase/server";
@@ -63,13 +63,13 @@ export default async function QuestDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-11">
-      <BackLink href={store.path("/quests")} label={`${questTerm} けいじばん`} />
+      <BackLink href={store.path("/quests")} label={store.w("quests.title", { quest: questTerm })} />
 
       <Window title={`${questCategoryMark[q.category]} ${questCategoryLabel[q.category]}`}>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {q.is_urgent && q.status === "open" && <span className="c-tag-urgent">急ぎ</span>}
           {q.members_only && <span className="c-chip">有料会員限定</span>}
-          <span className="c-chip">{questStatusLabel[q.status]}</span>
+          <span className="c-chip">{questStatusLabelFor(store.w)[q.status]}</span>
         </div>
 
         <h1 className="mt-3 text-xl leading-snug tracking-wider break-words sm:text-2xl">{q.title}</h1>
@@ -79,27 +79,27 @@ export default async function QuestDetailPage({ params }: Props) {
             <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
               {decidedOption && (
                 <>
-                  <dt className="c-label">かいさい日</dt>
+                  <dt className="c-label">{store.w("quest.heldOn")}</dt>
                   <dd>{formatScheduleLong(decidedOption.starts_at)}</dd>
                 </>
               )}
               {q.region && (
                 <>
-                  <dt className="c-label">ばしょ</dt>
+                  <dt className="c-label">{store.w("quest.place")}</dt>
                   <dd>{q.region}</dd>
                 </>
               )}
               {q.deadline && (
                 <>
-                  <dt className="c-label">しめきり</dt>
+                  <dt className="c-label">{store.w("quest.deadline")}</dt>
                   <dd>{formatDate(q.deadline)}まで</dd>
                 </>
               )}
               {q.member_limit && (
                 <>
-                  <dt className="c-label">にんずう</dt>
+                  <dt className="c-label">{store.w("quest.headcount")}</dt>
                   <dd>
-                    {q.member_limit}人まで（参加したい {q.applicant_count}人）
+                    {store.w("quest.headcountValue", { limit: q.member_limit, count: q.applicant_count })}
                   </dd>
                 </>
               )}
@@ -107,9 +107,9 @@ export default async function QuestDetailPage({ params }: Props) {
 
             {q.category === "gathering" && (
               <div className="c-card mt-6 px-4 py-3">
-                <p className="c-label text-xs">話すときの 約束（グランドルール）</p>
+                <p className="c-label text-xs">{store.w("rules.groundTitle")}</p>
                 <ul className="mt-1 space-y-1 text-sm leading-relaxed">
-                  {GROUND_RULES.map((rule) => (
+                  {groundRulesFor(store.w).map((rule) => (
                     <li key={rule}>・{rule}</li>
                   ))}
                 </ul>

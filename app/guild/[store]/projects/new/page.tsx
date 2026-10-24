@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { currentStore } from "@/lib/guild/current-store";
 import { LiveProjectForm } from "@/components/guild/live-project-form";
 import { getAuthenticatedUserId, getGuildContext, getMyPlanUsage, listGuildProjects } from "@/lib/guild/server-data";
 import { isExhausted } from "@/lib/guild/plan-usage";
 
-export const metadata: Metadata = { title: "プロジェクトを つくる" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await currentStore()).w("projects.newTitle") };
+}
 
 export default async function NewProjectPage() {
   const [projects, context, userId, usage] = await Promise.all([listGuildProjects(), getGuildContext(), getAuthenticatedUserId(), getMyPlanUsage()]);

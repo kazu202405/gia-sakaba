@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type { Profile } from "@/lib/guild/types";
 import { filterProjectMembers } from "@/lib/guild/project-member-search";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function ProjectMemberCombobox({ members, label, selectedMemberId, onChange, disabled }: {
   members: Profile[];
@@ -11,6 +12,7 @@ export function ProjectMemberCombobox({ members, label, selectedMemberId, onChan
   onChange: (label: string, memberId: string | null) => void;
   disabled: boolean;
 }) {
+  const store = useGuildStore();
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -40,8 +42,8 @@ export function ProjectMemberCombobox({ members, label, selectedMemberId, onChan
         if (event.key === "Enter" && open && active >= 0 && visible[active]) { event.preventDefault(); select(visible[active]); }
       }}
     />
-    {selectedMemberId && <p className="c-muted mt-1 text-xs">ギルドメンバーを選択中。名前を書き換えると自由入力になります。</p>}
-    {open && <div id={listId} role="listbox" aria-label="ギルドメンバー候補" className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto border-2 border-guild-ink bg-guild-paper shadow-[4px_4px_0_rgba(27,42,65,0.18)]">
+    {selectedMemberId && <p className="c-muted mt-1 text-xs">{store.w("combo.selected")}</p>}
+    {open && <div id={listId} role="listbox" aria-label={store.w("combo.candidates")} className="absolute inset-x-0 top-full z-20 mt-1 max-h-60 overflow-y-auto border-2 border-guild-ink bg-guild-paper shadow-[4px_4px_0_rgba(27,42,65,0.18)]">
       {visible.length === 0 ? <p className="c-muted px-3 py-3 text-xs">一致するメンバーはいません。この名前のまま追加できます。</p> : visible.map((member, index) => <button
         key={member.id} id={`${listId}-${index}`} type="button" role="option" aria-selected={active === index}
         onMouseDown={(event) => event.preventDefault()} onClick={() => select(member)}

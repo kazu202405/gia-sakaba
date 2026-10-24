@@ -11,6 +11,13 @@ import type {
   QuestStatus,
   VisibleGroup,
 } from "./types";
+import { makeWording, type Wording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
+
+// 店ごとに言い回しが変わるラベルは、店の言葉の表（lib/guild/words/）から作る。
+// 下の「…For(w)」が店の画面で使う入口。名前の付いた定数（groupLabel など）は GIAの酒場の言葉で、
+// 店を持たない昔の見本の画面（app/guild-look）が使う。
+const giaWording: Wording = makeWording(GIA_WORDS);
 
 /** 職業アイコンの選択肢に出す名前 */
 export const jobIconLabel: Record<JobIconKey, string> = {
@@ -68,12 +75,15 @@ export const positionLabel: Record<Position, string> = {
   other: "その他",
 };
 
-export const questStatusLabel: Record<QuestStatus, string> = {
-  open: "募集中",
-  in_progress: "進行中",
-  completed: "クリア",
-  withdrawn: "取り下げ",
-};
+export function questStatusLabelFor(w: Wording): Record<QuestStatus, string> {
+  return {
+    open: "募集中",
+    in_progress: "進行中",
+    completed: w("quest.status.completed"),
+    withdrawn: "取り下げ",
+  };
+}
+export const questStatusLabel: Record<QuestStatus, string> = questStatusLabelFor(giaWording);
 
 export const outcomeLabel: Record<IntroOutcome, string> = {
   met: "会えた",
@@ -81,11 +91,14 @@ export const outcomeLabel: Record<IntroOutcome, string> = {
   no_fit: "合わなかった",
 };
 
-export const groupLabel: Record<VisibleGroup, { title: string; note: string }> = {
-  work: { title: "しごと", note: "仕事内容・できること・キーワード" },
-  values: { title: "おもい", note: "大事にしていること・これから・とりくんでいる社会かだい" },
-  connect: { title: "つながり", note: "探しているもの・出会いたい人" },
-};
+export function groupLabelFor(w: Wording): Record<VisibleGroup, { title: string; note: string }> {
+  return {
+    work: { title: w("group.work.title"), note: w("group.work.note") },
+    values: { title: w("group.values.title"), note: w("group.values.note") },
+    connect: { title: w("group.connect.title"), note: w("group.connect.note") },
+  };
+}
+export const groupLabel: Record<VisibleGroup, { title: string; note: string }> = groupLabelFor(giaWording);
 
 /**
  * master＝ギルドマスター画面での呼び方。requester＝依頼した本人に見せる呼び方。

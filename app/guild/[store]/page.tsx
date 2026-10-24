@@ -38,29 +38,29 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
   const unread = notifications.filter((item) => item.read_at === null).length;
 
   return <div className="space-y-10">
-    <Window title="おしらせ">
+    <Window title={store.w("notifications.title")}>
       {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
       <TypeLines
         lines={[
           { className: "text-[17px] leading-loose", segments: [{ text: isFirstVisit ? `はじめまして、${me.display_name}さん。` : `おかえりなさい、${me.display_name}さん。` }] },
           {
             className: "mt-1 text-sm leading-relaxed",
-            segments: isFirstVisit ? [{ text: "マイページから ステータスを うめてみましょう。" }] : unread > 0
-              ? [{ text: "まだ読んでいない おしらせが " }, { text: String(unread), className: "text-xl tabular-nums" }, { text: "件あります。" }]
-              : [{ text: "新しい おしらせはありません。" }],
+            segments: isFirstVisit ? [{ text: store.w("home.firstVisit") }] : unread > 0
+              ? [{ text: store.w("home.unreadBefore") }, { text: String(unread), className: "text-xl tabular-nums" }, { text: "件あります。" }]
+              : [{ text: store.w("home.noNew") }],
           },
         ]}
       />
       {isFirstVisit
         ? <Link href={store.path("/me")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ マイページを開く</Link>
-        : <Link href={store.path("/notifications")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">▶ おしらせを見る</Link>}
+        : <Link href={store.path("/notifications")} className="rpg-cursor-row mt-3 inline-flex items-center text-sm">{store.w("home.seeNotices")}</Link>}
     </Window>
 
     {shareNudgeDone === false && <ShareUrlNudge />}
 
     <div className="grid gap-10 md:grid-cols-2">
-      <Window title="すすめている プロジェクト" action={<MoreLink href={store.path("/projects")} />} className="order-2 md:order-1">
-        {active.length === 0 ? <p className="c-muted text-sm leading-relaxed">すすめている プロジェクトはありません。<Link href={store.path("/projects/new")} className="mt-1 block underline underline-offset-4">プロジェクトをつくる</Link></p> :
+      <Window title={store.w("home.activeProjects")} action={<MoreLink href={store.path("/projects")} />} className="order-2 md:order-1">
+        {active.length === 0 ? <p className="c-muted text-sm leading-relaxed">{store.w("home.noActiveProjects")}<Link href={store.path("/projects/new")} className="mt-1 block underline underline-offset-4">プロジェクトをつくる</Link></p> :
           <ul className="space-y-5">{active.slice(0, 5).map((project) => {
             const done = project.tasks.filter((task) => task.status === "done").length;
             return <li key={project.id}>
@@ -72,10 +72,10 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
           })}</ul>}
       </Window>
 
-      <Window title="しめきりが近い タスク" className="order-1 md:order-2">
+      <Window title={store.w("home.dueTasks")} className="order-1 md:order-2">
         {upcoming.length === 0 ? <p className="c-muted text-sm">7日以内の自分のタスクはありません。</p> :
           <ul className="divide-y-2 divide-dashed divide-guild-ink/15">{upcoming.slice(0, 8).map(({ task, project }) => {
-            const due = dueLabel(task.due_date!, today);
+            const due = dueLabel(task.due_date!, today, store.w);
             return <li key={task.id}>
               <Link href={store.path(`/projects/${project.id}`)} className="rpg-cursor-row block py-3">
                 <span className="block text-sm break-words">▶ {task.title}</span>

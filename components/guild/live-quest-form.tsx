@@ -5,7 +5,6 @@ import { useGuildRouter } from "@/components/guild/use-guild-router";
 import type { GuildQuest } from "@/lib/guild/server-data";
 import type { QuestCategory } from "@/lib/guild/types";
 import { questCategoryHint, questCategoryLabel } from "@/lib/guild/labels";
-import { PROMISE_NOTE } from "@/lib/guild/rules";
 import { createClient } from "@/lib/supabase/client";
 import { uiToast } from "@/lib/ui-dialog";
 import { isExhausted, isPlanLimitError, type PlanKey, type QuotaSlot } from "@/lib/guild/plan-usage";
@@ -91,16 +90,16 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
 
   function validate(): boolean {
     const next: Record<string, string> = {};
-    if (!draft.category) next.category = "しゅるいを選んでください";
+    if (!draft.category) next.category = store.w("form.err.category");
     if (!draft.title.trim()) next.title = "タイトルを入れてください";
     if (!draft.summary.trim()) next.summary = "ひとことを入れてください";
-    if (!draft.body.trim()) next.body = "くわしい内容を入れてください";
-    if (!draft.region.trim()) next.region = "ばしょを入れてください";
+    if (!draft.body.trim()) next.body = store.w("form.err.body");
+    if (!draft.region.trim()) next.region = store.w("form.err.region");
     if (draft.deadline && draft.deadline !== quest?.deadline && daysBetween(today, draft.deadline) < 0) {
-      next.deadline = "しめきりは今日以降にしてください";
+      next.deadline = store.w("form.err.deadline");
     }
     if (draft.urgent && (!draft.deadline || (daysBetween(today, draft.deadline) > 14 && (!quest || draft.deadline !== quest.deadline)))) {
-      next.urgent = "急ぎにできるのは、しめきりが14日以内のときだけです";
+      next.urgent = store.w("form.err.urgent");
     }
     setErrors(next);
     if (Object.keys(next).length) scrollToFirstError();
@@ -145,16 +144,16 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-9"><BackLink href={quest ? store.path(`/quests/${quest.id}`) : fixedGathering ? store.path("/master") : store.path("/quests")} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : `${questTerm} けいじばん`} /></div>
+      <div className="mb-9"><BackLink href={quest ? store.path(`/quests/${quest.id}`) : fixedGathering ? store.path("/master") : store.path("/quests")} label={quest ? `${questTerm}に戻る` : fixedGathering ? "管理者" : store.w("quests.title", { quest: questTerm })} /></div>
       <section className="c-window p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{step === "form" ? quest ? `${questTerm}をなおす` : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : "かくにん"}</span>
+        <span className="c-window-title">{step === "form" ? quest ? store.w("quest.editTitle", { quest: questTerm }) : fixedGathering ? "限定の集まりを開く" : isFreeGathering ? "招待制の集まりを作る" : `${questTerm}を出す` : store.w("form.confirmTitle")}</span>
         {showQuota && quota && step === "form" && (quotaExhausted ? <div className="mb-6"><PlanQuotaExhausted kind="quest" plan={quota.plan} slot={quota.slot} /></div> : <PlanQuotaNote kind="quest" plan={quota.plan} slot={quota.slot} className="mb-5" />)}
         {step === "form" ? (
           <>
-            <h1 className="text-xl tracking-wider">{quest ? "内容をなおしますか？" : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
-            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? "保存すると、参加希望者にも変更をおしらせします。" : fixedGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人は管理者の承認が必要です。" : isFreeGathering ? "酒場の掲示板には表示されません。作成後に招待URLを作って案内できます。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
+            <h1 className="text-xl tracking-wider">{quest ? store.w("form.editQ") : isGathering ? "どんな集まりを開きますか？" : `どんな${questTerm}を出しますか？`}</h1>
+            <p className="c-muted mt-2 text-sm leading-relaxed">{quest ? store.w("form.editNote") : fixedGathering ? "有料会員が詳しい内容を見て申し込めます。はじめて申し込む人は管理者の承認が必要です。" : isFreeGathering ? "酒場の掲示板には表示されません。作成後に招待URLを作って案内できます。" : "投稿すると、酒場のメンバーに公開されます。"}</p>
             <div className="mt-7 space-y-6">
-              {fixedGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label="しゅるい" required error={errors.category}>
+              {fixedGathering ? <p className="c-card px-3 py-2.5 text-sm">{questCategoryMark.gathering} {questCategoryLabel.gathering}<span className="c-chip ml-2">有料会員限定</span></p> : <Field label={store.w("form.fieldKind")} required error={errors.category}>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {categories.map((category) => (
                     <button key={category} type="button" aria-pressed={draft.category === category}
@@ -171,28 +170,28 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
               <Field label="ひとことで" required hint={isFreeGathering ? "招待ページに表示されます" : "掲示板のカードに表示されます"} error={errors.summary}>
                 <TextInput value={draft.summary} onChange={(value) => set("summary", value)} max={60} label="ひとことで" />
               </Field>
-              <Field label="くわしく" required hint={isGathering ? "開催日時・会場・当日の流れを書いてください" : undefined} error={errors.body}>
-                <TextArea value={draft.body} onChange={(value) => set("body", value)} rows={6} max={800} label="くわしく" />
+              <Field label={store.w("form.fieldBody")} required hint={isGathering ? "開催日時・会場・当日の流れを書いてください" : undefined} error={errors.body}>
+                <TextArea value={draft.body} onChange={(value) => set("body", value)} rows={6} max={800} label={store.w("form.fieldBody")} />
               </Field>
               <p className="c-card border-dashed px-3 py-2.5 text-xs leading-relaxed">{isGathering ? "※ 酒場内で会費は集められません。当日お店で払う会費があれば、詳しい内容に書いてください。" : "※ 金額（報酬・予算）はここには書かず、会って話すときに決めてください。"}</p>
               <div className="grid gap-6 sm:grid-cols-2">
-                <Field label="ばしょ" required hint="地域名またはオンライン" error={errors.region}>
-                  <TextInput value={draft.region} onChange={(value) => set("region", value)} max={80} label="ばしょ" placeholder="例：大阪／オンライン可" />
+                <Field label={store.w("form.fieldPlace")} required hint="地域名またはオンライン" error={errors.region}>
+                  <TextInput value={draft.region} onChange={(value) => set("region", value)} max={80} label={store.w("form.fieldPlace")} placeholder="例：大阪／オンライン可" />
                 </Field>
-                <Field label="にんずう" hint="任意">
-                  <Select value={draft.memberLimit} onChange={(value) => set("memberLimit", value)} options={LIMIT_OPTIONS} label="にんずう" placeholder="きめない" />
+                <Field label={store.w("form.fieldHeadcount")} hint="任意">
+                  <Select value={draft.memberLimit} onChange={(value) => set("memberLimit", value)} options={LIMIT_OPTIONS} label={store.w("form.fieldHeadcount")} placeholder={store.w("form.undecided")} />
                 </Field>
               </div>
-              <Field label={isGathering ? "申込のしめきり" : "しめきり"} hint="任意" error={errors.deadline}>
-                <div className="sm:max-w-60"><DateInput value={draft.deadline} onChange={(value) => set("deadline", value)} min={quest?.deadline && quest.deadline < today ? quest.deadline : today} label="しめきり" /></div>
+              <Field label={isGathering ? store.w("form.fieldApplyDeadline") : store.w("form.fieldDeadline")} hint="任意" error={errors.deadline}>
+                <div className="sm:max-w-60"><DateInput value={draft.deadline} onChange={(value) => set("deadline", value)} min={quest?.deadline && quest.deadline < today ? quest.deadline : today} label={store.w("form.fieldDeadline")} /></div>
               </Field>
               {!isGathering && <Field label="急ぎにする" error={errors.urgent}>
                 <CheckBox checked={draft.urgent} onChange={(value) => set("urgent", value)}>
-                  <span className="text-sm">しめきりが14日以内のときだけ付けられます</span>
+                  <span className="text-sm">{store.w("form.urgentHint")}</span>
                 </CheckBox>
               </Field>}
             </div>
-            {!isGathering && <p className="c-muted mt-8 text-xs leading-relaxed">{PROMISE_NOTE}</p>}
+            {!isGathering && <p className="c-muted mt-8 text-xs leading-relaxed">{store.w("rules.promiseNote")}</p>}
             <div className="mt-5 flex justify-end">
               <button type="button" disabled={quotaExhausted} onClick={() => { if (validate()) setStep("confirm"); }} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">▶ 確認する</button>
             </div>
@@ -205,11 +204,11 @@ export function LiveQuestForm({ questTerm, gathering = false, quest, quota = nul
               <h1 className="text-xl break-words">{draft.title.trim()}</h1>
               <p className="c-muted text-sm break-words">{draft.summary.trim()}</p>
               <p className="whitespace-pre-line break-words text-sm leading-relaxed">{draft.body.trim()}</p>
-              <p className="c-muted text-xs">ばしょ：{draft.region.trim()}／しめきり：{draft.deadline || "きめない"}／にんずう：{draft.memberLimit || "きめない"}{draft.urgent && "／急ぎ"}</p>
+              <p className="c-muted text-xs">{store.w("form.summaryLine", { region: draft.region.trim(), deadline: draft.deadline || store.w("form.undecided"), limit: draft.memberLimit || store.w("form.undecided") })}{draft.urgent && "／急ぎ"}</p>
             </div>
             {saveError && <p role="alert" className="mt-5 text-sm text-[#c62828]">{saveError}</p>}
             <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button type="button" onClick={() => setStep("form")} disabled={saving} className="c-button-sub h-12">◀ なおす</button>
+              <button type="button" onClick={() => setStep("form")} disabled={saving} className="c-button-sub h-12">{store.w("form.backToEdit")}</button>
               <button type="button" onClick={submit} disabled={saving} className="rpg-button h-12 px-6 text-base">{saving ? quest ? "保存中…" : isFreeGathering ? "作成中…" : "公開中…" : quest ? "▶ 保存する" : isFreeGathering ? "▶ 集まりを作る" : "▶ 公開する"}</button>
             </div>
           </>

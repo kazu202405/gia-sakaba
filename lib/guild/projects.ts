@@ -14,6 +14,7 @@ import type {
   StepRecord,
 } from "./types";
 import { isTaskVisible } from "./task-visibility";
+import type { Wording } from "./store-words";
 
 export function canSeeProject(p: Project, userId: string): boolean {
   return p.owner_id === userId || p.member_ids.includes(userId);
@@ -239,11 +240,11 @@ export function upcomingItems(
 }
 
 /** しめきりの言い方。すぎたものは急ぎと同じく目立たせたいので、呼ぶ側が overdue を見る */
-export function dueLabel(due: string, today: string): { text: string; overdue: boolean } {
+export function dueLabel(due: string, today: string, w: Wording): { text: string; overdue: boolean } {
   const d = daysBetween(today, due);
-  if (d < 0) return { text: `${-d}日 すぎています`, overdue: true };
-  if (d === 0) return { text: "きょうまで", overdue: false };
-  return { text: `あと${d}日`, overdue: false };
+  if (d < 0) return { text: w("due.over", { n: -d }), overdue: true };
+  if (d === 0) return { text: w("due.today"), overdue: false };
+  return { text: w("due.left", { n: d }), overdue: false };
 }
 
 /** タスクの一覧を「まだ」と「おわった」に分ける（まだを上に。おわったは たたんで下に出す） */

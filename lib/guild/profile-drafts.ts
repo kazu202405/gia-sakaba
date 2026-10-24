@@ -6,21 +6,27 @@
 // - 本人がすでに書いている項目は上書きしない（mergeDraftIntoProfile。DBの sakaba_decide_my_profile_draft も同じ決まり）
 
 import type { Profile } from "./types";
+import { makeWording, type Wording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 export const DRAFT_FIELDS = ["headline", "industry", "region", "job", "bio", "values_text", "looking_for"] as const;
 export type DraftField = (typeof DRAFT_FIELDS)[number];
 export type ProfileDraftFields = Record<DraftField, string>;
 
 /** 入力画面（ステータスをなおす）と同じ項目名・同じ上限 */
-export const draftFieldLabel: Record<DraftField, string> = {
-  headline: "ひとこと",
-  industry: "業種",
-  region: "地域",
-  job: "職業",
-  bio: "仕事内容・できること",
-  values_text: "おもい",
-  looking_for: "さがしているもの・であいたい人",
-};
+export function draftFieldLabelFor(w: Wording): Record<DraftField, string> {
+  return {
+    headline: "ひとこと",
+    industry: "業種",
+    region: "地域",
+    job: "職業",
+    bio: "仕事内容・できること",
+    values_text: w("group.values.title"),
+    looking_for: w("member.connectLabel"),
+  };
+}
+/** GIAの酒場の言葉（項目の一覧を数えるのに使う）。店の画面は draftFieldLabelFor(store.w) */
+export const draftFieldLabel: Record<DraftField, string> = draftFieldLabelFor(makeWording(GIA_WORDS));
 
 export const draftFieldMax: Record<DraftField, number> = {
   headline: 40,
@@ -84,9 +90,9 @@ export function countDraftFields(fields: ProfileDraftFields): number {
   return DRAFT_FIELDS.filter((key) => fields[key].trim() !== "").length;
 }
 
-export function validateProfileDraft(fields: ProfileDraftFields): string | null {
+export function validateProfileDraft(fields: ProfileDraftFields, w: Wording): string | null {
   for (const key of DRAFT_FIELDS) {
-    if (fields[key].trim().length > draftFieldMax[key]) return `「${draftFieldLabel[key]}」は${draftFieldMax[key]}文字以内で入力してください。`;
+    if (fields[key].trim().length > draftFieldMax[key]) return `「${draftFieldLabelFor(w)[key]}」は${draftFieldMax[key]}文字以内で入力してください。`;
   }
   return null;
 }
@@ -110,7 +116,8 @@ function toFields(raw: unknown): ProfileDraftFields | null {
   return fields;
 }
 
-export function parseMyProfileDraft(data: unknown): MyProfileDraft | null {
+/** anonymousName＝書いた人の名前が空だったときに出す呼び名（店の言葉。「管理者」など） */
+export function parseMyProfileDraft(data: unknown, anonymousName: string): MyProfileDraft | null {
   if (!data || typeof data !== "object") return null;
   const row = data as Record<string, unknown>;
   const fields = toFields(row.fields);
@@ -119,7 +126,7 @@ export function parseMyProfileDraft(data: unknown): MyProfileDraft | null {
   return {
     id: row.id,
     created_at: typeof row.created_at === "string" ? row.created_at : "",
-    drafted_by_name: typeof row.drafted_by_name === "string" && row.drafted_by_name ? row.drafted_by_name : "ギルドのマスター",
+    drafted_by_name: typeof row.drafted_by_name === "string" && row.drafted_by_name ? row.drafted_by_name : anonymousName,
     fields,
     filled,
   };

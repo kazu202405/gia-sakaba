@@ -7,7 +7,7 @@
 import { useRef, useState } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { createClient } from "@/lib/supabase/client";
-import { DRAFT_FIELDS, draftFieldLabel, type MyProfileDraft } from "@/lib/guild/profile-drafts";
+import { DRAFT_FIELDS, draftFieldLabelFor, type MyProfileDraft } from "@/lib/guild/profile-drafts";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
@@ -40,7 +40,7 @@ export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
     try {
       const { error: rpcError } = await createClient().rpc("sakaba_decide_my_profile_draft", { p_draft_id: draft.id, p_decision: decision });
       if (rpcError) throw rpcError;
-      uiToast(decision === "apply" ? "ステータスに載せました" : "下書きは載せませんでした");
+      uiToast(decision === "apply" ? store.w("status.applied") : "下書きは載せませんでした");
       router.push(decision === "apply" ? store.path("/me") : store.path());
       router.refresh();
     } catch {
@@ -60,21 +60,21 @@ export function ProfileDraftReview({ draft }: { draft: MyProfileDraft }) {
   const disabled = busy !== null;
   return <div className="space-y-7">
     <Window title="下書きの内容">
-      <p className="text-sm leading-relaxed">{draft.drafted_by_name}さんが、あなたのステータスの下書きを書きました。<strong>あなたが「載せる」を選ぶまで、ほかのメンバーには見えません。</strong></p>
+      <p className="text-sm leading-relaxed">{store.w("draft.reviewLead", { name: draft.drafted_by_name })}<strong>あなたが「載せる」を選ぶまで、ほかのメンバーには見えません。</strong></p>
       <ul className="mt-5 space-y-4">
         {rows.map((row) => <li key={row.key} className="c-card min-w-0 p-4">
-          <p className="c-label text-sm">{draftFieldLabel[row.key]}</p>
+          <p className="c-label text-sm">{draftFieldLabelFor(store.w)[row.key]}</p>
           <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{row.text}</p>
           {row.taken && <p className="c-muted mt-2 text-xs">すでに書いてあるので入れません（いまの内容のまま残ります）</p>}
         </li>)}
       </ul>
-      {applicable === 0 && <p className="c-muted mt-4 text-sm">下書きの項目はどれも、すでに書いてあります。載せても何も変わらないので、「いらない」を選んでください。</p>}
+      {applicable === 0 && <p className="c-muted mt-4 text-sm">下書きの項目はどれも、すでに書いてあります。載せても何も変わらないので、{store.w("draft.noApplicable")}</p>}
     </Window>
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     <div className="flex flex-wrap gap-3">
       {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "apply"} onClick={() => void decide("apply")} className="rpg-button min-h-12 px-6 text-base disabled:opacity-50">{busy === "apply" ? "載せています…" : "▶ このまま載せる"}</button>}
-      {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "edit"} onClick={edit} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "edit" ? "開いています…" : "なおしてから載せる"}</button>}
-      <button type="button" disabled={disabled} aria-busy={busy === "decline"} onClick={() => void decide("decline")} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "decline" ? "処理しています…" : "いらない"}</button>
+      {applicable > 0 && <button type="button" disabled={disabled} aria-busy={busy === "edit"} onClick={edit} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "edit" ? "開いています…" : store.w("draft.editFirst")}</button>}
+      <button type="button" disabled={disabled} aria-busy={busy === "decline"} onClick={() => void decide("decline")} className="c-button-sub min-h-12 px-6 text-base disabled:opacity-50">{busy === "decline" ? "処理しています…" : store.w("draft.decline")}</button>
     </div>
   </div>;
 }

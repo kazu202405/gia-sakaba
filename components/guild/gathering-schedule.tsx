@@ -19,6 +19,7 @@ import {
   type ScheduleAnswer,
 } from "@/lib/guild/gathering-schedule";
 import { Window } from "./cards";
+import { useGuildStore } from "@/components/guild/store-context";
 
 type Props =
   | { mode: "member"; questId: string; initial: Schedule; open: boolean }
@@ -27,6 +28,7 @@ type Props =
 const ANSWERS: ScheduleAnswer[] = ["yes", "maybe", "no"];
 
 export function GatheringSchedule(props: Props) {
+  const store = useGuildStore();
   const [schedule, setSchedule] = useState(props.initial);
   const [answers, setAnswers] = useState<Record<string, ScheduleAnswer>>(props.initial.my_answers);
   const [comment, setComment] = useState(props.initial.my_comment ?? "");
@@ -114,7 +116,7 @@ export function GatheringSchedule(props: Props) {
     if (props.mode !== "member") return;
     const option = schedule.options.find((item) => item.id === optionId);
     const confirmed = await uiConfirm(optionId && option
-      ? { title: "日にちを決めます", message: `${formatScheduleLong(option.starts_at)} に決めます。日程に答えた会員に、おしらせが届きます。`, okLabel: "この日に決める" }
+      ? { title: "日にちを決めます", message: store.w("sched.decideMsg", { date: formatScheduleLong(option.starts_at) }), okLabel: "この日に決める" }
       : { title: "決定を取り消します", message: "日程の回答を、また受け付ける状態に戻します。", okLabel: "取り消す", danger: true });
     if (!confirmed) return;
     const questId = props.questId;
@@ -131,7 +133,7 @@ export function GatheringSchedule(props: Props) {
   return <Window title="日程調整">
     {decided ? (
       <div className="c-card px-4 py-3">
-        <p className="c-label text-xs">かいさい日が 決まりました</p>
+        <p className="c-label text-xs">{store.w("sched.decided")}</p>
         <p className="mt-1 text-lg tracking-wider">{formatScheduleLong(decided.starts_at)}</p>
         <p className="c-muted mt-2 text-xs leading-relaxed">
           {props.mode === "guest" ? "参加するときは、下の申し込みから申し込んでください。" : "参加するときは、この画面の申し込みから申し込んでください。"}
@@ -174,7 +176,7 @@ export function GatheringSchedule(props: Props) {
         </div>
       ) : (
         <button type="button" onClick={() => setEditingOptions(schedule.options.length > 0 ? schedule.options.map((option) => toJstInputValue(option.starts_at)) : [""])} className="c-button-sub mt-4 h-10 px-4 text-sm">
-          {schedule.options.length > 0 ? "候補日をなおす" : "▶ 候補日を出す"}
+          {schedule.options.length > 0 ? store.w("sched.editOptions") : "▶ 候補日を出す"}
         </button>
       )
     )}
@@ -183,7 +185,7 @@ export function GatheringSchedule(props: Props) {
 
     {canAnswer && (
       <form onSubmit={saveAnswers} className="c-dashed-top mt-6 space-y-4 pt-5">
-        <p className="c-label text-sm">{answeredBefore ? "あなたの回答（なおせます）" : "あなたの回答"}</p>
+        <p className="c-label text-sm">{answeredBefore ? store.w("sched.answerEditable") : "あなたの回答"}</p>
         {props.mode === "guest" && !props.isMember && (
           <label className="block">
             <span className="mb-1 block text-sm">お名前（主催者に表示されます）</span>

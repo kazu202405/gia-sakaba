@@ -6,20 +6,26 @@
 
 import type { GuildNotification, IntroRequest, IntroStatus, Quest, QuestApplication, QuestField } from "./types";
 import { introStatusLabel } from "./labels";
+import { makeWording, type Wording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 export type QuestFields = Pick<Quest, QuestField>;
 
 /** 並びは入力画面の順。「変わるところ」もこの順で出す */
-export const questFieldLabel: Record<QuestField, string> = {
-  category: "しゅるい",
-  title: "タイトル",
-  summary: "ひとことで",
-  body: "くわしく",
-  region: "ばしょ",
-  deadline: "しめきり",
-  member_limit: "にんずう",
-  is_urgent: "急ぎ",
-};
+export function questFieldLabelFor(w: Wording): Record<QuestField, string> {
+  return {
+    category: w("form.fieldKind"),
+    title: "タイトル",
+    summary: "ひとことで",
+    body: w("form.fieldBody"),
+    region: w("form.fieldPlace"),
+    deadline: w("form.fieldDeadline"),
+    member_limit: w("form.fieldHeadcount"),
+    is_urgent: "急ぎ",
+  };
+}
+/** GIAの酒場の言葉。店の画面は questFieldLabelFor(store.w) を使う */
+export const questFieldLabel: Record<QuestField, string> = questFieldLabelFor(makeWording(GIA_WORDS));
 
 const QUEST_FIELDS = Object.keys(questFieldLabel) as QuestField[];
 
@@ -85,60 +91,63 @@ export type NotificationContext = {
   intro: (introRequestId: string) => IntroRequest | undefined;
   /** 店の中の道を作る（store.path）。行き先は今の店の道にする */
   path: (rest: string) => string;
+  /** 店の言葉（store.w）。知らせの文面は店ごとの言葉の表から作る */
+  w: Wording;
 };
 
 /** 知らせの文面と、押したときの行き先 */
 export function notificationText(n: GuildNotification, ctx: NotificationContext): { text: string; href: string } {
-  const title = n.quest_id ? ctx.questTitle(n.quest_id) : "クエスト";
+  const w = ctx.w;
+  const title = n.quest_id ? ctx.questTitle(n.quest_id) : w("notif.questFallback");
   switch (n.kind) {
     case "quest_applied":
       return {
-        text: `${n.actor_id ? ctx.name(n.actor_id) : "だれか"}さんが「${title}」に 参加したいと伝えました`,
+        text: w("notif.questApplied", { name: n.actor_id ? ctx.name(n.actor_id) : "だれか", title }),
         href: ctx.path(`/quests/${n.quest_id}/applicants`),
       };
     case "quest_updated": {
       // 保存された順に関係なく、入力画面の順で並べる
       const fields = QUEST_FIELDS.filter((f) => n.changed_fields.includes(f))
-        .map((f) => questFieldLabel[f])
+        .map((f) => questFieldLabelFor(w)[f])
         .join("・");
       return {
-        text: `「${title}」の内容が なおされました${fields ? `（${fields}）` : ""}`,
+        text: w("notif.questUpdated", { title, fields: fields ? `（${fields}）` : "" }),
         href: ctx.path(`/quests/${n.quest_id}`),
       };
     }
     case "quest_withdrawn":
-      return { text: `「${title}」が 取り下げられました`, href: ctx.path(`/quests/${n.quest_id}`) };
+      return { text: w("notif.questWithdrawn", { title }), href: ctx.path(`/quests/${n.quest_id}`) };
     case "gathering_approved":
-      return { text: `「${title}」への 参加が 決まりました`, href: ctx.path(`/quests/${n.quest_id}`) };
+      return { text: w("notif.gatheringApproved", { title }), href: ctx.path(`/quests/${n.quest_id}`) };
     case "gathering_declined":
-      return { text: `「${title}」への 申し込みは 今回 見送りになりました`, href: ctx.path(`/quests/${n.quest_id}`) };
+      return { text: w("notif.gatheringDeclined", { title }), href: ctx.path(`/quests/${n.quest_id}`) };
     case "schedule_decided":
-      return { text: `「${title}」の 日にちが 決まりました`, href: ctx.path(`/quests/${n.quest_id}`) };
+      return { text: w("notif.scheduleDecided", { title }), href: ctx.path(`/quests/${n.quest_id}`) };
     case "consult_request":
-      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}エンタープライズの相談が 届きました`, href: ctx.path("/master#master-consults-title") };
+      return { text: w("notif.consult", { by: n.actor_id ? w("notif.by", { name: ctx.name(n.actor_id) }) : "" }), href: ctx.path("/master#master-consults-title") };
     case "feedback_report":
-      return { text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんから ` : ""}ご意見・不具合の報告が 届きました`, href: ctx.path("/master#master-feedback-title") };
+      return { text: w("notif.feedback", { by: n.actor_id ? w("notif.by", { name: ctx.name(n.actor_id) }) : "" }), href: ctx.path("/master#master-feedback-title") };
     case "member_joined":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー"}さんが 入会しました`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
+      return { text: w("notif.memberJoined", { name: n.actor_id ? ctx.name(n.actor_id) : "新しいメンバー" }), href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "member_pending":
-      return { text: "参加の申請が 届きました", href: ctx.path("/master#master-pending-members-title") };
+      return { text: w("notif.memberPending"), href: ctx.path("/master#master-pending-members-title") };
     case "profile_draft_waiting":
       return {
-        text: `${n.actor_id ? `${ctx.name(n.actor_id)}さんが ` : ""}あなたのステータスの 下書きを 書きました。見て、載せるか選んでください`,
+        text: w("notif.draftWaiting", { byGa: n.actor_id ? w("notif.byGa", { name: ctx.name(n.actor_id) }) : "" }),
         href: ctx.path("/me/status/draft"),
       };
     case "profile_draft_applied":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんが、書いた下書きを ステータスに載せました`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
+      return { text: w("notif.draftApplied", { name: n.actor_id ? ctx.name(n.actor_id) : "メンバー" }), href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "profile_draft_declined":
-      return { text: `${n.actor_id ? ctx.name(n.actor_id) : "メンバー"}さんは、書いた下書きを 今回は載せませんでした`, href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
+      return { text: w("notif.draftDeclined", { name: n.actor_id ? ctx.name(n.actor_id) : "メンバー" }), href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
-      if (!r || !n.intro_status) return { text: "しょうかいの おしらせが あります", href: ctx.path("/requests") };
+      if (!r || !n.intro_status) return { text: w("notif.introFallback"), href: ctx.path("/requests") };
       if (n.user_id === r.target_id) {
-        return { text: `${ctx.name(r.requester_id)}さんとの しょうかいの打診が 届きました`, href: ctx.path("/requests") };
+        return { text: w("notif.introAsked", { name: ctx.name(r.requester_id) }), href: ctx.path("/requests") };
       }
       return {
-        text: `${ctx.name(r.target_id)}さんへの しょうかい：${introStatusLabel[n.intro_status].requester}`,
+        text: w("notif.introProgress", { name: ctx.name(r.target_id), status: introStatusLabel[n.intro_status].requester }),
         href: ctx.path("/requests"),
       };
     }

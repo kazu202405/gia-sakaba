@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { uiConfirm, uiToast } from "@/lib/ui-dialog";
 import { Window } from "./cards";
 import { GatheringGuestVisibility } from "./gathering-guest-visibility";
+import { useGuildStore } from "@/components/guild/store-context";
 
 export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
   questId: string;
@@ -15,6 +16,7 @@ export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
   /** 主催者のプロフィールを、申し込んだゲストに見せる設定か（まだ選んでいなければ null） */
   hostVisible?: boolean | null;
 }) {
+  const store = useGuildStore();
   const router = useGuildRouter();
   const [localToken, setLocalToken] = useState<{ baseline: string | null; value: string } | null>(null);
   const token = localToken?.baseline === initial.token ? localToken.value : initial.token;
@@ -51,7 +53,7 @@ export function GuestGatheringHost({ questId, initial, hostVisible = null }: {
   }
 
   return <Window title="ゲスト向け招待リンク">
-    <p className="text-sm leading-relaxed">この集まりはクエスト掲示板には出ません。URLを送った人は、会員でなくても内容と、掲載に同意した申込者の紹介を見られます。</p>
+    <p className="text-sm leading-relaxed">{store.w("gathHost.note")}</p>
     {!href ? <button type="button" disabled={busy} onClick={() => void publish(false)} className="rpg-button mt-5 min-h-12 px-5 disabled:opacity-50">{busy ? "作成中…" : "▶ 招待リンクを作る"}</button> : <div className="mt-5 space-y-3">
       <label className="block text-sm">共有するURL<input readOnly value={`${origin}${href}`} onFocus={(e) => e.currentTarget.select()} className="c-input mt-2 w-full text-xs" /></label>
       <div className="flex flex-wrap gap-3">

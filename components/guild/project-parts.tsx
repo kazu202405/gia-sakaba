@@ -12,6 +12,8 @@ import { uiToast } from "@/lib/ui-dialog";
 import { cn } from "@/lib/utils";
 import { questCategoryMark } from "./cards";
 import { useGuildStore } from "@/components/guild/store-context";
+import { makeWording } from "@/lib/guild/store-words";
+import { GIA_WORDS } from "@/lib/guild/words/gia";
 
 const GAUGE_CELLS = 10;
 
@@ -76,7 +78,7 @@ export function ProjectProgressView({ project, state }: { project: Project; stat
   const progress = projectProgress(state.tasks, project.id);
   const schedule = projectSchedule(project, progress, TODAY);
   const pipeline = reachedLastStep(state.steps, state.contacts, state.records, project.id);
-  const due = project.due_date && project.status === "active" ? dueLabel(project.due_date, TODAY) : null;
+  const due = project.due_date && project.status === "active" ? dueLabel(project.due_date, TODAY, makeWording(GIA_WORDS)) : null;
 
   return (
     <span className="block">
@@ -169,7 +171,7 @@ export function TaskLine({
 }) {
   const store = useGuildStore();
   const isDone = task.status === "done";
-  const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY) : null;
+  const due = task.due_date && !isDone ? dueLabel(task.due_date, TODAY, makeWording(GIA_WORDS)) : null;
   const assignee = task.assignee_id ? getProfile(task.assignee_id)?.display_name : null;
 
   // button の中にも置けるよう、ブロックは span で組む

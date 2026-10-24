@@ -9,6 +9,8 @@ import {
   toRecurrence,
   validateRecurrenceDraft,
 } from "./recurrence";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 // DB 側（supabase/migrations/0125 の sakaba.recurrence_next_date）と同じ決まり。
 // 2026-10-03 は土曜、2026-10-05 は月曜。
@@ -142,11 +144,12 @@ describe("入力と言い方", () => {
     expect(toDraft("weekly", 2, "2026-10-03")).toEqual({ choice: "weekly", weekday: "2", monthDay: "3" });
   });
   it("入力チェック", () => {
-    expect(validateRecurrenceDraft({ choice: "", weekday: "", monthDay: "" })).toBeNull();
-    expect(validateRecurrenceDraft({ choice: "weekly", weekday: "", monthDay: "" })).not.toBeNull();
-    expect(validateRecurrenceDraft({ choice: "monthly", weekday: "1", monthDay: "32" })).not.toBeNull();
-    expect(validateRecurrenceDraft({ choice: "monthly", weekday: "1", monthDay: "31" })).toBeNull();
-    expect(validateRecurrenceDraft({ choice: "month_end", weekday: "", monthDay: "" })).toBeNull();
+    const w = makeWording(GIA_WORDS);
+    expect(validateRecurrenceDraft({ choice: "", weekday: "", monthDay: "" }, w)).toBeNull();
+    expect(validateRecurrenceDraft({ choice: "weekly", weekday: "", monthDay: "" }, w)).not.toBeNull();
+    expect(validateRecurrenceDraft({ choice: "monthly", weekday: "1", monthDay: "32" }, w)).not.toBeNull();
+    expect(validateRecurrenceDraft({ choice: "monthly", weekday: "1", monthDay: "31" }, w)).toBeNull();
+    expect(validateRecurrenceDraft({ choice: "month_end", weekday: "", monthDay: "" }, w)).toBeNull();
   });
   it("保存するしめきり：入っていればそのまま、空でくり返しありなら最初の該当日", () => {
     expect(dueForSave("2026-10-20", { kind: "weekly", day: 1 }, "2026-10-03")).toBe("2026-10-20");

@@ -7,7 +7,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata() {
   const store = await currentStore();
-  return { title: `${store.config.terms.quest}をなおす` };
+  return { title: store.w("quest.editTitle", { quest: store.config.terms.quest }) };
 }
 
 export default async function EditQuestPage({ params }: Props) {

@@ -20,6 +20,8 @@ import {
 import { notificationText, type NotificationContext } from "./notifications";
 import { countNavBadges } from "./nav-badges";
 import type { GuildNotification, NotificationKind } from "./types";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
 
 const MIGRATION = "supabase/migrations/0130_sakaba_profile_drafts.sql";
 const profile = { headline: "", industry: "", region: "", job: "", bio: "", values_text: "", looking_for: "" };
@@ -68,9 +70,9 @@ describe("下書きの項目と渡し方", () => {
     expect(draftRpcArgs(fields({ job: "  税理士  " })).p_job).toBe("税理士");
   });
   it("文字数の上限を超えたら理由を返す（日本語の項目名で）", () => {
-    expect(validateProfileDraft(fields({ headline: "あ".repeat(40) }))).toBeNull();
-    expect(validateProfileDraft(fields({ headline: "あ".repeat(41) }))).toMatch(/ひとこと/);
-    expect(validateProfileDraft(fields({ bio: "あ".repeat(1201) }))).toMatch(/仕事内容/);
+    expect(validateProfileDraft(fields({ headline: "あ".repeat(40) }), makeWording(GIA_WORDS))).toBeNull();
+    expect(validateProfileDraft(fields({ headline: "あ".repeat(41) }), makeWording(GIA_WORDS))).toMatch(/ひとこと/);
+    expect(validateProfileDraft(fields({ bio: "あ".repeat(1201) }), makeWording(GIA_WORDS))).toMatch(/仕事内容/);
   });
   it("中身があるかは、空白だけでは中身にならない", () => {
     expect(draftHasContent(emptyDraftFields)).toBe(false);
@@ -84,12 +86,12 @@ describe("下書きの項目と渡し方", () => {
 
 describe("DBからの返り値を読む（壊れていても落ちない）", () => {
   it("本人に届いた下書き", () => {
-    const draft = parseMyProfileDraft({ id: "d1", created_at: "2026-10-19", drafted_by_name: "五島", fields: { job: "税理士" }, filled: ["headline", "ばれ"] });
+    const draft = parseMyProfileDraft({ id: "d1", created_at: "2026-10-19", drafted_by_name: "五島", fields: { job: "税理士" }, filled: ["headline", "ばれ"] }, "管理者");
     expect(draft?.fields.job).toBe("税理士");
     expect(draft?.fields.bio).toBe("");
     expect(draft?.filled).toEqual(["headline"]);
-    expect(parseMyProfileDraft(null)).toBeNull();
-    expect(parseMyProfileDraft({ id: "d1", fields: { job: 3 } })).toBeNull();
+    expect(parseMyProfileDraft(null, "管理者")).toBeNull();
+    expect(parseMyProfileDraft({ id: "d1", fields: { job: 3 } }, "管理者")).toBeNull();
   });
   it("書いた側から見た下書き（返事が済むと中身は無い）", () => {
     expect(parseMemberProfileDraft({ id: "d1", state: "applied", decided_at: "2026-10-19", fields: null })?.fields).toBeNull();
@@ -107,7 +109,7 @@ describe("おしらせ", () => {
     id: kind, user_id: "me", kind, actor_id: "a", quest_id: null, intro_request_id: null, intro_status: null,
     changed_fields: [], read_at: null, created_at: "2026-10-19",
   });
-  const ctx: NotificationContext = { name: () => "五島", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest) };
+  const ctx: NotificationContext = { name: () => "五島", questTitle: () => "", intro: () => undefined, path: (rest) => guildPath("gia", rest), w: makeWording(GIA_WORDS) };
   it("届いた下書きは、本人が選ぶ画面（承認の入口）へ案内する", () => {
     expect(notificationText(note("profile_draft_waiting"), ctx).href).toBe("/guild/gia/me/status/draft");
   });

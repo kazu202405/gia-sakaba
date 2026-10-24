@@ -100,7 +100,7 @@ export function FeedbackButton({ className, label = "ご意見・不具合" }: {
             </dl>
             {error && <p role="alert" className="mt-2 text-sm text-[#c62828]">{error}</p>}
             <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button type="button" disabled={saving} onClick={() => { setStep("edit"); setError(""); }} className="c-button-sub h-11">◀ もどって なおす</button>
+              <button type="button" disabled={saving} onClick={() => { setStep("edit"); setError(""); }} className="c-button-sub h-11">{store.w("common.backToFix")}</button>
               <button type="button" disabled={saving} aria-busy={saving} onClick={() => void submit()} className="rpg-button h-11">{saving ? "送信中…" : "▶ この内容で送る"}</button>
             </div>
           </>}

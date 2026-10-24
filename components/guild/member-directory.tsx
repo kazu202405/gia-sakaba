@@ -11,9 +11,9 @@ import { MemberCard, Window } from "./cards";
 import { CheckBox } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
 
-export function MemberDirectory({ members, memberTerm = "ギルドメンバー", cardUrls = {}, searchLevel = "keyword" }: {
+export function MemberDirectory({ members, memberTerm, cardUrls = {}, searchLevel = "keyword" }: {
   members: Profile[];
-  memberTerm?: string;
+  memberTerm: string;
   /** 段で変わる探し方：list＝一覧だけ（フリー）／filter＝絞り込み＋めいし（プラス）／keyword＝＋キーワード（ビジネス） */
   searchLevel?: SearchLevel;
   /** 人ごとの名刺の表面の署名URL（「めいし」表示で使う） */
@@ -46,22 +46,22 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
 
   return (
     <div>
-      <Window title="さがす">
+      <Window title={store.w("dir.search")}>
         <label className="block">
           <span className="sr-only">{canKeyword ? "キーワード" : "名前・職業"}</span>
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder={canKeyword ? "キーワード（れい：採用、決算、ロゴ）" : "名前・職業で探す（れい：税理士）"}
+            placeholder={canKeyword ? store.w("dir.keywordPlaceholder") : store.w("dir.namePlaceholder")}
             className="c-input h-11"
           />
         </label>
-        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスプランからです。" : "業種・地域での絞り込みと「めいし」表示はプラスプラン、本文まで探すのはビジネスプランからです。"}<Link href={store.path("/plan")} className="ml-1 underline underline-offset-4">段をくらべる</Link></p>}
+        {!canKeyword && <p className="c-muted mt-2 text-xs">{canFilter ? "自己紹介などの本文まで探すのは、ビジネスプランからです。" : store.w("dir.planNote")}<Link href={store.path("/plan")} className="ml-1 underline underline-offset-4">{store.w("dir.comparePlans")}</Link></p>}
         {canFilter && <>
         {/* えらぶ欄の名前は 枠の外に出す（中に入れると スマホで 文字が切れる） */}
         <div className="mt-3 grid grid-cols-2 gap-2">
           <label className="block min-w-0">
-            <span className="c-muted mb-1 block text-xs">ぎょうしゅ</span>
+            <span className="c-muted mb-1 block text-xs">{store.w("member.industry")}</span>
             <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="c-input h-11">
               <option value="">すべて</option>
               {industries.map((i) => (
@@ -70,7 +70,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             </select>
           </label>
           <label className="block min-w-0">
-            <span className="c-muted mb-1 block text-xs">ちいき</span>
+            <span className="c-muted mb-1 block text-xs">{store.w("member.region")}</span>
             <select value={region} onChange={(e) => setRegion(e.target.value)} className="c-input h-11">
               <option value="">すべて</option>
               {regions.map((r) => (
@@ -81,7 +81,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
         </div>
         <div className="mt-3">
           <CheckBox checked={acceptOnly} onChange={setAcceptOnly}>
-            <span className="text-sm">しょうかいを受けつけている人だけ</span>
+            <span className="text-sm">{store.w("dir.acceptOnly")}</span>
           </CheckBox>
         </div>
         </>}
@@ -100,13 +100,13 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
             }}
             className="c-muted text-xs underline underline-offset-4"
           >
-            じょうけんを クリア
+            {store.w("dir.clear")}
           </button>
         )}
       </div>
 
       {canFilter && <div className="flex items-center justify-end gap-3 text-sm" role="group" aria-label="表示のしかた">
-        {([["list", "いつもの一覧"], ["cards", "めいし"]] as const).map(([mode, label]) => (
+        {([["list", store.w("dir.viewList")], ["cards", store.w("dir.viewCards")]] as const).map(([mode, label]) => (
           <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)} className={view === mode ? "underline underline-offset-4" : "c-muted"}>
             {label}
           </button>
@@ -115,7 +115,7 @@ export function MemberDirectory({ members, memberTerm = "ギルドメンバー",
 
       {filtered.length === 0 ? (
         <p className="c-card border-dashed px-4 py-10 text-center text-sm leading-relaxed">
-          じょうけんに合う {memberTerm}が 見つかりませんでした。
+          {store.w("dir.none", { member: memberTerm })}
           <br />
           <span className="c-muted">管理者に「こういう人いない？」と相談することもできます。</span>
         </p>

@@ -122,6 +122,7 @@ export function GatheringApprovals() {
                     questTitle: (id) => getQuest(id)?.title ?? "",
                     intro: () => undefined,
                     path: store.path,
+                    w: store.w,
                   }).text
                 }
               </li>

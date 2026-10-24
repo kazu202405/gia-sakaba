@@ -244,7 +244,7 @@ export async function getMyProfileDraft(): Promise<{ ok: true; draft: MyProfileD
   const store = await currentStore();
   const { data, error } = await (await createClient()).rpc("sakaba_get_my_profile_draft", { p_guild_slug: store.slug });
   if (error) { console.warn("[guild] ステータスの下書きを読めませんでした", error.message); return { ok: false }; }
-  return { ok: true, draft: parseMyProfileDraft(data) };
+  return { ok: true, draft: parseMyProfileDraft(data, store.w("draft.anonymousMaster")) };
 }
 
 /** 書いたオーナー・マスターが、その人あての下書きを読む */

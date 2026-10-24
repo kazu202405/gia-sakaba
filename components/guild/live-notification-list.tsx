@@ -25,9 +25,10 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
   const byIntroId = new Map(intros.map((intro) => [intro.id, intro]));
   const ctx: NotificationContext = {
     name: (id) => names.get(id) ?? "メンバー",
-    questTitle: (id) => titles.get(id) ?? "クエスト",
+    questTitle: (id) => titles.get(id) ?? store.w("notif.questFallback"),
     intro: (id) => byIntroId.get(id),
     path: store.path,
+    w: store.w,
   };
 
   async function markRead(id?: string, href?: string) {
@@ -56,9 +57,9 @@ export function LiveNotificationList({ initial, members, quests, intros }: {
     }
   }
 
-  return <Window title="あなたあて" action={unreadCount(initial) > 0 ? <button type="button" disabled={pendingId !== null} onClick={() => void markRead()} className="c-muted text-xs underline disabled:opacity-50">すべて既読にする</button> : undefined}>
+  return <Window title={store.w("notifList.title")} action={unreadCount(initial) > 0 ? <button type="button" disabled={pendingId !== null} onClick={() => void markRead()} className="c-muted text-xs underline disabled:opacity-50">すべて既読にする</button> : undefined}>
     {error && <p role="alert" className="mb-3 text-sm text-[#c62828]">{error}</p>}
-    {initial.length === 0 ? <p className="c-muted text-sm">おしらせはありません。</p> : <ul className="divide-y-2 divide-dashed divide-guild-ink/15">{initial.map((item) => {
+    {initial.length === 0 ? <p className="c-muted text-sm">{store.w("notifList.none")}</p> : <ul className="divide-y-2 divide-dashed divide-guild-ink/15">{initial.map((item) => {
       const intro = item.intro_request_id ? byIntroId.get(item.intro_request_id) : undefined;
       let { text, href } = notificationText(item, ctx);
       if (item.kind === "intro_progress" && intro && item.user_id !== intro.requester_id && item.user_id !== intro.target_id) {

@@ -32,6 +32,9 @@ import {
   visibleProjects,
 } from "./projects";
 import { MASTER_ID, ME_ID, projects } from "./mock-data";
+import { makeWording } from "./store-words";
+import { GIA_WORDS } from "./words/gia";
+import { KENSETSU_FUDOSAN_WORDS } from "./words/kensetsu-fudosan";
 
 const project = (id: string, patch: Partial<Project> = {}): Project => ({
   id,
@@ -124,9 +127,13 @@ describe("しめきりの日数", () => {
   });
 
   it("すぎた・きょう・あと何日", () => {
-    expect(dueLabel("2026-09-13", "2026-09-15")).toEqual({ text: "2日 すぎています", overdue: true });
-    expect(dueLabel("2026-09-15", "2026-09-15")).toEqual({ text: "きょうまで", overdue: false });
-    expect(dueLabel("2026-09-18", "2026-09-15")).toEqual({ text: "あと3日", overdue: false });
+    const w = makeWording(GIA_WORDS);
+    expect(dueLabel("2026-09-13", "2026-09-15", w)).toEqual({ text: "2日 すぎています", overdue: true });
+    expect(dueLabel("2026-09-15", "2026-09-15", w)).toEqual({ text: "きょうまで", overdue: false });
+    expect(dueLabel("2026-09-18", "2026-09-15", w)).toEqual({ text: "あと3日", overdue: false });
+    const k = makeWording(KENSETSU_FUDOSAN_WORDS);
+    expect(dueLabel("2026-09-13", "2026-09-15", k)).toEqual({ text: "2日過ぎています", overdue: true });
+    expect(dueLabel("2026-09-15", "2026-09-15", k)).toEqual({ text: "今日まで", overdue: false });
   });
 });
 

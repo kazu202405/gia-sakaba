@@ -23,7 +23,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
     const confirmed = await uiConfirm({
       title: `${questTerm}を取り下げます`,
       message: applicantCount > 0
-        ? `掲示板から消え、参加希望者${applicantCount}人におしらせが届きます。進行中の紹介依頼も取り消されます。`
+        ? store.w("owner.withdrawMsg", { count: applicantCount })
         : "掲示板から消えます。進行中の紹介依頼があれば取り消されます。",
       okLabel: "取り下げる",
       danger: true,
@@ -47,7 +47,7 @@ export function LiveQuestOwnerActions({ questId, questTerm, applicantCount, gath
   return <div className="c-dashed-top mt-8 space-y-3 pt-6">
     {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     <div className="flex flex-wrap items-center gap-3">
-      <Link href={store.path(`/quests/${questId}/edit`)} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">内容をなおす</Link>
+      <Link href={store.path(`/quests/${questId}/edit`)} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">{store.w("owner.edit")}</Link>
       {!gathering && <Link href={store.path(`/quests/${questId}/applicants`)} className="c-button-sub inline-flex h-11 items-center px-4 text-sm">参加希望者を見る（{applicantCount}人）</Link>}
       <button type="button" onClick={() => void withdraw()} disabled={busy} className="c-muted ml-auto text-xs underline underline-offset-4 disabled:opacity-50">{busy ? "取り下げ中…" : `この${questTerm}を取り下げる`}</button>
     </div>

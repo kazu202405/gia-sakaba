@@ -178,7 +178,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   if (pipeline.steps.length === 0) {
     return <div className="space-y-4">
       <p className="c-muted text-sm leading-relaxed">相手を行に、進める手順を列に並べ、予定日と完了日を記録します。呼び名と短いメモだけを扱い、連絡先は保存しません。</p>
-      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub c-wrap-button px-4 disabled:opacity-50">{busy ? "準備中…" : "▶ あいてごとの じょうきょうを きろくする"}</button>}
+      {editable && <button type="button" disabled={busy} onClick={() => run("sakaba_enable_project_steps", { p_project_id: projectId }, "開始")} className="c-button-sub c-wrap-button px-4 disabled:opacity-50">{busy ? "準備中…" : store.w("proj.pipelineStart")}</button>}
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
     </div>;
   }
@@ -236,7 +236,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {selection?.kind === "cell" && selectedContact && selectedStep && <div className="c-card space-y-4 p-4">
       <p className="text-sm">{selectedContact.label}：{selectedStep.name}</p>
       <div className="space-y-3">
-        <div><p className="c-muted mb-1 text-xs">{cellFinished ? "おわった日" : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => { setCellDate(value); if (value && value <= todayInJapan() && !finishedTouched.current) setCellFinished(true); })} label={cellFinished ? "おわった日" : "予定日"} /></div>
+        <div><p className="c-muted mb-1 text-xs">{cellFinished ? store.w("people.doneOn") : "予定日"}</p><DateInput value={cellDate} onChange={(value) => editCell(() => { setCellDate(value); if (value && value <= todayInJapan() && !finishedTouched.current) setCellFinished(true); })} label={cellFinished ? store.w("people.doneOn") : "予定日"} /></div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <div role="radiogroup" aria-label="進み具合" className="flex items-center gap-2">
             {([[true, "完了"], [false, "未定"]] as const).map(([value, text]) => <button key={text} type="button" role="radio" aria-checked={cellFinished === value} onClick={() => editCell(() => { finishedTouched.current = true; setCellFinished(value); if (value && !cellDate) setCellDate(todayInJapan()); })} className={`h-9 min-w-14 border-2 border-guild-ink px-3 text-sm ${cellFinished === value ? "bg-guild-ink text-guild-paper" : "bg-guild-paper"}`}>{text}</button>)}
@@ -294,7 +294,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     {addPanel}
     <div className="space-y-2">
       <button type="button" aria-expanded={followUpOpen} onClick={() => { if (followUpOpen && selectedInFollowUp) { leaveCell(); setSelection(null); } setFollowUpOpen(!followUpOpen); }} className="flex min-h-9 items-center gap-1 text-sm">
-        {followUpOpen ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人{followUpOpen ? "" : "（ひらく）"}</span>
+        {followUpOpen ? <ChevronDown size={18} aria-hidden /> : <ChevronRight size={18} aria-hidden />}フォローアップ<span className="c-muted ml-2 text-xs">{followUpContacts.length}人{followUpOpen ? "" : store.w("people.open")}</span>
       </button>
       {followUpOpen && <div role="tablist" aria-label="フォローアップの結果" className="flex flex-wrap gap-2">
         {followUpTabs.map((tab) => <button key={tab.key} type="button" role="tab" aria-selected={followUpTab === tab.key} onClick={() => setFollowUpTab(tab.key)} className={`h-9 min-w-16 border-2 border-guild-ink px-3 text-sm ${followUpTab === tab.key ? "bg-guild-ink text-guild-paper" : "bg-guild-paper"}`}>{tab.label} {tab.list.length}</button>)}
@@ -303,7 +303,7 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
     </div>
     {selectedInFollowUp && editPanels}
     {editable && <div className="c-dashed-top pt-4">
-      <button type="button" onClick={() => setEditingSteps(!editingSteps)} className="c-muted text-xs underline">{editingSteps ? "手順の編集を閉じる" : "手順（列）をなおす"}</button>
+      <button type="button" onClick={() => setEditingSteps(!editingSteps)} className="c-muted text-xs underline">{editingSteps ? "手順の編集を閉じる" : store.w("people.editSteps")}</button>
       {editingSteps && <div className="mt-4 space-y-3">
         {pipeline.steps.map((step) => hiddenSteps.includes(step.id)
           ? <div key={step.id} role="status" aria-busy="true" className="c-muted flex h-11 items-center gap-2 text-xs opacity-60"><Loader2 size={16} className="animate-spin" aria-hidden />「{step.name}」を削除中…</div>
@@ -320,9 +320,10 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
 }
 
 function StepNameEditor({ step, busy, run, onDelete, canDelete }: { step: GuildProjectPipeline["steps"][number]; busy: boolean; run: (name: string, args: Record<string, unknown>, action: string, onSuccess?: () => void) => Promise<boolean>; onDelete: () => void; canDelete: boolean }) {
+  const store = useGuildStore();
   const [name, setName] = useState(step.name);
   return <div className="flex items-center gap-2"><div className="min-w-0 flex-1"><TextInput value={name} onChange={setName} max={12} label={`${step.name}の名前`} /></div>
-    <button type="button" disabled={busy || !name.trim() || name.trim() === step.name} onClick={() => run("sakaba_rename_project_step", { p_step_id: step.id, p_name: name.trim() }, "手順の更新")} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">なおす</button>
+    <button type="button" disabled={busy || !name.trim() || name.trim() === step.name} onClick={() => run("sakaba_rename_project_step", { p_step_id: step.id, p_name: name.trim() }, "手順の更新")} className="c-button-sub h-11 shrink-0 px-3 text-xs disabled:opacity-50">{store.w("people.rename")}</button>
     <button type="button" disabled={busy || !canDelete} onClick={onDelete} aria-label={`${step.name}の列を削除`} title={canDelete ? `${step.name}の列を削除` : "最後の1列は削除できません"} className="flex h-11 w-11 shrink-0 items-center justify-center text-[#c62828] hover:bg-[#c62828]/10 focus-visible:outline-2 focus-visible:outline-[#c62828] disabled:opacity-40"><Trash2 size={18} aria-hidden /></button>
   </div>;
 }

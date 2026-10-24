@@ -72,7 +72,7 @@ export default async function MasterPage() {
           </>}
       </section>}
       <nav aria-label="管理項目" className="c-window p-4 pt-7 sm:p-5 sm:pt-8">
-        <span className="c-window-title">管理コマンド</span>
+        <span className="c-window-title">{store.w("master.menuTitle")}</span>
         <ul className="grid gap-x-8 text-sm sm:grid-cols-2">
           {isOwner && <li>
             <a href="#master-pending-members-title" className="rpg-cursor-row flex min-h-11 items-center gap-2 px-1 py-2 tracking-wider">

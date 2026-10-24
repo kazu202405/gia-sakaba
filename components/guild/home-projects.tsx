@@ -12,6 +12,8 @@ import { dueLabel, upcomingItems, visibleProjects, type UpcomingItem } from "@/l
 import { MoreLink, Window } from "./cards";
 import { ProjectRow, TaskLine } from "./project-parts";
 import { useGuildStore } from "@/components/guild/store-context";
+import { makeWording } from "@/lib/guild/store-words";
+import { GIA_WORDS } from "@/lib/guild/words/gia";
 
 const UPCOMING_DAYS = 7;
 
@@ -89,7 +91,7 @@ export function HomeProjects() {
 /** あいてごとの じょうきょうの予定。完了は ます目で入れるので、押すとプロジェクトへ移る */
 function StepLine({ item }: { item: Extract<UpcomingItem, { kind: "step" }> }) {
   const store = useGuildStore();
-  const due = dueLabel(item.date, TODAY);
+  const due = dueLabel(item.date, TODAY, makeWording(GIA_WORDS));
   return (
     <Link href={store.path(`/projects/${item.project.id}#people`)} className="rpg-cursor-row flex items-start gap-3 py-2.5">
       {/* ここでは おわりにできないので、□ではなく 移動の目印（▶）にする */}
