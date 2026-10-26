@@ -58,7 +58,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 酒場の道の表は lib/guild/live-routes.ts（店の名前を外した形で照合する）。道の組み立ては lib/guild/store-path.ts
-  const inGuild = pathname.startsWith(GUILD_ROOT);
+  // /guild そのものか /guild/… だけ。startsWith だけだと見本の /guild-look まで巻き込み、手元でも開けなくなる
+  const inGuild = pathname === GUILD_ROOT || pathname.startsWith(`${GUILD_ROOT}/`);
   if (inGuild && !isPublicGuildPath(pathname) && !user) {
     const url = request.nextUrl.clone();
     url.pathname = outsideStorePath("login");

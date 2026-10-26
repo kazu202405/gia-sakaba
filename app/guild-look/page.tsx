@@ -5,6 +5,16 @@ import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 export default function GuildLookIndexPage() {
   const items = [
     {
+      key: "K",
+      title: "建設・不動産の酒場：相談する → 追跡 → 管理者が渡す（全体の見本）",
+      note: "DBなし・仮データで、全画面を押して回れます。上の切り替えで、相談する人／受ける人／管理者を見られます",
+      links: [
+        { href: "/guild-look/kensetsu", label: "相談する人" },
+        { href: "/guild-look/kensetsu/incoming?as=member", label: "受ける人" },
+        { href: "/guild-look/kensetsu/master?as=admin", label: "管理者" },
+      ],
+    },
+    {
       key: "C",
       title: "C. 明るい酒場（A×B）",
       note: "Bの明るさ＋Aの窓・▶カーソル・ボタン・急ぎ札。文字はすべてドットで、言葉もひらがな多め",

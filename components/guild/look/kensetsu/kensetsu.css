@@ -1,0 +1,878 @@
+/*
+ * 建設・不動産の酒場 UXモック（段階0）の見た目。
+ * 色・角丸・書体は components/guild/guild-theme.css の --guild-* を読む（店の色は data-store、形は data-theme が決める）。
+ * このファイルで足すのは、モック専用の変数（--kz-*）と、箱を使わない（線・余白・見出しで区切る）部品だけ。
+ * 色の直書きは変数の定義の中だけ。
+ */
+
+.kz {
+  /* 足りない色。--guild-* を土台にして、ここ1か所で決める */
+  --kz-danger: #c62828;
+  --kz-warn: #9a3412;
+  --kz-line: rgb(var(--guild-ink-rgb) / 0.14);
+  --kz-muted: rgb(var(--guild-ink-rgb) / 0.66);
+  --kz-faint: rgb(var(--guild-ink-rgb) / 0.32);
+  --kz-disabled-bg: rgb(var(--guild-ink-rgb) / 0.16);
+  --kz-disabled-ink: rgb(var(--guild-ink-rgb) / 0.55);
+  --kz-hatch-a: color-mix(in srgb, var(--guild-ink) 9%, var(--guild-paper));
+  --kz-hatch-b: color-mix(in srgb, var(--guild-ink) 4%, var(--guild-paper));
+  --kz-shadow-modal: 0 8px 30px rgb(var(--guild-ink-rgb) / 0.28);
+
+  font-family: var(--font-jp-sans), system-ui, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: var(--guild-ink);
+  background: var(--guild-paper);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.kz *,
+.kz *::before,
+.kz *::after {
+  box-sizing: border-box;
+}
+.kz :is(p, h1, h2, h3, li, span, small) {
+  text-wrap: pretty;
+}
+/* トースト（components/ui/dialog-host.tsx）を下のメニューの上に出す */
+body:has(.kz) {
+  --ui-toast-bottom: 5.5rem;
+}
+
+.kz :where(dl, dd, ol, ul) {
+  margin: 0;
+  padding: 0;
+}
+.kz-confirm-value {
+  line-height: 1.7;
+}
+.kz a {
+  color: inherit;
+  text-decoration: none;
+}
+.kz :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--guild-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- 外枠 ---------- */
+.kz-top {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--guild-paper);
+  border-bottom: 3px solid var(--guild-accent);
+}
+.kz-top-in {
+  max-width: 40rem;
+  margin: 0 auto;
+  height: 3.5rem;
+  padding: 0 0.5rem 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.kz-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.kz-bell {
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.kz-bell-count {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.05rem;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--kz-warn);
+  color: var(--guild-paper);
+  font-size: 0.7rem;
+  line-height: 1.15rem;
+  text-align: center;
+}
+
+.kz-role {
+  background: var(--guild-bg);
+  border-bottom: 1px solid var(--kz-line);
+}
+.kz-role-in {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 0.5rem 1rem 0.6rem;
+}
+.kz-role-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.75rem;
+  color: var(--kz-muted);
+  line-height: 1.4;
+}
+.kz-role-set {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--guild-accent);
+  border-radius: var(--guild-radius);
+  overflow: hidden;
+}
+.kz-role-set a {
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.9375rem;
+  line-height: 1.3;
+  padding: 0 0.25rem;
+  background: var(--guild-paper);
+  color: var(--guild-accent-dark);
+}
+.kz-role-set a + a {
+  border-left: 1px solid var(--guild-accent);
+}
+.kz-role-set a[aria-current="true"] {
+  background: var(--guild-accent);
+  color: var(--guild-accent-ink);
+  font-weight: 700;
+}
+
+.kz-main {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem calc(6.5rem + env(safe-area-inset-bottom));
+}
+
+.kz-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: var(--guild-paper);
+  border-top: 1px solid var(--kz-line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.kz-nav-in {
+  max-width: 40rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.kz-nav a {
+  min-height: 4.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--kz-muted);
+}
+.kz-nav a[aria-current="page"] {
+  color: var(--guild-accent);
+  font-weight: 700;
+}
+.kz-nav-badge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.9rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--kz-warn);
+  color: var(--guild-paper);
+  font-size: 0.7rem;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+/* ---------- 文字 ---------- */
+.kz h1 {
+  font-size: 1.5rem;
+  line-height: 1.45;
+  margin: 0 0 0.9rem;
+  font-weight: 700;
+}
+.kz h2 {
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  margin: 0 0 0.4rem;
+  font-weight: 700;
+}
+.kz-lead {
+  margin: -0.3rem 0 1.1rem;
+  color: var(--kz-muted);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+}
+.kz-muted {
+  color: var(--kz-muted);
+}
+.kz-small {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+.kz-error {
+  margin: 0.4rem 0 0;
+  color: var(--kz-danger);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.kz-warn {
+  margin: 0.5rem 0;
+  color: var(--kz-warn);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+.kz-rule {
+  border: 0;
+  border-top: 1px solid var(--kz-line);
+  margin: 1.5rem 0 1rem;
+}
+.kz-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.kz-sec-head a {
+  font-size: 0.875rem;
+  color: var(--guild-accent-dark);
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---------- ボタン ---------- */
+.kz-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.5rem 1rem;
+  border: 1.5px solid var(--guild-accent);
+  border-radius: var(--guild-radius);
+  background: var(--guild-accent);
+  color: var(--guild-accent-ink);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+}
+.kz-btn:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--guild-accent-hover);
+}
+.kz-btn--sub {
+  background: var(--guild-paper);
+  color: var(--guild-accent-dark);
+}
+.kz-btn--sub:hover:not(:disabled):not([aria-disabled="true"]) {
+  background: var(--guild-accent-light);
+}
+.kz-btn--danger {
+  background: var(--kz-danger);
+  border-color: var(--kz-danger);
+  color: var(--guild-paper);
+}
+.kz-btn--danger:hover:not(:disabled) {
+  background: var(--kz-danger);
+  filter: brightness(0.92);
+}
+.kz-btn--small {
+  min-height: 2.75rem;
+  font-size: 0.9375rem;
+  padding: 0.35rem 0.75rem;
+}
+.kz-btn:disabled,
+.kz-btn[aria-disabled="true"] {
+  background: var(--kz-disabled-bg);
+  border-color: transparent;
+  color: var(--kz-disabled-ink);
+  cursor: not-allowed;
+}
+.kz-btn-row {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+.kz-pass-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+}
+.kz-pass-cell small {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--kz-muted);
+}
+
+/* ---------- 種類の行（ホーム） ---------- */
+.kz-picks {
+  border-top: 1px solid var(--kz-line);
+}
+.kz-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 4.25rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--kz-line);
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+.kz-pick:hover {
+  background: rgb(var(--guild-ink-rgb) / 0.03);
+}
+.kz-pick-icon {
+  color: var(--guild-accent);
+  flex: none;
+}
+.kz-pick-text {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+.kz-pick-text small {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--kz-muted);
+}
+.kz-pick-go {
+  color: var(--kz-faint);
+  flex: none;
+}
+
+/* ---------- 行（一覧） ---------- */
+.kz-list {
+  border-top: 1px solid var(--kz-line);
+}
+.kz-row {
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--kz-line);
+}
+.kz-row > p {
+  margin: 0;
+  line-height: 1.6;
+}
+.kz-row-link {
+  display: block;
+}
+.kz-row-link:hover {
+  background: rgb(var(--guild-ink-rgb) / 0.03);
+}
+.kz-meta {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--kz-muted);
+}
+.kz-meta--accent {
+  color: var(--guild-accent-dark);
+}
+.kz-empty {
+  margin: 1rem 0;
+  color: var(--kz-muted);
+  line-height: 1.8;
+}
+.kz-unread {
+  font-weight: 700;
+}
+.kz-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: var(--kz-warn);
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+/* 進み具合の線（4段） */
+.kz-steps {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.4rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--guild-accent-dark);
+}
+.kz-steps b {
+  width: 1.9rem;
+  height: 0.28rem;
+  border-radius: 2px;
+  background: var(--guild-accent);
+}
+.kz-steps b.off {
+  background: var(--kz-line);
+}
+.kz-steps span {
+  margin-left: 0.2rem;
+}
+.kz-steps--closed {
+  color: var(--kz-muted);
+}
+
+/* 追跡の縦の線 */
+.kz-time {
+  list-style: none;
+  position: relative;
+  padding-left: 1.9rem;
+  margin: 0 0 1.5rem;
+}
+.kz-time::before {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  bottom: 1.6rem;
+  width: 2px;
+  background: var(--kz-line);
+}
+.kz-st {
+  position: relative;
+  padding-bottom: 1.1rem;
+}
+.kz-st::before {
+  content: "";
+  position: absolute;
+  left: -1.72rem;
+  top: 0.35rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 999px;
+  background: var(--guild-accent);
+}
+.kz-st--now::before {
+  background: var(--guild-paper);
+  border: 3px solid var(--guild-accent);
+  box-shadow: 0 0 0 5px var(--guild-accent-light);
+}
+.kz-st--off::before {
+  background: var(--guild-paper);
+  border: 2px solid var(--kz-faint);
+}
+.kz-st p {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.kz-st--off p {
+  color: var(--kz-faint);
+  font-weight: 500;
+}
+.kz-st .kz-meta {
+  margin-top: 0.1rem;
+}
+.kz-st--now .kz-meta {
+  color: var(--guild-accent-dark);
+}
+.kz-note-line {
+  margin: 0 0 1.5rem;
+  padding-left: 0.9rem;
+  border-left: 3px solid var(--kz-warn);
+  line-height: 1.8;
+}
+
+/* タグ・印 */
+.kz-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.1rem 0 1.1rem;
+}
+.kz-tag {
+  display: inline-block;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding: 0.12rem 0.6rem;
+  border-radius: 4px;
+  background: var(--guild-bg);
+  color: var(--kz-muted);
+}
+.kz-mark {
+  display: inline-block;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  background: var(--guild-accent-light);
+  color: var(--guild-accent-dark);
+  font-weight: 500;
+}
+.kz-mark--off {
+  background: var(--guild-bg);
+  color: var(--kz-muted);
+  font-weight: 400;
+}
+.kz-marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+/* 写真 */
+.kz-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
+}
+.kz-photo {
+  position: relative;
+  width: 5.25rem;
+  height: 4rem;
+  border-radius: 6px;
+  overflow: hidden;
+  background: repeating-linear-gradient(45deg, var(--kz-hatch-a) 0 8px, var(--kz-hatch-b) 8px 16px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  color: var(--kz-muted);
+}
+.kz-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.kz-photo-x {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 0.2rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--guild-paper);
+}
+.kz-photo-x span {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 999px;
+  background: rgb(var(--guild-ink-rgb) / 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 見出しの下の本文 */
+.kz-quote {
+  margin: 0.4rem 0 0.7rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- 入力 ---------- */
+.kz-progress {
+  margin: 0 0 0.3rem;
+  font-size: 0.875rem;
+  color: var(--guild-accent-dark);
+  font-weight: 700;
+}
+.kz-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+  margin-bottom: 1.1rem;
+}
+.kz-bar i {
+  height: 0.28rem;
+  border-radius: 2px;
+  background: var(--kz-line);
+}
+.kz-bar i.on {
+  background: var(--guild-accent);
+}
+.kz-field {
+  display: block;
+  margin: 0 0 1.1rem;
+}
+.kz-field > span,
+.kz-label {
+  display: block;
+  margin: 0 0 0.35rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+.kz-input {
+  display: block;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--guild-ink);
+  background: var(--guild-paper);
+  border: 1.5px solid var(--guild-accent);
+  border-radius: var(--guild-radius);
+}
+textarea.kz-input {
+  min-height: 9rem;
+  resize: vertical;
+}
+.kz-input[aria-invalid="true"] {
+  border-color: var(--kz-danger);
+}
+.kz-count {
+  margin: 0.2rem 0 0;
+  text-align: right;
+  font-size: 0.8125rem;
+  color: var(--kz-muted);
+}
+.kz-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 0.6rem 0 1rem;
+}
+.kz-tools .kz-btn {
+  font-size: 0.9375rem;
+}
+.kz-choices {
+  display: grid;
+  gap: 0.5rem;
+}
+.kz-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3.25rem;
+  padding: 0.4rem 0.8rem;
+  border: 1.5px solid var(--kz-line);
+  border-radius: var(--guild-radius);
+  cursor: pointer;
+}
+.kz-choice:has(input:checked) {
+  border-color: var(--guild-accent);
+  background: var(--guild-accent-light);
+  font-weight: 700;
+}
+.kz-choice input {
+  width: 1.3rem;
+  height: 1.3rem;
+  accent-color: var(--guild-accent);
+  flex: none;
+}
+.kz-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.kz-chip {
+  min-height: 2.75rem;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--kz-line);
+  background: var(--guild-paper);
+  color: var(--guild-ink);
+  font: inherit;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+.kz-chip[aria-pressed="true"] {
+  background: var(--guild-accent-light);
+  border-color: var(--guild-accent);
+  color: var(--guild-accent-dark);
+  font-weight: 700;
+}
+.kz-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.6rem 0;
+  min-height: 2.75rem;
+  cursor: pointer;
+  line-height: 1.7;
+}
+.kz-check input {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-top: 0.2rem;
+  accent-color: var(--guild-accent);
+  flex: none;
+}
+
+/* ---------- タブ ---------- */
+.kz-tabs {
+  display: flex;
+  gap: 1.4rem;
+  border-bottom: 1px solid var(--kz-line);
+  margin: 0 0 0.3rem;
+}
+.kz-tabs button {
+  min-height: 2.75rem;
+  padding: 0.3rem 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--kz-muted);
+  cursor: pointer;
+}
+.kz-tabs button[aria-selected="true"] {
+  color: var(--guild-ink);
+  font-weight: 700;
+  border-bottom-color: var(--guild-accent);
+}
+.kz-tabs em {
+  font-style: normal;
+  font-size: 0.75rem;
+  background: var(--kz-warn);
+  color: var(--guild-paper);
+  border-radius: 999px;
+  padding: 0 0.45rem;
+  margin-left: 0.3rem;
+}
+
+/* ---------- モーダル（箱でよい） ---------- */
+.kz-modal-back {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(var(--guild-ink-rgb) / 0.45);
+}
+.kz-modal {
+  width: 100%;
+  max-width: 32rem;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 1.25rem 1.1rem calc(1.25rem + env(safe-area-inset-bottom));
+  background: var(--guild-paper);
+  color: var(--guild-ink);
+  border-radius: calc(var(--guild-radius) * 2) calc(var(--guild-radius) * 2) 0 0;
+  box-shadow: var(--kz-shadow-modal);
+}
+@media (min-width: 640px) {
+  .kz-modal-back {
+    align-items: center;
+  }
+  .kz-modal {
+    border-radius: calc(var(--guild-radius) * 2);
+  }
+}
+.kz-modal h2 {
+  font-size: 1.1875rem;
+  margin: 0 0 0.6rem;
+}
+.kz-modal-box {
+  margin: 0.5rem 0 0.8rem;
+  padding: 0.75rem 0.85rem;
+  background: var(--guild-bg);
+  border-radius: var(--guild-radius);
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+/* ---------- 読み込み中の仮の画面 ---------- */
+.kz-skel {
+  display: block;
+  height: 1rem;
+  border-radius: 4px;
+  background: currentColor;
+  opacity: 0.1;
+  margin-bottom: 0.9rem;
+  animation: kz-pulse 1.2s ease-in-out infinite;
+}
+.kz-skel--title {
+  width: 60%;
+  height: 1.75rem;
+}
+.kz-skel--line {
+  width: 85%;
+}
+.kz-skel--block {
+  width: 100%;
+  height: 4rem;
+}
+.kz-skel--short {
+  width: 70%;
+}
+.kz-nav-icon {
+  position: relative;
+  display: inline-flex;
+}
+@keyframes kz-pulse {
+  50% {
+    opacity: 0.2;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kz-skel {
+    animation: none;
+  }
+}
+
+/* ---------- 名簿の絞り込み ---------- */
+.kz-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+.kz-filters .kz-field {
+  margin: 0;
+}
+@media (max-width: 359px) {
+  .kz-filters {
+    grid-template-columns: 1fr;
+  }
+}
+.kz-region {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.8125rem;
+  color: var(--kz-muted);
+}
+
+.kz-link-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.25rem;
+  border-top: 1px solid var(--kz-line);
+  margin-bottom: 0.4rem;
+}
+.kz-tab-count {
+  font-size: 0.75rem;
+  color: var(--kz-muted);
+  margin-left: 0.3rem;
+}
