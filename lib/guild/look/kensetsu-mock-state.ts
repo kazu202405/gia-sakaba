@@ -63,7 +63,7 @@ export type MockAction =
   | { type: "withdraw"; id: string; now: number }
   | { type: "raiseHand"; id: string; memberId: string }
   | { type: "readNotice"; id: string }
-  | { type: "saveProfile"; memberId: string; patch: Partial<Pick<Member, "industry" | "areas" | "works" | "hasConstructionLicense" | "hasRealEstateLicense" | "photos" | "photoCount">> };
+  | { type: "saveProfile"; memberId: string; patch: Partial<Pick<Member, "industry" | "areas" | "works" | "hasConstructionLicense" | "hasRealEstateLicense" | "headline" | "message" | "photos" | "lookingFor" | "hometown" | "hobbies" | "lifeStory">> };
 
 function patchReferral(state: MockState, id: string, patch: Partial<Referral>): MockState {
   return { ...state, referrals: state.referrals.map((r) => (r.id === id ? { ...r, ...patch } : r)) };

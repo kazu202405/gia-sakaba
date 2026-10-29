@@ -173,21 +173,30 @@ export type Member = {
   hasConstructionLicense: boolean;
   hasRealEstateLicense: boolean;
   works: readonly string[];
-  /** 実績写真の枚数（仮の写真枠を出す） */
-  photoCount: number;
-  /** 自分で選んだ実績写真（Object URL。この画面の中だけ） */
-  photos?: readonly Photo[];
   contact: string;
+  // ここから下は自由に書く欄（空なら出さない）。実績写真は選びにくいのでやめ、「伝えたいこと」に書いてもらう（10-29）
+  headline?: string;
+  /** 伝えたいこと（実績・強みなど）。本番では店ごとのプロフィールの bio */
+  message?: string;
+  /** 伝えたいことに添える写真（任意・PHOTO_MAX 枚まで）。Object URL はこの画面の中だけ */
+  photos?: readonly Photo[];
+  lookingFor?: string;
+  hometown?: string;
+  hobbies?: string;
+  lifeStory?: string;
 };
 
+// プロフィールの文字数の上限（本番のDBの上限に合わせる）
+export const PROFILE_TEXT_MAX = { headline: 40, message: 1200, lookingFor: 1200, hometown: 80, hobbies: 300, lifeStory: 1200 } as const;
+
 export const MEMBERS: readonly Member[] = [
-  { id: "m-tanaka", name: "田中さん", company: "田中管理サービス（仮）", industry: "realestate", areas: ["大阪府"], hasConstructionLicense: false, hasRealEstateLicense: true, works: ["賃貸管理"], photoCount: 1, contact: "LINE（仮）" },
-  { id: "m-yamamoto", name: "山本さん", company: "山本工務店（仮）", industry: "roof", areas: ["大阪府", "兵庫県"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["屋根", "外壁塗装", "雨漏り"], photoCount: 3, contact: "LINE（仮）" },
-  { id: "m-ito", name: "伊藤さん", company: "伊藤内装（仮）", industry: "interior", areas: ["大阪府", "京都府"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["内装", "店舗改装"], photoCount: 2, contact: "電話（仮）" },
-  { id: "m-saito", name: "斎藤さん", company: "斎藤設備（仮）", industry: "equipment", areas: ["大阪府", "奈良県"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["水まわり", "電気"], photoCount: 0, contact: "LINE（仮）" },
-  { id: "m-kato", name: "加藤さん", company: "加藤不動産（仮）", industry: "realestate", areas: ["大阪府", "兵庫県"], hasConstructionLicense: false, hasRealEstateLicense: true, works: ["賃貸管理"], photoCount: 1, contact: "電話（仮）" },
-  { id: "m-matsuda", name: "松田さん", company: "松田経営支援（仮）", industry: "finance", areas: ["大阪府", "京都府", "兵庫県"], hasConstructionLicense: false, hasRealEstateLicense: false, works: [], photoCount: 0, contact: "メール（仮）" },
-  { id: "m-admin", name: "管理者", company: "建設・不動産の酒場 運営（仮）", industry: "", areas: ["大阪府"], hasConstructionLicense: false, hasRealEstateLicense: false, works: [], photoCount: 0, contact: "LINE（仮）" },
+  { id: "m-tanaka", name: "田中さん", company: "田中管理サービス（仮）", industry: "realestate", areas: ["大阪府"], hasConstructionLicense: false, hasRealEstateLicense: true, works: ["賃貸管理"], contact: "LINE（仮）", headline: "大阪市内の賃貸管理をしています" },
+  { id: "m-yamamoto", name: "山本さん", company: "山本工務店（仮）", industry: "roof", areas: ["大阪府", "兵庫県"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["屋根", "外壁塗装", "雨漏り"], contact: "LINE（仮）", headline: "屋根と雨漏りなら、まず相談ください", message: "大阪・兵庫で屋根工事を25年（仮）。雨漏りは原因を見つけるところから入ります。年に80件ほど（仮）。小さな修理でも伺います。", lookingFor: "外壁塗装の職人さん・空き家の持ち主とつながっている方", hometown: "堺市", hobbies: "釣り・草野球", lifeStory: "父の工務店を継いで2代目（仮）。", photos: [{ id: "m-yamamoto-p1", name: "写真" }, { id: "m-yamamoto-p2", name: "写真" }] },
+  { id: "m-ito", name: "伊藤さん", company: "伊藤内装（仮）", industry: "interior", areas: ["大阪府", "京都府"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["内装", "店舗改装"], contact: "電話（仮）" },
+  { id: "m-saito", name: "斎藤さん", company: "斎藤設備（仮）", industry: "equipment", areas: ["大阪府", "奈良県"], hasConstructionLicense: true, hasRealEstateLicense: false, works: ["水まわり", "電気"], contact: "LINE（仮）" },
+  { id: "m-kato", name: "加藤さん", company: "加藤不動産（仮）", industry: "realestate", areas: ["大阪府", "兵庫県"], hasConstructionLicense: false, hasRealEstateLicense: true, works: ["賃貸管理"], contact: "電話（仮）" },
+  { id: "m-matsuda", name: "松田さん", company: "松田経営支援（仮）", industry: "finance", areas: ["大阪府", "京都府", "兵庫県"], hasConstructionLicense: false, hasRealEstateLicense: false, works: [], contact: "メール（仮）" },
+  { id: "m-admin", name: "管理者", company: "建設・不動産の酒場 運営（仮）", industry: "", areas: ["大阪府"], hasConstructionLicense: false, hasRealEstateLicense: false, works: [], contact: "LINE（仮）" },
 ];
 
 export type Partner = {

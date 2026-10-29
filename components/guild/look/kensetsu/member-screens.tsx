@@ -9,6 +9,7 @@ import {
   INDUSTRIES,
   MASKED_REQUESTER,
   PHOTO_MAX,
+  PROFILE_TEXT_MAX,
   PREFECTURES,
   REGIONS,
   WORK_TYPES,
@@ -89,8 +90,7 @@ export function ProfileScreen() {
   const { persona } = useK();
   const [card, setCard] = useState<{ url: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
-  const photos: readonly Photo[] = persona.photos ?? Array.from({ length: persona.photoCount }, (_, i) => ({ id: `${persona.id}-p${i}`, name: "写真" }));
-  const filled = [persona.industry, persona.areas.length > 0, persona.works.length > 0, photos.length > 0].filter(Boolean).length;
+  const filled = [persona.industry, persona.areas.length > 0, persona.works.length > 0, persona.message?.trim()].filter(Boolean).length;
 
   const onCard = (files: FileList | null) => {
     const file = files?.[0];
@@ -104,6 +104,7 @@ export function ProfileScreen() {
     <div>
       <h1>{persona.name}</h1>
       <p className="kz-lead">{persona.company}　／　入力状況 {filled}/4</p>
+      {persona.headline?.trim() && <p>{persona.headline}</p>}
       <dl className="kz-list">
         <ProfileRow term="業種" value={persona.industry ? industryLabel(persona.industry) : "未入力"} />
         <ProfileRow term="対応エリア" value={persona.areas.length > 0 ? persona.areas.join("・") : "未入力"} />
@@ -112,16 +113,31 @@ export function ProfileScreen() {
           <dd><Marks receiver={persona} /></dd>
         </div>
         <div className="kz-row">
-          <dt className="kz-label">得意な工事</dt>
+          <dt className="kz-label">得意な工事・できること</dt>
           <dd>
             {persona.works.length > 0 ? <span className="kz-tags">{persona.works.map((w) => <span key={w} className="kz-tag">{w}</span>)}</span> : "未入力"}
           </dd>
         </div>
-        <div className="kz-row">
-          <dt className="kz-label">実績写真</dt>
-          <dd>{photos.length > 0 ? <PhotoTiles photos={photos} /> : "未入力"}</dd>
-        </div>
+        <ProfileText term="伝えたいこと（実績・強みなど）" value={persona.message} required />
+        {persona.photos && persona.photos.length > 0 && (
+          <div className="kz-row">
+            <dt className="kz-label">写真</dt>
+            <dd><PhotoTiles photos={persona.photos} /></dd>
+          </div>
+        )}
+        <ProfileText term="探しているもの" value={persona.lookingFor} />
+        <ProfileRow term="連絡先" value={persona.contact} />
       </dl>
+      {[persona.hometown, persona.hobbies, persona.lifeStory].some((v) => v?.trim()) && (
+        <>
+          <h2>雑談のきっかけ</h2>
+          <dl className="kz-list">
+            <ProfileText term="出身" value={persona.hometown} />
+            <ProfileText term="趣味" value={persona.hobbies} />
+            <ProfileText term="これまで" value={persona.lifeStory} />
+          </dl>
+        </>
+      )}
       <div className="kz-btn-row">
         <KLink to="/me/edit" className="kz-btn">プロフィールを編集する</KLink>
         <KLink to="/members" className="kz-btn kz-btn--sub">名簿を見る</KLink>
@@ -153,12 +169,26 @@ function ProfileRow({ term, value }: { term: string; value: string }) {
   );
 }
 
+// 自由に書く欄。空なら行ごと出さない（required の欄だけ「未入力」と出して書いてもらう）
+function ProfileText({ term, value, required = false }: { term: string; value?: string; required?: boolean }) {
+  const text = value?.trim() ?? "";
+  if (!text && !required) return null;
+  return (
+    <div className="kz-row">
+      <dt className="kz-label">{term}</dt>
+      <dd className="kz-pre">{text || "未入力"}</dd>
+    </div>
+  );
+}
+
 // ---------- 8. 自分を編集 ----------
 
 export function ProfileEditScreen() {
   const { persona } = useK();
   return <ProfileEditForm key={persona.id} persona={persona} />;
 }
+
+type TextKey = keyof typeof PROFILE_TEXT_MAX;
 
 function toggle(list: readonly string[], value: string): string[] {
   return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -172,7 +202,15 @@ function ProfileEditForm({ persona }: { persona: Member }) {
   const [works, setWorks] = useState<string[]>([...persona.works]);
   const [construction, setConstruction] = useState(persona.hasConstructionLicense);
   const [realEstate, setRealEstate] = useState(persona.hasRealEstateLicense);
-  const [photos, setPhotos] = useState<Photo[]>([...(persona.photos ?? Array.from({ length: persona.photoCount }, (_, i) => ({ id: `${persona.id}-p${i}`, name: "写真" })))]);
+  const [texts, setTexts] = useState<Record<TextKey, string>>(() => ({
+    headline: persona.headline ?? "",
+    message: persona.message ?? "",
+    lookingFor: persona.lookingFor ?? "",
+    hometown: persona.hometown ?? "",
+    hobbies: persona.hobbies ?? "",
+    lifeStory: persona.lifeStory ?? "",
+  }));
+  const [photos, setPhotos] = useState<Photo[]>([...(persona.photos ?? [])]);
   const [errors, setErrors] = useState<{ industry?: string; areas?: string }>({});
   const [saving, setSaving] = useState(false);
   const lock = useRef(false);
@@ -182,9 +220,27 @@ function ProfileEditForm({ persona }: { persona: Member }) {
     if (!files) return;
     const room = PHOTO_MAX - photos.length;
     const picked = Array.from(files).filter((f) => f.type.startsWith("image/")).slice(0, Math.max(room, 0));
-    if (files.length > picked.length) uiToast(`実績写真は${PHOTO_MAX}枚までです`, "info");
+    if (files.length > picked.length) uiToast(`写真は${PHOTO_MAX}枚までです`, "info");
     setPhotos([...photos, ...picked.map((f, i) => ({ id: `pp-${Date.now()}-${i}`, name: f.name, url: URL.createObjectURL(f) }))]);
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const textField = (key: TextKey, label: string, opts: { multiline?: boolean; placeholder?: string } = {}) => {
+    const max = PROFILE_TEXT_MAX[key];
+    const props = {
+      className: "kz-input",
+      value: texts[key],
+      maxLength: max,
+      placeholder: opts.placeholder,
+      onChange: (e: { target: { value: string } }) => setTexts((t) => ({ ...t, [key]: e.target.value })),
+    };
+    return (
+      <label className="kz-field">
+        <span className="kz-label">{label}</span>
+        {opts.multiline ? <textarea rows={4} {...props} /> : <input type="text" {...props} />}
+        {opts.multiline && <p className="kz-count">{texts[key].length}/{max}</p>}
+      </label>
+    );
   };
 
   const save = () => {
@@ -196,7 +252,8 @@ function ProfileEditForm({ persona }: { persona: Member }) {
     if (next.industry || next.areas) return;
     lock.current = true;
     setSaving(true);
-    dispatch({ type: "saveProfile", memberId: persona.id, patch: { industry, areas, works, hasConstructionLicense: construction, hasRealEstateLicense: realEstate, photos, photoCount: photos.length } });
+    const trimmed = Object.fromEntries(Object.entries(texts).map(([k, v]) => [k, v.trim()])) as Record<TextKey, string>;
+    dispatch({ type: "saveProfile", memberId: persona.id, patch: { industry, areas, works, hasConstructionLicense: construction, hasRealEstateLicense: realEstate, ...trimmed, photos } });
     uiToast("プロフィールを保存しました");
     // 錠は外さない。自分の画面が出るまで押せないまま
     go("/me");
@@ -206,6 +263,8 @@ function ProfileEditForm({ persona }: { persona: Member }) {
     <div>
       <h1>プロフィールを編集</h1>
       <p className="kz-lead">30秒で入ります。ここで入れた業種とエリアに合う相談が、届きます。</p>
+
+      {textField("headline", "ひとこと", { placeholder: "例：屋根と雨漏りなら、まず相談ください" })}
 
       <div className="kz-field">
         <span className="kz-label">業種</span>
@@ -240,7 +299,7 @@ function ProfileEditForm({ persona }: { persona: Member }) {
       </div>
 
       <div className="kz-field">
-        <span className="kz-label">得意な工事</span>
+        <span className="kz-label">得意な工事・できること</span>
         <div className="kz-chips">
           {WORK_TYPES.map((w) => (
             <button key={w} type="button" className="kz-chip" aria-pressed={works.includes(w)} onClick={() => setWorks(toggle(works, w))}>{w}</button>
@@ -248,15 +307,17 @@ function ProfileEditForm({ persona }: { persona: Member }) {
         </div>
       </div>
 
+      {textField("message", "伝えたいこと（実績・強みなど）", { multiline: true, placeholder: "例：大阪・兵庫で屋根工事を25年。雨漏りは原因を見つけるところから入ります。小さな修理でも伺います。" })}
+
       <div className="kz-field">
-        <span className="kz-label">実績写真（{PHOTO_MAX}枚まで）</span>
+        <span className="kz-label">写真（無くても大丈夫です・{PHOTO_MAX}枚まで）</span>
         <PhotoTiles photos={photos} onRemove={(id) => setPhotos(photos.filter((p) => p.id !== id))} />
         <button
           type="button"
           className="kz-btn kz-btn--sub kz-btn--small"
           aria-disabled={photos.length >= PHOTO_MAX}
           onClick={() => {
-            if (photos.length >= PHOTO_MAX) { uiToast(`実績写真は${PHOTO_MAX}枚までです`, "info"); return; }
+            if (photos.length >= PHOTO_MAX) { uiToast(`写真は${PHOTO_MAX}枚までです`, "info"); return; }
             fileRef.current?.click();
           }}
         >
@@ -264,6 +325,12 @@ function ProfileEditForm({ persona }: { persona: Member }) {
         </button>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => addPhotos(e.target.files)} />
       </div>
+      {textField("lookingFor", "探しているもの", { multiline: true, placeholder: "例：外壁塗装の職人さん・空き家の持ち主とつながっている方" })}
+
+      <h2>雑談のきっかけ（書かなくても大丈夫です）</h2>
+      {textField("hometown", "出身", { placeholder: "例：堺市" })}
+      {textField("hobbies", "趣味", { placeholder: "例：釣り・草野球" })}
+      {textField("lifeStory", "これまで", { multiline: true, placeholder: "例：父の工務店を継いで2代目です。" })}
 
       <div className="kz-btn-row">
         <button type="button" className="kz-btn" disabled={saving} onClick={save}>{saving ? "保存しています…" : "保存する"}</button>
@@ -311,6 +378,7 @@ export function RosterScreen() {
             <div key={m.id} className="kz-row">
               <p><strong>{m.company}</strong></p>
               <p className="kz-meta">{m.name}・{industryLabel(m.industry)}・{m.areas.join("・")}</p>
+              {m.headline?.trim() && <p>{m.headline}</p>}
               <Marks receiver={m} />
               {m.works.length > 0 && <span className="kz-tags">{m.works.map((w) => <span key={w} className="kz-tag">{w}</span>)}</span>}
             </div>

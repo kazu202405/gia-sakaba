@@ -876,3 +876,9 @@ textarea.kz-input {
   color: var(--kz-muted);
   margin-left: 0.3rem;
 }
+
+/* プロフィールの自由に書く欄（改行をそのまま出す） */
+.kz-pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
