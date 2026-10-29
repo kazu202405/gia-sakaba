@@ -287,7 +287,7 @@ insert into results values ('プッシュの行き先に店のない古い形が
 
 -- ================= 8. 店の行（0132） =================
 select (select name from sakaba.guilds where slug = 'kensetsu-fudosan') = '建設・不動産の酒場'
-   and (select terms->>'quest' from sakaba.guilds where slug = 'kensetsu-fudosan') = '案件・探しもの'
+   and (select terms->>'quest' from sakaba.guilds where slug = 'kensetsu-fudosan') = '案件'
    and (select count(*) from sakaba.guild_members where guild_id = :'ken_id' and role = 'owner') = 1 as ok \gset
 insert into results values ('K店の行がある（名前・呼び名）', :'ok', '');
 
