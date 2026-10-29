@@ -2207,6 +2207,10 @@ begin
     case when v_pending then btrim(coalesce(p_other_title, '')) else '' end,
     case when v_pending then btrim(coalesce(p_other_work, '')) else '' end
   );
+  -- どの店にもまだいなかった人は、入会画面で入れた名前を店の行の名前にする（ほかの店にいる人は前の店の名前のまま）
+  update sakaba.guild_profiles gp set display_name = btrim(p_display_name)
+  where gp.guild_id = v_invite.guild_id and gp.user_id = v_user_id
+    and not exists (select 1 from sakaba.guild_profiles o where o.user_id = v_user_id and o.guild_id <> v_invite.guild_id);
   update sakaba.invites
   set used_count = used_count + 1
   where id = v_invite.id;
