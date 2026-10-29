@@ -1,3 +1,4 @@
+import { industryLabel } from "@/lib/guild/store-profile";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -68,7 +69,10 @@ export default async function SharedProfilePage({ params }: Props) {
                 <dd className="break-words">{p.company_name}{p.position ? `（${positionLabel[p.position]}）` : ""}</dd>
               </>}
               {p.job && <><dt className="c-label text-base">しょくぎょう</dt><dd className="break-words">{p.job}</dd></>}
-              {p.industry && <><dt className="c-label text-base">ぎょうしゅ</dt><dd className="break-words">{p.industry}</dd></>}
+              {p.industry && <><dt className="c-label text-base">ぎょうしゅ</dt><dd className="break-words">{industryLabel(p.industry) || p.industry}</dd></>}
+              {(p.work_areas ?? []).length > 0 && <><dt className="c-label text-base">対応エリア</dt><dd className="break-words">{(p.work_areas ?? []).join("・")}</dd></>}
+              {(p.work_types ?? []).length > 0 && <><dt className="c-label text-base">得意な工事</dt><dd className="break-words">{(p.work_types ?? []).join("・")}</dd></>}
+              {(p.has_construction_license || p.has_real_estate_license) && <><dt className="c-label text-base">許可・免許</dt><dd>{[p.has_construction_license ? "建設業許可" : "", p.has_real_estate_license ? "宅建免許" : ""].filter(Boolean).join("・")}</dd></>}
               {p.region && <><dt className="c-label text-base">ちいき</dt><dd className="break-words">{p.region}</dd></>}
             </dl>
           </div>

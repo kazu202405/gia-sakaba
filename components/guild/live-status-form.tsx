@@ -14,6 +14,8 @@ import { JobAvatar } from "./job-avatar";
 import { CheckBox, Field, Select, TextArea, TextInput } from "./form-parts";
 import { useGuildStore } from "@/components/guild/store-context";
 import { Go } from "./go-mark";
+import { StoreOnlyFields, WorkPhotosEditor } from "./store-profile-fields";
+import { avatarPath, hasStoreOnlyFields, storeHasField, type ProfileField } from "@/lib/guild/store-profile";
 
 type Snapshot = { draft: MyGuildProfile };
 
@@ -23,7 +25,7 @@ function validationError({ draft }: Snapshot): string | null {
   return null;
 }
 
-async function persist(slug: string, { draft }: Snapshot) {
+async function persist(slug: string, storeOnly: boolean, { draft }: Snapshot) {
   const supabase = createClient();
   const profileResult = await supabase.rpc("sakaba_update_my_profile_simple", {
     p_guild_slug: slug,
@@ -54,6 +56,17 @@ async function persist(slug: string, { draft }: Snapshot) {
     p_name_kana: draft.name_kana?.trim() ?? "",
   });
   if (extrasResult.error) return extrasResult;
+  if (storeOnly) {
+    const storeResult = await supabase.rpc("sakaba_update_store_profile_extras", {
+      p_guild_slug: slug,
+      p_industry: draft.industry,
+      p_work_areas: draft.work_areas ?? [],
+      p_work_types: draft.work_types ?? [],
+      p_has_construction_license: Boolean(draft.has_construction_license),
+      p_has_real_estate_license: Boolean(draft.has_real_estate_license),
+    });
+    if (storeResult.error) return storeResult;
+  }
   return supabase.rpc("sakaba_update_personal_profile", {
     p_guild_slug: slug,
     p_hometown: draft.hometown?.trim() ?? "",
@@ -67,12 +80,17 @@ async function persist(slug: string, { draft }: Snapshot) {
 
 // contactEditor：連絡先の窓（別に自動保存する。置き場所だけここ）
 // profileDraft：届いたステータスの下書きを入れて開いたとき（0130）。自動保存はせず、「保存して載せる」を押したときだけ保存して、下書きを済みにする
-export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
+export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor, profileDraft }: {
   initial: MyGuildProfile;
+  guildId: string;
+  /** 伝えたいことの写真の署名URL（保存場所の名前 → URL） */
+  workPhotoUrls: Record<string, string>;
   contactEditor?: React.ReactNode;
   profileDraft?: { id: string; from: string; skipped: DraftField[] };
 }) {
   const store = useGuildStore();
+  const has = (field: ProfileField) => storeHasField(store.config, field);
+  const storeOnly = hasStoreOnlyFields(store.config);
   const router = useGuildRouter();
   const currentYear = new Date().getUTCFullYear();
   const [draft, setDraft] = useState(initial);
@@ -84,6 +102,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [personalOpen, setPersonalOpen] = useState(Boolean(initial.hometown || initial.hobbies || initial.life_story || initial.birth_month));
+  const showPersonal = has("hometown") || has("birthday") || has("hobbies") || has("life_story");
   const [retryToken, setRetryToken] = useState(0);
   const [error, setError] = useState("");
   const latestRef = useRef<Snapshot>({ draft: initial });
@@ -100,7 +119,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       if (issue) { setError(issue); setSaveState("error"); return false; }
       setSaveState("saving"); setError("");
       try {
-        const { error: rpcError } = await persist(store.slug, snapshot);
+        const { error: rpcError } = await persist(store.slug, storeOnly, snapshot);
         if (rpcError) { setError("保存できませんでした。少し待ってもう一度お試しください。"); setSaveState("error"); return false; }
       } catch {
         setError("通信に失敗しました。接続を確認してもう一度お試しください。"); setSaveState("error"); return false;
@@ -117,7 +136,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
     });
     queueRef.current = next.catch(() => false);
     return next;
-  }, [store.slug]);
+  }, [store.slug, storeOnly]);
 
   useEffect(() => {
     latestRef.current = { draft };
@@ -186,7 +205,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
       const supabase = createClient();
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user || user.id !== draft.id) throw new Error("ログイン情報を確認できませんでした。");
-      const path = `${user.id}/sakaba-avatar.jpg`;
+      const path = avatarPath(user.id, guildId);
       const { error: uploadError } = await supabase.storage.from("profile-photos").upload(path, blob, {
         upsert: true,
         contentType: "image/jpeg",
@@ -229,12 +248,16 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
         {photoError && <p role="alert" className="text-sm text-[#c62828]">{photoError}</p>}
         <Field label={store.w("status.fieldName")} required><TextInput value={draft.display_name} onChange={(value) => set("display_name", value)} max={30} label={store.w("status.fieldName")} /></Field>
         <Field label="ふりがな" optional hint="名前の読み方をメンバーに伝えられます"><TextInput value={draft.name_kana ?? ""} onChange={(value) => set("name_kana", value)} max={60} label="ふりがな" placeholder="例：やまだ たろう" /></Field>
-        <Field label="ひとこと" optional><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>
-        <div className="grid gap-5 sm:grid-cols-2 sm:items-end">
-          <Field label="業種" optional hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>
-          <Field label="地域" optional><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>
-        </div>
-        <Field label="職業" optional hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>
+        {has("headline") && <Field label="ひとこと" optional><TextInput value={draft.headline} onChange={(value) => set("headline", value)} max={40} label="ひとこと" /></Field>}
+        {(has("industry") || has("region")) && <div className="grid gap-5 sm:grid-cols-2 sm:items-end">
+          {has("industry") && <Field label="業種" optional hint="仕事の分野。例：飲食・士業・IT"><TextInput value={draft.industry} onChange={(value) => set("industry", value)} max={40} label="業種" placeholder="例：飲食" /></Field>}
+          {has("region") && <Field label="地域" optional><TextInput value={draft.region} onChange={(value) => set("region", value)} max={40} label="地域" /></Field>}
+        </div>}
+        {has("job") && <Field label="職業" optional hint="あなたがしている仕事。例：居酒屋オーナー・税理士"><TextInput value={draft.job} onChange={(value) => set("job", value)} max={40} label="職業" placeholder="例：居酒屋オーナー" /></Field>}
+        <StoreOnlyFields
+          values={{ industry: draft.industry, work_areas: draft.work_areas ?? [], work_types: draft.work_types ?? [], has_construction_license: Boolean(draft.has_construction_license), has_real_estate_license: Boolean(draft.has_real_estate_license) }}
+          onChange={(key, value) => set(key as keyof MyGuildProfile, value as never)}
+        />
         <Field label="プロフィールのアイコン" optional hint="写真がないときに表示されます。仕事と同じ絵でなくても大丈夫です">
           <button type="button" aria-expanded={iconPickerOpen} aria-controls="profile-icon-options" onClick={() => setIconPickerOpen((open) => !open)} className="c-input flex min-h-16 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-guild-ink">
             <JobAvatar icon={draft.job_icon} name={jobIconLabel[draft.job_icon]} size="sm" />
@@ -257,7 +280,7 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>{store.w("status.showCompany")}</CheckBox>
       </section>
 
-      <details className="c-window p-5 pt-10 sm:p-7 sm:pt-11" open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
+      {showPersonal && <details className="c-window p-5 pt-10 sm:p-7 sm:pt-11" open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
         <span className="c-window-title">人となり</span>
         <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-[15px] tracking-wider">
           <span><Go />出身地・誕生日・趣味などを書く</span>
@@ -265,33 +288,34 @@ export function LiveStatusForm({ initial, contactEditor, profileDraft }: {
         </summary>
         <div className="mt-5 space-y-5">
           <p className="c-muted text-xs">{store.w("status.personalNote")}</p>
-          <Field label={store.w("personal.hometown")} optional hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>
-          <Field label={store.w("personal.birthday")} optional hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
+          {has("hometown") && <Field label={store.w("personal.hometown")} optional hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>}
+          {has("birthday") && <Field label={store.w("personal.birthday")} optional hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="col-span-2 sm:col-span-1"><span className="c-muted mb-1 block text-xs">生年（任意）</span><Select value={draft.birth_year?.toString() ?? ""} onChange={(value) => set("birth_year", value ? Number(value) : null)} label="生まれた年" placeholder="未設定" options={Array.from({ length: currentYear - 1899 }, (_, index) => ({ value: String(currentYear - index), label: `${currentYear - index}年` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">月</span><Select value={draft.birth_month?.toString() ?? ""} onChange={(value) => { set("birth_month", value ? Number(value) : null); if (!value) { set("birth_day", null); set("birth_year", null); } }} label="誕生月" placeholder="未設定" options={Array.from({ length: 12 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}月` }))} /></label>
               <label><span className="c-muted mb-1 block text-xs">日</span><Select value={draft.birth_day?.toString() ?? ""} onChange={(value) => { set("birth_day", value ? Number(value) : null); if (!value) { set("birth_month", null); set("birth_year", null); } }} label="誕生日" placeholder="未設定" options={Array.from({ length: 31 }, (_, index) => ({ value: String(index + 1), label: `${index + 1}日` }))} /></label>
             </div>
-          </Field>
-          <Field label={store.w("personal.hobbies")} optional><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>
-          <Field label={store.w("personal.lifeStory")} optional hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>
+          </Field>}
+          {has("hobbies") && <Field label={store.w("personal.hobbies")} optional><TextArea value={draft.hobbies ?? ""} onChange={(value) => set("hobbies", value)} max={300} rows={3} label="趣味・好きなこと" /></Field>}
+          {has("life_story") && <Field label={store.w("personal.lifeStory")} optional hint="仕事や活動の変化、転機など。書きたい範囲で自由にどうぞ"><TextArea value={draft.life_story ?? ""} onChange={(value) => set("life_story", value)} max={1200} rows={5} label="これまでの歩み" /></Field>}
         </div>
-      </details>
+      </details>}
 
-      <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
+      {has("bio") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{store.w("group.work.title")}</span>
-        <Field label="仕事内容・できること" optional hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label="仕事内容・できること" /></Field>
-      </section>
+        <Field label={store.w("status.bioLabel")} optional hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label={store.w("status.bioLabel")} /></Field>
+        {has("work_photos") && <WorkPhotosEditor userId={draft.id} guildId={guildId} initialPaths={initial.work_photos ?? []} initialUrls={workPhotoUrls} />}
+      </section>}
 
-      <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
+      {has("values_text") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{store.w("group.values.title")}</span>
         <Field label="自由に書いてください" optional hint={store.w("status.valuesHint")}><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={1200} rows={6} label={store.w("group.values.title")} /></Field>
-      </section>
+      </section>}
 
-      <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
+      {has("looking_for") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
         <span className="c-window-title">{store.w("group.connect.title")}</span>
         <Field label={store.w("member.connectLabel")} optional hint="仕事、情報、協力してほしいこと、話してみたい人などを自由に書けます"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={1200} rows={6} label={store.w("member.connectLabel")} /></Field>
-      </section>
+      </section>}
 
       {contactEditor}
 

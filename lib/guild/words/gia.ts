@@ -24,6 +24,8 @@ export const GIA_WORDS = {
   "member.region": "ちいき",
   "member.wantToSolve": "いま かいけつしたいこと",
   "member.valuesLabel": "だいじにしていること・これから",
+  "status.bioLabel": "仕事内容・できること",
+  "member.bioLabel": "仕事内容・できること",
   "member.connectLabel": "さがしているもの・であいたい人",
   "member.profileWindow": "プロフィール",
   "member.hidden": "※ ひこうかいに しています",

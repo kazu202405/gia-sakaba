@@ -22,7 +22,7 @@ export default async function MembersPage() {
   const memberTerm = context.guild.terms.member;
   // 「めいし」表示用：名刺の表面（表が無ければ裏）の署名URLを人ごとに
   const supabase = await createClient();
-  const { data: cardList } = searchLevel === "list" ? { data: [] } : await supabase.rpc("sakaba_list_business_cards");
+  const { data: cardList } = searchLevel === "list" ? { data: [] } : await supabase.rpc("sakaba_list_business_cards", { p_guild_slug: store.slug });
   const cards = (cardList as { user_id: string; front: string | null; back: string | null }[] | null) ?? [];
   const signed = await signBusinessCards(supabase, cards.map((card) => card.front ?? card.back));
   const cardUrls: Record<string, string> = {};

@@ -26,6 +26,8 @@ export const KENSETSU_FUDOSAN_WORDS: Record<keyof typeof GIA_WORDS, string> = {
   "member.region": "地域",
   "member.wantToSolve": "いま解決したいこと",
   "member.valuesLabel": "大事にしていること・これから",
+  "status.bioLabel": "伝えたいこと（実績・強みなど）",
+  "member.bioLabel": "伝えたいこと（実績・強みなど）",
   "member.connectLabel": "探しているもの・出会いたい人",
   "member.profileWindow": "自己紹介",
   "member.hidden": "※ 非公開にしています",

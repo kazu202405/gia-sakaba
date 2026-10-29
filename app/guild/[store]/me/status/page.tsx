@@ -5,9 +5,9 @@ import { ContactItemsEditor } from "@/components/guild/contact-items-editor";
 import { LiveStatusForm } from "@/components/guild/live-status-form";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { parseContactItemsMap, type GuildContactItem } from "@/lib/guild/contact-items";
-import { signBusinessCards } from "@/lib/guild/business-card-server";
+import { signBusinessCards, signWorkPhotos } from "@/lib/guild/business-card-server";
 import { mergeDraftIntoProfile } from "@/lib/guild/profile-drafts";
-import { getMyGuildProfile, getMyProfileDraft } from "@/lib/guild/server-data";
+import { getGuildContext, getMyGuildProfile, getMyProfileDraft } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,17 +22,20 @@ export default async function StatusEditPage({ searchParams }: { searchParams: P
   const draft = draftResult?.ok && draftResult.draft?.id === draftId ? draftResult.draft : null;
   const merge = draft ? mergeDraftIntoProfile(savedProfile, draft.fields) : null;
   const profile = merge ? { ...savedProfile, ...merge.merged } : savedProfile;
+  const store = await currentStore();
+  const { guild } = await getGuildContext();
   const supabase = await createClient();
-  const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: profile.id });
+  const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: profile.id, p_guild_slug: store.slug });
   const card = (cardData as BusinessCard | null) ?? { front: null, back: null, agreed_at: null };
   const urls = await signBusinessCards(supabase, [card.front, card.back]);
   // 連絡先：読めなかったときは null（編集させない。空のまま保存して消さないように）
-  const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [profile.id] });
+  const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [profile.id], p_guild_slug: store.slug });
   const contactItems: GuildContactItem[] | null = contactError ? null : (parseContactItemsMap(contactData)[profile.id] ?? []).flatMap((item, index) =>
     item.value === null ? [] : [{ kind: item.kind, label: item.label, value: item.value, visibility: item.visibility ?? "approved", sort_order: index }]);
+  const workPhotoUrls = await signWorkPhotos(supabase, profile.work_photos ?? []);
   return <div className="space-y-11">
-    <LiveStatusForm initial={profile} profileDraft={draft && merge ? { id: draft.id, from: draft.drafted_by_name, skipped: merge.skipped } : undefined} contactEditor={<ContactItemsEditor initial={contactItems} />} />
+    <LiveStatusForm initial={profile} guildId={guild.id} workPhotoUrls={workPhotoUrls} profileDraft={draft && merge ? { id: draft.id, from: draft.drafted_by_name, skipped: merge.skipped } : undefined} contactEditor={<ContactItemsEditor initial={contactItems} />} />
     {/* 名刺は画像を選んだその場で保存する（上の「保存して戻る」とは別） */}
-    <BusinessCardEditor userId={profile.id} initial={card} initialUrls={urls} />
+    <BusinessCardEditor userId={profile.id} guildId={guild.id} initial={card} initialUrls={urls} />
   </div>;
 }

@@ -70,7 +70,7 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
     if (issue) { setError(issue); setState("error"); return; }
     setState("saving"); setError("");
     try {
-      const { error: rpcError } = await createClient().rpc("sakaba_save_my_contact_items", { p_items: payload });
+      const { error: rpcError } = await createClient().rpc("sakaba_save_my_contact_items", { p_items: payload, p_guild_slug: store.slug });
       if (rpcError) throw rpcError;
       lastSaved.current = serialized;
       setState("saved");
@@ -79,7 +79,7 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
       setError("連絡先を保存できませんでした。少し待ってもう一度お試しください。");
       setState("error");
     }
-  }, []);
+  }, [store.slug]);
 
   useEffect(() => {
     if (initial === null || JSON.stringify(toPayload(rows)) === lastSaved.current) return;
@@ -92,8 +92,8 @@ export function ContactItemsEditor({ initial }: { initial: GuildContactItem[] | 
     const current = latest.current;
     const payload = toPayload(current);
     if (JSON.stringify(payload) === lastSaved.current || contactItemsError(filled(current))) return;
-    void createClient().rpc("sakaba_save_my_contact_items", { p_items: payload });
-  }, []);
+    void createClient().rpc("sakaba_save_my_contact_items", { p_items: payload, p_guild_slug: store.slug });
+  }, [store.slug]);
 
   // 読み込みに失敗したときは編集させない（空のまま保存すると、登録済みの連絡先を消してしまうため）
   if (initial === null) {

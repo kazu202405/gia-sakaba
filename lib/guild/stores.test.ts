@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_STORE_SLUG, STORES, STORE_SLUGS, findStore, storeOrDefault, storeThemeAttrs } from "./stores";
 import { buildManifest } from "./manifest";
+import { PROFILE_FIELDS } from "./store-profile";
 
 const read = (path: string) => readFileSync(path, "utf8").replace(/\r\n/g, "\n");
 
@@ -160,5 +161,43 @@ describe("manifest（ホーム画面に追加するアプリ）", () => {
     expect(manifest.start_url).toBe("/guild/kensetsu-fudosan");
     expect(manifest.scope).toBe("/guild");
     expect(manifest.name).toBe("建設・不動産の酒場");
+  });
+});
+
+// 店ごとに出すプロフィールの項目：DB（0134 の guilds.profile_fields）とコードの店設定（stores.ts の profileFields）を照合する
+function profileFieldsFromMigration(slug: string, sql = read("supabase/migrations/0134_sakaba_store_profiles_tables.sql")): string[] | null {
+  const m = new RegExp(String.raw`update sakaba\.guilds set profile_fields = array\[([^\]]*)\]\s*where slug = '${slug}'`).exec(sql);
+  if (!m) return null;
+  return [...m[1].matchAll(/'([a-z_]+)'/g)].map((x) => x[1]);
+}
+
+describe("店ごとのプロフィール項目とDB（0134）が食い違わない", () => {
+  it("全店で、コードの profileFields と migration の profile_fields が同じ（順番は問わない）", () => {
+    for (const slug of STORE_SLUGS) {
+      const db = profileFieldsFromMigration(slug);
+      expect([slug, db === null]).toEqual([slug, false]);
+      expect([slug, [...(db ?? [])].sort()]).toEqual([slug, [...STORES[slug].profileFields].sort()]);
+    }
+  });
+
+  it("項目の名前は、決めた一覧（PROFILE_FIELDS）の中だけ", () => {
+    for (const store of Object.values(STORES)) {
+      for (const field of store.profileFields) expect([store.slug, PROFILE_FIELDS.includes(field)]).toEqual([store.slug, true]);
+      expect(new Set(store.profileFields).size).toBe(store.profileFields.length);
+    }
+  });
+
+  it("建設・不動産の店は、価値観・ビジョン・社会課題・誕生日・強み・会いたい人・解決したいことを出さない（仕様 10-29）", () => {
+    const fields = STORES["kensetsu-fudosan"].profileFields as readonly string[];
+    for (const hidden of ["values_text", "vision", "social_issue", "birthday", "strengths", "want_to_meet", "want_to_solve"]) expect([hidden, fields.includes(hidden)]).toEqual([hidden, false]);
+    for (const shown of ["headline", "industry_choice", "work_areas", "work_types", "licenses", "bio", "looking_for", "hometown", "hobbies", "life_story", "work_photos"]) expect([shown, fields.includes(shown)]).toEqual([shown, true]);
+  });
+
+  it("見張り自身：migration から読めている／食い違うと見つかる", () => {
+    expect(profileFieldsFromMigration("gia")?.length).toBeGreaterThan(5);
+    expect(profileFieldsFromMigration("kensetsu-fudosan")).toContain("work_photos");
+    expect(profileFieldsFromMigration("nonexistent")).toBeNull();
+    const broken = read("supabase/migrations/0134_sakaba_store_profiles_tables.sql").replace("'work_photos', ", "");
+    expect([...(profileFieldsFromMigration("kensetsu-fudosan", broken) ?? [])].sort()).not.toEqual([...STORES["kensetsu-fudosan"].profileFields].sort());
   });
 });

@@ -12,7 +12,9 @@ import { LiveMemberProfileDraft } from "@/components/guild/live-member-profile-d
 import { ContactItemsView } from "@/components/guild/contact-items-view";
 import type { BusinessCard } from "@/lib/guild/business-card";
 import { parseContactItemsMap } from "@/lib/guild/contact-items";
-import { signBusinessCards } from "@/lib/guild/business-card-server";
+import { signBusinessCards, signWorkPhotos } from "@/lib/guild/business-card-server";
+import { industryLabel, storeHasField } from "@/lib/guild/store-profile";
+import { StoreProfileView } from "@/components/guild/store-profile-view";
 import type { InvitePath } from "@/lib/guild/invite-path";
 import { createClient } from "@/lib/supabase/server";
 import { PersonalProfileWindow } from "@/components/guild/personal-profile-window";
@@ -49,17 +51,20 @@ export default async function MemberStatusPage({ params }: Props) {
   const memberDraft = canDraftStatus ? await getMemberProfileDraft(p.id) : null;
   // 入会のつながり（あなた → … → この方）
   const supabase = await createClient();
-  const invitePathResult = await supabase.rpc("sakaba_get_invite_path", { p_target_id: p.id });
+  const invitePathResult = await supabase.rpc("sakaba_get_invite_path", { p_target_id: p.id, p_guild_slug: store.slug });
   const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
   // 名刺（同じギルドの会員だけが見られる）
-  const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: p.id });
+  const { data: cardData } = await supabase.rpc("sakaba_get_business_card", { p_user_id: p.id, p_guild_slug: store.slug });
   const card = cardData as BusinessCard | null;
   const cardUrls = await signBusinessCards(supabase, [card?.front, card?.back]);
+  // 伝えたいことの写真（その店の会員だけが署名URLを作れる）
+  const workPhotoUrls = await signWorkPhotos(supabase, p.work_photos ?? []);
+  const has = (field: Parameters<typeof storeHasField>[1]) => storeHasField(store.config, field);
   // 連絡先（見せてよい分だけDBから来る。「つながった人だけ」でまだのものは種類だけ）
-  const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [p.id] });
+  const { data: contactData, error: contactError } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: [p.id], p_guild_slug: store.slug });
   const contactItems = parseContactItemsMap(contactData)[p.id] ?? [];
   // 相手の共有URL（あれば）と、入会のつながり（招待した人・された人）。読めなかったときは、どちらも出さない
-  const linkResult = isMe ? null : await supabase.rpc("sakaba_get_member_link_info", { p_target_id: p.id });
+  const linkResult = isMe ? null : await supabase.rpc("sakaba_get_member_link_info", { p_target_id: p.id, p_guild_slug: store.slug });
   const linkInfo = linkResult && !linkResult.error ? linkResult.data as { share_token: string | null; invite_connected: boolean } : null;
   // 自分の画面でも、他の人に見える「紹介のためのURL」を同じ形で出す（人からの見え方の確認）。共有オフなら「まだ作っていません」と同じ表示
   const myShareResult = isMe ? await supabase.rpc("sakaba_get_my_share", { p_guild_slug: store.slug }) : null;
@@ -89,17 +94,15 @@ export default async function MemberStatusPage({ params }: Props) {
                   </dd>
                 </>
               )}
-              <dt className="c-label text-base">{store.w("member.job")}</dt>
-              <dd>{p.job}</dd>
-              <dt className="c-label text-base">{store.w("member.industry")}</dt>
-              <dd>{p.industry}</dd>
-              <dt className="c-label text-base">{store.w("member.region")}</dt>
-              <dd>{p.region}</dd>
+              {has("job") && <><dt className="c-label text-base">{store.w("member.job")}</dt><dd>{p.job}</dd></>}
+              {(has("industry") || has("industry_choice")) && <><dt className="c-label text-base">{store.w("member.industry")}</dt><dd>{has("industry_choice") ? industryLabel(p.industry) : p.industry}</dd></>}
+              {has("region") && <><dt className="c-label text-base">{store.w("member.region")}</dt><dd>{p.region}</dd></>}
             </dl>
             {contactError
               ? <p className="c-muted mt-4 text-xs">連絡先を読み込めませんでした。</p>
               : <ContactItemsView items={contactItems} className="c-dashed-top mt-4 pt-4" />}
-            {p.want_to_solve && (
+            <StoreProfileView profile={p} />
+            {has("want_to_solve") && p.want_to_solve && (
               <p className="c-card mt-4 px-3 py-2 text-sm leading-relaxed break-words">
                 <span className="c-label mr-2 text-base">{store.w("member.wantToSolve")}</span>
                 {p.want_to_solve}
@@ -124,10 +127,11 @@ export default async function MemberStatusPage({ params }: Props) {
         profile={p}
         isMe={isMe}
         sections={[
-          { group: "work", label: "仕事内容・できること", value: p.bio },
-          { group: "values", label: store.w("member.valuesLabel"), value: p.values_text },
-          { group: "connect", label: store.w("member.connectLabel"), value: p.looking_for },
+          ...(has("bio") ? [{ group: "work" as const, label: store.w("member.bioLabel"), value: p.bio }] : []),
+          ...(has("values_text") ? [{ group: "values" as const, label: store.w("member.valuesLabel"), value: p.values_text }] : []),
+          ...(has("looking_for") ? [{ group: "connect" as const, label: store.w("member.connectLabel"), value: p.looking_for }] : []),
         ]}
+        workPhotos={has("work_photos") ? (p.work_photos ?? []).flatMap((path) => workPhotoUrls[path] ? [workPhotoUrls[path]] : []) : []}
         w={store.w}
       />
 
@@ -155,11 +159,14 @@ function ProfileWindow({
   profile,
   isMe,
   sections,
+  workPhotos,
   w,
 }: {
   profile: Profile;
   isMe: boolean;
   w: Wording;
+  /** 伝えたいことに添える写真の署名URL（出さない店では空） */
+  workPhotos: string[];
   sections: { group: VisibleGroup; label: string; value: string }[];
 }) {
   const shown = isMe ? sections : sections.filter((section) => !profile.visible_groups.includes(section.group) || section.value.trim());
@@ -181,6 +188,12 @@ function ProfileWindow({
                 <>
                   <p className="c-muted mt-1 text-xs">{section.label}</p>
                   <p className="mt-1.5 text-[15px] leading-relaxed break-words whitespace-pre-line">{section.value}</p>
+                  {section.group === "work" && workPhotos.length > 0 && <ul className="mt-3 grid grid-cols-3 gap-2">
+                    {workPhotos.map((url) => <li key={url} className="c-card aspect-square overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- 期限つきの署名URLの画像なので next/image を通さない */}
+                      <a href={url} target="_blank" rel="noopener noreferrer"><img src={url} alt="伝えたいことの写真" className="h-full w-full object-cover" /></a>
+                    </li>)}
+                  </ul>}
                 </>
               ) : (
                 <p className="c-muted mt-1.5 text-sm">{w("member.hidden")}</p>

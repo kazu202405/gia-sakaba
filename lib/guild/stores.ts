@@ -13,6 +13,7 @@
 import { GIA_WORDS } from "./words/gia";
 import { KENSETSU_FUDOSAN_WORDS } from "./words/kensetsu-fudosan";
 import type { StoreWords } from "./store-words";
+import type { ProfileField } from "./store-profile";
 
 export type StoreTheme = "tavern" | "plain";
 
@@ -49,6 +50,8 @@ export type StoreConfig = {
   rosterLabel: string;
   /** 画面の言葉の表（terms の5語で足りない言い回し。lib/guild/words/）。キーは全店で同じ */
   words: StoreWords;
+  /** この店のプロフィールで出す項目（DB の guilds.profile_fields と同じ。0134。食い違うと stores.test.ts が落ちる） */
+  profileFields: readonly ProfileField[];
   /** LINE などでURLを送ったときの説明・ブラウザのアプリ名の説明 */
   description: string;
   /** ホーム画面に追加したときのアプリの id と開始位置。GIAの酒場は昔の値のまま（入れ直しにならないように） */
@@ -66,6 +69,7 @@ const GIA: StoreConfig = {
   terms: { member: "仲間", quest: "クエスト", party: "パーティ", master: "ギルドマスター", status: "ステータス" },
   rosterLabel: "ギルド",
   words: GIA_WORDS,
+  profileFields: ["headline", "job", "industry", "region", "bio", "can_help_with", "strengths", "values_text", "vision", "social_issue", "looking_for", "want_to_meet", "want_to_solve", "hometown", "hobbies", "life_story", "birthday"],
   description: "仕事の話が、次の一歩になる場所。仲間・クエスト・プロジェクトをひとつの酒場に。",
   pwa: { id: "/guild", startPath: "/guild" },
 };
@@ -78,6 +82,7 @@ const KENSETSU_FUDOSAN: StoreConfig = {
   terms: { member: "メンバー", quest: "案件", party: "チーム", master: "管理者", status: "プロフィール" },
   rosterLabel: "名簿",
   words: KENSETSU_FUDOSAN_WORDS,
+  profileFields: ["headline", "industry_choice", "work_areas", "work_types", "licenses", "bio", "work_photos", "looking_for", "hometown", "hobbies", "life_story"],
   description: "建設・不動産のメンバーどうしで、案件・探しもの・紹介を持ち寄る、招待制の集まりです。",
   pwa: { id: "/guild/kensetsu-fudosan", startPath: "/guild/kensetsu-fudosan" },
   // 案内ページの文言は仮。物件の掲載や広告に読めない書き方にしている（宅建業法・五島さんと詰める）

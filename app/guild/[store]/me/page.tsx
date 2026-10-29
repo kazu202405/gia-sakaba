@@ -31,7 +31,7 @@ export default async function MyPage() {
   // 届いているステータスの下書き（読めなかったときは何も出さない。ステータスの編集は普段どおり使える）
   const profileDraft = await getMyProfileDraft();
   // 自分の入会のつながり（根っこ → … → あなた）と、名前を出さない設定
-  const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: me.id });
+  const invitePathResult = await (await createClient()).rpc("sakaba_get_invite_path", { p_target_id: me.id, p_guild_slug: store.slug });
   const invitePath = invitePathResult.error ? null : invitePathResult.data as InvitePath;
   // 共有URLの設定（なければ、ここで作られる＝本人がマイページを開いたとき）
   const shareResult = await (await createClient()).rpc("sakaba_get_my_share", { p_guild_slug: store.slug });

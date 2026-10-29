@@ -4,6 +4,7 @@
 
 import type { GuestGatheringMembers } from "@/lib/guild/guest-gathering";
 import type { JobIconKey } from "@/lib/guild/types";
+import { industryLabel } from "@/lib/guild/store-profile";
 import { formatDate } from "@/lib/guild/labels";
 import { JobAvatar } from "./job-avatar";
 import { Window } from "./cards";
@@ -24,7 +25,7 @@ export function GuestGatheringMembersWindow({ data, isMember }: { data: GuestGat
     ) : (
       <ul className="mt-4 space-y-4">
         {data.members.map((member) => {
-          const meta = [member.job, member.industry, member.region].filter(Boolean).join("・");
+          const meta = [member.job, industryLabel(member.industry) || member.industry, member.region].filter(Boolean).join("・");
           const sections = [
             { label: "仕事内容・できること", value: member.bio },
             { label: "おもい", value: member.values_text },

@@ -1,4 +1,4 @@
-// 名刺の表裏（0107）。画像は鍵付きの保存場所に置き、見るときは期限つきのURL（署名URL）を作る。
+// 名刺の表裏（0107・店ごとに0135）。画像は鍵付きの保存場所に置き、見るときは期限つきのURL（署名URL）を作る。
 // 見られるのは同じギルドの在籍中の会員だけ（DBと保存場所の決まりで守る）。
 
 export const BUSINESS_CARD_BUCKET = "sakaba-business-cards";
@@ -15,9 +15,9 @@ export type BusinessCard = {
   agreed_at?: string | null;
 };
 
-/** 保存場所の名前「<本人のid>/<front|back>-<時刻>.jpg」 */
-export function businessCardPath(userId: string, side: BusinessCardSide, now = Date.now()): string {
-  return `${userId}/${side}-${now}.jpg`;
+/** 保存場所の名前「<本人のid>/<店のid>/<front|back>-<時刻>.jpg」。名刺は店ごとなので、置き場所にも店を入れる（0135） */
+export function businessCardPath(userId: string, guildId: string, side: BusinessCardSide, now = Date.now()): string {
+  return `${userId}/${guildId}/${side}-${now}.jpg`;
 }
 
 /** 画像を長い辺1600pxまでに縮めて JPEG にする（ブラウザだけで使う） */

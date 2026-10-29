@@ -21,8 +21,9 @@ import { useGuildStore } from "@/components/guild/store-context";
 
 const SIDE_LABEL: Record<BusinessCardSide, string> = { front: "表", back: "裏" };
 
-export function BusinessCardEditor({ userId, initial, initialUrls }: {
+export function BusinessCardEditor({ userId, guildId, initial, initialUrls }: {
   userId: string;
+  guildId: string;
   initial: BusinessCard;
   initialUrls: Record<string, string>;
 }) {
@@ -37,7 +38,7 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
 
   async function save(next: BusinessCard) {
     const { error: rpcError } = await createClient().rpc("sakaba_set_business_card", {
-      p_front: next.front, p_back: next.back, p_agreed: agreed,
+      p_front: next.front, p_back: next.back, p_agreed: agreed, p_guild_slug: store.slug,
     });
     if (rpcError) throw rpcError;
   }
@@ -49,7 +50,7 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
     if (!agreed) { setError("名刺を登録するには、下の同意にチェックを入れてください。"); return; }
     setBusy(side); setError("");
     const supabase = createClient();
-    const path = businessCardPath(userId, side);
+    const path = businessCardPath(userId, guildId, side);
     const old = card[side];
     let uploaded = false;
     try {
@@ -85,7 +86,7 @@ export function BusinessCardEditor({ userId, initial, initialUrls }: {
     try {
       const next = { ...card, [side]: null };
       const { error: rpcError } = await supabase.rpc("sakaba_set_business_card", {
-        p_front: next.front, p_back: next.back, p_agreed: true,
+        p_front: next.front, p_back: next.back, p_agreed: true, p_guild_slug: store.slug,
       });
       if (rpcError) throw rpcError;
       await supabase.storage.from(BUSINESS_CARD_BUCKET).remove([old]);

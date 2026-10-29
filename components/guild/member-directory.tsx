@@ -2,6 +2,7 @@
 
 // 仲間名鑑の絞り込み。AIで選ばず、条件で絞るだけ（なぜその人が出たか説明できるように）。
 
+import { industryText } from "@/lib/guild/store-profile";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { Profile } from "@/lib/guild/types";
@@ -65,7 +66,7 @@ export function MemberDirectory({ members, memberTerm, cardUrls = {}, searchLeve
             <select value={industry} onChange={(e) => setIndustry(e.target.value)} className="c-input h-11">
               <option value="">すべて</option>
               {industries.map((i) => (
-                <option key={i}>{i}</option>
+                <option key={i} value={i}>{industryText(store.config, i)}</option>
               ))}
             </select>
           </label>
@@ -133,7 +134,7 @@ export function MemberDirectory({ members, memberTerm, cardUrls = {}, searchLeve
                   ) : (
                     // 名刺が無い人は、名前・職業・会社で作った名札を代わりに出す（並びに穴をあけない）
                     <span className="c-card flex aspect-[91/55] flex-col justify-between p-3">
-                      <span className="c-muted block truncate text-[10px]">{m.show_company && m.company_name ? m.company_name : m.industry}</span>
+                      <span className="c-muted block truncate text-[10px]">{m.show_company && m.company_name ? m.company_name : industryText(store.config, m.industry)}</span>
                       <span className="block truncate text-base tracking-wider">{m.display_name}</span>
                       <span className="c-muted block truncate text-[10px]">{[m.job, m.region].filter(Boolean).join("・")}</span>
                     </span>

@@ -4,10 +4,12 @@ import { LiveRequests } from "@/components/guild/live-requests";
 import { getAuthenticatedUserId, listGuildIntroRequests, listGuildMembers } from "@/lib/guild/server-data";
 import { parseContactItemsMap } from "@/lib/guild/contact-items";
 import { createClient } from "@/lib/supabase/server";
+import { currentStore } from "@/lib/guild/current-store";
 
 export const metadata: Metadata = { title: "つながり申請" };
 
 export default async function RequestsPage() {
+  const store = await currentStore();
   const [requests, members, currentUserId] = await Promise.all([
     listGuildIntroRequests(), listGuildMembers(), getAuthenticatedUserId(),
   ]);
@@ -18,7 +20,7 @@ export default async function RequestsPage() {
   let contacts: ReturnType<typeof parseContactItemsMap> | null = {};
   if (counterpartIds.length > 0) {
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: counterpartIds.slice(0, 200) });
+    const { data, error } = await supabase.rpc("sakaba_get_contact_items", { p_user_ids: counterpartIds.slice(0, 200), p_guild_slug: store.slug });
     contacts = error ? null : parseContactItemsMap(data);
   }
   return (

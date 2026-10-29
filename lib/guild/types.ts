@@ -73,6 +73,13 @@ export type Profile = {
   birth_month?: number | null;
   birth_day?: number | null;
   birth_year?: number | null;
+  /** 建設・不動産の店だけの項目（出さない店では空。0134） */
+  work_areas?: string[];
+  work_types?: string[];
+  has_construction_license?: boolean;
+  has_real_estate_license?: boolean;
+  /** 伝えたいことの写真（保存場所の名前の並び） */
+  work_photos?: string[];
   // ② 仕事
   bio: string;
   can_help_with: string;
@@ -292,7 +299,8 @@ export type StepRecord = {
   contact_id: string;
   step_id: string;
   planned_on: string | null;
-  done_on: string | null;
+  done_on: string | null;
+
   result?: "ok" | "ng" | null;
 };
 

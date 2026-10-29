@@ -42,6 +42,11 @@ export type SharedProfile = {
   job_icon: JobIconKey;
   region: string;
   industry: string | null;
+  /** 建設・不動産の店だけの項目（出さない店・共有しない設定のときは null） */
+  work_areas?: string[] | null;
+  work_types?: string[] | null;
+  has_construction_license?: boolean | null;
+  has_real_estate_license?: boolean | null;
   company_name: string | null;
   position: Position | null;
   bio: string | null;
