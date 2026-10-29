@@ -35,6 +35,8 @@ export function applyShareChange(current: ShareSettings, change: Partial<Omit<Sh
 
 /** 公開ページが受け取る内容（DBの sakaba_get_shared_profile の返り値） */
 export type SharedProfile = {
+  /** URLの持ち主の店（0136）。ページの見た目・言葉をこの店のものにする */
+  guild_slug: string;
   display_name: string;
   photo_url: string | null;
   headline: string;

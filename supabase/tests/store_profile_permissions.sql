@@ -1,6 +1,6 @@
 -- プロフィールを店ごとに分けたことの権限・分離テスト（2026-10-29）。仕様：contexts/projects/gia/sakaba_store_profile_spec.md
 --
--- 使い方：全 migration（0001〜0135）を当てた手元の PostgreSQL の複製に対して、psql で流す。本番では流さない。
+-- 使い方：全 migration（0001〜0136）を当てた手元の PostgreSQL の複製に対して、psql で流す。本番では流さない。
 --   psql -h localhost -p 55432 -U postgres -d <複製DB> -v ON_ERROR_STOP=1 -f store_profile_permissions.sql
 -- 前提・出力・終わり方は multi_store_permissions.sql と同じ（スタブ済みの複製・BEGIN〜ROLLBACK・FAIL があれば最後に例外）。
 -- 移し替えそのものの照合（移す前後で一致）は 0134 の末尾が行う。ここでは、移した後の分離と、新しい入口を確かめる。
@@ -217,6 +217,9 @@ select pg_temp.contains('共有URL：建設店のURLに価値観は出ない', :
 select pg_temp.contains('共有URL：建設店のURLに得意な工事が出る', :'u_n', format($q$select public.sakaba_get_shared_profile(%L)$q$, :'share_ken'), '雨漏り', true);
 select pg_temp.hidden('共有URL：GIA店のURLを建設店の指定で開いても出ない', :'u_n', format($q$select public.sakaba_get_shared_profile(%L, 'kensetsu-fudosan')$q$, :'share_gia'));
 select pg_temp.contains('共有URL：店の指定が合っていれば出る', :'u_n', format($q$select public.sakaba_get_shared_profile(%L, 'gia')$q$, :'share_gia'), 'GIA-BIO', true);
+-- 公開ページの見た目を決める店の名前（0136）
+select pg_temp.contains('共有URL：GIA店のURLは店の名前 gia を返す', :'u_n', format($q$select public.sakaba_get_shared_profile(%L)$q$, :'share_gia'), '"guild_slug": "gia"', true);
+select pg_temp.contains('共有URL：建設店のURLは店の名前 kensetsu-fudosan を返す', :'u_n', format($q$select public.sakaba_get_shared_profile(%L)$q$, :'share_ken'), '"guild_slug": "kensetsu-fudosan"', true);
 select (:'share_gia' <> :'share_ken') as ok \gset
 insert into results values ('共有URL：店ごとに別のtoken', :'ok', '');
 -- 片方の店のURLを作り直しても、もう片方は変わらない

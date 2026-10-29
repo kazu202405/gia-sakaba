@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -9,11 +9,24 @@ import { describe, expect, it } from "vitest";
  * 返り値に混ざったら落ちる。決定の一覧は contexts/projects/gia/sakaba_share_url.md。
  */
 
+// 共有の表と、anon に開く関数を決めた migration
 const MIGRATION = "supabase/migrations/0121_sakaba_share_profile.sql";
+const CREATE_SHARED = "create or replace function public.sakaba_get_shared_profile";
+
+/** sakaba_get_shared_profile を最後に定義し直した migration（返り値はこれで決まる。0131・0135・0136 と作り直している） */
+function latestSharedProfileMigration(): string {
+  const dir = join(process.cwd(), "supabase/migrations");
+  const files = readdirSync(dir).filter((name) => name.endsWith(".sql")).sort()
+    .filter((name) => stripComments(readFileSync(join(dir, name), "utf8")).includes(CREATE_SHARED));
+  if (files.length === 0) throw new Error("sakaba_get_shared_profile を定義した migration が見つかりません");
+  return join("supabase/migrations", files[files.length - 1]);
+}
 
 const ALLOWED_KEYS = [
-  // 返り値の上の階層
-  "display_name", "photo_url", "headline", "job", "job_icon", "region", "industry",
+  // 返り値の上の階層（guild_slug は、ページの見た目を決める店の名前。0136）
+  "guild_slug", "display_name", "photo_url", "headline", "job", "job_icon", "region", "industry",
+  // 建設・不動産の店だけの項目（0135）
+  "work_areas", "work_types", "has_construction_license", "has_real_estate_license",
   "company_name", "position", "bio", "values_text", "looking_for", "keywords",
   "hobbies", "life_story", "business_card", "introductions",
   // 名刺と紹介状の中
@@ -96,16 +109,23 @@ function violations(functionSql: string): string[] {
   return found;
 }
 
+/** 関数の定義（create から本文の終わりの $$; まで） */
 function sharedProfileFunction(sql: string) {
-  const start = sql.indexOf("create or replace function public.sakaba_get_shared_profile");
-  const end = sql.indexOf("revoke all on function", start);
-  if (start < 0 || end < 0) throw new Error("sakaba_get_shared_profile が見つかりません");
+  const start = sql.indexOf(CREATE_SHARED);
+  const bodyStart = sql.indexOf("$$", start);
+  const end = sql.indexOf("$$;", bodyStart + 2);
+  if (start < 0 || bodyStart < 0 || end < 0) throw new Error("sakaba_get_shared_profile が見つかりません");
   return sql.slice(start, end);
 }
 
 describe("共有URLの公開用の関数（見張り）", () => {
   const sql = readFileSync(join(process.cwd(), MIGRATION), "utf8");
-  const fn = sharedProfileFunction(sql);
+  const fn = sharedProfileFunction(stripComments(readFileSync(join(process.cwd(), latestSharedProfileMigration()), "utf8")));
+
+  it("見張るのは、最後に定義し直した migration（古い 0121 を見て通らない）", () => {
+    expect(latestSharedProfileMigration()).not.toContain("0121_");
+    expect(fn).toContain("'guild_slug'");
+  });
 
   it("返す項目は、許可した一覧だけで、出さない列を使っていない", () => {
     expect(violations(fn)).toEqual([]);

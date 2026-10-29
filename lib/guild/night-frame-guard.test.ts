@@ -37,10 +37,12 @@ describe("公開ページの外枠（夜の酒場）", () => {
     expect(bad).toEqual([]);
   });
 
-  it("公開ページ /p /i /e は NightPageFrame を使っている", () => {
-    for (const dir of ["p", "i", "e"]) {
+  it("公開ページ /i /e は NightPageFrame、店が決まる /p は StorePageFrame（酒場の見た目の店では NightPageFrame になる）を使っている", () => {
+    for (const dir of ["i", "e"]) {
       expect(readFileSync(join(root, "app", dir, "[token]", "page.tsx"), "utf8")).toContain("<NightPageFrame>");
     }
+    expect(readFileSync(join(root, "app", "p", "[token]", "page.tsx"), "utf8")).toContain("<StorePageFrame config={config}>");
+    expect(readFileSync(join(root, "components", "guild", "night-page-frame.tsx"), "utf8")).toMatch(/theme === "tavern"\) return <NightPageFrame>/);
   });
 
   describe("自己テスト（見張り自身が取りこぼさないか）", () => {
