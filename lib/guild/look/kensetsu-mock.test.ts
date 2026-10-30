@@ -155,14 +155,15 @@ describe("渡す前の注意・合う渡し先・届く相談", () => {
   it("土地・物件の案内文がある", () => {
     expect(LAND_NOTICE).toContain("免許のある会社");
   });
-  it("届いた相談は 業種・エリアが合い、まだ渡す前で、自分の相談でないものだけ", () => {
+  it("案件は 管理者が確認済みで、業種・エリアが合い、まだ渡す前で、自分の相談でないものだけ", () => {
     const yamamoto = MEMBERS.find((m) => m.id === "m-yamamoto")!;
-    expect(matchesMember(base(), yamamoto)).toBe(true);
-    expect(matchesMember(base({ prefecture: "東京都" }), yamamoto)).toBe(false);
-    expect(matchesMember(base({ kind: "land" }), yamamoto)).toBe(false);
+    expect(matchesMember(base({ status: "reviewed" }), yamamoto)).toBe(true);
+    expect(matchesMember(base(), yamamoto)).toBe(false);
+    expect(matchesMember(base({ status: "reviewed", prefecture: "東京都" }), yamamoto)).toBe(false);
+    expect(matchesMember(base({ status: "reviewed", kind: "land" }), yamamoto)).toBe(false);
     expect(matchesMember(base({ status: "passed" }), yamamoto)).toBe(false);
-    expect(matchesMember(base({ requesterId: yamamoto.id }), yamamoto)).toBe(false);
-    expect(matchesMember(base(), MEMBERS.find((m) => m.id === "m-admin")!)).toBe(false);
+    expect(matchesMember(base({ status: "reviewed", requesterId: yamamoto.id }), yamamoto)).toBe(false);
+    expect(matchesMember(base({ status: "reviewed" }), MEMBERS.find((m) => m.id === "m-admin")!)).toBe(false);
   });
   it("渡す文面に 種類・場所・時期・本文が入る", () => {
     const text = buildPassMessage(base({ body: "雨漏りの修理" }), welltech, "田中さん");

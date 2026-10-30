@@ -1,6 +1,6 @@
 "use client";
 
-// 相談する人の画面：ホーム(1)・相談を出す(2)・確認(3)・追跡(4)・出した相談の一覧(5)。
+// 相談する人の画面：出す＝種類をえらぶ(1')・相談を出す(2)・確認(3)・追跡(4)・出した相談の一覧(5)。
 // 送る・取り下げるは、押した瞬間に useRef で錠をかけ、ボタンを「〇〇中…」にして押せなくする。
 // 錠は次の画面が出るまで外さない（送れたあと、画面が移る前にもう一度押されないように）。
 
@@ -38,16 +38,17 @@ import { KLink, mockNow, useK, useMock } from "./store";
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-// ---------- 1. ホーム ----------
+// ---------- 1'. 出す（種類をえらぶ） ----------
+// ホームは案件（member-screens.tsx の HomeScreen）。ここへは下メニュー「出す」とホームの「＋ 相談・案件を出す」から来る
 
-export function HomeScreen() {
+export function PostScreen() {
   const { state, dispatch } = useMock();
   const { persona } = useK();
   const mine = state.referrals.filter((r) => r.requesterId === persona.id).sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
   return (
     <div>
-      <h1>何のご相談ですか？</h1>
-      <p className="kz-lead"><Ph text="押すと、3つの質問に|答えるだけで|管理者に届きます。" /></p>
+      <h1>何のご相談・案件ですか？</h1>
+      <p className="kz-lead"><Ph text="押すと、3つの質問に|答えるだけで|管理者に届きます。|管理者が確認してから、|合う会員に|案件として回ります。" /></p>
       <div className="kz-picks">
         {KINDS.map((k) => (
           <KLink key={k.key} to={`/new?kind=${k.key}`} className="kz-pick" onClick={() => dispatch({ type: "startDraft", kind: k.key })}>
@@ -236,7 +237,7 @@ export function RequestFlow() {
         {step > 1 ? (
           <button type="button" className="kz-btn kz-btn--sub" disabled={busy} onClick={back}>もどる</button>
         ) : (
-          <KLink to="" className="kz-btn kz-btn--sub">ホームにもどる</KLink>
+          <KLink to="/post" className="kz-btn kz-btn--sub">種類をえらびなおす</KLink>
         )}
       </div>
     </div>
@@ -268,7 +269,7 @@ export function ConfirmScreen() {
       <div>
         <h1>入力がありません</h1>
         <p className="kz-empty">相談の入力が見つかりません。はじめからやり直してください。</p>
-        <KLink to="" className="kz-btn">ホームにもどる</KLink>
+        <KLink to="/post" className="kz-btn">はじめからやり直す</KLink>
       </div>
     );
   }

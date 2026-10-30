@@ -43,9 +43,9 @@ describe("相談を出す", () => {
 
 describe("管理者の動き（進む向きだけ）", () => {
   it("開くと確認済みに進み、出した人に知らせる。何度開いても1回だけ", () => {
-    const once = run(initialState(), { type: "adminOpen", id: "r2", now });
-    expect(statusOf(once, "r2")).toBe("reviewed");
-    const twice = run(once, { type: "adminOpen", id: "r2", now });
+    const once = run(initialState(), { type: "adminOpen", id: "r3", now });
+    expect(statusOf(once, "r3")).toBe("reviewed");
+    const twice = run(once, { type: "adminOpen", id: "r3", now });
     expect(twice.notices).toHaveLength(once.notices.length);
   });
   it("受付箱から直接渡すと、確認の日時も入る。渡し先が追跡に出る", () => {
@@ -58,7 +58,7 @@ describe("管理者の動き（進む向きだけ）", () => {
     expect(statusOf(s, "r2")).toBe("passed");
   });
   it("つながるのは、渡したあとだけ。受け付けのまま つながった、にはできない", () => {
-    expect(statusOf(run(initialState(), { type: "connect", id: "r2", now }), "r2")).toBe("received");
+    expect(statusOf(run(initialState(), { type: "connect", id: "r3", now }), "r3")).toBe("received");
     expect(statusOf(run(initialState(), { type: "connect", id: "r1", now }), "r1")).toBe("connected");
   });
   it("戻す・やり直すは止まる（つながった／渡した／終わったあと）", () => {

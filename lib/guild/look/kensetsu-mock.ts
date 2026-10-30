@@ -18,8 +18,8 @@ export const MOCK_STORE_NAME = MOCK_STORE?.name ?? "";
 export type Role = "requester" | "member" | "admin";
 
 export const ROLES: readonly { key: Role; label: string; /** 切り替えたときに最初に開く道 */ home: string; personaId: string }[] = [
-  { key: "requester", label: "相談する人", home: "", personaId: "m-tanaka" },
-  { key: "member", label: "受ける人", home: "/incoming", personaId: "m-yamamoto" },
+  { key: "requester", label: "会員（不動産）", home: "", personaId: "m-tanaka" },
+  { key: "member", label: "会員（工務店）", home: "", personaId: "m-yamamoto" },
   { key: "admin", label: "管理者", home: "/master", personaId: "m-admin" },
 ];
 
@@ -304,7 +304,7 @@ export const SEED_REFERRALS: readonly Referral[] = [
   {
     id: "r2", requesterId: "m-nakamura", kind: "land", prefecture: "大阪府", city: "東大阪市", timing: "quarter",
     body: "工場の隣の土地を買いたいです。売りに出ていないか、持ち主に聞いてもらえませんか。",
-    photos: [], status: "received", createdAt: jst(26, 8, 30), interestedIds: [],
+    photos: [], status: "reviewed", createdAt: jst(26, 8, 30), reviewedAt: jst(26, 9, 10), interestedIds: [],
   },
   {
     id: "r3", requesterId: "m-kobayashi", kind: "subsidy", prefecture: "大阪府", city: "八尾市", timing: "relaxed",
@@ -329,7 +329,7 @@ export const SEED_REFERRALS: readonly Referral[] = [
   {
     id: "r7", requesterId: "m-hayashi", kind: "construction", prefecture: "大阪府", city: "大阪市東成区", timing: "quarter",
     body: "築30年のアパートの外壁の塗り替えを考えています。見積もりをお願いしたいです。",
-    photos: ph("r7", 3), status: "received", createdAt: jst(25, 9, 40), interestedIds: [],
+    photos: ph("r7", 3), status: "reviewed", createdAt: jst(25, 9, 40), reviewedAt: jst(25, 11, 0), interestedIds: [],
   },
   {
     id: "r8", requesterId: "m-tanaka", kind: "other", prefecture: "大阪府", city: "", timing: "relaxed",
@@ -408,11 +408,12 @@ export function licenseMarks(r: Pick<Receiver, "hasConstructionLicense" | "hasRe
   ];
 }
 
-/** 受ける人の「届いた相談」に出すか（業種・エリアが合い、まだ渡す前で、自分の相談ではない） */
+/** 会員の「案件」に出すか（管理者が確認済みで、まだ渡す前・業種とエリアが合い・自分の相談ではない）。
+ *  出された相談は、管理者が開いて確認するまで会員には見せない（10-30 五島さん：相談と案件を一本に） */
 export function matchesMember(r: Referral, m: Pick<Member, "id" | "industry" | "areas">): boolean {
   const industry = INDUSTRIES.find((i) => i.key === m.industry);
   if (!industry) return false;
-  return r.requesterId !== m.id && (r.status === "received" || r.status === "reviewed") && industry.kinds.includes(r.kind) && m.areas.includes(r.prefecture);
+  return r.requesterId !== m.id && r.status === "reviewed" && industry.kinds.includes(r.kind) && m.areas.includes(r.prefecture);
 }
 
 /** 渡す文面（管理者がコピー／LINEで送る。アプリからは自動で送らない） */
