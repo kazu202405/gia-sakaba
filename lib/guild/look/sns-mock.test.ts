@@ -7,8 +7,30 @@ import {
   POSTS,
   COMPANIES,
   RECENT_CONNECTIONS,
+  BUSINESS_CARDS,
+  EMPTY_POST_DRAFT,
+  INCOMING_INTRO_REQUESTS,
+  WANT_ANSWERS,
+  answerCount,
+  answersFor,
   areaText,
+  directPeople,
+  duplicatePairs,
+  filterWantPosts,
   findPerson,
+  hasSameCard,
+  joinLines,
+  makeCard,
+  makeWantPost,
+  markInvited,
+  mergeCards,
+  mergeOrder,
+  pairKey,
+  secondDegreePeople,
+  splitLines,
+  validateCardInput,
+  validatePostDraft,
+  wantPosts,
   relationText,
   relationTo,
   relationToCompany,
@@ -92,5 +114,108 @@ describe("対応エリアの見せ方", () => {
   it("地域を丸ごと覆えば「〇〇全域」", () => {
     expect(areaText(["東京都", "神奈川県", "埼玉県", "千葉県", "茨城県", "栃木県", "群馬県"])).toBe("関東全域");
     expect(areaText(["東京都", "神奈川県"])).toBe("東京都・神奈川県");
+  });
+});
+
+describe("人脈", () => {
+  it("知り合いは相互承認済みの人だけ。知り合いの知り合いは道を見せる人だけ", () => {
+    expect(directPeople().map((p) => p.id).sort()).toEqual(["minato", "mori", "nakamura", "ono", "sato"]);
+    const second = secondDegreePeople().map((p) => p.id);
+    expect(second).toContain("yamamoto");
+    expect(second).not.toContain("kitamura");
+    expect(second).not.toContain("sato");
+    for (const id of second) expect(relationTo(id).kind).toBe("via");
+  });
+  it("届いた紹介のおねがいは、いる人を指す", () => {
+    for (const r of INCOMING_INTRO_REQUESTS) {
+      expect(findPerson(r.fromId)).not.toBeNull();
+      expect(findPerson(r.toId)).not.toBeNull();
+    }
+  });
+});
+
+describe("案件", () => {
+  it("カテゴリーで絞る。null はすべて", () => {
+    const all = wantPosts();
+    expect(filterWantPosts(all, null)).toHaveLength(all.length);
+    const partner = filterWantPosts(all, "seek-partner");
+    expect(partner.length).toBeGreaterThan(0);
+    expect(partner.every((p) => p.category === "seek-partner")).toBe(true);
+  });
+  it("自分の投稿は先頭に出る", () => {
+    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d", contact: "c" }, "my-1");
+    expect(wantPosts([mine])[0].id).toBe("my-1");
+  });
+  it("見本の答えの数は、投稿の数字と合っている", () => {
+    for (const p of wantPosts()) {
+      expect(answerCount(p.id, "know"), p.id).toBe(p.knowCount);
+      expect(answerCount(p.id, "can"), p.id).toBe(p.canDoCount);
+    }
+    for (const a of WANT_ANSWERS) expect(findPerson(a.personId)).not.toBeNull();
+  });
+  it("自分の答えは答えの一覧に足される", () => {
+    const mine = [{ postId: "p1", kind: "can" as const, personId: ME_ID, note: "x" }];
+    expect(answersFor("p1", mine)).toHaveLength(answersFor("p1").length + 1);
+    expect(answerCount("p1", "can", mine)).toBe(2);
+  });
+  it("投稿の入力の確かめ：空は理由つきで止める", () => {
+    const e = validatePostDraft(EMPTY_POST_DRAFT, "2026-10-30");
+    expect(Object.keys(e).sort()).toEqual(["category", "contact", "detail", "industry", "regions", "title"]);
+    const ok = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["関東"], detail: "d", contact: "c" };
+    expect(validatePostDraft(ok, "2026-10-30")).toEqual({});
+    expect(validatePostDraft({ ...ok, deadline: "2026-10-29" }, "2026-10-30").deadline).toBeTruthy();
+    expect(validatePostDraft({ ...ok, deadline: "2026-10-30" }, "2026-10-30")).toEqual({});
+    expect(validatePostDraft({ ...ok, title: "   " }, "2026-10-30").title).toBeTruthy();
+  });
+  it("確かめを通っていない入力から投稿は作れない", () => {
+    expect(() => makeWantPost(EMPTY_POST_DRAFT, "x")).toThrow();
+  });
+});
+
+describe("自分のプロフィールの欄", () => {
+  it("1行に1つ：空行・重複を捨て、上限で切る", () => {
+    expect(splitLines(" a \n\n b\r\na\n")).toEqual(["a", "b"]);
+    expect(splitLines("1\n2\n3", 2)).toEqual(["1", "2"]);
+    expect(splitLines("")).toEqual([]);
+    expect(splitLines(joinLines(["x", "y"]))).toEqual(["x", "y"]);
+  });
+});
+
+describe("管理者：名刺の仮登録", () => {
+  it("入力の確かめ", () => {
+    expect(Object.keys(validateCardInput({ name: " ", company: "" })).sort()).toEqual(["company", "name"]);
+    expect(validateCardInput({ name: "a", company: "b" })).toEqual({});
+  });
+  it("手で入れた名刺は未招待・非公開から。番号は続き", () => {
+    const c = makeCard(BUSINESS_CARDS, { name: " 新井 ", company: "新井組" }, "2026-10-30");
+    expect(c).toMatchObject({ id: "c10", name: "新井", status: "uninvited", registeredOn: "2026-10-30" });
+  });
+  it("同じ名刺は「株式会社」や空白の違いを無視して見つける", () => {
+    expect(hasSameCard(BUSINESS_CARDS, { name: "山本隆", company: "(株)山本電設" })).toBe(true);
+    expect(hasSameCard(BUSINESS_CARDS, { name: "山本 隆", company: "別の会社" })).toBe(false);
+  });
+  it("重複の候補：同じ名前か同じ会社。別の人と選んだ組は出ない", () => {
+    const pairs = duplicatePairs(BUSINESS_CARDS);
+    const keys = pairs.map((p) => p.key);
+    expect(keys).toContain(pairKey("c1", "c5"));
+    expect(keys).toContain(pairKey("c1", "c6"));
+    expect(pairs.find((p) => p.key === pairKey("c1", "c5"))?.reasons).toEqual(["同じ名前", "同じ会社"]);
+    expect(pairs.find((p) => p.key === pairKey("c1", "c6"))?.reasons).toEqual(["同じ会社"]);
+    expect(keys).not.toContain(pairKey("c2", "c3"));
+    expect(duplicatePairs(BUSINESS_CARDS, new Set([pairKey("c1", "c5")])).map((p) => p.key)).not.toContain(pairKey("c1", "c5"));
+  });
+  it("まとめる：先に登録した方を残し、状態は進んだ方に合わせる", () => {
+    const a = BUSINESS_CARDS.find((c) => c.id === "c1")!;
+    const b = BUSINESS_CARDS.find((c) => c.id === "c5")!;
+    expect(mergeOrder(b, a)).toEqual({ keep: a, drop: b });
+    // 消す方に進んだ状態があれば、残す方がそれを引き継ぐ
+    const merged = mergeCards(BUSINESS_CARDS, "c5", "c1");
+    expect(merged.find((c) => c.id === "c1")).toBeUndefined();
+    expect(merged.find((c) => c.id === "c5")?.status).toBe("approved");
+    expect(mergeCards(BUSINESS_CARDS, "zz", "c1")).toHaveLength(BUSINESS_CARDS.length);
+  });
+  it("招待URLを渡すと招待中になる（承認ずみはそのまま）", () => {
+    expect(markInvited(BUSINESS_CARDS, "c4").find((c) => c.id === "c4")?.status).toBe("invited");
+    expect(markInvited(BUSINESS_CARDS, "c1").find((c) => c.id === "c1")?.status).toBe("approved");
   });
 });

@@ -12,14 +12,15 @@ import { HOME_STYLES, PALETTES, SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-
 import { PageSkeleton } from "./parts";
 import { SnProvider, snPath, useSnState } from "./store";
 import "./sns.css";
+import "./sns-layout.css";
 
 /** 下のメニュー。ready=false はまだ画面が無い（押せない見た目にして、リンクにしない） */
 export const NAV: readonly { to: string; label: string; icon: LucideIcon; also?: string[]; ready: boolean }[] = [
   { to: "", label: "ホーム", icon: House, ready: true },
   { to: "/search", label: "探す", icon: Search, also: ["/people", "/companies"], ready: true },
-  { to: "/network", label: "人脈", icon: Users, ready: false },
-  { to: "/posts", label: "案件", icon: BriefcaseBusiness, ready: false },
-  { to: "/me", label: "自分", icon: UserRound, ready: false },
+  { to: "/network", label: "人脈", icon: Users, ready: true },
+  { to: "/posts", label: "案件", icon: BriefcaseBusiness, ready: true },
+  { to: "/me", label: "自分", icon: UserRound, ready: true },
 ];
 
 function isUnder(rest: string, to: string) {

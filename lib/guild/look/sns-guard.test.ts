@@ -14,7 +14,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const ROOTS = ["app/guild-look/sns", "components/guild/look/sns"];
-const EXTRA = ["lib/guild/look/sns-mock.ts"];
+const EXTRA = ["lib/guild/look/sns-mock.ts", "lib/guild/look/sns-sort.ts"];
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -134,7 +134,8 @@ describe("人脈ネットワークSNS見本の見張り", () => {
   const css = files.filter((f) => f.endsWith(".css"));
 
   it("見る範囲にファイルがちゃんとある（空振りで通らない）", () => {
-    expect(code.length).toBeGreaterThan(8);
+    expect(code.length).toBeGreaterThan(17);
+    expect(code).toContain("lib/guild/look/sns-sort.ts");
     expect(css).toContain("components/guild/look/sns/sns.css");
     expect(code).toContain("lib/guild/look/sns-mock.ts");
     expect(code).toContain("app/guild-look/sns/layout.tsx");

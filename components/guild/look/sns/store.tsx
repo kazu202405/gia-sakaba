@@ -8,13 +8,21 @@ import Link from "next/link";
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
+  BUSINESS_CARDS,
   DEFAULT_HOME_STYLE,
   DEFAULT_PALETTE,
   HOME_STYLES,
+  ME_ID,
   PALETTES,
+  PEOPLE,
   SNS_BASE,
+  type BusinessCard,
   type HomeStyle,
+  type IntroReply,
   type PaletteKey,
+  type Person,
+  type WantAnswer,
+  type WantPost,
 } from "@/lib/guild/look/sns-mock";
 
 /** 送った紹介のおねがい（相手の id → おねがいした知り合いの id） */
@@ -29,6 +37,22 @@ type Ctx = {
   addSentIntro: (targetId: string, viaId: string) => void;
   reactions: ReadonlySet<string>;
   toggleReaction: (key: string) => void;
+  /** 届いた紹介のおねがいへの返事（おねがいの id → 返事） */
+  introReplies: Readonly<Record<string, IntroReply>>;
+  addIntroReply: (requestId: string, reply: IntroReply) => void;
+  /** 自分が足した投稿・送った答え */
+  myPosts: readonly WantPost[];
+  addPost: (post: WantPost) => void;
+  myAnswers: readonly WantAnswer[];
+  addAnswer: (answer: WantAnswer) => void;
+  /** 自分のプロフィール（編集すると見る画面に反映される） */
+  me: Person;
+  saveMe: (patch: Partial<Pick<Person, "past" | "now" | "future" | "talk" | "offer" | "want" | "openToIntro">>) => void;
+  /** 管理者：名刺の仮登録と、「別の人」と選んだ組 */
+  cards: readonly BusinessCard[];
+  updateCards: (fn: (prev: readonly BusinessCard[]) => readonly BusinessCard[]) => void;
+  distinctPairs: ReadonlySet<string>;
+  markDistinct: (key: string) => void;
 };
 
 const SnContext = createContext<Ctx | null>(null);
@@ -83,6 +107,12 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
   const { palette, homeStyle } = parsePrefs(raw);
   const [sentIntros, setSentIntros] = useState<SentIntros>({});
   const [reactions, setReactions] = useState<ReadonlySet<string>>(new Set());
+  const [introReplies, setIntroReplies] = useState<Readonly<Record<string, IntroReply>>>({});
+  const [myPosts, setMyPosts] = useState<readonly WantPost[]>([]);
+  const [myAnswers, setMyAnswers] = useState<readonly WantAnswer[]>([]);
+  const [me, setMe] = useState<Person>(() => PEOPLE.find((p) => p.id === ME_ID) as Person);
+  const [cards, setCards] = useState<readonly BusinessCard[]>(BUSINESS_CARDS);
+  const [distinctPairs, setDistinctPairs] = useState<ReadonlySet<string>>(new Set());
 
   const value = useMemo<Ctx>(() => ({
     palette,
@@ -97,7 +127,19 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     }),
-  }), [palette, homeStyle, sentIntros, reactions]);
+    introReplies,
+    addIntroReply: (requestId, reply) => setIntroReplies((prev) => ({ ...prev, [requestId]: reply })),
+    myPosts,
+    addPost: (post) => setMyPosts((prev) => [post, ...prev]),
+    myAnswers,
+    addAnswer: (answer) => setMyAnswers((prev) => [...prev, answer]),
+    me,
+    saveMe: (patch) => setMe((prev) => ({ ...prev, ...patch })),
+    cards,
+    updateCards: (fn) => setCards((prev) => fn(prev)),
+    distinctPairs,
+    markDistinct: (key) => setDistinctPairs((prev) => new Set(prev).add(key)),
+  }), [palette, homeStyle, sentIntros, reactions, introReplies, myPosts, myAnswers, me, cards, distinctPairs]);
 
   return <SnContext.Provider value={value}>{children}</SnContext.Provider>;
 }
