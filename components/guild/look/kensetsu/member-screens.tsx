@@ -1,12 +1,14 @@
 "use client";
 
-// 会員の画面：ホーム＝案件(1)・案件のすべて(6)・自分(7)・自分を編集(8)・名簿(9)・お知らせ(10)。
+// 会員の画面：ホーム＝案件(1)・案件のすべて(6)・案件1件(6')・自分(7)・自分を編集(8)・名簿(9)・お知らせ(10)。
 
 import { Camera, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   INDUSTRIES,
+  MOCK_NOW_BASE,
+  URGENT_TIMING,
   MASKED_REQUESTER,
   PHOTO_MAX,
   PROFILE_TEXT_MAX,
@@ -15,6 +17,7 @@ import {
   WORK_TYPES,
   formatJst,
   industryLabel,
+  isNewCase,
   isOpen,
   kindLabel,
   matchesMember,
@@ -29,9 +32,10 @@ import {
 import { Marks, PhotoTiles, StepLine } from "./parts";
 import { KLink, useK, useMock } from "./store";
 
-// ---------- 1. ホーム（案件が真ん中）・6. 案件のすべて ----------
-// 10-30 五島さん：会員がふだん開く理由は「自分に合う仕事が回ってきているか」。ホームは案件を真ん中に、
-// 出すのは下の「＋ 相談・案件を出す」と下メニューの「出す」から。出された相談は、管理者が確認してから案件として回る。
+// ---------- 1. ホーム（案件が真ん中）・6. 案件のすべて・6'. 案件1件 ----------
+// 10-30 五島さん：会員がふだん開く理由は「自分に合う仕事が回ってきているか」。ホームは案件を真ん中に、出すのは下メニューの「出す」。
+// 出された相談は、管理者が確認してから案件として回る。一覧は1件2行（どこ・いつまでに を左に立てる＝現場の人は場所で選ぶ）で、
+// 中身を読んでから手を挙げられるよう「話を聞きたい」は案件1件の画面にだけ置く。
 
 /** 自分に合う案件（管理者が確認済み）＋自分が手を挙げてまだ返事待ちのもの。新しい順 */
 function useCases() {
@@ -42,80 +46,85 @@ function useCases() {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-function CaseLead() {
+/** 地名は「市・郡」の後ろでだけ折り返す（「大阪市東|成区」のように途中で切らない） */
+function PlaceText({ text }: { text: string }) {
+  const parts = text.split(/(?<=[市郡])/);
+  return <>{parts.map((part, i) => <span key={i} className="kz-nowrap">{part}</span>)}</>;
+}
+
+/** 何で絞っているか（業種・エリア）を1行で。押すと直せる */
+function CaseScope() {
   const { persona } = useK();
+  if (!persona.industry) return null;
   return (
-    <p className="kz-lead">
-      {persona.industry
-        ? `あなたの業種（${industryLabel(persona.industry)}）とエリア（${persona.areas.join("・")}）に合う案件です。`
-        : "業種とエリアを入れると、合う案件が届きます。"}
-      {MASKED_REQUESTER}。
-    </p>
+    <KLink to="/me/edit" className="kz-scope">
+      <span className="kz-scope-text">{industryLabel(persona.industry)}　{persona.areas.join("・")}</span>
+      <span className="kz-scope-edit">変える</span>
+    </KLink>
   );
 }
 
 function CaseRows({ list }: { list: readonly Referral[] }) {
-  const { dispatch } = useMock();
   const { persona } = useK();
-  const locked = useRef(new Set<string>());
-  const raise = (id: string) => {
-    // 押した瞬間に錠（同じ案件を続けて押されても1回だけ）
-    if (locked.current.has(id)) return;
-    locked.current.add(id);
-    dispatch({ type: "raiseHand", id, memberId: persona.id });
-    uiToast("手を挙げました。管理者の返事をお待ちください");
-  };
   if (list.length === 0) {
     return persona.industry ? (
       <p className="kz-empty">いま合う案件はありません。新しい案件が入ると、お知らせします。</p>
     ) : (
-      <p className="kz-empty">
-        まだ案件が届きません。<KLink to="/me/edit">業種と対応エリアを入れる</KLink>と、合う案件がここに届きます。
-      </p>
+      <div className="kz-empty">
+        <p>業種と対応エリアを入れると、合う案件がここに届きます。</p>
+        <KLink to="/me/edit" className="kz-btn kz-btn--sub">業種とエリアを入れる</KLink>
+      </div>
     );
   }
   return (
-    <div className="kz-list">
+    <ul className="kz-cases">
       {list.map((r) => {
         const raised = r.interestedIds.includes(persona.id);
+        const fresh = !raised && isNewCase(r, MOCK_NOW_BASE);
         return (
-          <div key={r.id} className="kz-row">
-            <p>{r.body}</p>
-            <p className="kz-meta">{kindLabel(r.kind)}・{placeOf(r)}・{timingLabel(r.timing)}・{formatJst(r.createdAt)}</p>
-            <PhotoTiles photos={r.photos} />
-            {raised ? (
-              <>
-                <button type="button" className="kz-btn kz-btn--small" disabled>手を挙げました</button>
-                <p className="kz-meta">管理者の返事待ちです</p>
-              </>
-            ) : (
-              <button type="button" className="kz-btn kz-btn--small" onClick={() => raise(r.id)}>話を聞きたい</button>
-            )}
-          </div>
+          <li key={r.id}>
+            <KLink to={`/cases/${r.id}`} className="kz-case">
+              <span className="kz-case-where">
+                <span className="kz-case-place"><PlaceText text={placeOf(r)} /></span>
+                <span className={r.timing === URGENT_TIMING ? "kz-case-when kz-case-when--urgent" : "kz-case-when"}>{timingLabel(r.timing)}</span>
+              </span>
+              <span className="kz-case-what">
+                <span className={fresh ? "kz-case-title kz-case-title--new" : "kz-case-title"}>{summaryOf(r.body, 40)}</span>
+                <span className="kz-case-sub">
+                  {fresh && <span className="kz-flag">新着</span>}
+                  {raised && <span className="kz-flag kz-flag--done">手を挙げました</span>}
+                  <span>{kindLabel(r.kind)}</span>
+                  {r.photos.length > 0 && <span className="kz-case-photos"><Camera size={14} aria-hidden />{r.photos.length}</span>}
+                </span>
+              </span>
+              <ChevronRight size={20} className="kz-case-go" aria-hidden />
+            </KLink>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }
 
-const HOME_CASES = 3;
+const HOME_CASES = 5;
 
 export function HomeScreen() {
   const { state } = useMock();
   const { persona } = useK();
   const cases = useCases();
+  const fresh = cases.filter((r) => !r.interestedIds.includes(persona.id) && isNewCase(r, MOCK_NOW_BASE)).length;
   const mine = state.referrals.filter((r) => r.requesterId === persona.id && isOpen(r.status)).sort((a, b) => b.createdAt - a.createdAt).slice(0, 3);
   return (
     <div>
-      <div className="kz-sec-head">
+      <div className="kz-case-head">
         <h1>あなたに合う案件</h1>
-        {cases.length > HOME_CASES && <KLink to="/incoming">すべて（{cases.length}）</KLink>}
+        {fresh > 0 && <span className="kz-case-count">新着 {fresh}件</span>}
       </div>
-      <CaseLead />
+      <CaseScope />
       <CaseRows list={cases.slice(0, HOME_CASES)} />
+      {cases.length > HOME_CASES && <KLink to="/incoming" className="kz-more">案件をすべて見る（{cases.length}件）</KLink>}
       {mine.length > 0 && (
-        <>
-          <hr className="kz-rule" />
+        <section className="kz-mine">
           <div className="kz-sec-head">
             <h2>自分が出した相談</h2>
             <KLink to="/referrals">すべて</KLink>
@@ -124,18 +133,12 @@ export function HomeScreen() {
             {mine.map((r) => (
               <KLink key={r.id} to={`/referrals/${r.id}`} className="kz-row kz-row-link">
                 <p>{summaryOf(r.body)}</p>
-                <p className="kz-meta">{kindLabel(r.kind)}・{placeOf(r)}・{formatJst(r.createdAt)}</p>
                 <StepLine referral={r} members={state.members} />
               </KLink>
             ))}
           </div>
-        </>
+        </section>
       )}
-      <hr className="kz-rule" />
-      <KLink to="/post" className="kz-row kz-row-link kz-link-row">
-        <span>＋ 相談・案件を出す</span>
-        <ChevronRight size={20} className="kz-pick-go" aria-hidden />
-      </KLink>
     </div>
   );
 }
@@ -144,13 +147,63 @@ export function IncomingScreen() {
   const cases = useCases();
   return (
     <div>
-      <h1>案件</h1>
-      <CaseLead />
-      <KLink to="/members" className="kz-row kz-row-link kz-link-row">
-        <span>名簿を見る</span>
-        <ChevronRight size={20} className="kz-pick-go" aria-hidden />
-      </KLink>
+      <div className="kz-case-head">
+        <h1>案件</h1>
+        <KLink to="/members" className="kz-case-side">名簿を見る</KLink>
+      </div>
+      <CaseScope />
       <CaseRows list={cases} />
+    </div>
+  );
+}
+
+export function CaseScreen({ id }: { id: string }) {
+  const { state, dispatch } = useMock();
+  const { persona } = useK();
+  const locked = useRef(false);
+  const r = state.referrals.find((x) => x.id === id);
+  const visible = r && (matchesMember(r, persona) || (r.interestedIds.includes(persona.id) && r.requesterId !== persona.id && r.status === "reviewed"));
+  if (!r || !visible) {
+    return (
+      <div>
+        <h1>この案件は見られません</h1>
+        <p className="kz-empty">ほかの会社に渡ったか、取り下げられました。</p>
+        <KLink to="" className="kz-btn kz-btn--sub">案件の一覧へ</KLink>
+      </div>
+    );
+  }
+  const raised = r.interestedIds.includes(persona.id);
+  const raise = () => {
+    // 押した瞬間に錠（続けて押されても1回だけ）。押したあとはボタンが「手を挙げました」になり、戻らない
+    if (locked.current) return;
+    locked.current = true;
+    dispatch({ type: "raiseHand", id: r.id, memberId: persona.id });
+    uiToast("手を挙げました。管理者の返事をお待ちください");
+  };
+  return (
+    <div>
+      <p className="kz-back"><KLink to="">‹ 案件</KLink></p>
+      <p className="kz-case-detail-where">
+        <span>{r.prefecture}{r.city.trim()}</span>
+        <span className={r.timing === URGENT_TIMING ? "kz-case-when kz-case-when--urgent" : "kz-case-when"}>{timingLabel(r.timing)}</span>
+      </p>
+      <h1 className="kz-case-body kz-pre">{r.body}</h1>
+      <PhotoTiles photos={r.photos} />
+      <dl className="kz-facts">
+        <div><dt>種類</dt><dd>{kindLabel(r.kind)}</dd></div>
+        <div><dt>届いた日</dt><dd>{formatJst(r.reviewedAt ?? r.createdAt)}</dd></div>
+      </dl>
+      <p className="kz-case-note">{MASKED_REQUESTER}。手を挙げると、管理者があいだに入っておつなぎします。</p>
+      <div className="kz-case-action">
+        {raised ? (
+          <>
+            <button type="button" className="kz-btn" disabled>手を挙げました</button>
+            <p className="kz-meta">管理者の返事待ちです。返事はお知らせに届きます。</p>
+          </>
+        ) : (
+          <button type="button" className="kz-btn" onClick={raise}>話を聞きたい</button>
+        )}
+      </div>
     </div>
   );
 }
@@ -467,7 +520,7 @@ export function NoticesScreen() {
   const { persona } = useK();
   const list = state.notices.filter((n) => n.forMemberId === persona.id).sort((a, b) => b.at - a.at);
   // 同じ人が出す側にも受ける側にもなるので、行き先は見る人でなくお知らせの種類で決める
-  const target = (n: Notice) => (n.kind === "referral_received" ? `/master/${n.referralId}` : n.kind === "hand_reply" ? "/incoming" : `/referrals/${n.referralId}`);
+  const target = (n: Notice) => (n.kind === "referral_received" ? `/master/${n.referralId}` : n.kind === "hand_reply" ? `/cases/${n.referralId}` : `/referrals/${n.referralId}`);
   return (
     <div>
       <h1>お知らせ</h1>

@@ -26,7 +26,7 @@ function navFor(role: Role, newCount: number): NavItem[] {
   }
   // 10-30：会員のホームは案件。出すのは2番目（数か月に1回の操作のため）
   return [
-    { to: "", label: "案件", icon: ClipboardList, also: ["/incoming"] },
+    { to: "", label: "案件", icon: ClipboardList, also: ["/incoming", "/cases"] },
     { to: "/post", label: "出す", icon: MessageSquarePlus, also: ["/new", "/referrals"] },
     { to: "/me", label: "自分", icon: UserRound, also: ["/members"] },
   ];

@@ -368,6 +368,17 @@ export function formatJst(ms: number): string {
   return `${pick("month")}月${pick("day")}日 ${pick("hour")}:${pick("minute")}`;
 }
 
+/** 案件に「新着」の印を付ける時間（管理者が確認してから） */
+export const NEW_CASE_HOURS = 48;
+
+/** 新着か（管理者が確認してから NEW_CASE_HOURS 以内）。確認の日時が無ければ出した日時で数える */
+export function isNewCase(r: Pick<Referral, "createdAt" | "reviewedAt">, now: number): boolean {
+  return now - (r.reviewedAt ?? r.createdAt) < NEW_CASE_HOURS * 3600 * 1000;
+}
+
+/** 一覧で目立たせる時期（急ぎ） */
+export const URGENT_TIMING: TimingKey = "now";
+
 /** 一覧に出す1行目（本文の最初の一文を短く） */
 export function summaryOf(body: string, max = 28): string {
   const first = body.trim().split(/[。\n]/)[0] ?? "";
