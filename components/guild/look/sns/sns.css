@@ -58,8 +58,9 @@
 .sn *, .sn *::before, .sn *::after { box-sizing: border-box; }
 .sn :is(p, h1, h2, h3, li, span) { text-wrap: pretty; }
 .sn :where(p, h1, h2, h3, ul, ol, dl, dd) { margin: 0; padding: 0; }
-.sn a { color: inherit; text-decoration: none; }
-.sn button { font: inherit; color: inherit; }
+/* 土台の決まりは :where で一番弱くする（.sn-btn--main などの文字色に負けるように。強いと緑のボタンの文字が黒になる） */
+:where(.sn a) { color: inherit; text-decoration: none; }
+:where(.sn button) { font: inherit; color: inherit; }
 .sn :is(a, button, input, textarea):focus-visible { outline: 3px solid var(--sn-accent); outline-offset: 2px; }
 body:has(.sn) { --ui-toast-bottom: 5.5rem; }
 
@@ -73,7 +74,7 @@ body:has(.sn) { --ui-toast-bottom: 5.5rem; }
 
 .sn-mock { background: var(--sn-accent-soft); font-size: 0.75rem; }
 .sn-mock-in { max-width: var(--sn-width); margin: 0 auto; padding: 0.375rem 1.125rem; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: center; }
-.sn-mock-in > span { color: var(--sn-muted); }
+.sn-mock-in > span { color: var(--sn-ink); }
 .sn-mock-set { display: inline-flex; gap: 0.25rem; align-items: center; }
 .sn-mock-set button { border: none; background: transparent; padding: 0.25rem 0.5rem; border-radius: var(--sn-radius-pill); cursor: pointer; min-height: 2rem; }
 .sn-mock-set button[aria-pressed="true"] { background: var(--sn-accent); color: var(--sn-accent-ink); font-weight: 700; }
@@ -158,7 +159,7 @@ body:has(.sn) { --ui-toast-bottom: 5.5rem; }
 .sn-post-head .sn-sub { display: block; }
 .sn-post-body { font-size: 0.9375rem; line-height: 1.75; margin-top: 0.625rem; }
 .sn-want { margin-top: 0.625rem; padding: 0.75rem 0.875rem; border-radius: var(--sn-radius); background: var(--sn-route-soft); font-weight: 700; line-height: 1.6; }
-.sn-want small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--sn-muted); margin-top: 0.125rem; }
+.sn-want small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--sn-ink); margin-top: 0.125rem; }
 .sn-photo { margin-top: 0.625rem; aspect-ratio: 16 / 9; border-radius: var(--sn-radius); background: linear-gradient(160deg, var(--sn-photo-a), var(--sn-photo-b)); display: flex; align-items: flex-start; padding: 0.5rem 0.75rem; font-size: 0.6875rem; color: var(--sn-accent-ink); }
 .sn-react { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .sn-react button { border: none; background: transparent; padding: 0.375rem 0.5rem; margin-left: -0.5rem; font-size: 0.8125rem; color: var(--sn-muted); cursor: pointer; min-height: 2.5rem; border-radius: var(--sn-radius-pill); }
