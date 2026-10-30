@@ -90,6 +90,14 @@ describe("guildGate", () => {
     expect(guildGate("/guild-look/c", prod)).toEqual({ kind: "redirect", to: "/guild" });
   });
 
+  it("建設・不動産の酒場の作り直しの見本 /guild-look/sns だけは本番でも通す（ほかの見本・似た道は通さない）", () => {
+    expect(guildGate("/guild-look/sns", prod)).toEqual({ kind: "pass" });
+    expect(guildGate("/guild-look/sns/people/yamamoto", prod)).toEqual({ kind: "pass" });
+    expect(guildGate("/guild-look/snsx", prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate("/guild-look/a", prod)).toEqual({ kind: "redirect", to: "/guild" });
+    expect(guildGate("/guild-look", prod)).toEqual({ kind: "redirect", to: "/guild" });
+  });
+
   it("GIA 本体の画面は /guild へ飛ばす", () => {
     for (const p of ["/login", "/plans", "/members/app/board", "/clone/x/tasks", "/admin", "/sitemap.xml"]) {
       expect(guildGate(p, prod)).toEqual({ kind: "redirect", to: "/guild" });

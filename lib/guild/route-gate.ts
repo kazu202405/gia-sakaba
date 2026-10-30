@@ -6,7 +6,8 @@
 //
 // - /（公開の酒場案内）と /guild 配下 → 通す（ただし店ができる前の昔の道 /guild/quests/… は /guild/<既定の店>/… へ転送）
 // - 利用規約・プライバシーポリシー・特商法表記 → 通す（入会・申し込みの前に、未ログインで読むもの）
-// - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す
+// - /guild-look（見た目の見比べ）→ 手元の開発中だけ通す。ただし /guild-look/sns（建設・不動産の酒場の作り直しの見本）だけは本番でも通す
+//   （2026-10-31 五島さん「本番にあげてくれてOK」。スマホの実機で見るため。DBなし・仮データ・検索に出さない）
 // - Next.js の内部ファイル・画像など → 通す
 // - 酒場の決済・プッシュ通知APIとStripe Webhookだけ通し、その他の /api 配下 → 404
 //   （リダイレクトすると外部からの呼び出しが 200 で成功したように見える）
@@ -40,6 +41,9 @@ function isUnder(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+/** 本番でも開く見本（DBなし）。ほかの /guild-look は開発中だけ */
+const SNS_LOOK = "/guild-look/sns";
+
 export function guildGate(pathname: string, options: { allowLook: boolean }): GuildGateResult {
   if (pathname === "/") return { kind: "pass" };
   if (LEGAL_PATHS.has(pathname)) return { kind: "pass" };
@@ -53,6 +57,7 @@ export function guildGate(pathname: string, options: { allowLook: boolean }): Gu
   const legacy = legacyPathToStore(pathname);
   if (legacy) return { kind: "redirect", to: legacy, keepSearch: true };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
+  if (isUnder(pathname, SNS_LOOK)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 
   // Next.js の内部（静的ファイル・開発時の自動更新やエラー表示）と、公開してよい固定ファイル
