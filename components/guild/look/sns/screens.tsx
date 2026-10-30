@@ -87,16 +87,20 @@ function SearchHome() {
               <h2>いま、こんな人を探しています</h2>
             </div>
           </div>
-          <div className="sn-rail">
+          <div>
             {wants.map((w) => {
               const author = findPerson(w.authorId);
               if (!author) return null;
               return (
-                <SnLink key={w.id} to={`/people/${author.id}`}>
-                  <Avatar person={author} />
-                  <Say>{w.text}</Say>
-                  <p className="sn-sub">
-                    {author.name}・{w.ago}
+                <SnLink key={w.id} to={`/posts/${w.id}`} className="sn-want-row">
+                  <p>{w.text}</p>
+                  <p className="sn-want-by">
+                    <span>
+                      {author.name}・{companyOf(author)?.name ?? ""}　{w.ago}
+                    </span>
+                    <b>
+                      {w.industry}・{w.areas.map((a) => a.replace(/[都府県]$/, "")).join("／")}
+                    </b>
                   </p>
                 </SnLink>
               );
@@ -148,6 +152,7 @@ function IncomingRequests() {
             <p>
               <b>{from.name}さん</b>が、あなた経由で<b>{shortName(to)}さん</b>とつながりたいそうです
             </p>
+            <span className="sn-ask-go">返事する</span>
           </SnLink>
         );
       })}
@@ -387,26 +392,36 @@ export function PersonView({ person, relation }: { person: Person; relation: Rel
     <div className="sn-page sn-page--detail">
       <aside className="sn-page-side">
         <div className="sn-hero">
-          <Avatar person={person} />
-          <h1>{person.name}</h1>
-          <p className="sn-meta">
-            {company ? (
-              <SnLink to={`/companies/${company.id}`}>
-                <u>{company.name}</u>
-              </SnLink>
-            ) : null}
-            　{person.title}（{person.prefecture}）
-          </p>
-          <Say>{person.say}</Say>
-          {person.talk.length > 0 && (
-            <div className="sn-chips sn-chips--static" aria-label="話のきっかけ">
-              {person.talk.map((t) => (
-                <span key={t} className="sn-chip">
-                  {t}
-                </span>
-              ))}
+          {/* 名刺と同じ比率の枠：上に会社と役職、まん中に顔とふりがな・名前、下に許可と所在地 */}
+          <div className="sn-card">
+            <p className="sn-card-top">
+              {company ? <SnLink to={`/companies/${company.id}`}>{company.name}</SnLink> : <span />}
+              <span>{person.title}</span>
+            </p>
+            <div className="sn-card-mid">
+              <Avatar person={person} />
+              <div>
+                <p className="sn-kana">{person.kana}</p>
+                <h1>{person.name}</h1>
+              </div>
             </div>
-          )}
+            <div className="sn-card-bottom">
+              {company && <LicenseTags licenses={company.licenses} />}
+              {company && <p>{person.prefecture}　対応：{areaText(company.areas)}</p>}
+            </div>
+          </div>
+          <div className="sn-hero-say">
+            <Say>{person.say}</Say>
+            {person.talk.length > 0 && (
+              <div className="sn-chips sn-chips--static" aria-label="話のきっかけ">
+                {person.talk.map((t) => (
+                  <span key={t} className="sn-chip">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <RouteLine person={person} relation={relation} />
       </aside>
@@ -417,11 +432,6 @@ export function PersonView({ person, relation }: { person: Person; relation: Rel
           <Story k="これから" v={person.future} />
         </div>
         <OfferWant offer={person.offer} want={person.want} />
-        {company && (
-          <div className="sn-sec">
-            <LicenseTags licenses={company.licenses} />
-          </div>
-        )}
       </div>
       {relation.kind !== "self" && relation.kind !== "none" && (
         <div className="sn-sticky">
@@ -476,11 +486,20 @@ export function CompanyScreen({ id }: { id: string }) {
     <div className="sn-page sn-page--detail">
       <aside className="sn-page-side">
         <div className="sn-hero">
-          <Logo company={company} />
-          <h1>{company.name}</h1>
-          <p className="sn-meta">
-            {company.prefecture}／{company.business}
-          </p>
+          <div className="sn-card">
+            <p className="sn-card-top">
+              <span>{company.business}</span>
+              <span>{company.prefecture}</span>
+            </p>
+            <div className="sn-card-mid">
+              <Logo company={company} />
+              <h1>{company.name}</h1>
+            </div>
+            <div className="sn-card-bottom">
+              <LicenseTags licenses={company.licenses} />
+              <p>対応：{areaText(company.areas)}</p>
+            </div>
+          </div>
           <p className="sn-v">{company.about}</p>
         </div>
         {person && <RouteLine person={person} relation={relation} />}

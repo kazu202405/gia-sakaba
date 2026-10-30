@@ -46,13 +46,15 @@ export function Say({ children, className }: { children: React.ReactNode; classN
   return <p className={className ? `sn-say ${className}` : "sn-say"}>{children}</p>;
 }
 
-/** 許可・免許の札。確認済みと自己申告を見分けられるようにする */
+/** 許可・免許。名刺と同じ並び（種類・許可行政庁・番号）で書き、確認済みと自己申告を見分けられるようにする */
 export function LicenseTags({ licenses }: { licenses: readonly License[] }) {
   return (
     <>
       {licenses.map((l) => (
-        <span key={l.name} className={l.verified ? "sn-tag sn-tag--ok" : "sn-tag sn-tag--self"}>
-          {l.name}・{l.verified ? "確認済み" : "自己申告"}
+        <span key={l.name} className="sn-lic">
+          {l.name}
+          {l.number && `　${l.number}`}
+          <b className={l.verified ? "sn-lic-ok" : "sn-lic-self"}>{l.verified ? "確認済み" : "自己申告"}</b>
         </span>
       ))}
     </>
@@ -85,15 +87,23 @@ export function RouteLine({ person, relation }: { person: Person; relation: Rela
 }
 
 /** 人の行（探す・人脈・会社の所属で使う） */
+/** 人の行（探す・人脈・会社の所属で使う）。名刺の並び：ふりがな・名前・会社と役職、右に所在地と対応エリア、その下に一言・許可・つながり */
 export function PersonRow({ person }: { person: Person }) {
   const company = companyOf(person);
   return (
-    <SnLink to={`/people/${person.id}`} className="sn-row">
+    <SnLink to={`/people/${person.id}`} className="sn-row sn-mrow">
       <Avatar person={person} />
       <div className="sn-row-body">
-        <Say>{person.say}</Say>
-        <p className="sn-meta"><b>{person.name}</b>{company ? `・${company.name}（${person.prefecture}）` : ""}</p>
-        {company && <LicenseTags licenses={company.licenses} />}
+        <div className="sn-mrow-head">
+          <div>
+            <p className="sn-kana">{person.kana}</p>
+            <p className="sn-mrow-name">{person.name}</p>
+            {company && <p className="sn-mrow-co">{company.name}<span>{person.title}</span></p>}
+          </div>
+          <p className="sn-mrow-where">{person.prefecture}{company && <><br />{areaText(company.areas)}</>}</p>
+        </div>
+        <Say className="sn-mrow-say">{person.say}</Say>
+        {company && <p className="sn-mrow-lic"><LicenseTags licenses={company.licenses} /></p>}
         <RelationLine relation={relationTo(person.id)} />
       </div>
     </SnLink>
@@ -103,15 +113,18 @@ export function PersonRow({ person }: { person: Person }) {
 /** 会社の行（探す） */
 export function CompanyRow({ company }: { company: Company }) {
   return (
-    <SnLink to={`/companies/${company.id}`} className="sn-row">
+    <SnLink to={`/companies/${company.id}`} className="sn-row sn-mrow">
       <Logo company={company} />
       <div className="sn-row-body">
-        <p className="sn-row-title">{company.name}</p>
-        <p className="sn-meta">{company.prefecture}／{company.business}　対応：{areaText(company.areas)}</p>
-        <div>
-          {company.specialties.map((s) => <span key={s} className="sn-tag">{s}</span>)}
-          <LicenseTags licenses={company.licenses} />
+        <div className="sn-mrow-head">
+          <div>
+            <p className="sn-mrow-name sn-mrow-name--co">{company.name}</p>
+            <p className="sn-mrow-co">{company.business}</p>
+          </div>
+          <p className="sn-mrow-where">{company.prefecture}<br />{areaText(company.areas)}</p>
         </div>
+        <p className="sn-mrow-say">得意：{company.specialties.join("・")}</p>
+        <p className="sn-mrow-lic"><LicenseTags licenses={company.licenses} /></p>
         <RelationLine relation={relationToCompany(company.id).relation} />
       </div>
     </SnLink>

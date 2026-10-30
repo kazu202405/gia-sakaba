@@ -6,7 +6,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Bell, BriefcaseBusiness, ChevronLeft, House, Search, UserRound, Users, type LucideIcon } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
 import { HOME_STYLES, PALETTES, SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
 import { PageSkeleton } from "./parts";
@@ -14,13 +14,13 @@ import { SnProvider, snPath, useSnState } from "./store";
 import "./sns.css";
 import "./sns-layout.css";
 
-/** 下のメニュー。ready=false はまだ画面が無い（押せない見た目にして、リンクにしない） */
-export const NAV: readonly { to: string; label: string; icon: LucideIcon; also?: string[]; ready: boolean }[] = [
-  { to: "", label: "ホーム", icon: House, ready: true },
-  { to: "/search", label: "探す", icon: Search, also: ["/people", "/companies"], ready: true },
-  { to: "/network", label: "人脈", icon: Users, ready: true },
-  { to: "/posts", label: "案件", icon: BriefcaseBusiness, ready: true },
-  { to: "/me", label: "自分", icon: UserRound, ready: true },
+/** 下のメニュー（字だけ。10-30 決定）。ready=false はまだ画面が無い（押せない見た目にして、リンクにしない） */
+export const NAV: readonly { to: string; label: string; also?: string[]; ready: boolean }[] = [
+  { to: "", label: "ホーム", ready: true },
+  { to: "/search", label: "探す", also: ["/people", "/companies"], ready: true },
+  { to: "/network", label: "人脈", ready: true },
+  { to: "/posts", label: "案件", ready: true },
+  { to: "/me", label: "自分", ready: true },
 ];
 
 function isUnder(rest: string, to: string) {
@@ -91,10 +91,7 @@ function FrameInner({ children }: { children: React.ReactNode }) {
           ) : (
             <BackButton onPress={() => setPending("back")} />
           )}
-          <span className="sn-icon-btn" aria-label="お知らせ（未読あり）" role="img">
-            <Bell size={22} strokeWidth={1.8} aria-hidden />
-            <span className="sn-dot" aria-hidden />
-          </span>
+          <span className="sn-notice">お知らせ<b>1</b></span>
         </div>
       </header>
       <div className="sn-mock">
@@ -120,18 +117,11 @@ function FrameInner({ children }: { children: React.ReactNode }) {
       <nav className="sn-nav" aria-label="メニュー">
         <div className="sn-nav-in">
           {NAV.map((item) => {
-            const Icon = item.icon;
             const active = item.to === "" ? shownRest === "" : isUnder(shownRest, item.to) || (item.also ?? []).some((a) => isUnder(shownRest, a));
-            const inner = (
-              <>
-                <Icon size={22} strokeWidth={1.8} aria-hidden />
-                {item.label}
-              </>
-            );
             if (!item.ready) {
-              return <span key={item.to} aria-disabled="true" title="この画面はこのあと作ります">{inner}</span>;
+              return <span key={item.to} aria-disabled="true" title="この画面はこのあと作ります">{item.label}</span>;
             }
-            return <Link key={item.to} href={snPath(item.to)} aria-current={active ? "page" : undefined}>{inner}</Link>;
+            return <Link key={item.to} href={snPath(item.to)} aria-current={active ? "page" : undefined}>{item.label}</Link>;
           })}
         </div>
       </nav>

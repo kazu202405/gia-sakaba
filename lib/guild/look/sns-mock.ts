@@ -33,7 +33,8 @@ export const REGIONS: Readonly<Record<string, readonly string[]>> = {
 export const REGION_NAMES = Object.keys(REGIONS);
 
 /** 許可・免許・登録。自己申告と確認済みを混同しない（設計書5-2） */
-export type License = { name: string; verified: boolean };
+/** number は名刺に書く並び（許可行政庁・番号）。見本の番号は架空 */
+export type License = { name: string; number?: string; verified: boolean };
 
 export type Company = {
   id: string;
@@ -80,63 +81,63 @@ export const COMPANIES: readonly Company[] = [
   {
     id: "yamamoto-densetsu", name: "株式会社山本電設", mark: "山", prefecture: "東京都", industries: ["建設"], business: "電気工事業",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["受変電設備", "LED改修"],
-    licenses: [{ name: "建設業許可　電気工事業（特定）", verified: true }],
+    licenses: [{ name: "電気工事業（特定）", number: "東京都知事 第12345号", verified: true }],
     about: "ビル・工場の受変電設備の更新を中心に、関東一円で工事をしています。",
     offer: ["受変電設備の更新工事", "LED改修の見積り"], want: ["九州の電気工事会社", "工場の設備担当の方"],
   },
   {
     id: "minato-setsubi", name: "有限会社ミナト設備", mark: "ミ", prefecture: "神奈川県", industries: ["建設"], business: "管工事・電気工事",
     areas: ["神奈川県", "東京都"], specialties: ["空調", "店舗の設備", "外壁改修"],
-    licenses: [{ name: "建設業許可　管工事業（一般）", verified: false }],
+    licenses: [{ name: "管工事業（一般）", number: "神奈川県知事 第08812号", verified: false }],
     about: "店舗・小さなビルの空調と電気をまとめて見ています。外壁の改修も協力会社と請けます。",
     offer: ["店舗の空調・電気の工事", "外壁の改修"], want: ["横浜の不動産会社"],
   },
   {
     id: "hokushin", name: "北辰エンジニアリング", mark: "北", prefecture: "埼玉県", industries: ["建設"], business: "電気工事業",
     areas: ["埼玉県", "群馬県", "栃木県"], specialties: ["太陽光", "蓄電池"],
-    licenses: [{ name: "建設業許可　電気工事業（一般）", verified: true }],
+    licenses: [{ name: "電気工事業（一般）", number: "埼玉県知事 第20417号", verified: true }],
     about: "住宅・工場の太陽光と蓄電池の設置と保守。",
     offer: ["太陽光の設置・保守"], want: ["工場の屋根を持つオーナー"],
   },
   {
     id: "sato-komuten", name: "株式会社佐藤工務店", mark: "佐", prefecture: "大阪府", industries: ["建設"], business: "工務店",
     areas: ["大阪府", "京都府", "兵庫県"], specialties: ["木造の新築", "リフォーム"],
-    licenses: [{ name: "建設業許可　建築工事業（一般）", verified: true }],
+    licenses: [{ name: "建築工事業（一般）", number: "大阪府知事 第31560号", verified: true }],
     about: "木造の注文住宅とリフォーム。関西で40年。",
     offer: ["木造住宅の新築・リフォーム"], want: ["関東の協力会社"],
   },
   {
     id: "nakamura-fudosan", name: "中村不動産", mark: "中", prefecture: "神奈川県", industries: ["不動産"], business: "売買仲介・賃貸管理",
     areas: ["神奈川県", "東京都"], specialties: ["一棟アパート", "収益物件"],
-    licenses: [{ name: "宅地建物取引業　神奈川県知事（3）", verified: true }],
+    licenses: [{ name: "宅地建物取引業", number: "神奈川県知事（3）第27731号", verified: true }],
     about: "横浜を中心に、一棟アパートの売買と管理をしています。",
     offer: ["収益物件の紹介", "賃貸管理"], want: ["外壁塗装の会社", "不動産投資家"],
   },
   {
     id: "hayashi-estate", name: "林エステート", mark: "林", prefecture: "大阪府", industries: ["不動産"], business: "売買仲介・買取再販",
     areas: ["大阪府", "兵庫県"], specialties: ["事業用地", "買取再販"],
-    licenses: [{ name: "宅地建物取引業　大阪府知事（2）", verified: false }],
+    licenses: [{ name: "宅地建物取引業", number: "大阪府知事（2）第58203号", verified: false }],
     about: "大阪市内の事業用地と、中古の買取再販。",
     offer: ["事業用地の情報"], want: ["300坪前後の事業用地"],
   },
   {
     id: "ono-design", name: "小野設計室", mark: "小", prefecture: "福岡県", industries: ["建設", "士業"], business: "設計事務所",
     areas: ["福岡県", "佐賀県", "熊本県"], specialties: ["中古リノベ", "店舗設計"],
-    licenses: [{ name: "一級建築士事務所", verified: true }],
+    licenses: [{ name: "一級建築士事務所", number: "福岡県知事登録 第1-60112号", verified: true }],
     about: "福岡で中古住宅のリノベと店舗の設計。",
     offer: ["リノベの設計", "店舗の設計"], want: ["九州の工務店"],
   },
   {
     id: "tanaka-realty", name: "田中リアルティ", mark: "田", prefecture: "福岡県", industries: ["不動産"], business: "売買仲介",
     areas: ["福岡県", "長崎県"], specialties: ["土地", "戸建て"],
-    licenses: [{ name: "宅地建物取引業　福岡県知事（1）", verified: true }],
+    licenses: [{ name: "宅地建物取引業", number: "福岡県知事（1）第19045号", verified: true }],
     about: "福岡の土地と戸建ての売買。",
     offer: ["福岡の土地情報"], want: ["関東に対応できる不動産会社"],
   },
   {
     id: "mori-gyosei", name: "森行政書士事務所", mark: "森", prefecture: "東京都", industries: ["士業"], business: "行政書士",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["建設業許可", "経営事項審査"],
-    licenses: [{ name: "行政書士　登録", verified: true }],
+    licenses: [{ name: "行政書士", number: "登録 第21081234号", verified: true }],
     about: "建設業許可の取得・更新と、経審の手続き。",
     offer: ["建設業許可の相談"], want: ["許可を取りたい工事会社"],
   },

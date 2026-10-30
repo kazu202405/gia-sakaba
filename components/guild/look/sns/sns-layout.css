@@ -26,10 +26,10 @@
   .sn-nav-in { flex-direction: column; gap: 0.25rem; max-width: none; }
   .sn-nav-in > * {
     flex: none; flex-direction: row; justify-content: flex-start; gap: 0.75rem;
-    min-height: 2.75rem; padding: 0 0.875rem; border-radius: var(--sn-radius-pill);
+    min-height: 2.75rem; padding: 0 0.875rem; border-radius: var(--sn-radius);
     font-size: 0.9375rem;
   }
-  .sn-nav-in > [aria-current="page"] { background: var(--sn-accent-soft); }
+  .sn-nav-in > [aria-current="page"] { background: var(--sn-tint); box-shadow: none; }
 
   .sn-main { max-width: none; margin-left: var(--sn-rail-width); padding: 1.5rem 2rem 3rem; }
   .sn-main > div > :not(.sn-page):not(.sn-form) { max-width: 48rem; margin-left: auto; margin-right: auto; }
@@ -57,15 +57,12 @@
   .sn-page--detail > .sn-sticky { grid-area: act; align-self: start; position: sticky; top: 4.75rem; background: none; padding: 1rem 1.125rem; }
   .sn-page--detail .sn-hero { padding-top: 0.5rem; }
   .sn-page--detail .sn-story, .sn-page--detail .sn-dl > div { padding-left: 0; padding-right: 0; }
-  .sn-page--detail .sn-pair { border-top: none; }
+  .sn-page--detail .sn-pair { border-top: none; margin: 0; }
   .sn-page--detail .sn-pair > div:first-child { padding-left: 0; }
 
   /* 主なボタンは、2段の外でも固定しない */
-  .sn-sticky { position: static; background: none; }
+  .sn-sticky { position: static; background: none; border-top: none; }
 
-  /* 横に流す「探しています」は、PCでは並べる */
-  .sn-rail { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); overflow: visible; }
-  .sn-rail > * { width: auto; }
   .sn-faces { flex-wrap: wrap; overflow: visible; }
 
   /* 窓は画面の中央に */
@@ -74,6 +71,6 @@
 }
 
 @media (hover: hover) {
-  .sn-row:hover, .sn-rail > a:hover { background: var(--sn-accent-soft); }
+  .sn-row:hover, .sn-want-row:hover { background: var(--sn-tint); }
   .sn-nav-in > a:hover { color: var(--sn-accent); }
 }
