@@ -85,7 +85,8 @@ describe("画面コードは profiles（人ごとの古い表）の中身を読�
   it("app/ components/ lib/ に、sakaba.profiles・.from(\"profiles\")・profiles(…) の埋め込みが無い", () => {
     const hits = ["app", "components", "lib"].flatMap(walk).flatMap((path) => findProfilesReads(read(path), path).map((h) => `${path}:${h.line} ${h.text}`));
     expect(hits).toEqual([]);
-  });
+    // app/ components/ lib/ を全部読むので、全体を流すと既定の5秒に間に合わないことがある（2026-10-31）
+  }, 30_000);
 });
 
 describe("0135 以降の migration は profiles の中身の列を読まない・書かない", () => {

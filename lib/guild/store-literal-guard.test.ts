@@ -115,7 +115,8 @@ describe("画面コードに店の slug と /guild の道を直書きしない",
       .filter((path) => !ALLOWED.has(path))
       .flatMap((path) => findStoreLiterals(readFileSync(path, "utf8"), path).map((f) => `${path}:${f.line} [${f.kind}] ${f.text}`));
     expect(offenders).toEqual([]);
-  });
+    // app/ components/ lib/ を全部構文解析するので、全体を流すと既定の5秒に間に合わないことがある（2026-10-31）
+  }, 30_000);
 
   it("わざと1か所戻したら落ちる（実際のファイルの中身を使った確認）", () => {
     const source = readFileSync("components/guild/live-my-invite.tsx", "utf8");
