@@ -1,0 +1,318 @@
+/*
+ * 建設・不動産の酒場の作り直し（人脈ネットワークSNS）見本の見た目。
+ * 10-30 夜 決定：16「名刺・やわらか A」（比較 contexts/projects/gia/sakaba_kensetsu_sns_look/compare2.html?c）。
+ *   左ぞろえ・名前は太めのゴシック＋ふりがな・許可番号は名刺どおりの並び・色の付いた丸い札は使わず線と字の太さで強弱・
+ *   角は少し丸く（ピルにしない）・緑は大事なボタンと選んでいる所だけ・メニューは字だけ・人のページの頭は名刺の比率の枠。
+ * 色・書体・角・影はここの変数だけ。色の直書きは変数の定義の中だけ（sns-guard.test.ts で見張る）。
+ * 箱（カード）は使わない。モーダルと人のページの名刺の枠だけは箱。
+ */
+
+.sn {
+  /* 深緑と真鍮（既定）。墨はやわらかい黒 */
+  --sn-bg: #ffffff;
+  --sn-paper: #ffffff;
+  --sn-ink: #2a2f2c;
+  --sn-muted: #626964;
+  --sn-line: #e6e9e6;
+  --sn-line-strong: #cfd5d1;
+  --sn-tint: #f3f6f3;
+  --sn-accent: #2c5e4a;
+  --sn-accent-ink: #ffffff;
+  --sn-accent-soft: #e4ede8;
+  --sn-route: #8a5f1d;
+  --sn-route-soft: #f3f6f3;
+  --sn-ok: #2c5e4a;
+  --sn-ok-soft: #e4ede8;
+  --sn-danger: #b3261e;
+  --sn-avatar-1: #d9e2dc;
+  --sn-avatar-2: #ece3d3;
+  --sn-avatar-3: #dde1ea;
+  --sn-avatar-4: #e8dcd8;
+  --sn-photo-a: #8d99a6;
+  --sn-photo-b: #3e4752;
+  --sn-skel: #edf1ee;
+  --sn-shadow-modal: 0 10px 34px rgb(0 0 0 / 0.22);
+  --sn-backdrop: rgb(0 0 0 / 0.4);
+
+  --sn-font: var(--font-sn-sans), var(--font-jp-sans), "Hiragino Sans", system-ui, sans-serif;
+  --sn-radius: 12px;
+  --sn-radius-pill: 999px;
+  --sn-width: 40rem;
+
+  font-family: var(--sn-font);
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  color: var(--sn-ink);
+  background: var(--sn-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.sn[data-palette="tokiwa"] {
+  /* 常磐（青みの緑）と真鍮 */
+  --sn-ink: #283030;
+  --sn-muted: #606a69;
+  --sn-line: #e4eaea;
+  --sn-tint: #f2f6f6;
+  --sn-route-soft: #f2f6f6;
+  --sn-accent: #1e5a57;
+  --sn-accent-soft: #e0eeec;
+  --sn-ok: #1e5a57;
+  --sn-ok-soft: #e0eeec;
+  --sn-avatar-1: #d6e3e1;
+  --sn-skel: #ebf2f1;
+}
+
+.sn *, .sn *::before, .sn *::after { box-sizing: border-box; }
+.sn :is(p, h1, h2, h3, li, span) { text-wrap: pretty; }
+.sn :where(p, h1, h2, h3, ul, ol, dl, dd) { margin: 0; padding: 0; }
+/* 土台の決まりは :where で一番弱くする（.sn-btn--main などの文字色に負けるように。強いと緑のボタンの文字が黒になる） */
+:where(.sn a) { color: inherit; text-decoration: none; }
+:where(.sn button) { font: inherit; color: inherit; }
+.sn :is(a, button, input, textarea):focus-visible { outline: 3px solid var(--sn-accent); outline-offset: 2px; }
+body:has(.sn) { --ui-toast-bottom: 5.5rem; }
+
+/* ---------- 外枠 ---------- */
+.sn-top { position: sticky; top: 0; z-index: 30; background: var(--sn-paper); border-bottom: 1px solid var(--sn-line); }
+.sn-top-in { max-width: var(--sn-width); margin: 0 auto; height: 3.25rem; padding: 0 0.5rem 0 1.125rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.sn-brand { font-weight: 900; font-size: 0.9375rem; letter-spacing: 0.02em; }
+.sn-notice { font-size: 0.8125rem; color: var(--sn-muted); padding: 0 0.625rem; min-height: 2.75rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.sn-notice b { color: var(--sn-route); }
+.sn-back { border: none; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.9375rem; color: var(--sn-muted); min-height: 2.75rem; }
+
+.sn-mock { background: var(--sn-tint); font-size: 0.75rem; border-bottom: 1px solid var(--sn-line); }
+.sn-mock-in { max-width: var(--sn-width); margin: 0 auto; padding: 0.375rem 1.125rem; display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: center; }
+.sn-mock-in > span { color: var(--sn-ink); }
+.sn-mock-set { display: inline-flex; gap: 0.25rem; align-items: center; }
+.sn-mock-set button { border: none; background: transparent; padding: 0.25rem 0.5rem; border-radius: 6px; cursor: pointer; min-height: 2rem; }
+.sn-mock-set button[aria-pressed="true"] { background: var(--sn-accent); color: var(--sn-accent-ink); font-weight: 700; }
+
+.sn-main { max-width: var(--sn-width); margin: 0 auto; padding-bottom: 6rem; }
+
+.sn-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--sn-paper); border-top: 1px solid var(--sn-line); padding-bottom: env(safe-area-inset-bottom); }
+.sn-nav-in { max-width: var(--sn-width); margin: 0 auto; display: flex; }
+.sn-nav-in > * { flex: 1; min-height: 3.5rem; display: flex; align-items: center; justify-content: center; font-size: 0.8125rem; font-weight: 500; color: var(--sn-muted); }
+.sn-nav-in > [aria-current="page"] { color: var(--sn-accent); font-weight: 700; box-shadow: inset 0 2px 0 var(--sn-accent); }
+.sn-nav-in > [aria-disabled="true"] { opacity: 0.4; }
+
+/* ---------- 見出し・区切り ---------- */
+.sn-sec { padding: 1.375rem 1.25rem 0.5rem; }
+.sn-sec-h { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; margin-bottom: 0.5rem; }
+.sn-sec-h h2 { font-size: 1.0625rem; font-weight: 700; }
+.sn-sec-h a, .sn-sec-h span { font-size: 0.8125rem; color: var(--sn-muted); }
+.sn-band { background: var(--sn-paper); border-bottom: 1px solid var(--sn-line); }
+.sn-meta { font-size: 0.8125rem; color: var(--sn-muted); line-height: 1.6; }
+.sn-sub { font-size: 0.75rem; color: var(--sn-muted); }
+.sn-empty { padding: 2rem 1.125rem; text-align: center; color: var(--sn-muted); font-size: 0.9375rem; }
+
+.sn-band.sn-sec { padding-bottom: 0.875rem; }
+.sn-gap { height: 0.75rem; }
+
+/* ---------- 検索 ---------- */
+.sn-search { display: flex; align-items: center; gap: 0.625rem; height: 3rem; padding: 0 0.875rem; border-radius: var(--sn-radius); border: 1px solid var(--sn-line-strong); background: var(--sn-tint); color: var(--sn-muted); font-size: 0.9375rem; width: 100%; }
+.sn-search input { flex: 1; min-width: 0; border: none; background: transparent; font: inherit; color: var(--sn-ink); outline: none; height: 100%; }
+.sn-search:focus-within { border-color: var(--sn-accent); box-shadow: 0 0 0 1px var(--sn-accent); background: var(--sn-paper); }
+
+/* 絞り込み：丸い札にせず、字と下線。選んでいるものだけ緑の太字＋下線 */
+.sn-chips { display: flex; flex-wrap: wrap; gap: 0 1.125rem; margin-top: 0.5rem; }
+.sn-chip { font-size: 0.875rem; font-weight: 500; padding: 0; min-height: 2.5rem; display: inline-flex; align-items: center; border: none; background: transparent; color: var(--sn-muted); cursor: pointer; }
+.sn-chip[aria-pressed="true"] { color: var(--sn-accent); font-weight: 700; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.4em; }
+@media (hover: hover) { .sn-chip:hover { color: var(--sn-ink); } }
+/* 話のきっかけなど、押さない札は「・」でつないだ字に */
+.sn-chips--static { gap: 0; }
+.sn-chips--static .sn-chip { cursor: default; min-height: 0; font-size: 0.8125rem; }
+.sn-chips--static .sn-chip + .sn-chip::before { content: "・"; color: var(--sn-muted); }
+
+.sn-tabs { display: flex; background: var(--sn-paper); border-bottom: 1px solid var(--sn-line); }
+.sn-tabs button { flex: 1; border: none; background: transparent; padding: 0.75rem 0; font-size: 0.9375rem; color: var(--sn-muted); cursor: pointer; min-height: 2.75rem; }
+.sn-tabs button[aria-selected="true"] { color: var(--sn-accent); font-weight: 700; box-shadow: inset 0 -2px 0 var(--sn-accent); }
+.sn-count { font-size: 0.75rem; color: var(--sn-muted); padding: 0.875rem 1.25rem 0.5rem; }
+
+/* ---------- 顔・ロゴ ---------- */
+.sn-av { flex: none; width: var(--sn-av-size, 3.25rem); height: var(--sn-av-size, 3.25rem); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: calc(var(--sn-av-size, 3.25rem) * 0.3); color: var(--sn-ink); }
+.sn-av[data-tone="1"] { background: var(--sn-avatar-1); }
+.sn-av[data-tone="2"] { background: var(--sn-avatar-2); }
+.sn-av[data-tone="3"] { background: var(--sn-avatar-3); }
+.sn-av[data-tone="4"] { background: var(--sn-avatar-4); }
+.sn-logo { flex: none; width: 2.75rem; height: 2.75rem; border-radius: 10px; border: 1px solid var(--sn-line-strong); background: var(--sn-paper); display: inline-flex; align-items: center; justify-content: center; font-weight: 900; color: var(--sn-ink); }
+
+/* ---------- 行（一覧） ---------- */
+.sn-list { background: var(--sn-paper); border-top: 1px solid var(--sn-line); }
+.sn-row { display: flex; gap: 0.875rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--sn-line); }
+.sn-row:active { background: var(--sn-tint); }
+.sn-row-body { flex: 1; min-width: 0; }
+.sn-row-title { font-size: 0.9375rem; font-weight: 700; line-height: 1.5; }
+.sn-say { font-weight: 500; line-height: 1.7; }
+
+/* 札は色の付いた箱にしない。小さな字で、確認済みだけ緑の太字 */
+.sn-tag { display: inline; font-size: 0.75rem; color: var(--sn-muted); margin-right: 0.75rem; }
+.sn-tag--ok { color: var(--sn-ok); font-weight: 700; }
+/* 許可・免許（名刺の並び） */
+.sn-lic { font-size: 0.75rem; color: var(--sn-muted); margin-right: 0.75rem; font-variant-numeric: tabular-nums; }
+.sn-lic b { margin-left: 0.5rem; }
+.sn-lic-ok { color: var(--sn-ok); font-weight: 700; }
+.sn-lic-self { font-weight: 500; }
+/* 人・会社の行（名刺の並び） */
+.sn-mrow .sn-av { --sn-av-size: 2.75rem; margin-top: 0.125rem; }
+.sn-mrow-head { display: flex; justify-content: space-between; gap: 0.75rem; }
+.sn-mrow-name { font-size: 1.1875rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1.35; }
+.sn-mrow-name--co { font-size: 1rem; }
+.sn-mrow-co { font-size: 0.75rem; font-weight: 700; margin-top: 0.125rem; }
+.sn-mrow-co span { font-weight: 500; color: var(--sn-muted); margin-left: 0.5rem; }
+.sn-mrow-where { flex: none; text-align: right; font-size: 0.6875rem; color: var(--sn-muted); line-height: 1.6; }
+.sn-mrow-say { font-size: 0.875rem; margin-top: 0.5rem; }
+.sn-mrow-lic { margin-top: 0.375rem; line-height: 1.5; }
+
+.sn-rel { font-size: 0.8125rem; margin-top: 0.25rem; color: var(--sn-route); font-weight: 700; }
+.sn-rel[data-kind="direct"] { color: var(--sn-accent); }
+.sn-rel[data-kind="none"] { color: var(--sn-muted); font-weight: 400; }
+
+.sn-faces { display: flex; gap: 1rem; overflow-x: auto; padding: 0.25rem 1.125rem 0.75rem; scrollbar-width: none; }
+.sn-faces a { flex: none; width: 4rem; text-align: center; font-size: 0.75rem; color: var(--sn-muted); }
+.sn-faces .sn-av { --sn-av-size: 3.5rem; margin: 0 auto 0.25rem; }
+
+.sn-stats { display: flex; padding: 0.875rem 1.25rem; gap: 1.25rem; font-size: 0.8125rem; color: var(--sn-muted); border-bottom: 1px solid var(--sn-line); background: var(--sn-paper); }
+.sn-stats b { font-size: 1.25rem; font-weight: 700; color: var(--sn-ink); margin-right: 0.125rem; }
+
+.sn-ask { display: flex; gap: 0.75rem; align-items: center; margin: 0 1.25rem; padding: 0.875rem 1rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.875rem; line-height: 1.6; }
+.sn-ask > p { flex: 1; }
+.sn-ask-go { flex: none; font-weight: 700; color: var(--sn-route); font-size: 0.8125rem; }
+.sn-ask .sn-av { --sn-av-size: 2.5rem; }
+
+/* ---------- 近況の流れ ---------- */
+.sn-post { background: var(--sn-paper); padding: 1rem 1.25rem 0.75rem; border-bottom: 1px solid var(--sn-line); }
+.sn-post-head { display: flex; gap: 0.625rem; align-items: center; }
+.sn-post-head .sn-av { --sn-av-size: 2.5rem; }
+.sn-post-name { font-size: 0.9375rem; font-weight: 700; }
+.sn-post-head .sn-sub { display: block; }
+.sn-post-body { font-size: 0.9375rem; line-height: 1.75; margin-top: 0.625rem; }
+.sn-want { margin-top: 0.625rem; padding: 0.75rem 0.875rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-weight: 700; line-height: 1.6; }
+.sn-want small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--sn-ink); margin-top: 0.125rem; }
+.sn-photo { margin-top: 0.625rem; aspect-ratio: 16 / 9; border-radius: var(--sn-radius); background: linear-gradient(160deg, var(--sn-photo-a), var(--sn-photo-b)); display: flex; align-items: flex-start; padding: 0.5rem 0.75rem; font-size: 0.6875rem; color: var(--sn-accent-ink); }
+.sn-react { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.sn-react button { border: none; background: transparent; padding: 0.375rem 0.5rem; margin-left: -0.5rem; font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); cursor: pointer; min-height: 2.5rem; border-radius: 8px; }
+.sn-react button[aria-pressed="true"] { color: var(--sn-route); font-weight: 700; }
+.sn-slim { display: flex; gap: 0.625rem; align-items: center; background: var(--sn-paper); padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--sn-line); font-size: 0.8125rem; color: var(--sn-muted); }
+.sn-slim .sn-av { --sn-av-size: 2rem; }
+.sn-slim b { color: var(--sn-ink); }
+
+/* 「探しています」の行（題名を太く・だれが・どの業種と地域か） */
+.sn-want-row { display: block; padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--sn-line); }
+.sn-want-row:first-child { border-top: 1px solid var(--sn-line); }
+.sn-want-row > p:first-child { font-size: 0.9375rem; font-weight: 700; line-height: 1.6; }
+.sn-want-by { display: flex; justify-content: space-between; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.75rem; color: var(--sn-muted); }
+.sn-want-by b { color: var(--sn-ink); font-weight: 700; flex: none; }
+
+/* ---------- 詳しいページ ---------- */
+/* 人・会社のページの頭：名刺と同じ比率（91×55）の枠。左ぞろえ */
+.sn-hero { padding: 1.25rem 1.25rem 0; }
+.sn-card { aspect-ratio: 91 / 55; border: 1px solid var(--sn-line-strong); border-radius: 14px; padding: 1rem 1.125rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.5rem; background: var(--sn-paper); }
+.sn-card-top { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.75rem; font-weight: 700; }
+.sn-card-top span { color: var(--sn-muted); font-weight: 500; }
+.sn-card-mid { display: flex; gap: 0.875rem; align-items: center; }
+.sn-card-mid .sn-av { --sn-av-size: 3.5rem; }
+.sn-card-mid .sn-logo { width: 3.5rem; height: 3.5rem; font-size: 1.375rem; }
+.sn-kana { font-size: 0.6875rem; letter-spacing: 0.24em; color: var(--sn-muted); }
+.sn-hero h1 { font-size: 1.625rem; font-weight: 700; line-height: 1.25; letter-spacing: 0.04em; }
+.sn-card-bottom { font-size: 0.75rem; color: var(--sn-muted); line-height: 1.6; }
+.sn-card-bottom .sn-tag { margin-right: 0; }
+.sn-hero-say { padding: 1.125rem 0 0; }
+.sn-hero-say .sn-say { font-size: 1.0625rem; font-weight: 700; }
+.sn-hero .sn-chips { margin-top: 0.25rem; }
+.sn-hero .sn-v { margin-top: 0.75rem; }
+.sn-route { display: flex; align-items: center; flex-wrap: wrap; gap: 0.375rem; margin: 1rem 1.25rem 0; padding: 0.625rem 0.875rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.8125rem; color: var(--sn-route); font-weight: 700; }
+.sn-route b { font-weight: 700; }
+.sn-route i { font-style: normal; color: var(--sn-route); font-weight: 700; }
+.sn-route[data-kind="direct"] { color: var(--sn-accent); }
+.sn-route[data-kind="none"] { color: var(--sn-muted); font-weight: 500; }
+
+/* これまで・いま・これから：01 02 03 の番号つき */
+.sn-story { padding: 0.75rem 1.25rem 0.5rem; counter-reset: sn-story; }
+.sn-story > div { counter-increment: sn-story; display: grid; grid-template-columns: 2rem 1fr; padding: 0.875rem 0; border-top: 1px solid var(--sn-line); }
+.sn-story > div::before { content: counter(sn-story, decimal-leading-zero); grid-row: 1 / 3; font-size: 0.75rem; font-weight: 700; color: var(--sn-accent); padding-top: 0.125rem; font-variant-numeric: tabular-nums; }
+.sn-story .sn-k { color: var(--sn-ink); }
+.sn-k { font-size: 0.75rem; font-weight: 700; color: var(--sn-muted); letter-spacing: 0.08em; }
+.sn-v { font-size: 0.9375rem; line-height: 1.8; margin-top: 0.125rem; }
+.sn-pair { display: flex; margin: 0 1.25rem; border-top: 1px solid var(--sn-line); border-bottom: 1px solid var(--sn-line); }
+.sn-pair > div { flex: 1; padding: 0.875rem 0 1rem; font-size: 0.875rem; line-height: 1.75; }
+.sn-pair > div + div { padding-left: 1rem; }
+.sn-pair > div + div { border-left: 1px solid var(--sn-line); }
+.sn-pair ul { list-style: none; }
+.sn-pair .sn-k { color: var(--sn-muted); }
+.sn-dl { margin-top: 0.75rem; }
+.sn-dl > div { display: flex; gap: 1rem; padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--sn-line); font-size: 0.875rem; }
+.sn-dl dt { flex: none; width: 6rem; color: var(--sn-muted); }
+.sn-dl dd { flex: 1; min-width: 0; }
+
+.sn-sticky { position: sticky; bottom: calc(3.5rem + env(safe-area-inset-bottom)); padding: 0.75rem 1.25rem; background: var(--sn-paper); border-top: 1px solid var(--sn-line); }
+
+/* ---------- ボタン ---------- */
+.sn-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.375rem; min-height: 2.75rem; padding: 0.5rem 1.125rem; border-radius: var(--sn-radius); border: 1px solid var(--sn-line-strong); background: var(--sn-paper); font-weight: 700; font-size: 0.9375rem; cursor: pointer; }
+.sn-btn--main { background: var(--sn-accent); color: var(--sn-accent-ink); border-color: var(--sn-accent); }
+.sn-btn--wide { width: 100%; min-height: 3rem; font-size: 1rem; }
+.sn-btn:disabled, .sn-btn[aria-disabled="true"] { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); cursor: not-allowed; }
+
+/* ---------- モーダル ---------- */
+.sn-modal-back { position: fixed; inset: 0; z-index: 100; background: var(--sn-backdrop); display: flex; align-items: flex-end; justify-content: center; }
+.sn-modal { width: 100%; max-width: var(--sn-width); max-height: 90dvh; overflow: auto; background: var(--sn-paper); border-radius: var(--sn-radius) var(--sn-radius) 0 0; padding: 1.25rem 1.125rem calc(1.25rem + env(safe-area-inset-bottom)); box-shadow: var(--sn-shadow-modal); outline: none; }
+.sn-modal h2 { font-size: 1.0625rem; font-weight: 700; margin-bottom: 0.75rem; }
+.sn-modal textarea { width: 100%; min-height: 7rem; padding: 0.75rem; border: 1px solid var(--sn-line); border-radius: var(--sn-radius); font: inherit; color: var(--sn-ink); background: var(--sn-paper); resize: vertical; }
+.sn-modal-lead { margin-bottom: 0.5rem; }
+.sn-modal-acts { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.sn-modal-acts > * { flex: 1; }
+.sn-error { color: var(--sn-danger); font-size: 0.8125rem; margin-top: 0.375rem; }
+.sn-review { padding: 0.75rem 1rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.875rem; line-height: 1.8; }
+.sn-review dt { font-size: 0.75rem; color: var(--sn-muted); }
+.sn-review dd + dt { margin-top: 0.5rem; }
+.sn-review dd { white-space: pre-wrap; }
+
+/* ---------- 読み込み中 ---------- */
+.sn-skel { display: block; background: var(--sn-skel); border-radius: var(--sn-radius); margin: 0.75rem 1.125rem; }
+.sn-skel--face { height: 11rem; margin-top: 1.25rem; border-radius: 14px; }
+.sn-skel--title { height: 1.5rem; width: 50%; }
+.sn-skel--line { height: 1rem; width: 70%; }
+.sn-skel--block { height: 4.5rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .sn-skel { animation: sn-pulse 1.2s ease-in-out infinite; }
+  @keyframes sn-pulse { 50% { opacity: 0.5; } }
+}
+.sn .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- 人脈・案件・自分・管理者（残りの画面） ---------- */
+.sn-row-acts { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
+.sn-chips--pad { padding: 0 1.125rem; margin-top: 0.75rem; }
+.sn-url { margin: 0.5rem 0 0.75rem; padding: 0.5rem 0.75rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.8125rem; word-break: break-all; user-select: all; }
+.sn-note { padding: 0 1.125rem; }
+.sn-btn--small { min-height: 2.25rem; padding: 0.25rem 0.875rem; font-size: 0.8125rem; }
+.sn-btn--danger { background: var(--sn-danger); border-color: var(--sn-danger); color: var(--sn-accent-ink); }
+.sn-btn--danger:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); }
+a.sn-btn[aria-disabled="true"] { pointer-events: none; }
+
+.sn-me-bar { padding: 1rem 1.125rem 0; }
+
+.sn-fields { padding: 0 1.125rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
+.sn-field { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; border: none; min-width: 0; font-size: 0.9375rem; }
+.sn-field > span, .sn-field > legend { font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); padding: 0; }
+.sn-field input[type="text"], .sn-field input[type="date"], .sn-field textarea { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius); font: inherit; color: var(--sn-ink); background: var(--sn-paper); }
+.sn-field textarea { resize: vertical; }
+.sn-field [aria-invalid="true"] { border-color: var(--sn-danger); }
+.sn-field .sn-chips { margin-top: 0; }
+.sn-check { display: flex; align-items: center; gap: 0.625rem; min-height: 2.75rem; cursor: pointer; }
+.sn-check input { width: 1.25rem; height: 1.25rem; accent-color: var(--sn-accent); }
+
+.sn-steps { list-style: none; counter-reset: sn-step; padding: 0; }
+.sn-steps li { counter-increment: sn-step; position: relative; padding: 0.625rem 0 0.625rem 2rem; border-bottom: 1px solid var(--sn-line); font-size: 0.875rem; line-height: 1.6; }
+.sn-steps li::before { content: counter(sn-step, decimal-leading-zero); position: absolute; left: 0; top: 0.75rem; font-size: 0.75rem; font-weight: 700; color: var(--sn-accent); font-variant-numeric: tabular-nums; }
+
+.sn-table-wrap { overflow-x: auto; border-top: 1px solid var(--sn-line); }
+.sn-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; background: var(--sn-paper); }
+.sn-table th, .sn-table td { text-align: left; padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--sn-line); vertical-align: middle; white-space: nowrap; }
+.sn-table th { font-size: 0.75rem; color: var(--sn-muted); font-weight: 700; }
+.sn-th-btn { border: none; background: transparent; padding: 0.25rem 0; font: inherit; color: inherit; cursor: pointer; min-height: 2.25rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.sn-th-btn:hover { color: var(--sn-accent); }
+.sn-th-mark { color: var(--sn-accent); min-width: 0.75rem; }
+.sn-pending-row td { color: var(--sn-muted); background: var(--sn-tint); }
+
+/* 酒場の共通の日付の欄（components/guild/form-parts.tsx の DateInput）を、見本の見た目に合わせる */
+.sn .c-input { border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius); background: var(--sn-paper); color: var(--sn-ink); min-height: 2.75rem; font-size: 1rem; }
+.sn .c-input:focus { outline: 3px solid var(--sn-accent); outline-offset: 2px; }

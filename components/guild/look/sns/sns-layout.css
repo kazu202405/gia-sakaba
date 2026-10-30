@@ -1,0 +1,76 @@
+/*
+ * 画面の組み方（スマホは縦に積む・PCは2段）。色は sns.css の変数だけ。
+ *   .sn-page                 一覧の画面：本文（.sn-page-main）＋右に補足（.sn-page-side）
+ *   .sn-page--filters        絞り込みのある一覧：左に絞り込み（.sn-page-side を本文より前に置く）
+ *   .sn-page--detail         1件の画面：左に顔・題名（.sn-page-side を前に）、右に中身。主なボタン（.sn-sticky）は .sn-page の直下の最後に
+ *   .sn-form                 入力の画面：PCでは幅を抑えて中央に
+ */
+
+.sn-page { display: flex; flex-direction: column; }
+.sn-page-main, .sn-page-side { min-width: 0; }
+.sn-form { max-width: 40rem; margin: 0 auto; }
+
+@media (min-width: 960px) {
+  .sn { --sn-width: 72rem; --sn-rail-width: 14rem; }
+  body:has(.sn) { --ui-toast-bottom: 1.5rem; }
+
+  /* 上のバーとつまみは横いっぱい */
+  .sn-top-in, .sn-mock-in { max-width: none; padding-left: 1.5rem; padding-right: 1rem; }
+
+  /* 下のメニュー → 左の縦のメニュー */
+  .sn-nav {
+    top: 3.25rem; bottom: 0; right: auto; width: var(--sn-rail-width);
+    border-top: none; border-right: 1px solid var(--sn-line);
+    padding: 1rem 0.75rem;
+  }
+  .sn-nav-in { flex-direction: column; gap: 0.25rem; max-width: none; }
+  .sn-nav-in > * {
+    flex: none; flex-direction: row; justify-content: flex-start; gap: 0.75rem;
+    min-height: 2.75rem; padding: 0 0.875rem; border-radius: var(--sn-radius);
+    font-size: 0.9375rem;
+  }
+  .sn-nav-in > [aria-current="page"] { background: var(--sn-tint); box-shadow: none; }
+
+  .sn-main { max-width: none; margin-left: var(--sn-rail-width); padding: 1.5rem 2rem 3rem; }
+  .sn-main > div > :not(.sn-page):not(.sn-form) { max-width: 48rem; margin-left: auto; margin-right: auto; }
+
+  /* 2段 */
+  .sn-page {
+    display: grid; gap: 2.5rem; align-items: start;
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    max-width: var(--sn-width); margin: 0 auto;
+  }
+  .sn-page > .sn-page-side { position: sticky; top: 4.75rem; border-left: 1px solid var(--sn-line); padding-left: 1.5rem; }
+
+  .sn-page--filters { grid-template-columns: 17rem minmax(0, 1fr); }
+  .sn-page--filters > .sn-page-side { border-left: none; padding-left: 0; border-right: 1px solid var(--sn-line); padding-right: 1.5rem; }
+  .sn-page--filters > .sn-page-side .sn-band { border-bottom: none; padding-left: 0; padding-right: 0; }
+
+  .sn-page--detail {
+    grid-template-columns: 21rem minmax(0, 1fr);
+    grid-template-areas: "side main" "act main";
+    grid-template-rows: auto 1fr;
+    row-gap: 0;
+  }
+  .sn-page--detail > .sn-page-side { grid-area: side; position: static; border-left: none; padding-left: 0; }
+  .sn-page--detail > .sn-page-main { grid-area: main; border-left: 1px solid var(--sn-line); padding-left: 2rem; }
+  .sn-page--detail > .sn-sticky { grid-area: act; align-self: start; position: sticky; top: 4.75rem; background: none; padding: 1rem 1.125rem; }
+  .sn-page--detail .sn-hero { padding-top: 0.5rem; }
+  .sn-page--detail .sn-story, .sn-page--detail .sn-dl > div { padding-left: 0; padding-right: 0; }
+  .sn-page--detail .sn-pair { border-top: none; margin: 0; }
+  .sn-page--detail .sn-pair > div:first-child { padding-left: 0; }
+
+  /* 主なボタンは、2段の外でも固定しない */
+  .sn-sticky { position: static; background: none; border-top: none; }
+
+  .sn-faces { flex-wrap: wrap; overflow: visible; }
+
+  /* 窓は画面の中央に */
+  .sn-modal-back { align-items: center; }
+  .sn-modal { max-width: 32rem; border-radius: var(--sn-radius); padding-bottom: 1.25rem; }
+}
+
+@media (hover: hover) {
+  .sn-row:hover, .sn-want-row:hover { background: var(--sn-tint); }
+  .sn-nav-in > a:hover { color: var(--sn-accent); }
+}

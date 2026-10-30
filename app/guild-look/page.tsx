@@ -5,6 +5,17 @@ import { DEFAULT_STORE_SLUG } from "@/lib/guild/stores";
 export default function GuildLookIndexPage() {
   const items = [
     {
+      key: "S",
+      title: "建設・不動産の酒場の作り直し：人脈ネットワークSNS（見本）",
+      note: "DBなし・仮データ。上のつまみで色（深緑／常磐）とホームの形（探す中心／近況が流れる）を切り替えられます",
+      links: [
+        { href: "/guild-look/sns", label: "ホーム" },
+        { href: "/guild-look/sns/search", label: "探す" },
+        { href: "/guild-look/sns/people/yamamoto", label: "人の詳しいページ" },
+        { href: "/guild-look/sns/companies/yamamoto-densetsu", label: "会社の詳しいページ" },
+      ],
+    },
+    {
       key: "C",
       title: "C. 明るい酒場（A×B）",
       note: "Bの明るさ＋Aの窓・▶カーソル・ボタン・急ぎ札。文字はすべてドットで、言葉もひらがな多め",
