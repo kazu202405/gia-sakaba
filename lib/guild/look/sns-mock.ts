@@ -470,8 +470,8 @@ export const ANSWER_LABEL: Readonly<Record<AnswerKind, string>> = { know: "知�
 export type WantAnswer = { postId: string; kind: AnswerKind; personId: string; note: string };
 
 export const WANT_ANSWERS: readonly WantAnswer[] = [
-  { postId: "p1", kind: "know", personId: "sato", note: "大阪の塗装屋なら知っていますが、関東は分かりません" },
-  { postId: "p1", kind: "know", personId: "ono", note: "九州の職人さんしか分かりませんでした" },
+  { postId: "p1", kind: "know", personId: "sato", note: "大阪の塗装屋さんで、関東の現場にも出ている会社があります" },
+  { postId: "p1", kind: "know", personId: "ono", note: "九州の職人さんですが、関東の現場に入ったことがある人を知っています" },
   { postId: "p1", kind: "know", personId: "mori", note: "お客さまで、外壁が得意な会社があります。聞いてみます" },
   { postId: "p1", kind: "can", personId: "minato", note: "外壁の改修なら協力会社と請けられます" },
   { postId: "p4", kind: "know", personId: "sato", note: "吹田に空いている土地があると聞きました" },
