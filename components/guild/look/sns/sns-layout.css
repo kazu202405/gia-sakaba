@@ -16,20 +16,25 @@
 
   /* 上のバーとつまみは横いっぱい */
   .sn-top-in, .sn-mock-in { max-width: none; padding-left: 1.5rem; padding-right: 1rem; }
+  /* つまみは左の縦のメニューの右から始める（メニューの下に隠れないように） */
+  .sn-mock-in { padding-left: calc(var(--sn-rail-width) + 1.5rem); }
 
-  /* 下のメニュー → 左の縦のメニュー */
+  /* 下のメニュー → 左の縦のメニュー（アイコンと字を横に並べる。「依頼する」は藍の札のまま） */
   .sn-nav {
-    top: 3.25rem; bottom: 0; right: auto; width: var(--sn-rail-width);
+    top: 3.375rem; bottom: 0; right: auto; width: var(--sn-rail-width);
     border-top: none; border-right: 1px solid var(--sn-line);
     padding: 1rem 0.75rem;
   }
   .sn-nav-in { flex-direction: column; gap: 0.25rem; max-width: none; }
-  .sn-nav-in > * {
+  .sn-nav-in > a {
     flex: none; flex-direction: row; justify-content: flex-start; gap: 0.75rem;
     min-height: 2.75rem; padding: 0 0.875rem; border-radius: var(--sn-radius);
     font-size: 0.9375rem;
   }
-  .sn-nav-in > [aria-current="page"] { background: var(--sn-tint); box-shadow: none; }
+  .sn-nav-in > a[aria-current="page"] { background: var(--sn-accent-soft); }
+  .sn-nav-in > a.sn-nav-plus { padding-top: 0; gap: 0.75rem; }
+  .sn-nav-put { width: 1.75rem; height: 1.75rem; }
+  .sn-nav-put svg { width: 1.125rem; height: 1.125rem; }
 
   .sn-main { max-width: none; margin-left: var(--sn-rail-width); padding: 1.5rem 2rem 3rem; }
   .sn-main > div > :not(.sn-page):not(.sn-form) { max-width: 48rem; margin-left: auto; margin-right: auto; }
@@ -40,7 +45,7 @@
     grid-template-columns: minmax(0, 1fr) 20rem;
     max-width: var(--sn-width); margin: 0 auto;
   }
-  .sn-page > .sn-page-side { position: sticky; top: 4.75rem; border-left: 1px solid var(--sn-line); padding-left: 1.5rem; }
+  .sn-page > .sn-page-side { position: sticky; top: 4.875rem; border-left: 1px solid var(--sn-line); padding-left: 1.5rem; }
 
   .sn-page--filters { grid-template-columns: 17rem minmax(0, 1fr); }
   .sn-page--filters > .sn-page-side { border-left: none; padding-left: 0; border-right: 1px solid var(--sn-line); padding-right: 1.5rem; }
@@ -64,6 +69,7 @@
   .sn-sticky { position: static; background: none; border-top: none; }
 
   .sn-faces { flex-wrap: wrap; overflow: visible; }
+  .sn-region-chips { flex-wrap: wrap; overflow: visible; }
 
   /* 窓は画面の中央に */
   .sn-modal-back { align-items: center; }

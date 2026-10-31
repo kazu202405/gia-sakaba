@@ -26,6 +26,7 @@ export function ComposeFlow({
   emptyMessage,
   reviewRows,
   sendLabel = "送る",
+  picture,
   onClose,
   onSent,
 }: {
@@ -37,6 +38,8 @@ export function ComposeFlow({
   emptyMessage?: string;
   reviewRows: (note: string) => ReviewRow[];
   sendLabel?: string;
+  /** 見直しの上に出す、だれとだれがつながるかの絵（任意） */
+  picture?: React.ReactNode;
   onClose: () => void;
   onSent: (note: string) => void;
 }) {
@@ -86,6 +89,7 @@ export function ComposeFlow({
   }
   return (
     <Modal title="この内容で送りますか？" onClose={() => setStep("write")} busy={busy}>
+      {picture}
       <dl className="sn-review">
         {reviewRows(note.trim()).map((r) => (
           <ReviewItem key={r.label} row={r} />

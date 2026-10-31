@@ -1,6 +1,6 @@
 "use client";
 
-// 見本の状態置き場：見本だけのつまみ（色・ホームの形）と、画面の中だけで動く操作（紹介のおねがい・反応）。
+// 見本の状態置き場：見本だけのつまみ（色）と、画面の中だけで動く操作（紹介のおねがい・反応）。
 // 状態は再読み込みで元に戻ってよい。つまみの選択だけはこの端末に覚えておく（見比べやすくするため。読めなくても動く）。
 // 移動は useSn().go（押した瞬間に仮の画面を出す共通の入口）。道は useSn().href で作る。
 
@@ -9,15 +9,12 @@ import { createContext, useCallback, useContext, useMemo, useState, useSyncExter
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
   BUSINESS_CARDS,
-  DEFAULT_HOME_STYLE,
   DEFAULT_PALETTE,
-  HOME_STYLES,
   ME_ID,
   PALETTES,
   PEOPLE,
   SNS_BASE,
   type BusinessCard,
-  type HomeStyle,
   type IntroReply,
   type PaletteKey,
   type Person,
@@ -31,8 +28,6 @@ type SentIntros = Readonly<Record<string, string>>;
 type Ctx = {
   palette: PaletteKey;
   setPalette: (p: PaletteKey) => void;
-  homeStyle: HomeStyle;
-  setHomeStyle: (h: HomeStyle) => void;
   sentIntros: SentIntros;
   addSentIntro: (targetId: string, viaId: string) => void;
   reactions: ReadonlySet<string>;
@@ -76,20 +71,20 @@ function subscribePrefs(listener: () => void) {
   };
 }
 
-function parsePrefs(raw: string): { palette: PaletteKey; homeStyle: HomeStyle } {
-  let obj: { palette?: unknown; homeStyle?: unknown } = {};
+function parsePrefs(raw: string): { palette: PaletteKey } {
+  let obj: { palette?: unknown } = {};
   try {
     obj = raw ? JSON.parse(raw) : {};
   } catch {
     obj = {};
   }
   return {
+    // 昔の色の名前（常磐など）が残っていても、既定の藍に戻る
     palette: PALETTES.find((x) => x.key === obj.palette)?.key ?? DEFAULT_PALETTE,
-    homeStyle: HOME_STYLES.find((x) => x.key === obj.homeStyle)?.key ?? DEFAULT_HOME_STYLE,
   };
 }
 
-function writePrefs(prefs: { palette: PaletteKey; homeStyle: HomeStyle }) {
+function writePrefs(prefs: { palette: PaletteKey }) {
   try {
     window.localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
   } catch {
@@ -104,7 +99,7 @@ let memoryPrefs = "";
 
 export function SnProvider({ children }: { children: React.ReactNode }) {
   const raw = useSyncExternalStore(subscribePrefs, () => readPrefsRaw() || memoryPrefs, () => "");
-  const { palette, homeStyle } = parsePrefs(raw);
+  const { palette } = parsePrefs(raw);
   const [sentIntros, setSentIntros] = useState<SentIntros>({});
   const [reactions, setReactions] = useState<ReadonlySet<string>>(new Set());
   const [introReplies, setIntroReplies] = useState<Readonly<Record<string, IntroReply>>>({});
@@ -116,9 +111,7 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<Ctx>(() => ({
     palette,
-    setPalette: (p) => writePrefs({ palette: p, homeStyle }),
-    homeStyle,
-    setHomeStyle: (h) => writePrefs({ palette, homeStyle: h }),
+    setPalette: (p) => writePrefs({ palette: p }),
     sentIntros,
     addSentIntro: (targetId, viaId) => setSentIntros((prev) => ({ ...prev, [targetId]: viaId })),
     reactions,
@@ -139,7 +132,7 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
     updateCards: (fn) => setCards((prev) => fn(prev)),
     distinctPairs,
     markDistinct: (key) => setDistinctPairs((prev) => new Set(prev).add(key)),
-  }), [palette, homeStyle, sentIntros, reactions, introReplies, myPosts, myAnswers, me, cards, distinctPairs]);
+  }), [palette, sentIntros, reactions, introReplies, myPosts, myAnswers, me, cards, distinctPairs]);
 
   return <SnContext.Provider value={value}>{children}</SnContext.Provider>;
 }

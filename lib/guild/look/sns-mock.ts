@@ -5,32 +5,44 @@
 export const SNS_BASE = "/guild-look/sns";
 export const SNS_NAME = "建設・不動産の酒場";
 
-/** 見本の上で切り替える色（10-30：11 深緑と真鍮／12 常磐と真鍮の二択を実機で決める）。値は sns.css の [data-palette] */
+/** 見本の上で切り替える色（10-31：23「紹介の道＋地域」。藍が既定・深緑は見比べ用）。値は sns.css の [data-palette] */
 export const PALETTES = [
+  { key: "ai", label: "藍" },
   { key: "fukamidori", label: "深緑" },
-  { key: "tokiwa", label: "常磐" },
 ] as const;
 export type PaletteKey = (typeof PALETTES)[number]["key"];
-export const DEFAULT_PALETTE: PaletteKey = "fukamidori";
-
-/** ホームの形（10-30：探す中心か、近況が流れるか。見本で押して比べる） */
-export const HOME_STYLES = [
-  { key: "search", label: "探す中心" },
-  { key: "feed", label: "近況が流れる" },
-] as const;
-export type HomeStyle = (typeof HOME_STYLES)[number]["key"];
-export const DEFAULT_HOME_STYLE: HomeStyle = "search";
+export const DEFAULT_PALETTE: PaletteKey = "ai";
 
 export const INDUSTRIES = ["建設", "不動産", "士業", "その他"] as const;
 export type Industry = (typeof INDUSTRIES)[number];
 
-/** 探すときの地域のまとまり。対応エリアは都道府県で持ち、ここで束ねる */
+/** 業種の色・印の呼び名（sns.css の data-kind と lucide の印がこれで決まる）。「me」は自分だけ */
+export type KindKey = "build" | "estate" | "pro" | "other" | "me";
+export const INDUSTRY_KIND: Readonly<Record<Industry, Exclude<KindKey, "me">>> = {
+  建設: "build",
+  不動産: "estate",
+  士業: "pro",
+  その他: "other",
+};
+
+/** 探すときの地域のまとまり（8つ）。対応エリアは都道府県で持ち、ここで束ねる。並びはチップの並び（北から南） */
 export const REGIONS: Readonly<Record<string, readonly string[]>> = {
+  北海道: ["北海道"],
+  東北: ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
   関東: ["東京都", "神奈川県", "埼玉県", "千葉県", "茨城県", "栃木県", "群馬県"],
-  関西: ["大阪府", "京都府", "兵庫県", "奈良県", "滋賀県", "和歌山県"],
-  九州: ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県"],
+  中部: ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県"],
+  関西: ["大阪府", "京都府", "兵庫県", "奈良県", "滋賀県", "和歌山県", "三重県"],
+  中国: ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+  四国: ["徳島県", "香川県", "愛媛県", "高知県"],
+  九州: ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"],
 };
 export const REGION_NAMES = Object.keys(REGIONS);
+
+/** 都道府県（または地域の名前）→ 地域。どちらで持っていても同じ地域にそろえる（案件の入力は地域名、仮データは都道府県） */
+export function regionOf(area: string): string | null {
+  if (area in REGIONS) return area;
+  return REGION_NAMES.find((r) => REGIONS[r].includes(area)) ?? null;
+}
 
 /** 許可・免許・登録。自己申告と確認済みを混同しない（設計書5-2） */
 /** number は名刺に書く並び（許可行政庁・番号）。見本の番号は架空 */
@@ -452,9 +464,9 @@ export function findWantPost(id: string, extra: readonly WantPost[] = []): WantP
   return wantPosts(extra).find((p) => p.id === id) ?? null;
 }
 
-/** 投稿への答え。know＝知ってる人いるよ／can＝自分がやれる */
+/** 投稿への返事。know＝知り合いを紹介する／can＝うちで受けたい（10-31：「相談」より「依頼」「案件」の言葉に） */
 export type AnswerKind = "know" | "can";
-export const ANSWER_LABEL: Readonly<Record<AnswerKind, string>> = { know: "知ってる人いるよ", can: "自分がやれる" };
+export const ANSWER_LABEL: Readonly<Record<AnswerKind, string>> = { know: "知り合いを紹介する", can: "うちで受けたい" };
 export type WantAnswer = { postId: string; kind: AnswerKind; personId: string; note: string };
 
 export const WANT_ANSWERS: readonly WantAnswer[] = [
@@ -646,4 +658,92 @@ export function cardInviteUrl(cardId: string): string {
 /** 招待URLを渡した名刺は「招待中」にする（承認済みはそのまま） */
 export function markInvited(cards: readonly BusinessCard[], cardId: string): BusinessCard[] {
   return cards.map((c) => (c.id === cardId && c.status === "uninvited" ? { ...c, status: "invited" } : c));
+}
+
+// ---------- 業種の色・紹介の道・地域・期限（23「紹介の道＋地域」） ----------
+
+/** 人の色の種類。自分は「me」、会社のある人はその会社の最初の業種、会社が無ければ「other」 */
+export function kindOfPerson(person: Pick<Person, "id" | "companyId">): KindKey {
+  if (person.id === ME_ID) return "me";
+  const company = findCompany(person.companyId);
+  return company ? INDUSTRY_KIND[company.industries[0]] : "other";
+}
+
+export function kindOfCompany(company: Pick<Company, "industries">): Exclude<KindKey, "me"> {
+  return INDUSTRY_KIND[company.industries[0]];
+}
+
+/**
+ * 相手までの紹介の道（自分は含めない）。直接の知り合いは [相手]、知り合いの知り合いは [間の知り合い, 相手]、
+ * 自分・道なしは空。画面の線は「あなた → ここに並ぶ人」の順につなぐ（直接＝実線、2人目から点線）。
+ */
+export function routeTo(targetId: string, meId: string = ME_ID): Person[] {
+  const target = findPerson(targetId);
+  if (!target) return [];
+  const rel = relationTo(targetId, meId);
+  if (rel.kind === "direct") return [target];
+  if (rel.kind === "via") return [rel.via, target];
+  return [];
+}
+
+/** 案件の地域（地域名にそろえて重複なし）。入力は地域名・仮データは都道府県のどちらでも同じ結果 */
+export function postRegions(post: Pick<WantPost, "areas">): string[] {
+  const out: string[] = [];
+  for (const a of post.areas) {
+    const r = regionOf(a);
+    if (r && !out.includes(r)) out.push(r);
+  }
+  return out;
+}
+
+/** 地域ごとの案件の数（0件の地域も入れる） */
+export function regionCounts(posts: readonly WantPost[]): Record<string, number> {
+  const counts: Record<string, number> = Object.fromEntries(REGION_NAMES.map((r) => [r, 0]));
+  for (const p of posts) for (const r of postRegions(p)) counts[r] += 1;
+  return counts;
+}
+
+/** 直接の知り合いがいる地域（所在地の都道府県から） */
+export function friendRegions(meId: string = ME_ID): Set<string> {
+  const out = new Set<string>();
+  for (const id of friendsOf(meId)) {
+    const p = findPerson(id);
+    const r = p ? regionOf(p.prefecture) : null;
+    if (r) out.add(r);
+  }
+  return out;
+}
+
+/** 地域で絞る（null＝すべて） */
+export function filterByRegion(posts: readonly WantPost[], region: string | null): WantPost[] {
+  return region === null ? [...posts] : posts.filter((p) => postRegions(p).includes(region));
+}
+
+export const DUE_SOON_DAYS = 7;
+
+/** 募集期限の見せ方。7日以内は soon（赤）。期限なしは null */
+export function dueInfo(deadline: string | null, today: string = todayIso()): { label: string; soon: boolean; past: boolean } | null {
+  if (!deadline) return null;
+  const [y, m, d] = deadline.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+  const days = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(ty, tm - 1, td)) / 86400000);
+  if (days < 0) return { label: "期限が過ぎました", soon: false, past: true };
+  return { label: `${m}/${String(d).padStart(2, "0")}まで`, soon: days <= DUE_SOON_DAYS, past: false };
+}
+
+/** 案件に「この人を紹介する」と出せる知り合い。同じ業種の知り合いのうち、案件の地域に対応できる人を先に。いなければ null */
+export function suggestIntroducee(post: WantPost, meId: string = ME_ID): Person | null {
+  const regions = postRegions(post);
+  const fits = directPeople(meId).filter((p) => p.id !== post.authorId && companyOf(p)?.industries.includes(post.industry));
+  const inArea = (p: Person) => {
+    const c = companyOf(p);
+    return !!c && c.areas.some((a) => regions.includes(regionOf(a) ?? ""));
+  };
+  return fits.find(inArea) ?? fits[0] ?? null;
+}
+
+/** 案件を近い順に並べる（自分の依頼 → 知り合い → 知り合いの知り合い → 道なし。同じ近さの中は元の並びのまま） */
+export function sortByCloseness(posts: readonly WantPost[], meId: string = ME_ID): WantPost[] {
+  const rank = (p: WantPost) => (p.authorId === meId ? 0 : routeTo(p.authorId, meId).length || 3);
+  return posts.map((p, i) => ({ p, i })).sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i).map((x) => x.p);
 }
