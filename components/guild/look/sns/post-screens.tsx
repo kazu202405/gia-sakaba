@@ -1,8 +1,10 @@
 "use client";
 
-// 見本の案件の画面（設計書6-6）：一覧（カテゴリーで絞る）・1件（知ってる人いるよ／自分がやれる）・投稿。
+// 見本の案件の画面（設計書6-6）：一覧（カテゴリーで絞る）・1件（うちで受けたい／知り合いを紹介する）・依頼する（何を探していますか？）。
+// 10-31：「相談」より「依頼」「案件」の言葉。一覧の見出しは「探しています」。
 
 import { useRef, useState } from "react";
+import { Clock, MapPin, Package, Plus, Send } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   ANSWER_LABEL,
@@ -14,14 +16,20 @@ import {
   POST_TITLE_MAX,
   POST_VISIBILITIES,
   REGION_NAMES,
-  answerCount,
   answersFor,
   categoryLabel,
+  companyOf,
+  dueInfo,
   filterWantPosts,
   findPerson,
   findWantPost,
   makeWantPost,
+  postRegions,
+  regionOf,
+  relationTo,
   shortName,
+  sortByCloseness,
+  suggestIntroducee,
   validatePostDraft,
   visibilityLabel,
   wantPosts,
@@ -29,10 +37,9 @@ import {
   type PostCategory,
   type PostDraft,
   type PostDraftErrors,
-  type WantPost,
 } from "@/lib/guild/look/sns-mock";
 import { ComposeFlow, SEND_MS } from "./flow";
-import { Avatar, Modal } from "./parts";
+import { Avatar, IndustryPill, MeetPicture, Modal, PlainPill, RouteLine, WantRow } from "./parts";
 import { SnLink, useSn, useSnState } from "./store";
 import { DateInput } from "@/components/guild/form-parts";
 
@@ -40,24 +47,20 @@ function toggle<T>(list: readonly T[], v: T): T[] {
   return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 }
 
-function postMeta(post: WantPost): string {
-  return `${post.industry}／${post.areas.join("・")}`;
-}
-
 // ---------- 一覧 ----------
 
 export function PostsScreen() {
-  const { myPosts, myAnswers } = useSnState();
+  const { myPosts } = useSnState();
   const [category, setCategory] = useState<PostCategory | null>(null);
   const all = wantPosts(myPosts);
-  const posts = filterWantPosts(all, category);
+  const posts = sortByCloseness(filterWantPosts(all, category));
 
   return (
     <div className="sn-page sn-page--filters">
       <aside className="sn-page-side">
         <div className="sn-band sn-sec">
-          <div className="sn-sec-h"><h2>探しています</h2><span>{posts.length}件</span></div>
-          <SnLink to="/posts/new" className="sn-btn sn-btn--main sn-btn--wide">案件を投稿する</SnLink>
+          <div className="sn-sec-h"><h2>探しています</h2><span>{posts.length}件・近い順</span></div>
+          <SnLink to="/posts/new" className="sn-btn sn-btn--main sn-btn--wide"><Plus aria-hidden />依頼する</SnLink>
           <div className="sn-chips" role="group" aria-label="カテゴリー">
             <button type="button" className="sn-chip" aria-pressed={category === null} onClick={() => setCategory(null)}>すべて {all.length}</button>
             {POST_CATEGORIES.map((c) => (
@@ -70,26 +73,12 @@ export function PostsScreen() {
       </aside>
       <div className="sn-page-main">
         {posts.length === 0 ? (
-          <p className="sn-empty">このカテゴリーの案件は、まだありません。<br />「すべて」に戻すか、投稿してみてください</p>
+          <p className="sn-empty">このカテゴリーの案件は、まだありません。<br />「すべて」に戻すか、依頼してみてください</p>
         ) : (
-          <div className="sn-list">
-            {posts.map((post) => {
-              const author = findPerson(post.authorId);
-              if (!author) return null;
-              return (
-                <SnLink key={post.id} to={`/posts/${post.id}`} className="sn-row">
-                  <Avatar person={author} />
-                  <div className="sn-row-body">
-                    <p className="sn-row-title">{post.text}</p>
-                    <p className="sn-meta"><span className="sn-tag">{categoryLabel(post.category)}</span> {postMeta(post)}</p>
-                    <p className="sn-meta">
-                      {post.authorId === ME_ID ? "あなた" : `${author.name}さん`}・{post.ago}
-                      知ってる人 {answerCount(post.id, "know", myAnswers)}・やれる {answerCount(post.id, "can", myAnswers)}
-                    </p>
-                  </div>
-                </SnLink>
-              );
-            })}
+          <div>
+            {posts.map((post) => (
+              <WantRow key={post.id} post={post} />
+            ))}
           </div>
         )}
       </div>
@@ -107,33 +96,61 @@ export function PostScreen({ id }: { id: string }) {
   const author = findPerson(post.authorId);
   if (!author) return <p className="sn-empty">この案件は見つかりませんでした</p>;
   const isMine = post.authorId === ME_ID;
+  const company = companyOf(author);
   const answers = answersFor(post.id, myAnswers);
   const answered = (kind: AnswerKind) => myAnswers.some((a) => a.postId === post.id && a.kind === kind);
+  const due = dueInfo(post.deadline);
+  const introducee = suggestIntroducee(post);
+  const knowLabel = introducee ? `${shortName(introducee)}さんを紹介する` : ANSWER_LABEL.know;
 
   return (
     <div className="sn-page sn-page--detail">
       <aside className="sn-page-side">
         <div className="sn-hero">
-          <SnLink to={`/people/${author.id}`} aria-label={`${author.name}さんのページ`}><Avatar person={author} /></SnLink>
-          <p className="sn-meta">{isMine ? "あなたの投稿" : `${author.name}さん`}・{post.ago}</p>
-          <h1>{post.text}</h1>
-          <p className="sn-meta"><span className="sn-tag">{categoryLabel(post.category)}</span></p>
+          <div className="sn-who">
+            <SnLink to={`/people/${author.id}`} aria-label={`${author.name}さんのページ`}>
+              <Avatar person={author} size="lg" />
+              <span>
+                <b>{isMine ? "あなた" : author.name}</b>
+                {company ? `${company.name}・${author.prefecture}` : author.prefecture}　{post.ago}
+              </span>
+            </SnLink>
+          </div>
+          <h1 className="sn-want-title">{post.text}</h1>
+          <div className="sn-pills">
+            <IndustryPill industry={post.industry} />
+            <PlainPill icon={<MapPin aria-hidden />}>{postRegions(post).join("・")}</PlainPill>
+            <PlainPill>{categoryLabel(post.category)}</PlainPill>
+          </div>
         </div>
+        {isMine ? (
+          <p className="sn-meta sn-note">あなたの依頼です。返事が届くと、ここに並びます</p>
+        ) : (
+          <>
+            <div className="sn-sec">
+              <div className="sn-sec-h"><h2>{shortName(author)}さんに届く道</h2></div>
+            </div>
+            <RouteLine person={author} relation={relationTo(author.id)} />
+          </>
+        )}
       </aside>
       <div className="sn-page-main">
+        <div className="sn-facts">
+          <div><MapPin aria-hidden /><span>依頼した人</span><b>{regionOf(author.prefecture) ?? author.prefecture}</b></div>
+          <div><Package aria-hidden /><span>探している場所</span><b>{postRegions(post).join("・")}</b></div>
+          <div className={due?.soon ? "sn-facts-soon" : undefined}><Clock aria-hidden /><span>返事の期限</span><b>{due ? due.label : "決めていません"}</b></div>
+        </div>
+        <div className="sn-story sn-story--plain">
+          <div><p className="sn-k">内容</p><p className="sn-v">{post.detail}</p></div>
+        </div>
         <dl className="sn-dl">
-          <div><dt>対象</dt><dd>{postMeta(post)}</dd></div>
-          <div><dt>募集期限</dt><dd>{post.deadline ?? "決めていません"}</dd></div>
           <div><dt>問い合わせ先</dt><dd>{post.contact}</dd></div>
           <div><dt>公開範囲</dt><dd>{visibilityLabel(post.visibility)}</dd></div>
         </dl>
-        <div className="sn-story">
-          <div><p className="sn-k">内容</p><p className="sn-v">{post.detail}</p></div>
-        </div>
         <section>
-          <div className="sn-sec"><div className="sn-sec-h"><h2>みんなの答え</h2><span>{answers.length}件</span></div></div>
+          <div className="sn-sec"><div className="sn-sec-h"><h2>みんなの返事</h2><span>{answers.length}件</span></div></div>
           {answers.length === 0 ? (
-            <p className="sn-empty">まだ答えはありません</p>
+            <p className="sn-empty">まだ返事はありません</p>
           ) : (
             <div className="sn-list">
               {answers.map((a, i) => {
@@ -155,37 +172,39 @@ export function PostScreen({ id }: { id: string }) {
       </div>
       <div className="sn-sticky">
         {isMine ? (
-          <p className="sn-meta">あなたの投稿です。答えが届くと、ここに並びます</p>
+          <p className="sn-meta">あなたの依頼です。返事が届くと、ここに並びます</p>
         ) : (
-          <div className="sn-modal-acts">
-            <button type="button" className="sn-btn sn-btn--main" disabled={answered("know")} onClick={() => setAnswering("know")}>
-              {answered("know") ? "答えました" : ANSWER_LABEL.know}
+          <div className="sn-sticky-pair">
+            <button type="button" className="sn-btn" disabled={answered("can")} onClick={() => setAnswering("can")}>
+              {answered("can") ? "返事しました" : ANSWER_LABEL.can}
             </button>
-            <button type="button" className="sn-btn sn-btn--main" disabled={answered("can")} onClick={() => setAnswering("can")}>
-              {answered("can") ? "答えました" : ANSWER_LABEL.can}
+            <button type="button" className="sn-btn sn-btn--main" disabled={answered("know")} onClick={() => setAnswering("know")}>
+              <Send aria-hidden />{answered("know") ? "返事しました" : knowLabel}
             </button>
           </div>
         )}
       </div>
       {answering && (
         <ComposeFlow
-          title={answering === "know" ? `${shortName(author)}さんに「知ってる人いるよ」と答える` : `${shortName(author)}さんに「自分がやれる」と答える`}
+          title={answering === "know" ? `${shortName(author)}さんに「${ANSWER_LABEL.know}」と返事する` : `${shortName(author)}さんに「${ANSWER_LABEL.can}」と返事する`}
           lead={answering === "know" ? "誰のことか、どんな人かをひとこと書いてください。" : "どんなことができるかを、ひとこと書いてください。"}
           placeholder={answering === "know" ? "例：横浜で外壁に強い会社の社長を知っています" : "例：外壁の改修なら、協力会社と請けられます"}
           required
           emptyMessage="ひとこと書いてください。受け取る人が判断しやすくなります"
+          picture={answering === "know" && introducee ? <MeetPicture people={[introducee, null, author]} /> : undefined}
           reviewRows={(note) => [
             { label: "届く人", value: `${author.name}さん` },
             { label: "案件", value: post.text },
-            { label: "答え", value: ANSWER_LABEL[answering] },
+            { label: "返事", value: ANSWER_LABEL[answering] },
+            ...(answering === "know" && introducee ? [{ label: "紹介する人", value: `${introducee.name}さん` }] : []),
             { label: "ひとこと", value: note },
           ]}
           onClose={() => setAnswering(null)}
           onSent={(note) => {
-            // 答えの一覧に自分の行が出るのと、トーストを同じ瞬間に
+            // 返事の一覧に自分の行が出るのと、トーストを同じ瞬間に
             addAnswer({ postId: post.id, kind: answering, personId: ME_ID, note });
             setAnswering(null);
-            uiToast(`${shortName(author)}さんに答えました`);
+            uiToast(`${shortName(author)}さんに返事しました`);
           }}
         />
       )}
@@ -193,7 +212,7 @@ export function PostScreen({ id }: { id: string }) {
   );
 }
 
-// ---------- 投稿 ----------
+// ---------- 依頼する ----------
 
 export function NewPostScreen() {
   const { myPosts, addPost } = useSnState();
@@ -219,12 +238,12 @@ export function NewPostScreen() {
     setBusy(true);
     window.setTimeout(() => {
       const post = makeWantPost(draft, `my-${myPosts.length + 1}`);
-      // 一覧に出る投稿とトーストを同じ瞬間に。錠は外さない（画面が変わるまで押せない）
+      // 一覧に出る依頼とトーストを同じ瞬間に。錠は外さない（画面が変わるまで押せない）
       addPost(post);
       setReviewing(false);
       setBusy(false);
       setDone(true);
-      uiToast("案件を投稿しました");
+      uiToast("依頼を出しました");
       go(`/posts/${post.id}`);
     }, SEND_MS);
   };
@@ -234,10 +253,10 @@ export function NewPostScreen() {
   return (
     <div className="sn-form">
       <form onSubmit={toReview} noValidate>
-        <div className="sn-sec"><div className="sn-sec-h"><h2>案件を投稿する</h2></div></div>
+        <div className="sn-sec"><div className="sn-sec-h"><h2>何を探していますか？</h2></div></div>
         <div className="sn-fields">
           <label className="sn-field">
-            <span>タイトル</span>
+            <span>ひとことで（タイトル）</span>
             <input type="text" value={draft.title} maxLength={POST_TITLE_MAX} placeholder="例：関東で外壁塗装をたのめる会社を探しています" onChange={(e) => set({ title: e.target.value })} aria-invalid={!!errors.title} />
             {err("title")}
           </label>
@@ -253,7 +272,7 @@ export function NewPostScreen() {
           </fieldset>
 
           <fieldset className="sn-field">
-            <legend>対象の業種</legend>
+            <legend>探している業種</legend>
             <div className="sn-chips">
               {INDUSTRIES.map((i) => (
                 <button key={i} type="button" className="sn-chip" aria-pressed={draft.industry === i} onClick={() => set({ industry: i })}>{i}</button>
@@ -263,7 +282,7 @@ export function NewPostScreen() {
           </fieldset>
 
           <fieldset className="sn-field">
-            <legend>対象の地域（いくつでも）</legend>
+            <legend>探している地域（いくつでも）</legend>
             <div className="sn-chips">
               {REGION_NAMES.map((r) => (
                 <button key={r} type="button" className="sn-chip" aria-pressed={draft.regions.includes(r)} onClick={() => set({ regions: toggle(draft.regions, r) })}>{r}</button>
@@ -279,9 +298,9 @@ export function NewPostScreen() {
           </label>
 
           <label className="sn-field">
-            <span>募集期限（なくても大丈夫です）</span>
+            <span>返事の期限（なくても大丈夫です）</span>
             {/* 日付の欄は酒場の共通部品（iOS Safari で枠からはみ出さないように） */}
-            <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="募集期限" />
+            <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="返事の期限" />
             {err("deadline")}
           </label>
 
@@ -301,23 +320,23 @@ export function NewPostScreen() {
           </fieldset>
         </div>
         <div className="sn-sticky">
-          <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={done}>{done ? "投稿しました" : "内容を確かめる"}</button>
+          <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={done}>{done ? "依頼を出しました" : "内容を確かめる"}</button>
         </div>
       </form>
       {reviewing && (
-        <Modal title="この内容で投稿しますか？" onClose={() => !busy && setReviewing(false)} busy={busy}>
+        <Modal title="この内容で依頼を出しますか？" onClose={() => !busy && setReviewing(false)} busy={busy}>
           <dl className="sn-review">
             <dt>タイトル</dt><dd>{draft.title.trim()}</dd>
             <dt>カテゴリー</dt><dd>{draft.category === "" ? "" : categoryLabel(draft.category)}</dd>
-            <dt>対象</dt><dd>{draft.industry}／{draft.regions.join("・")}</dd>
+            <dt>探している人</dt><dd>{draft.industry}／{draft.regions.join("・")}</dd>
             <dt>内容</dt><dd>{draft.detail.trim()}</dd>
-            <dt>募集期限</dt><dd>{draft.deadline === "" ? "決めていません" : draft.deadline}</dd>
+            <dt>返事の期限</dt><dd>{draft.deadline === "" ? "決めていません" : draft.deadline}</dd>
             <dt>問い合わせ先</dt><dd>{draft.contact.trim()}</dd>
             <dt>見える人</dt><dd>{visibilityLabel(draft.visibility)}</dd>
           </dl>
           <div className="sn-modal-acts">
             <button type="button" className="sn-btn" disabled={busy} onClick={() => setReviewing(false)}>もどって なおす</button>
-            <button type="button" className="sn-btn sn-btn--main" disabled={busy} onClick={send}>{busy ? "投稿しています…" : "投稿する"}</button>
+            <button type="button" className="sn-btn sn-btn--main" disabled={busy} onClick={send}>{busy ? "出しています…" : "依頼を出す"}</button>
           </div>
         </Modal>
       )}

@@ -1,6 +1,6 @@
 "use client";
 
-// 見本の代表の画面：ホーム（探す中心／近況が流れる）・探す・人の詳しいページ・会社の詳しいページ。
+// 見本の代表の画面：ホーム（探す欄・地域のチップ・探しています）・探す・人の詳しいページ・会社の詳しいページ。
 // 残りの画面（人脈・案件・自分・管理者）も、ここと parts.tsx の部品で組む。
 
 import { useSearchParams } from "next/navigation";
@@ -10,108 +10,104 @@ import {
   INCOMING_INTRO_REQUESTS,
   INDUSTRIES,
   NETWORK_SUMMARY,
-  POSTS,
   RECENT_CONNECTIONS,
   REGION_NAMES,
   areaText,
   companyOf,
+  filterByRegion,
   findCompany,
   findPerson,
+  friendRegions,
   peopleOf,
+  regionCounts,
   relationTo,
   relationToCompany,
   searchCompanies,
   searchPeople,
   shortName,
+  sortByCloseness,
+  wantPosts,
   type Industry,
   type Person,
-  type Post,
   type Relation,
   type SearchFilter,
+  type WantPost,
 } from "@/lib/guild/look/sns-mock";
-import { Avatar, CompanyRow, IntroRequestButton, LicenseTags, Logo, PersonRow, RouteLine, Say } from "./parts";
-import { SnLink, useSn, useSnState } from "./store";
+import { Avatar, CompanyRow, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
+import { SnLink, useSnState } from "./store";
 
 // ---------- ホーム ----------
 
+/** ホーム：頭に「人・会社を探す」欄 → 地域のチップ → 届いた紹介のおねがい → まわりの「探しています」 */
 export function HomeScreen() {
-  const { homeStyle } = useSnState();
-  return homeStyle === "feed" ? <FeedHome /> : <SearchHome />;
-}
-
-/** ホームの検索窓。入れて決定すると「探す」へ移る */
-function HomeSearch() {
-  const { go } = useSn();
-  const [q, setQ] = useState("");
-  return (
-    <form
-      role="search"
-      onSubmit={(e) => {
-        e.preventDefault();
-        go(q.trim() ? `/search?q=${encodeURIComponent(q.trim())}` : "/search");
-      }}
-    >
-      <label className="sn-search">
-        <Search size={18} aria-hidden />
-        <span className="sr-only">探す</span>
-        <input type="search" enterKeyHint="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="人・会社・得意なことで探す" />
-      </label>
-    </form>
-  );
-}
-
-function SearchHome() {
-  const wants = POSTS.filter((p): p is Extract<Post, { kind: "want" }> => p.kind === "want");
+  const { myPosts } = useSnState();
+  const [region, setRegion] = useState<string | null>(null);
+  const all = wantPosts(myPosts);
+  const posts = sortByCloseness(filterByRegion(all, region));
   return (
     <div className="sn-page">
       <div className="sn-page-main">
         <div className="sn-band sn-sec">
-          <HomeSearch />
-          <div className="sn-chips">
-            {INDUSTRIES.slice(0, 3).map((i) => (
-              <SnLink key={i} to={`/search?industry=${encodeURIComponent(i)}`} className="sn-chip">
-                {i}
-              </SnLink>
-            ))}
-            {REGION_NAMES.map((r) => (
-              <SnLink key={r} to={`/search?region=${encodeURIComponent(r)}`} className="sn-chip">
-                {r}
-              </SnLink>
-            ))}
-          </div>
+          <SnLink to="/search" className="sn-search">
+            <Search aria-hidden />
+            人・会社を探す（業種・地域・名前）
+          </SnLink>
         </div>
+        <RegionChips posts={all} value={region} onChange={setRegion} />
         <IncomingRequests />
         <section>
           <div className="sn-sec">
             <div className="sn-sec-h">
-              <h2>いま、こんな人を探しています</h2>
+              <h2>{region ? `${region}の、探しています` : "探しています"}</h2>
+              <span>近い順</span>
             </div>
           </div>
-          <div>
-            {wants.map((w) => {
-              const author = findPerson(w.authorId);
-              if (!author) return null;
-              return (
-                <SnLink key={w.id} to={`/posts/${w.id}`} className="sn-want-row">
-                  <p>{w.text}</p>
-                  <p className="sn-want-by">
-                    <span>
-                      {author.name}・{companyOf(author)?.name ?? ""}　{w.ago}
-                    </span>
-                    <b>
-                      {w.industry}・{w.areas.map((a) => a.replace(/[都府県]$/, "")).join("／")}
-                    </b>
-                  </p>
-                </SnLink>
-              );
-            })}
-          </div>
+          {posts.length === 0 ? (
+            <p className="sn-empty">{region}の依頼は、まだありません。<br />もう一度{region}を押すと、全部が出ます</p>
+          ) : (
+            <div>
+              {posts.map((post) => (
+                <WantRow key={post.id} post={post} />
+              ))}
+            </div>
+          )}
         </section>
       </div>
       <aside className="sn-page-side">
         <NetworkStats />
         <RecentFaces />
       </aside>
+    </div>
+  );
+}
+
+/** どこで探されているか：地域のチップ（地図の代わり）。押すと下の一覧がその地域だけに、もう一度押すと全部 */
+function RegionChips({ posts, value, onChange }: { posts: readonly WantPost[]; value: string | null; onChange: (r: string | null) => void }) {
+  const counts = regionCounts(posts);
+  const friends = friendRegions();
+  return (
+    <div className="sn-region">
+      <div className="sn-region-head">
+        <b>どこで探されているか</b>
+        <span><i className="sn-dot" aria-hidden />知り合いがいる</span>
+      </div>
+      <div className="sn-region-chips" role="group" aria-label="地域">
+        {REGION_NAMES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            className="sn-rchip"
+            aria-pressed={value === r}
+            data-has={counts[r] > 0}
+            data-friend={friends.has(r)}
+            aria-label={`${r} 依頼${counts[r]}件${friends.has(r) ? "・知り合いがいます" : ""}`}
+            onClick={() => onChange(value === r ? null : r)}
+          >
+            <b>{counts[r]}</b>
+            {r}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -129,34 +125,28 @@ function NetworkStats() {
   );
 }
 
-/** まだ返事をしていない、届いた紹介のおねがい。押すと人脈の画面で返事をする */
+/** まだ返事をしていない、届いた紹介のおねがい（藍の面）。押すとやり取りの画面で返事をする */
 function IncomingRequests() {
   const { introReplies } = useSnState();
   const waiting = INCOMING_INTRO_REQUESTS.filter((r) => !introReplies[r.id]);
-  if (waiting.length === 0) return null;
   return (
-    <section>
-      <div className="sn-sec">
-        <div className="sn-sec-h">
-          <h2>紹介のおねがい</h2>
-          <span>{waiting.length}件</span>
-        </div>
-      </div>
+    <>
       {waiting.map((r) => {
         const from = findPerson(r.fromId);
         const to = findPerson(r.toId);
         if (!from || !to) return null;
         return (
-          <SnLink key={r.id} to="/network?tab=intro" className="sn-ask">
+          <div key={r.id} className="sn-ask">
             <Avatar person={from} />
             <p>
-              <b>{from.name}さん</b>が、あなた経由で<b>{shortName(to)}さん</b>とつながりたいそうです
+              <b>{from.name}さんから、紹介のおねがい</b>
+              <small>あなた経由で{shortName(to)}さんとつながりたいそうです</small>
             </p>
-            <span className="sn-ask-go">返事する</span>
-          </SnLink>
+            <SnLink to="/network" className="sn-ask-go">中身を見る</SnLink>
+          </div>
         );
       })}
-    </section>
+    </>
   );
 }
 
@@ -181,98 +171,6 @@ function RecentFaces() {
         })}
       </div>
     </section>
-  );
-}
-
-function FeedHome() {
-  return (
-    <div className="sn-page">
-      <div className="sn-page-main">
-        <div className="sn-band sn-sec">
-          <HomeSearch />
-        </div>
-        <IncomingRequests />
-        <div className="sn-gap" />
-        {POSTS.map((post) => (
-          <FeedPost key={post.id} post={post} />
-        ))}
-      </div>
-      <aside className="sn-page-side">
-        <NetworkStats />
-        <RecentFaces />
-      </aside>
-    </div>
-  );
-}
-
-function FeedPost({ post }: { post: Post }) {
-  const { reactions, toggleReaction } = useSnState();
-  const author = findPerson(post.authorId);
-  if (!author) return null;
-  const company = companyOf(author);
-
-  if (post.kind === "connected") {
-    const other = findPerson(post.otherId);
-    if (!other) return null;
-    return (
-      <div className="sn-slim">
-        <Avatar person={author} />
-        <p>
-          <b>{author.name}さん</b>と<b>{other.name}さん</b>がつながりました　{post.ago}
-        </p>
-      </div>
-    );
-  }
-
-  const head = (
-    <SnLink to={`/people/${author.id}`} className="sn-post-head">
-      <Avatar person={author} />
-      <span>
-        <span className="sn-post-name">{author.name}</span>
-        <span className="sn-sub">{post.kind === "profile" ? `「${post.field}」を書き換えました　${post.ago}` : `${company?.name ?? ""}・${post.ago}`}</span>
-      </span>
-    </SnLink>
-  );
-
-  const react = (key: string, label: string, count: number) => {
-    const on = reactions.has(`${post.id}:${key}`);
-    return (
-      <button type="button" aria-pressed={on} onClick={() => toggleReaction(`${post.id}:${key}`)}>
-        {label} {count + (on ? 1 : 0)}
-      </button>
-    );
-  };
-
-  return (
-    <article className="sn-post">
-      {head}
-      {post.kind === "want" && (
-        <>
-          <p className="sn-want">
-            {post.text}
-            <small>
-              {post.industry}／{post.areas.join("・")}　{post.detail}
-            </small>
-          </p>
-          <div className="sn-react">
-            {react("know", "知ってる人いるよ", post.knowCount)}
-            {react("can", "自分がやれる", post.canDoCount)}
-          </div>
-        </>
-      )}
-      {post.kind === "news" && (
-        <>
-          <p className="sn-post-body">{post.text}</p>
-          {post.photo && (
-            <div className="sn-photo" role="img" aria-label={post.photo}>
-              {post.photo}
-            </div>
-          )}
-          <div className="sn-react">{react("like", "いいね", post.likeCount)}</div>
-        </>
-      )}
-      {post.kind === "profile" && <p className="sn-post-body">{post.text}</p>}
-    </article>
   );
 }
 
@@ -413,11 +311,9 @@ export function PersonView({ person, relation }: { person: Person; relation: Rel
           <div className="sn-hero-say">
             <Say>{person.say}</Say>
             {person.talk.length > 0 && (
-              <div className="sn-chips sn-chips--static" aria-label="話のきっかけ">
+              <div className="sn-pills" aria-label="話のきっかけ">
                 {person.talk.map((t) => (
-                  <span key={t} className="sn-chip">
-                    {t}
-                  </span>
+                  <PlainPill key={t}>{t}</PlainPill>
                 ))}
               </div>
             )}

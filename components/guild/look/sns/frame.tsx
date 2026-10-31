@@ -1,27 +1,40 @@
 "use client";
 
-// 見本の外枠：上のバー・見本だけのつまみ（色・ホームの形）・下のメニュー・読み込み中の仮の画面。
+// 見本の外枠：上のバー・見本だけのつまみ（色）・下のメニュー・読み込み中の仮の画面。
 // リンクを押した瞬間（ボタンからの移動も）に、行き先が届くまで仮の画面を出す。
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { Bell, ChevronLeft, ClipboardList, House, MessageCircle, Plus, User, type LucideIcon } from "lucide-react";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
-import { HOME_STYLES, PALETTES, SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
+import { PALETTES, SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
 import { PageSkeleton } from "./parts";
 import { SnProvider, snPath, useSnState } from "./store";
 import "./sns.css";
 import "./sns-layout.css";
 
-/** 下のメニュー（字だけ。10-30 決定）。ready=false はまだ画面が無い（押せない見た目にして、リンクにしない） */
-export const NAV: readonly { to: string; label: string; also?: string[]; ready: boolean }[] = [
-  { to: "", label: "ホーム", ready: true },
-  { to: "/search", label: "探す", also: ["/people", "/companies"], ready: true },
-  { to: "/network", label: "人脈", ready: true },
-  { to: "/posts", label: "案件", ready: true },
-  { to: "/me", label: "自分", ready: true },
+/**
+ * 下のメニュー（アイコン＋字。10-31 決定）。「探す」は外し、ホームの検索欄から入る。
+ * put は真ん中の丸い札（依頼する）。also はそのメニューの下に置く画面（押している所の印に使う）
+ */
+export const NAV: readonly { to: string; label: string; icon: LucideIcon; also?: string[]; put?: boolean }[] = [
+  { to: "", label: "ホーム", icon: House, also: ["/search", "/people", "/companies"] },
+  { to: "/posts", label: "案件", icon: ClipboardList },
+  { to: "/posts/new", label: "依頼する", icon: Plus, put: true },
+  { to: "/network", label: "やり取り", icon: MessageCircle },
+  { to: "/me", label: "マイページ", icon: User, also: ["/admin"] },
 ];
+
+/** いま開いている画面に当たるメニュー（いちばん長く合う道。/posts/new は「案件」でなく「依頼する」） */
+export function activeNavTo(rest: string): string | null {
+  const hits = NAV.flatMap((n) => {
+    const paths = [n.to, ...(n.also ?? [])];
+    return paths.filter((p) => (p === "" ? rest === "" : isUnder(rest, p))).map((p) => ({ to: n.to, len: p.length }));
+  });
+  if (hits.length === 0) return null;
+  return hits.reduce((best, h) => (h.len > best.len ? h : best)).to;
+}
 
 function isUnder(rest: string, to: string) {
   return rest === to || rest.startsWith(`${to}/`);
@@ -39,7 +52,7 @@ export function SnFrame({ children }: { children: React.ReactNode }) {
 }
 
 function FrameInner({ children }: { children: React.ReactNode }) {
-  const { palette, setPalette, homeStyle, setHomeStyle } = useSnState();
+  const { palette, setPalette } = useSnState();
   const pathname = usePathname();
   const rest = pathname.startsWith(SNS_BASE) ? pathname.slice(SNS_BASE.length) : "";
 
@@ -81,6 +94,7 @@ function FrameInner({ children }: { children: React.ReactNode }) {
 
   const shownRest = pending && pending.startsWith(SNS_BASE) ? pending.slice(SNS_BASE.length) : rest;
   const isTop = NAV.some((n) => n.to === shownRest);
+  const activeTo = activeNavTo(shownRest);
 
   return (
     <div className="sn" data-palette={palette}>
@@ -91,7 +105,10 @@ function FrameInner({ children }: { children: React.ReactNode }) {
           ) : (
             <BackButton onPress={() => setPending("back")} />
           )}
-          <span className="sn-notice">お知らせ<b>1</b></span>
+          <span className="sn-notice" role="img" aria-label="お知らせ 1件">
+            <Bell size={22} aria-hidden />
+            <i />
+          </span>
         </div>
       </header>
       <div className="sn-mock">
@@ -100,11 +117,6 @@ function FrameInner({ children }: { children: React.ReactNode }) {
           <span className="sn-mock-set" role="group" aria-label="色">
             {PALETTES.map((p) => (
               <button key={p.key} type="button" aria-pressed={palette === p.key} onClick={() => setPalette(p.key)}>{p.label}</button>
-            ))}
-          </span>
-          <span className="sn-mock-set" role="group" aria-label="ホームの形">
-            {HOME_STYLES.map((h) => (
-              <button key={h.key} type="button" aria-pressed={homeStyle === h.key} onClick={() => setHomeStyle(h.key)}>{h.label}</button>
             ))}
           </span>
         </div>
@@ -117,11 +129,14 @@ function FrameInner({ children }: { children: React.ReactNode }) {
       <nav className="sn-nav" aria-label="メニュー">
         <div className="sn-nav-in">
           {NAV.map((item) => {
-            const active = item.to === "" ? shownRest === "" : isUnder(shownRest, item.to) || (item.also ?? []).some((a) => isUnder(shownRest, a));
-            if (!item.ready) {
-              return <span key={item.to} aria-disabled="true" title="この画面はこのあと作ります">{item.label}</span>;
-            }
-            return <Link key={item.to} href={snPath(item.to)} aria-current={active ? "page" : undefined}>{item.label}</Link>;
+            const Icon = item.icon;
+            const active = activeTo === item.to;
+            return (
+              <Link key={item.to} href={snPath(item.to)} className={item.put ? "sn-nav-plus" : undefined} aria-current={active ? "page" : undefined}>
+                {item.put ? <span className="sn-nav-put"><Icon aria-hidden strokeWidth={2.4} /></span> : <Icon aria-hidden />}
+                {item.label}
+              </Link>
+            );
           })}
         </div>
       </nav>

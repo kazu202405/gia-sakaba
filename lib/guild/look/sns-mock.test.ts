@@ -7,6 +7,19 @@ import {
   POSTS,
   COMPANIES,
   RECENT_CONNECTIONS,
+  ANSWER_LABEL,
+  REGIONS,
+  REGION_NAMES,
+  dueInfo,
+  filterByRegion,
+  friendRegions,
+  kindOfPerson,
+  postRegions,
+  regionCounts,
+  regionOf,
+  routeTo,
+  sortByCloseness,
+  suggestIntroducee,
   BUSINESS_CARDS,
   EMPTY_POST_DRAFT,
   INCOMING_INTRO_REQUESTS,
@@ -217,5 +230,85 @@ describe("管理者：名刺の仮登録", () => {
   it("招待URLを渡すと招待中になる（承認ずみはそのまま）", () => {
     expect(markInvited(BUSINESS_CARDS, "c4").find((c) => c.id === "c4")?.status).toBe("invited");
     expect(markInvited(BUSINESS_CARDS, "c1").find((c) => c.id === "c1")?.status).toBe("approved");
+  });
+});
+
+describe("地域（8つ）", () => {
+  it("8つの地域に、どの都道府県も1回だけ入る", () => {
+    expect(REGION_NAMES).toEqual(["北海道", "東北", "関東", "中部", "関西", "中国", "四国", "九州"]);
+    const all = REGION_NAMES.flatMap((r) => REGIONS[r]);
+    expect(all).toHaveLength(47);
+    expect(new Set(all).size).toBe(47);
+  });
+  it("都道府県でも地域名でも同じ地域に引ける", () => {
+    expect(regionOf("神奈川県")).toBe("関東");
+    expect(regionOf("関西")).toBe("関西");
+    expect(regionOf("沖縄県")).toBe("九州");
+    expect(regionOf("どこか")).toBeNull();
+  });
+  it("案件の地域は地域名にそろい、重複しない", () => {
+    expect(postRegions({ areas: ["東京都", "神奈川県", "大阪府"] })).toEqual(["関東", "関西"]);
+    expect(postRegions({ areas: ["関東", "東京都"] })).toEqual(["関東"]);
+  });
+  it("地域ごとの案件の数（0件の地域も入る）と、地域で絞る", () => {
+    const all = wantPosts();
+    const counts = regionCounts(all);
+    expect(Object.keys(counts)).toEqual(REGION_NAMES);
+    expect(counts["北海道"]).toBe(0);
+    expect(counts["関東"]).toBeGreaterThan(0);
+    expect(filterByRegion(all, "関東")).toHaveLength(counts["関東"]);
+    expect(filterByRegion(all, null)).toHaveLength(all.length);
+    expect(filterByRegion(all, "関東").every((p) => postRegions(p).includes("関東"))).toBe(true);
+  });
+  it("知り合いがいる地域は、直接の知り合いの所在地から", () => {
+    const r = friendRegions();
+    expect(r.has("関東")).toBe(true);
+    expect(r.has("関西")).toBe(true);
+    expect(r.has("九州")).toBe(true);
+    expect(r.has("北海道")).toBe(false);
+  });
+});
+
+describe("業種の色・紹介の道・期限", () => {
+  it("顔の種類：自分は me、会社の最初の業種で決まる", () => {
+    expect(kindOfPerson(findPerson(ME_ID)!)).toBe("me");
+    expect(kindOfPerson(findPerson("sato")!)).toBe("build");
+    expect(kindOfPerson(findPerson("nakamura")!)).toBe("estate");
+    expect(kindOfPerson(findPerson("mori")!)).toBe("pro");
+  });
+  it("紹介の道：直接は1人、知り合いの知り合いは間の人と相手、道なし・自分は空", () => {
+    expect(routeTo("sato").map((p) => p.id)).toEqual(["sato"]);
+    const via = routeTo("yamamoto");
+    expect(via).toHaveLength(2);
+    expect(via[1].id).toBe("yamamoto");
+    expect(["sato", "mori"]).toContain(via[0].id);
+    expect(routeTo("kitamura")).toEqual([]);
+    expect(routeTo(ME_ID)).toEqual([]);
+  });
+  it("期限：7日以内は赤、過ぎたら過ぎた、なしは null", () => {
+    expect(dueInfo(null, "2026-10-31")).toBeNull();
+    expect(dueInfo("2026-11-07", "2026-10-31")).toEqual({ label: "11/07まで", soon: true, past: false });
+    expect(dueInfo("2026-11-08", "2026-10-31")?.soon).toBe(false);
+    expect(dueInfo("2026-10-31", "2026-10-31")?.soon).toBe(true);
+    expect(dueInfo("2026-10-30", "2026-10-31")).toMatchObject({ past: true, soon: false });
+  });
+  it("近い順：自分の依頼 → 知り合い → 知り合いの知り合い → 道なし。同じ近さは元の並び", () => {
+    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d", contact: "c" }, "my-1");
+    const sorted = sortByCloseness(wantPosts([mine]));
+    expect(sorted[0].id).toBe("my-1");
+    const rank = (authorId: string) => (authorId === ME_ID ? 0 : routeTo(authorId).length || 3);
+    const ranks = sorted.map((p) => rank(p.authorId));
+    expect(ranks).toEqual([...ranks].sort((a, b) => a - b));
+  });
+  it("案件で「この人を紹介する」と出せる知り合いは、同じ業種の知り合い。いなければ null", () => {
+    const p1 = wantPosts().find((p) => p.id === "p1")!;
+    const who = suggestIntroducee(p1);
+    expect(who).not.toBeNull();
+    expect(relationTo(who!.id).kind).toBe("direct");
+    expect(who!.id).not.toBe(p1.authorId);
+    expect(suggestIntroducee({ ...p1, industry: "その他" })).toBeNull();
+  });
+  it("返事の言葉（10-31）", () => {
+    expect(ANSWER_LABEL).toEqual({ know: "知り合いを紹介する", can: "うちで受けたい" });
   });
 });
