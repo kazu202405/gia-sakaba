@@ -136,6 +136,31 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 
 /* 絞り込み・選ぶ札：枠だけの丸い札。選んでいるものは藍の面＋白字 */
 .sn-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }
+/* 検索はエリア → 業種 → 業種内の条件。見本の色・書体をそのまま使う。 */
+.sn-filters { margin-top: 1.5rem; }
+.sn-filter-group { border: 0; padding: 0; margin: 0 0 1.75rem; min-width: 0; }
+.sn-filter-group > legend { font-size: 1rem; font-weight: 700; width: 100%; }
+.sn-filter-group small, .sn-filter-sub h3 small { display: block; font-size: 0.75rem; font-weight: 400; color: var(--sn-muted); }
+.sn-filter-help { font-size: 0.75rem; color: var(--sn-muted); margin: 0.75rem 0; line-height: 1.7; }
+.sn-filter-region { border-bottom: 1px solid var(--sn-line); }
+.sn-filter-region summary { cursor: pointer; min-height: 2.75rem; padding: 0.625rem 0; font-weight: 600; font-size: 0.875rem; }
+.sn-filter-region summary span { float: right; font-size: 0.6875rem; font-weight: 400; color: var(--sn-muted); padding-top: 0.125rem; }
+.sn-filter-region[open] { padding-bottom: 0.5rem; }
+.sn-filter-check { display: flex; align-items: center; gap: 0.5rem; min-height: 2.75rem; font-size: 0.8125rem; cursor: pointer; }
+.sn-filter-check input { flex: 0 0 auto; width: 1rem; height: 1rem; accent-color: var(--sn-accent); }
+.sn-prefectures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 0.5rem; }
+.sn-filter-sub { margin-top: 1rem; padding: 0.875rem; background: var(--sn-tint); border-radius: var(--sn-radius-s); }
+.sn-filter-sub h3 { font-size: 0.875rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
+.sn-filter-sub h3:first-child { margin-top: 0; }
+.sn-trade-search input { width: 100%; min-height: 2.75rem; padding: 0.5rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); background: var(--sn-paper); font-size: 0.8125rem; }
+.sn-trades { max-height: 17rem; overflow-y: auto; overscroll-behavior: contain; margin-top: 0.5rem; }
+.sn-permit { margin: 1rem 0 0; padding: 0.75rem 0 0; border: 0; border-top: 1px solid var(--sn-line); }
+.sn-permit legend { font-weight: 700; font-size: 0.8125rem; }
+.sn-active-filters { padding: 1rem 1.125rem; background: var(--sn-tint); border-radius: var(--sn-radius-s); margin-bottom: 1rem; }
+.sn-filter-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.75rem; }
+.sn-filter-heading button { min-height: 2.75rem; color: var(--sn-accent); text-decoration: underline; cursor: pointer; }
+.sn-page--filters > .sn-page-side { position: static; }
+.sn-filters :is(input, button, summary):focus-visible, .sn-active-filters button:focus-visible { outline: 2px solid var(--sn-accent); outline-offset: 3px; }
 .sn-chip { font-size: 0.8125rem; font-weight: 500; padding: 0 0.875rem; min-height: 2.25rem; display: inline-flex; align-items: center; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-pill); background: var(--sn-paper); color: var(--sn-muted); cursor: pointer; }
 .sn-chip[aria-pressed="true"] { background: var(--sn-accent); border-color: var(--sn-accent); color: var(--sn-accent-ink); font-weight: 700; }
 @media (hover: hover) { .sn-chip:hover { color: var(--sn-ink); } .sn-chip[aria-pressed="true"]:hover { color: var(--sn-accent-ink); } }

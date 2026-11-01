@@ -35,6 +35,7 @@ import {
 } from "@/lib/guild/look/sns-mock";
 import { Avatar, CompanyRow, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
 import { SnLink, useSnState } from "./store";
+import { SearchFilters, ActiveSearchFilters } from "./search-filters";
 
 // ---------- ホーム ----------
 
@@ -176,10 +177,6 @@ function RecentFaces() {
 
 // ---------- 探す ----------
 
-function toggle<T>(list: readonly T[], v: T): T[] {
-  return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
-}
-
 export function SearchScreen() {
   const params = useSearchParams();
   const [tab, setTab] = useState<"people" | "companies">("people");
@@ -209,29 +206,11 @@ export function SearchScreen() {
               <input type="search" enterKeyHint="search" value={filter.query} onChange={(e) => set({ query: e.target.value })} placeholder="人・会社・得意なことで探す" />
             </label>
           </form>
-          <div className="sn-chips" role="group" aria-label="地域">
-            {REGION_NAMES.map((r) => (
-              <button key={r} type="button" className="sn-chip" aria-pressed={filter.regions.includes(r)} onClick={() => set({ regions: toggle(filter.regions, r) })}>
-                {r}
-              </button>
-            ))}
-          </div>
-          <div className="sn-chips" role="group" aria-label="業種と条件">
-            {INDUSTRIES.map((i) => (
-              <button key={i} type="button" className="sn-chip" aria-pressed={filter.industries.includes(i)} onClick={() => set({ industries: toggle(filter.industries, i) })}>
-                {i}
-              </button>
-            ))}
-            <button type="button" className="sn-chip" aria-pressed={filter.licensedOnly} onClick={() => set({ licensedOnly: !filter.licensedOnly })}>
-              許可・登録が確認済み
-            </button>
-            <button type="button" className="sn-chip" aria-pressed={filter.introducibleOnly} onClick={() => set({ introducibleOnly: !filter.introducibleOnly })}>
-              紹介できる人だけ
-            </button>
-          </div>
+          <SearchFilters filter={filter} onChange={set} />
         </div>
       </aside>
       <div className="sn-page-main">
+        <ActiveSearchFilters filter={filter} onChange={set} />
         <div className="sn-tabs" role="tablist">
           <button type="button" role="tab" aria-selected={tab === "people"} onClick={() => setTab("people")}>
             人 {people.length}
@@ -268,7 +247,7 @@ export function SearchScreen() {
 function NoHit() {
   return (
     <p className="sn-empty">
-      条件に合う人がいません。
+      条件に合う人・会社が見つかりませんでした。
       <br />
       地域や業種をひとつ外してみてください
     </p>

@@ -1,3 +1,5 @@
+import { matchesEstate, type EstateBusiness, type EstateTransaction, type EstateProperty, matchesConstruction, type ConstructionWork, type ConstructionTrade, type PermitFilter } from "./sns-construction";
+
 // 建設・不動産の酒場の作り直し（人脈ネットワークSNS）の見本（DBなし）の仮データと、つながりの計算。
 // 仕様：contexts/projects/gia/sakaba_kensetsu_sns_spec_v0.1.md。本物の /guild/<店> の画面・DBとは関係しない。
 // 画面はここの値と関数だけを読む（同じ計算を画面ごとに書かない）。
@@ -60,6 +62,8 @@ export type Company = {
   areas: readonly string[];
   specialties: readonly string[];
   licenses: readonly License[];
+  construction?: readonly ConstructionWork[];
+  estate?: EstateBusiness;
   about: string;
   offer: readonly string[];
   want: readonly string[];
@@ -91,6 +95,7 @@ export const ME_ID = "me";
 
 export const COMPANIES: readonly Company[] = [
   {
+    construction: [{ trade: "電気", permit: "special" }],
     id: "yamamoto-densetsu", name: "株式会社山本電設", mark: "山", prefecture: "東京都", industries: ["建設"], business: "電気工事業",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["受変電設備", "LED改修"],
     licenses: [{ name: "電気工事業（特定）", number: "東京都知事 第12345号", verified: true }],
@@ -98,6 +103,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["受変電設備の更新工事", "LED改修の見積り"], want: ["九州の電気工事会社", "工場の設備担当の方"],
   },
   {
+    construction: [{ trade: "管", permit: "general" }, { trade: "電気", permit: "none" }],
     id: "minato-setsubi", name: "有限会社ミナト設備", mark: "ミ", prefecture: "神奈川県", industries: ["建設"], business: "管工事・電気工事",
     areas: ["神奈川県", "東京都"], specialties: ["空調", "店舗の設備", "外壁改修"],
     licenses: [{ name: "管工事業（一般）", number: "神奈川県知事 第08812号", verified: false }],
@@ -105,6 +111,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["店舗の空調・電気の工事", "外壁の改修"], want: ["横浜の不動産会社"],
   },
   {
+    construction: [{ trade: "電気", permit: "general" }],
     id: "hokushin", name: "北辰エンジニアリング", mark: "北", prefecture: "埼玉県", industries: ["建設"], business: "電気工事業",
     areas: ["埼玉県", "群馬県", "栃木県"], specialties: ["太陽光", "蓄電池"],
     licenses: [{ name: "電気工事業（一般）", number: "埼玉県知事 第20417号", verified: true }],
@@ -112,6 +119,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["太陽光の設置・保守"], want: ["工場の屋根を持つオーナー"],
   },
   {
+    construction: [{ trade: "建築一式", permit: "general" }, { trade: "大工", permit: "unknown" }, { trade: "内装仕上", permit: "none" }],
     id: "sato-komuten", name: "株式会社佐藤工務店", mark: "佐", prefecture: "大阪府", industries: ["建設"], business: "工務店",
     areas: ["大阪府", "京都府", "兵庫県"], specialties: ["木造の新築", "リフォーム"],
     licenses: [{ name: "建築工事業（一般）", number: "大阪府知事 第31560号", verified: true }],
@@ -119,6 +127,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["木造住宅の新築・リフォーム"], want: ["関東の協力会社"],
   },
   {
+    estate: { transactions: ["売買", "賃貸", "管理"], properties: ["一棟アパート・マンション", "店舗・テナント", "飲食店舗"] },
     id: "nakamura-fudosan", name: "中村不動産", mark: "中", prefecture: "神奈川県", industries: ["不動産"], business: "売買仲介・賃貸管理",
     areas: ["神奈川県", "東京都"], specialties: ["一棟アパート", "収益物件"],
     licenses: [{ name: "宅地建物取引業", number: "神奈川県知事（3）第27731号", verified: true }],
@@ -126,6 +135,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["収益物件の紹介", "賃貸管理"], want: ["外壁塗装の会社", "不動産投資家"],
   },
   {
+    estate: { transactions: ["売買", "買取再販"], properties: ["土地", "店舗・テナント", "事務所", "倉庫・工場"] },
     id: "hayashi-estate", name: "林エステート", mark: "林", prefecture: "大阪府", industries: ["不動産"], business: "売買仲介・買取再販",
     areas: ["大阪府", "兵庫県"], specialties: ["事業用地", "買取再販"],
     licenses: [{ name: "宅地建物取引業", number: "大阪府知事（2）第58203号", verified: false }],
@@ -140,6 +150,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["リノベの設計", "店舗の設計"], want: ["九州の工務店"],
   },
   {
+    estate: { transactions: ["売買"], properties: ["土地", "戸建て"] },
     id: "tanaka-realty", name: "田中リアルティ", mark: "田", prefecture: "福岡県", industries: ["不動産"], business: "売買仲介",
     areas: ["福岡県", "長崎県"], specialties: ["土地", "戸建て"],
     licenses: [{ name: "宅地建物取引業", number: "福岡県知事（1）第19045号", verified: true }],
@@ -350,16 +361,31 @@ export type SearchFilter = {
   query: string;
   regions: readonly string[];
   industries: readonly Industry[];
+  prefectures?: readonly string[];
+  areaMode?: "service" | "location";
+  estateTransactions?: readonly EstateTransaction[];
+  estateProperties?: readonly EstateProperty[];
+  constructionTrades?: readonly ConstructionTrade[];
+  constructionPermit?: PermitFilter;
   licensedOnly: boolean;
   introducibleOnly: boolean;
 };
 
 export const EMPTY_FILTER: SearchFilter = { query: "", regions: [], industries: [], licensedOnly: false, introducibleOnly: false };
 
-function inRegions(areas: readonly string[], regions: readonly string[]): boolean {
-  if (regions.length === 0) return true;
-  const prefs = regions.flatMap((r) => REGIONS[r] ?? []);
-  return areas.some((a) => prefs.includes(a));
+/** 地方と都道府県を合わせてOR検索。所在地と対応エリアを切り替える。 */
+function matchesCompanyFilters(c: Company, filter: SearchFilter): boolean {
+  const prefs = [...filter.regions.flatMap((r) => REGIONS[r] ?? []), ...(filter.prefectures ?? [])];
+  const areas = filter.areaMode === "location" ? [c.prefecture] : c.areas;
+  if (prefs.length && !areas.some((a) => prefs.includes(a))) return false;
+  if (filter.industries.length && !filter.industries.some((industry) => {
+    if (!c.industries.includes(industry)) return false;
+    if (industry === "建設") return matchesConstruction(c.construction ?? [], filter.constructionTrades ?? [], filter.constructionPermit ?? "any");
+    if (industry === "不動産") return matchesEstate(c.estate, filter.estateTransactions ?? [], filter.estateProperties ?? []);
+    return true;
+  })) return false;
+  if (filter.licensedOnly && !c.licenses.some((l) => l.verified)) return false;
+  return true;
 }
 
 /** 対応エリアが少しでもかかる地域の名前（「関東」で探せるように） */
@@ -379,9 +405,7 @@ const RELATION_ORDER: Record<Relation["kind"], number> = { self: 3, direct: 0, v
 /** 会社を探す。並びは「紹介できる順」（知り合い → 知り合いの知り合い → それ以外） */
 export function searchCompanies(filter: SearchFilter, meId: string = ME_ID): Company[] {
   return COMPANIES.filter((c) => {
-    if (!inRegions(c.areas, filter.regions)) return false;
-    if (filter.industries.length > 0 && !c.industries.some((i) => filter.industries.includes(i))) return false;
-    if (filter.licensedOnly && !c.licenses.some((l) => l.verified)) return false;
+    if (!matchesCompanyFilters(c, filter)) return false;
     const rel = relationToCompany(c.id, meId).relation;
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
     return matchesQuery([c.name, c.business, c.prefecture, ...c.specialties, ...c.offer, ...c.areas, ...regionsTouching(c.areas)], filter.query);
@@ -394,9 +418,7 @@ export function searchPeople(filter: SearchFilter, meId: string = ME_ID): Person
     if (p.id === meId) return false;
     const c = companyOf(p);
     if (!c) return false;
-    if (!inRegions(c.areas, filter.regions)) return false;
-    if (filter.industries.length > 0 && !c.industries.some((i) => filter.industries.includes(i))) return false;
-    if (filter.licensedOnly && !c.licenses.some((l) => l.verified)) return false;
+    if (!matchesCompanyFilters(c, filter)) return false;
     const rel = relationTo(p.id, meId);
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
     return matchesQuery([p.name, p.kana, p.say, p.now, ...p.offer, c.name, c.business, ...c.specialties, ...c.areas, ...regionsTouching(c.areas)], filter.query);
