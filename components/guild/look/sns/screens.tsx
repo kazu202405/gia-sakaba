@@ -5,7 +5,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import {
   INCOMING_INTRO_REQUESTS,
   INDUSTRIES,
@@ -17,7 +17,6 @@ import {
   filterByRegion,
   findCompany,
   findPerson,
-  friendRegions,
   peopleOf,
   regionCounts,
   relationTo,
@@ -31,7 +30,6 @@ import {
   type Person,
   type Relation,
   type SearchFilter,
-  type WantPost,
 } from "@/lib/guild/look/sns-mock";
 import { Avatar, CompanyRow, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
 import { SnLink, useSnState } from "./store";
@@ -39,11 +37,12 @@ import { SearchFilters, ActiveSearchFilters } from "./search-filters";
 
 // ---------- ホーム ----------
 
-/** ホーム：頭に「人・会社を探す」欄 → 地域のチップ → 届いた紹介のおねがい → まわりの「探しています」 */
+/** ホーム：検索 → 届いた紹介 → 探しています。地域は一覧の見出しで切り替える。 */
 export function HomeScreen() {
   const { myPosts } = useSnState();
   const [region, setRegion] = useState<string | null>(null);
   const all = wantPosts(myPosts);
+  const counts = regionCounts(all);
   const posts = sortByCloseness(filterByRegion(all, region));
   return (
     <div className="sn-page">
@@ -54,17 +53,25 @@ export function HomeScreen() {
             人・会社を探す（業種・地域・名前）
           </SnLink>
         </div>
-        <RegionChips posts={all} value={region} onChange={setRegion} />
         <IncomingRequests />
         <section>
           <div className="sn-sec">
             <div className="sn-sec-h">
-              <h2>{region ? `${region}の、探しています` : "探しています"}</h2>
-              <span>近い順</span>
+              <h2>探しています</h2>
+              <div className="sn-feed-tools">
+                <label className="sn-feed-area">
+                  <MapPin size={14} aria-hidden /><span className="sr-only">案件の地域</span>
+                  <select value={region ?? ""} onChange={(e) => setRegion(e.target.value || null)}>
+                    <option value="">全国</option>
+                    {REGION_NAMES.map((r) => <option key={r} value={r}>{r}（{counts[r]}）</option>)}
+                  </select>
+                </label>
+                <span>近い順</span>
+              </div>
             </div>
           </div>
           {posts.length === 0 ? (
-            <p className="sn-empty">{region}の依頼は、まだありません。<br />もう一度{region}を押すと、全部が出ます</p>
+            <p className="sn-empty">{region}の依頼は、まだありません。<br />地域を「全国」に戻すと、すべての依頼を見られます</p>
           ) : (
             <div>
               {posts.map((post) => (
@@ -78,37 +85,6 @@ export function HomeScreen() {
         <NetworkStats />
         <RecentFaces />
       </aside>
-    </div>
-  );
-}
-
-/** どこで探されているか：地域のチップ（地図の代わり）。押すと下の一覧がその地域だけに、もう一度押すと全部 */
-function RegionChips({ posts, value, onChange }: { posts: readonly WantPost[]; value: string | null; onChange: (r: string | null) => void }) {
-  const counts = regionCounts(posts);
-  const friends = friendRegions();
-  return (
-    <div className="sn-region">
-      <div className="sn-region-head">
-        <b>どこで探されているか</b>
-        <span><i className="sn-dot" aria-hidden />知り合いがいる</span>
-      </div>
-      <div className="sn-region-chips" role="group" aria-label="地域">
-        {REGION_NAMES.map((r) => (
-          <button
-            key={r}
-            type="button"
-            className="sn-rchip"
-            aria-pressed={value === r}
-            data-has={counts[r] > 0}
-            data-friend={friends.has(r)}
-            aria-label={`${r} 依頼${counts[r]}件${friends.has(r) ? "・知り合いがいます" : ""}`}
-            onClick={() => onChange(value === r ? null : r)}
-          >
-            <b>{counts[r]}</b>
-            {r}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
@@ -196,8 +172,8 @@ export function SearchScreen() {
   const set = (patch: Partial<SearchFilter>) => setFilter((f) => ({ ...f, ...patch }));
 
   return (
-    <div className="sn-page sn-page--filters">
-      <aside className="sn-page-side">
+    <div className="sn-page sn-page--search">
+      <div className="sn-search-controls">
         <div className="sn-band sn-sec">
           <form role="search" onSubmit={(e) => e.preventDefault()}>
             <label className="sn-search">
@@ -206,9 +182,9 @@ export function SearchScreen() {
               <input type="search" enterKeyHint="search" value={filter.query} onChange={(e) => set({ query: e.target.value })} placeholder="人・会社・得意なことで探す" />
             </label>
           </form>
-          <SearchFilters filter={filter} onChange={set} />
+          <SearchFilters filter={filter} onChange={set} resultType={tab} />
         </div>
-      </aside>
+      </div>
       <div className="sn-page-main">
         <ActiveSearchFilters filter={filter} onChange={set} />
         <div className="sn-tabs" role="tablist">

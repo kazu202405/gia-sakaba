@@ -69,7 +69,6 @@
   .sn-sticky { position: static; background: none; border-top: none; }
 
   .sn-faces { flex-wrap: wrap; overflow: visible; }
-  .sn-region-chips { flex-wrap: wrap; overflow: visible; }
 
   /* 窓は画面の中央に */
   .sn-modal-back { align-items: center; }
