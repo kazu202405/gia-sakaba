@@ -48,7 +48,7 @@
   .sn-page > .sn-page-side { position: sticky; top: 4.875rem; border-left: 1px solid var(--sn-line); padding-left: 1.5rem; }
 
   .sn-page--filters { grid-template-columns: 17rem minmax(0, 1fr); }
-  .sn-page--filters > .sn-page-side { border-left: none; padding-left: 0; border-right: 1px solid var(--sn-line); padding-right: 1.5rem; }
+  .sn-page--filters > .sn-page-side { position: static; border-left: none; padding-left: 0; border-right: 1px solid var(--sn-line); padding-right: 1.5rem; }
   .sn-page--filters > .sn-page-side .sn-band { border-bottom: none; padding-left: 0; padding-right: 0; }
 
   .sn-page--detail {
