@@ -7,9 +7,9 @@ import { ProfilePreviewScreen } from "@/components/guild/look/sns/profile-previe
 import { MeScreen } from "@/components/guild/look/sns/me-screens";
 
 vi.mock("@/components/guild/look/sns/store", async () => {
-  const { findPerson, ME_ID } = await import("./sns-mock");
+  const { findCompany, findPerson, ME_COMPANY_ID, ME_ID } = await import("./sns-mock");
   return {
-    useSnState: () => ({ me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, sentIntros: {}, myPosts: [], myAnswers: [] }),
+    useSnState: () => ({ me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, myCompany: findCompany(ME_COMPANY_ID)!, sentIntros: {}, myPosts: [], myAnswers: [] }),
     SnLink: ({ to, children, ...props }: { to: string; children: ReactNode }) => createElement("a", { href: to, ...props }, children),
   };
 });
@@ -17,7 +17,7 @@ vi.mock("@/components/guild/look/sns/store", async () => {
 describe("マイページ", () => {
   const html = renderToStaticMarkup(createElement(MeScreen));
   it("プロフィール → 出した依頼 → 知り合い → 招待 → 設定 の順を保つ", () => {
-    const order = [">これまで</p>", "<h2>出した依頼</h2>", "<h2>知り合い</h2>", "知り合いを招待する</h2>", "<h2>設定</h2>"].map((s) => html.indexOf(s));
+    const order = [">これまで</p>", "<h2>会社情報</h2>", "<h2>出した依頼</h2>", "<h2>知り合い</h2>", "知り合いを招待する</h2>", "<h2>設定</h2>"].map((s) => html.indexOf(s));
     expect(order.every((p) => p >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((a, b) => a - b));
   });
@@ -54,6 +54,18 @@ describe("他の人から見たプロフィール", () => {
     expect(html).not.toContain("連絡先を見る");
     expect(html).not.toContain("プロフィールを編集");
     expect(html).not.toContain("出した依頼");
+  });
+  it("「全員に見せる」にした本人の連絡先は、未接続の人にも見える", () => {
+    const open: Person = { ...me, contactReveal: { phone: "all", email: "friends" } };
+    const html = renderToStaticMarkup(createElement(PersonView, { person: open, relation: { kind: "none" }, preview: true }));
+    expect(html).toContain(me.contact.phone);
+    expect(html).not.toContain(me.contact.email);
+  });
+  it("連絡先をすべて「見せない」にすると、知り合いにも入口を出さない", () => {
+    const closed: Person = { ...me, contactReveal: { phone: "hidden", email: "hidden" } };
+    const html = renderToStaticMarkup(createElement(PersonView, { person: closed, relation: { kind: "direct" }, preview: true }));
+    expect(html).not.toContain("連絡先を見る");
+    expect(html).toContain("連絡先は公開されていません");
   });
   it("知り合いには従来どおり連絡先の入口を表示する", () => {
     const html = renderToStaticMarkup(createElement(PersonView, { person: me, relation: { kind: "direct" }, preview: true }));

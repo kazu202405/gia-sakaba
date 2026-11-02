@@ -9,12 +9,15 @@ import { createContext, useCallback, useContext, useMemo, useState, useSyncExter
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
   BUSINESS_CARDS,
+  COMPANIES,
   DEFAULT_PALETTE,
+  ME_COMPANY_ID,
   ME_ID,
   PALETTES,
   PEOPLE,
   SNS_BASE,
   type BusinessCard,
+  type Company,
   type IntroReply,
   type PaletteKey,
   type Person,
@@ -42,7 +45,10 @@ type Ctx = {
   addAnswer: (answer: WantAnswer) => void;
   /** 自分のプロフィール（編集すると見る画面に反映される） */
   me: Person;
-  saveMe: (patch: Partial<Pick<Person, "past" | "now" | "future" | "talk" | "offer" | "want" | "openToIntro">>) => void;
+  saveMe: (patch: Partial<Pick<Person, "name" | "kana" | "title" | "prefecture" | "say" | "contact" | "contactReveal" | "past" | "now" | "future" | "talk" | "offer" | "want" | "openToIntro">>) => void;
+  /** 自分の会社（編集すると、マイページ・会社のページ・探すに反映される） */
+  myCompany: Company;
+  saveMyCompany: (company: Company) => void;
   /** 管理者：名刺の仮登録と、「別の人」と選んだ組 */
   cards: readonly BusinessCard[];
   updateCards: (fn: (prev: readonly BusinessCard[]) => readonly BusinessCard[]) => void;
@@ -106,6 +112,7 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
   const [myPosts, setMyPosts] = useState<readonly WantPost[]>([]);
   const [myAnswers, setMyAnswers] = useState<readonly WantAnswer[]>([]);
   const [me, setMe] = useState<Person>(() => PEOPLE.find((p) => p.id === ME_ID) as Person);
+  const [myCompany, setMyCompany] = useState<Company>(() => COMPANIES.find((c) => c.id === ME_COMPANY_ID) as Company);
   const [cards, setCards] = useState<readonly BusinessCard[]>(BUSINESS_CARDS);
   const [distinctPairs, setDistinctPairs] = useState<ReadonlySet<string>>(new Set());
 
@@ -128,11 +135,13 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
     addAnswer: (answer) => setMyAnswers((prev) => [...prev, answer]),
     me,
     saveMe: (patch) => setMe((prev) => ({ ...prev, ...patch })),
+    myCompany,
+    saveMyCompany: setMyCompany,
     cards,
     updateCards: (fn) => setCards((prev) => fn(prev)),
     distinctPairs,
     markDistinct: (key) => setDistinctPairs((prev) => new Set(prev).add(key)),
-  }), [palette, sentIntros, reactions, introReplies, myPosts, myAnswers, me, cards, distinctPairs]);
+  }), [palette, sentIntros, reactions, introReplies, myPosts, myAnswers, me, myCompany, cards, distinctPairs]);
 
   return <SnContext.Provider value={value}>{children}</SnContext.Provider>;
 }

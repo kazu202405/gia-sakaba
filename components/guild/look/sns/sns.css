@@ -449,6 +449,11 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 
 .sn-me-sec { margin-top: 2rem; padding: 0 var(--sn-me-pad); scroll-margin-top: 4.25rem; }
 .sn-me-sec > .sn-sec-h { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); margin-bottom: 0.25rem; }
+.sn-me-sec .sn-sec-h a { display: inline-flex; align-items: center; min-height: 2.75rem; margin: -0.75rem 0; font-size: 0.8125rem; font-weight: 700; color: var(--sn-accent); }
+.sn-me-sec .sn-dl { margin-top: 0; }
+.sn-me-sec .sn-dl > div { padding-left: 0; padding-right: 0; }
+.sn-me-sec .sn-dl dd { overflow-wrap: anywhere; }
+.sn-me-note { padding-top: 0.625rem; font-size: 0.75rem; }
 .sn-me-sec .sn-tabs { background: transparent; }
 .sn-me-tab-note { padding-top: 0.75rem; font-size: 0.75rem; }
 .sn-me-none { display: flex; flex-direction: column; align-items: flex-start; gap: 0.625rem; padding: 0.5rem 0 0.25rem; font-size: 0.875rem; color: var(--sn-muted); }
@@ -480,10 +485,25 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 .sn-fields { padding: 0 1.125rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
 .sn-field { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; border: none; min-width: 0; font-size: 0.9375rem; }
 .sn-field > span, .sn-field > legend { font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); padding: 0; }
-.sn-field input[type="text"], .sn-field input[type="date"], .sn-field textarea { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); font: inherit; color: var(--sn-ink); background: var(--sn-paper); }
+.sn-field :is(input[type="text"], input[type="tel"], input[type="email"], input[type="url"], input[type="date"], select), .sn-field textarea { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); font: inherit; color: var(--sn-ink); background: var(--sn-paper); }
 .sn-field textarea { resize: vertical; }
 .sn-field [aria-invalid="true"] { border-color: var(--sn-danger); }
 .sn-field .sn-chips { margin-top: 0; }
+/* 連絡先の見せる相手：入力欄のすぐ下に小さく。本人向けの札は値の横 */
+.sn-segment--reveal { margin-top: -0.5rem; }
+.sn-segment--reveal > button { min-height: 2.5rem; padding: 0 0.25rem; font-size: 0.75rem; cursor: pointer; }
+.sn-reveal { display: inline-block; margin-left: 0.5rem; padding: 0 0.4375rem; border-radius: var(--sn-radius-pill); background: var(--sn-tint); font-size: 0.6875rem; font-weight: 500; color: var(--sn-muted); white-space: nowrap; }
+.sn-open-contact { margin-top: 0.75rem; }
+.sn-field-note { font-size: 0.75rem; color: var(--sn-muted); line-height: 1.5; }
+/* 長い入力の画面のまとまり：線で区切る */
+.sn-form-sec { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.sn-form-sec + .sn-form-sec { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); }
+.sn-form-sec h3 { font-size: 1rem; font-weight: 900; }
+.sn-form-sec .sn-area-regions { margin: 0; }
+.sn-form-sec .sn-area-summary { padding-top: 0; }
+.sn-work-row { display: grid; grid-template-columns: minmax(0, 1fr) 7.5rem; align-items: center; gap: 0.75rem; font-size: 0.875rem; color: var(--sn-ink); }
+.sn-field .sn-work-row > span { font-size: 0.875rem; font-weight: 500; color: var(--sn-ink); }
+.sn-sticky > .sn-error { margin: 0 0 0.25rem; }
 .sn-check { display: flex; align-items: center; gap: 0.625rem; min-height: 2.75rem; cursor: pointer; }
 .sn-check input { width: 1.25rem; height: 1.25rem; accent-color: var(--sn-accent); }
 

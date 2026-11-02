@@ -9,6 +9,7 @@ import { uiToast } from "@/lib/ui-dialog";
 import {
   ME_ID,
   NETWORK_SUMMARY,
+  PREFECTURES,
   companyOf,
   directPeople,
   inviteUrl,
@@ -20,7 +21,8 @@ import {
   type Person,
 } from "@/lib/guild/look/sns-mock";
 import { CopyUrlButton, SEND_MS } from "./flow";
-import { Avatar, RelationLine, WantRow } from "./parts";
+import { Avatar, CompanyFacts, RelationLine, WantRow } from "./parts";
+import { RevealPicker } from "./company-edit";
 import { PersonView } from "./screens";
 import { SnLink, useSn, useSnState } from "./store";
 
@@ -30,7 +32,7 @@ type ContactTab = "direct" | "second";
 const CONTACTS_PREVIEW = 3;
 
 export function MeScreen() {
-  const { me, myPosts } = useSnState();
+  const { me, myCompany, myPosts } = useSnState();
   const [contactTab, setContactTab] = useState<ContactTab>("direct");
   const mine = wantPosts(myPosts).filter((p) => p.authorId === ME_ID);
   const url = inviteUrl(ME_ID);
@@ -53,6 +55,12 @@ export function MeScreen() {
         </>
       }
     >
+      <section id="sn-me-company" className="sn-me-sec">
+        <div className="sn-sec-h"><h2>会社情報</h2><SnLink to="/me/company">編集する</SnLink></div>
+        <CompanyFacts company={myCompany} relation={{ kind: "self" }} showReveal />
+        <p className="sn-meta sn-me-note">連絡先の見せる相手は「編集する」で項目ごとに選べます。業種から下は「探す」の条件になります。</p>
+      </section>
+
       <section id="sn-me-requests" className="sn-me-sec">
         <div className="sn-sec-h"><h2>出した依頼</h2><span>{mine.length}件</span></div>
         {mine.length === 0 ? (
@@ -148,6 +156,15 @@ function ContactRow({ person, far }: { person: Person; far: boolean }) {
 export function MeEditScreen() {
   const { me, saveMe } = useSnState();
   const { go } = useSn();
+  const [name, setName] = useState(me.name);
+  const [kana, setKana] = useState(me.kana);
+  const [title, setTitle] = useState(me.title);
+  const [prefecture, setPrefecture] = useState(me.prefecture);
+  const [say, setSay] = useState(me.say);
+  const [phone, setPhone] = useState(me.contact.phone);
+  const [email, setEmail] = useState(me.contact.email);
+  const [contactReveal, setContactReveal] = useState(me.contactReveal);
+  const [nameError, setNameError] = useState("");
   const [past, setPast] = useState(me.past);
   const [now, setNow] = useState(me.now);
   const [future, setFuture] = useState(me.future);
@@ -161,11 +178,16 @@ export function MeEditScreen() {
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (lock.current) return;
+    if (name.trim() === "") {
+      setNameError("名前を入れてください");
+      return;
+    }
+    setNameError("");
     lock.current = true;
     setBusy(true);
     window.setTimeout(() => {
       // 見る画面に反映される保存とトーストを同じ瞬間に。錠は外さない（画面が変わるまで押せない）
-      saveMe({ past: past.trim(), now: now.trim(), future: future.trim(), offer: splitLines(offer), want: splitLines(want), talk: splitLines(talk), openToIntro });
+      saveMe({ name: name.trim(), kana: kana.trim(), title: title.trim(), prefecture, say: say.trim(), contact: { phone: phone.trim(), email: email.trim() }, contactReveal, past: past.trim(), now: now.trim(), future: future.trim(), offer: splitLines(offer), want: splitLines(want), talk: splitLines(talk), openToIntro });
       uiToast("プロフィールを保存しました");
       go("/me");
     }, SEND_MS);
@@ -176,7 +198,40 @@ export function MeEditScreen() {
       <form onSubmit={save}>
         <div className="sn-sec"><div className="sn-sec-h"><h2>プロフィールを編集</h2></div></div>
         <div className="sn-fields">
-          <p className="sn-meta">すべて書かなくても大丈夫です。書けるところだけで、人柄が伝わります。</p>
+          <label className="sn-field">
+            <span>名前（必須）</span>
+            <input type="text" value={name} aria-invalid={nameError !== ""} onChange={(e) => setName(e.target.value)} />
+            {nameError && <small className="sn-error" role="alert">{nameError}</small>}
+          </label>
+          <label className="sn-field">
+            <span>ふりがな</span>
+            <input type="text" value={kana} onChange={(e) => setKana(e.target.value)} />
+          </label>
+          <label className="sn-field">
+            <span>部署・役職</span>
+            <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </label>
+          <label className="sn-field">
+            <span>活動する都道府県</span>
+            <select value={prefecture} onChange={(e) => setPrefecture(e.target.value)}>
+              {PREFECTURES.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </label>
+          <label className="sn-field">
+            <span>ひとこと</span>
+            <input type="text" maxLength={40} value={say} placeholder="例：関西の木造なら、まず相談してください" onChange={(e) => setSay(e.target.value)} />
+          </label>
+          <label className="sn-field">
+            <span>電話（本人）</span>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          </label>
+          <RevealPicker label="電話（本人）を見せる相手" value={contactReveal.phone} onChange={(v) => setContactReveal((r) => ({ ...r, phone: v }))} />
+          <label className="sn-field">
+            <span>メール（本人）</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </label>
+          <RevealPicker label="メール（本人）を見せる相手" value={contactReveal.email} onChange={(v) => setContactReveal((r) => ({ ...r, email: v }))} />
+          <p className="sn-meta">会社名・住所・業種などは「<SnLink to="/me/company"><u>会社情報</u></SnLink>」で変えられます。ここから下は、書けるところだけで大丈夫です。</p>
           <label className="sn-field">
             <span>これまで</span>
             <textarea rows={3} maxLength={300} value={past} placeholder="これまでの仕事や経験" onChange={(e) => setPast(e.target.value)} />
