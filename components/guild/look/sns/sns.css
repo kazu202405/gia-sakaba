@@ -359,6 +359,7 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 .sn-industry-section h3 small { margin-left: 0.5rem; color: var(--sn-muted); font-size: 0.6875rem; font-weight: 400; }
 .sn-other-business > span { display: block; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.625rem; }
 .sn-other-business > input { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; font-size: 1rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); background: var(--sn-paper); }
+.sn-work-query { margin-bottom: 1rem; }
 .sn-person-profile summary:focus-visible, .sn-profile-preview-bar :is(a, button):focus-visible { outline: 2px solid var(--sn-accent); outline-offset: 3px; }
 @media (min-width: 640px) {
   .sn-person-profile .sn-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }

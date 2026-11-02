@@ -1,4 +1,4 @@
-import { matchesOtherBusiness, type Profession } from "./sns-expertise";
+import { matchesBusinessKeywords, matchesOtherBusiness, type Profession } from "./sns-expertise";
 import { matchesEstate, type EstateBusiness, type EstateTransaction, type EstateProperty, matchesConstruction, type ConstructionWork, type ConstructionTrade, type PermitFilter } from "./sns-construction";
 
 // 建設・不動産の酒場の作り直し（人脈ネットワークSNS）の見本（DBなし）の仮データと、つながりの計算。
@@ -373,6 +373,7 @@ export type SearchFilter = {
   constructionPermit?: PermitFilter;
   professions?: readonly Profession[];
   otherBusiness?: string;
+  workQueries?: Partial<Record<Industry, string>>;
   licensedOnly: boolean;
   introducibleOnly: boolean;
 };
@@ -386,6 +387,7 @@ function matchesCompanyFilters(c: Company, filter: SearchFilter): boolean {
   if (prefs.length && !areas.some((a) => prefs.includes(a))) return false;
   if (filter.industries.length && !filter.industries.some((industry) => {
     if (!c.industries.includes(industry)) return false;
+    if (!matchesBusinessKeywords([c.business, ...c.specialties, ...c.offer, ...(c.professions ?? []), ...(c.estate?.properties ?? [])], filter.workQueries?.[industry] ?? "")) return false;
     if (industry === "建設") return matchesConstruction(c.construction ?? [], filter.constructionTrades ?? [], filter.constructionPermit ?? "any");
     if (industry === "不動産") return matchesEstate(c.estate, filter.estateTransactions ?? [], filter.estateProperties ?? []);
     if (industry === "士業") return !filter.professions?.length || (c.professions ?? []).some((p) => filter.professions?.includes(p));

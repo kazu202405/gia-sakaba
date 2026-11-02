@@ -1,9 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { CONSTRUCTION_TRADES, matchesConstruction, matchesEstate } from "./sns-construction";
 import { EMPTY_FILTER, REGIONS, searchCompanies, searchPeople } from "./sns-mock";
-import { matchesOtherBusiness, PROFESSIONS } from "./sns-expertise";
+import { matchesBusinessKeywords, matchesOtherBusiness, PROFESSIONS } from "./sns-expertise";
 
 describe("エリア・専門業種の検索", () => {
+  it("管工事の中をエアコンで絞れ、空調という呼び名でも同じ会社を探せる", () => {
+    const filter = { ...EMPTY_FILTER, industries: ["建設"] as const, constructionTrades: ["管"] as const, constructionPermit: "yes" as const };
+    expect(searchCompanies({ ...filter, workQueries: { 建設: "エアコン" } }).map((c) => c.id)).toEqual(["minato-setsubi"]);
+    expect(searchPeople({ ...filter, workQueries: { 建設: "空調 店舗" } }).map((p) => p.id)).toEqual(["minato"]);
+    expect(searchCompanies({ ...filter, workQueries: { 建設: "ガス" } })).toEqual([]);
+    expect(searchCompanies({ ...filter, workQueries: { 建設: "水道" } })).toEqual([]);
+  });
+  it("取引・物件・士業の専門分野と自由入力を掛け合わせる", () => {
+    expect(searchCompanies({ ...EMPTY_FILTER, industries: ["不動産"], estateTransactions: ["売買"], estateProperties: ["土地"], workQueries: { 不動産: "事業用地" } }).map((c) => c.id)).toEqual(["hayashi-estate"]);
+    expect(searchPeople({ ...EMPTY_FILTER, industries: ["士業"], professions: ["行政書士"], workQueries: { 士業: "建設業許可" } }).map((p) => p.id)).toEqual(["mori"]);
+    expect(searchPeople({ ...EMPTY_FILTER, industries: ["士業"], professions: ["司法書士"], workQueries: { 士業: "建設業許可" } })).toEqual([]);
+  });
+  it("各業種の入力は独立し、会社が探している仕事は提供できる仕事として検索しない", () => {
+    const ids = searchCompanies({ ...EMPTY_FILTER, industries: ["建設", "士業"], workQueries: { 建設: "エアコン", 士業: "建設業許可" } }).map((c) => c.id);
+    expect(ids).toEqual(["minato-setsubi", "mori-gyosei"]);
+    expect(searchCompanies({ ...EMPTY_FILTER, industries: ["建設"], workQueries: { 建設: "九州" } })).toEqual([]);
+    expect(searchCompanies({ ...EMPTY_FILTER, workQueries: { 建設: "エアコン" } })).toEqual(searchCompanies(EMPTY_FILTER));
+    expect(searchCompanies({ ...EMPTY_FILTER, industries: ["建設"], workQueries: { 建設: "　 " } })).toEqual(searchCompanies({ ...EMPTY_FILTER, industries: ["建設"] }));
+  });
+  it("表記ゆれと複数語のAND検索を扱う", () => {
+    expect(matchesBusinessKeywords(["店舗の空調", "リノベ"], "エアコン リノベーション")).toBe(true);
+    expect(matchesBusinessKeywords(["社会保険労務士"], "社労士")).toBe(true);
+    expect(matchesBusinessKeywords(["空調"], "エアコン ガス")).toBe(false);
+  });
   it("士業は専門職を複数選択し、人と会社を同じ条件で探せる", () => {
     expect(new Set(PROFESSIONS).size).toBe(PROFESSIONS.length);
     const filter = { ...EMPTY_FILTER, industries: ["士業"] as const, professions: ["行政書士"] as const };
