@@ -65,6 +65,11 @@
   .sn-page--detail .sn-pair { border-top: none; margin: 0; }
   .sn-page--detail .sn-pair > div:first-child { padding-left: 0; }
 
+  /* マイページ：左の名刺と入口は残したまま、右をプロフィール→依頼→知り合い→招待→設定と読み進める */
+  .sn-page--me { --sn-me-pad: 0; grid-template-areas: "side main"; grid-template-rows: auto; }
+  .sn-page--me > .sn-page-side { position: sticky; top: 4.875rem; }
+  .sn-page--me .sn-me-invite { padding: 1.25rem; }
+
   /* 主なボタンは、2段の外でも固定しない */
   .sn-sticky { position: static; background: none; border-top: none; }
 
@@ -78,4 +83,8 @@
 @media (hover: hover) {
   .sn-row:hover, .sn-want-row:hover { background: var(--sn-tint); }
   .sn-nav-in > a:hover { color: var(--sn-accent); }
+  /* マイページの行は左右に余白が無いので、面でなく字の色で知らせる */
+  .sn-me-list .sn-want-row:hover { background: none; }
+  .sn-me-list .sn-want-row:hover .sn-want-w, .sn-me-row:hover b, .sn-me-links a:hover b { color: var(--sn-accent); }
+  .sn-me-stats a:hover b { color: var(--sn-accent); }
 }
