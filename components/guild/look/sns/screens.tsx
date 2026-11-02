@@ -239,17 +239,20 @@ export function PersonScreen({ id }: { id: string }) {
   return <PersonView person={person} relation={relationTo(person.id)} />;
 }
 
-/** 人の詳しいページの中身（自分のページでも使う。自分なら relation は self で、紹介のボタンは出ない） */
-export function PersonView({ person, relation, preview = false }: { person: Person; relation: Relation; preview?: boolean }) {
+/**
+ * 人の詳しいページの中身（マイページでも使う。自分なら relation は self で、紹介のボタンは出ない）。
+ * マイページだけ、名刺の下に heroExtra（編集の入口と数）、プロフィールの下に children（依頼・知り合いなど）を足す。
+ */
+export function PersonView({ person, relation, preview = false, heroExtra, children }: { person: Person; relation: Relation; preview?: boolean; heroExtra?: React.ReactNode; children?: React.ReactNode }) {
   const company = companyOf(person);
   return (
-    <div className="sn-page sn-page--detail sn-person-profile">
+    <div className={children ? "sn-page sn-page--detail sn-page--me sn-person-profile" : "sn-page sn-page--detail sn-person-profile"}>
       <aside className="sn-page-side">
         <div className="sn-hero">
           {/* 名刺と同じ比率の枠：上に会社と役職、まん中に顔とふりがな・名前、下に許可と所在地 */}
           <div className="sn-card sn-person-card">
             <p className="sn-card-top">
-              {company ? <SnLink to={`/companies/${company.id}`}>{company.name}</SnLink> : <span />}
+              {company && <SnLink to={`/companies/${company.id}`}>{company.name}</SnLink>}
               <span>{person.title}</span>
             </p>
             <div className="sn-card-mid">
@@ -261,7 +264,7 @@ export function PersonView({ person, relation, preview = false }: { person: Pers
             </div>
             <div className="sn-card-bottom">
               {company && <LicenseTags licenses={company.licenses} />}
-              {company && <p>{person.prefecture}　対応：{areaText(company.areas)}</p>}
+              <p>{person.prefecture}{company && `　対応：${areaText(company.areas)}`}</p>
             </div>
           </div>
           <div className="sn-hero-say">
@@ -274,6 +277,7 @@ export function PersonView({ person, relation, preview = false }: { person: Pers
               </div>
             )}
           </div>
+          {heroExtra}
         </div>
         {!preview && <RouteLine person={person} relation={relation} />}
       </aside>
@@ -284,6 +288,7 @@ export function PersonView({ person, relation, preview = false }: { person: Pers
           <Story k="これから" v={person.future} />
         </div>
         <OfferWant offer={person.offer} want={person.want} />
+        {children}
       </div>
       {relation.kind !== "self" && relation.kind !== "none" && (
         <div className="sn-sticky">

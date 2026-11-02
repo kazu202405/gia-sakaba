@@ -436,14 +436,46 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 .sn-btn--danger:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); }
 a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 
-.sn-me-bar { padding: 1rem 1.125rem 0; }
-/* マイページの下の、まとまりごとの面 */
-.sn-me-sec { margin: 1.25rem 1.125rem 0; padding: 0.25rem 0 0.75rem; border-radius: var(--sn-radius); background: var(--sn-tint); }
-.sn-me-sec > .sn-sec { padding-top: 0.75rem; }
-.sn-me-sec .sn-list { border-top: none; background: transparent; }
-.sn-me-sec .sn-row, .sn-me-sec .sn-want-row { border-bottom-color: var(--sn-line); }
+/* マイページ：名刺の下に編集の入口と数、プロフィールの下にまとまりを線で区切って並べる。
+   面（色の敷き）は数と招待の2か所だけにして、主役の順がわかるようにする */
+.sn-page--me { --sn-me-pad: 1.125rem; }
+.sn-me-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.75rem, 1fr)); gap: 0.5rem; margin-top: 1rem; }
+.sn-me-actions .sn-btn { padding: 0.5rem; font-size: 0.875rem; }
+.sn-me-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0.75rem; border-radius: var(--sn-radius); background: var(--sn-tint); }
+.sn-me-stats a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 4.25rem; padding: 0.5rem 0.25rem; font-size: 0.75rem; color: var(--sn-muted); line-height: 1.4; border-radius: var(--sn-radius); }
+.sn-me-stats a + a { border-left: 1px solid var(--sn-line); border-radius: 0; }
+.sn-me-stats a:active { background: var(--sn-accent-soft); }
+.sn-me-stats b { font-family: var(--sn-head); font-size: 1.375rem; font-weight: 900; color: var(--sn-ink); line-height: 1.25; font-variant-numeric: tabular-nums; }
+
+.sn-me-sec { margin-top: 2rem; padding: 0 var(--sn-me-pad); scroll-margin-top: 4.25rem; }
+.sn-me-sec > .sn-sec-h { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); margin-bottom: 0.25rem; }
 .sn-me-sec .sn-tabs { background: transparent; }
-.sn-me-sec .sn-empty { padding: 1.25rem; }
+.sn-me-tab-note { padding-top: 0.75rem; font-size: 0.75rem; }
+.sn-me-none { display: flex; flex-direction: column; align-items: flex-start; gap: 0.625rem; padding: 0.5rem 0 0.25rem; font-size: 0.875rem; color: var(--sn-muted); }
+.sn-me-none .sn-btn { color: var(--sn-ink); }
+.sn-me-list .sn-want-row { padding-left: 0; padding-right: 0; }
+.sn-me-list .sn-want-row:first-child { border-top: none; }
+.sn-me-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; min-height: 4.25rem; padding: 0.625rem 0; border-bottom: 1px solid var(--sn-line); }
+.sn-me-row > span:not(.sn-fc) { min-width: 0; }
+.sn-me-row b { display: block; font-family: var(--sn-head); font-size: 1rem; font-weight: 900; line-height: 1.4; }
+.sn-me-row small { display: block; font-size: 0.75rem; color: var(--sn-muted); line-height: 1.5; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sn-me-row .sn-rel { font-size: 0.75rem; margin-top: 0; }
+.sn-me-row > svg, .sn-me-links svg:last-child { width: 1.125rem; height: 1.125rem; color: var(--sn-muted); }
+.sn-me-row:active, .sn-me-links a:active { background: var(--sn-tint); }
+.sn-me-more { width: 100%; min-height: 2.75rem; border: none; background: transparent; font-size: 0.8125rem; font-weight: 700; color: var(--sn-accent); cursor: pointer; }
+
+.sn-me-invite { margin-left: var(--sn-me-pad); margin-right: var(--sn-me-pad); padding: 1.125rem; border-radius: var(--sn-radius); background: var(--sn-accent-soft); }
+.sn-me-invite h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.0625rem; font-weight: 900; margin-bottom: 0.25rem; }
+.sn-me-invite h2 svg { width: 1.25rem; height: 1.25rem; color: var(--sn-accent); }
+.sn-me-invite .sn-meta { color: var(--sn-ink); }
+.sn-me-invite .sn-url { background: var(--sn-paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; word-break: normal; }
+.sn-me-links a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; min-height: 3.5rem; padding: 0.625rem 0; border-bottom: 1px solid var(--sn-line); }
+.sn-me-links a > svg:first-child { width: 1.25rem; height: 1.25rem; color: var(--sn-accent); }
+.sn-me-links b { display: block; font-size: 0.9375rem; font-weight: 700; line-height: 1.5; }
+.sn-me-links small { display: block; font-size: 0.75rem; color: var(--sn-muted); line-height: 1.5; }
+/* 次のまとまりの線と二重にならないよう、一覧の最後の線は引かない */
+.sn-me-list > :last-child, .sn-me-links > :last-child { border-bottom: none; }
+.sn-page--me .sn-page-main { padding-bottom: 1rem; }
 
 .sn-fields { padding: 0 1.125rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
 .sn-field { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; border: none; min-width: 0; font-size: 0.9375rem; }

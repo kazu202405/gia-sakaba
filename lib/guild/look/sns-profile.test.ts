@@ -4,13 +4,37 @@ import { describe, expect, it, vi } from "vitest";
 import { companyOf, findPerson, kindOfPerson, ME_ID, type Person } from "./sns-mock";
 import { PersonView } from "@/components/guild/look/sns/screens";
 import { ProfilePreviewScreen } from "@/components/guild/look/sns/profile-preview";
+import { MeScreen } from "@/components/guild/look/sns/me-screens";
 
 vi.mock("@/components/guild/look/sns/store", async () => {
   const { findPerson, ME_ID } = await import("./sns-mock");
   return {
-    useSnState: () => ({ me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, sentIntros: {} }),
+    useSnState: () => ({ me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, sentIntros: {}, myPosts: [], myAnswers: [] }),
     SnLink: ({ to, children, ...props }: { to: string; children: ReactNode }) => createElement("a", { href: to, ...props }, children),
   };
+});
+
+describe("マイページ", () => {
+  const html = renderToStaticMarkup(createElement(MeScreen));
+  it("プロフィール → 出した依頼 → 知り合い → 招待 → 設定 の順を保つ", () => {
+    const order = [">これまで</p>", "<h2>出した依頼</h2>", "<h2>知り合い</h2>", "知り合いを招待する</h2>", "<h2>設定</h2>"].map((s) => html.indexOf(s));
+    expect(order.every((p) => p >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+  it("編集の入口は名刺の下にあり、紹介の道の説明は1回だけ出す", () => {
+    expect(html.indexOf("sn-person-card")).toBeLessThan(html.indexOf("プロフィールを編集"));
+    expect(html.indexOf("プロフィールを編集")).toBeLessThan(html.indexOf(">これまで</p>"));
+    expect(html.match(/紹介の道は、/g)).toHaveLength(1);
+  });
+  it("数の目次の飛び先が実際にある", () => {
+    const targets = [...html.matchAll(/href="#([^"]+)"/g)].map((m) => m[1]);
+    expect(targets.length).toBeGreaterThan(0);
+    for (const id of targets) expect(html).toContain(`id="${id}"`);
+  });
+  it("知り合いは、はじめ数人だけ出し、残りの人数を押して開ける", () => {
+    expect(html.match(/class="sn-me-row"/g)).toHaveLength(3);
+    expect(html).toMatch(/あと<!-- -->\d+<!-- -->人を見る|あと\d+人を見る/);
+  });
 });
 
 describe("他の人から見たプロフィール", () => {

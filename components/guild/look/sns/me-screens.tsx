@@ -4,100 +4,144 @@
 // プロフィールの編集は /me/edit。
 
 import { useRef, useState } from "react";
-import { Eye } from "lucide-react";
+import { ChevronRight, Eye, Plus, Settings2, ShieldCheck, UserPlus } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   ME_ID,
   NETWORK_SUMMARY,
+  companyOf,
   directPeople,
   inviteUrl,
   joinLines,
+  relationTo,
   secondDegreePeople,
   splitLines,
   wantPosts,
   type Person,
 } from "@/lib/guild/look/sns-mock";
 import { CopyUrlButton, SEND_MS } from "./flow";
-import { PersonRow, WantRow } from "./parts";
+import { Avatar, RelationLine, WantRow } from "./parts";
 import { PersonView } from "./screens";
 import { SnLink, useSn, useSnState } from "./store";
 
+type ContactTab = "direct" | "second";
+
+// 知り合いが増えても招待・設定が遠くならないよう、はじめに出す人数
+const CONTACTS_PREVIEW = 3;
+
 export function MeScreen() {
   const { me, myPosts } = useSnState();
+  const [contactTab, setContactTab] = useState<ContactTab>("direct");
   const mine = wantPosts(myPosts).filter((p) => p.authorId === ME_ID);
   const url = inviteUrl(ME_ID);
   return (
-    <>
-      <div className="sn-me-bar">
-        <p className="sn-meta">
-          {me.openToIntro ? "知り合いの知り合いに、紹介の道を見せています" : "紹介の道は、知り合いにだけ見せています"}
-        </p>
-        <div className="sn-row-acts">
-          <SnLink to="/me/edit" className="sn-btn sn-btn--main">プロフィールを編集</SnLink>
-          <SnLink to="/me/preview" className="sn-btn"><Eye aria-hidden />人からの見え方</SnLink>
-        </div>
-      </div>
-      <PersonView person={me} relation={{ kind: "self" }} />
-
-      <section className="sn-me-sec">
-        <div className="sn-sec"><div className="sn-sec-h"><h2>出した依頼</h2><span>{mine.length}件</span></div></div>
+    <PersonView
+      person={me}
+      relation={{ kind: "self" }}
+      heroExtra={
+        <>
+          <div className="sn-me-actions">
+            <SnLink to="/me/edit" className="sn-btn sn-btn--main">プロフィールを編集</SnLink>
+            <SnLink to="/me/preview" className="sn-btn"><Eye aria-hidden />人からの見え方</SnLink>
+          </div>
+          {/* 数はそのまま目次になる（プロフィールの下の、それぞれのまとまりへ飛ぶ） */}
+          <nav className="sn-me-stats" aria-label="マイページの中の場所">
+            <a href="#sn-me-contacts" onClick={() => setContactTab("direct")}><b>{NETWORK_SUMMARY.direct}</b>知り合い</a>
+            <a href="#sn-me-contacts" onClick={() => setContactTab("second")}><b>{NETWORK_SUMMARY.second}</b>その先に</a>
+            <a href="#sn-me-requests"><b>{mine.length}</b>出した依頼</a>
+          </nav>
+        </>
+      }
+    >
+      <section id="sn-me-requests" className="sn-me-sec">
+        <div className="sn-sec-h"><h2>出した依頼</h2><span>{mine.length}件</span></div>
         {mine.length === 0 ? (
-          <p className="sn-empty">まだ依頼はありません。<br /><SnLink to="/posts/new"><u>何を探していますか？</u></SnLink></p>
+          <div className="sn-me-none">
+            <p>まだ依頼はありません。</p>
+            <SnLink to="/posts/new" className="sn-btn sn-btn--small"><Plus aria-hidden />何を探していますか？</SnLink>
+          </div>
         ) : (
-          <div>{mine.map((p) => <WantRow key={p.id} post={p} />)}</div>
+          <div className="sn-me-list">{mine.map((p) => <WantRow key={p.id} post={p} />)}</div>
         )}
       </section>
 
-      <section className="sn-me-sec">
-        <ContactsSection />
+      <section id="sn-me-contacts" className="sn-me-sec">
+        <ContactsSection tab={contactTab} onTab={setContactTab} />
+      </section>
+
+      <section className="sn-me-sec sn-me-invite">
+        <h2><UserPlus aria-hidden />知り合いを招待する</h2>
+        <p className="sn-meta">LINEに貼って送ると、相手がプロフィールを作ってつながれます。</p>
+        <p className="sn-url">{url}</p>
+        <CopyUrlButton url={url} label="招待URLをコピー" className="sn-btn sn-btn--main sn-btn--wide" />
       </section>
 
       <section className="sn-me-sec">
-        <div className="sn-sec">
-          <div className="sn-sec-h"><h2>知り合いを招待する</h2></div>
-          <p className="sn-meta">LINEに貼って送ると、相手がプロフィールを作ってつながれます。</p>
-          <p className="sn-url">{url}</p>
-          <CopyUrlButton url={url} label="招待URLをコピー" className="sn-btn sn-btn--main sn-btn--wide" />
+        <div className="sn-sec-h"><h2>設定</h2></div>
+        <div className="sn-me-links">
+          <SnLink to="/me/edit">
+            <Settings2 aria-hidden />
+            <span>
+              <b>プロフィールと公開範囲を変える</b>
+              <small>{me.openToIntro ? "紹介の道は、知り合いの知り合いにも見せています" : "紹介の道は、知り合いにだけ見せています"}</small>
+            </span>
+            <ChevronRight aria-hidden />
+          </SnLink>
+          <SnLink to="/admin">
+            <ShieldCheck aria-hidden />
+            <span><b>管理者の画面へ</b></span>
+            <ChevronRight aria-hidden />
+          </SnLink>
         </div>
       </section>
+    </PersonView>
+  );
+}
 
-      <section className="sn-me-sec">
-        <div className="sn-sec">
-          <div className="sn-sec-h"><h2>設定</h2></div>
-          <p className="sn-meta">
-            知り合い{NETWORK_SUMMARY.direct}人・その先に{NETWORK_SUMMARY.second}人。
-            {me.openToIntro ? "紹介の道は、知り合いの知り合いにも見せています。" : "紹介の道は、知り合いにだけ見せています。"}
-          </p>
-          <div className="sn-row-acts">
-            <SnLink to="/me/edit" className="sn-btn">プロフィールと公開範囲を変える</SnLink>
-            <SnLink to="/admin" className="sn-btn">管理者の画面へ</SnLink>
-          </div>
-        </div>
-      </section>
+/** 知り合い（直接）と、知り合いの知り合い。マイページは一覧を見に来る所ではないので、行は短く、はじめは数人だけ */
+function ContactsSection({ tab, onTab }: { tab: ContactTab; onTab: (tab: ContactTab) => void }) {
+  const [showAll, setShowAll] = useState(false);
+  const direct = directPeople();
+  const second = secondDegreePeople();
+  const people: readonly Person[] = tab === "direct" ? direct : second;
+  const shown = showAll ? people : people.slice(0, CONTACTS_PREVIEW);
+  const pick = (next: ContactTab) => {
+    setShowAll(false);
+    onTab(next);
+  };
+  return (
+    <>
+      <div className="sn-sec-h"><h2>知り合い</h2><span>見本には{direct.length + second.length}人</span></div>
+      <div className="sn-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === "direct"} onClick={() => pick("direct")}>知り合い {direct.length}</button>
+        <button type="button" role="tab" aria-selected={tab === "second"} onClick={() => pick("second")}>知り合いの知り合い {second.length}</button>
+      </div>
+      {tab === "second" && <p className="sn-meta sn-me-tab-note">知り合いを通して紹介をたのめる人です。紹介の道を見せない設定の人は出ません</p>}
+      {people.length === 0 ? (
+        <div className="sn-me-none"><p>{tab === "direct" ? "まだ知り合いがいません。招待URLを送って、つながってください" : "知り合いの知り合いは、まだいません"}</p></div>
+      ) : (
+        <div className="sn-me-list">{shown.map((p) => <ContactRow key={p.id} person={p} far={tab === "second"} />)}</div>
+      )}
+      {shown.length < people.length && (
+        <button type="button" className="sn-me-more" onClick={() => setShowAll(true)}>あと{people.length - shown.length}人を見る</button>
+      )}
     </>
   );
 }
 
-/** 知り合い（直接）と、知り合いの知り合い。一覧は人の行（探すと同じ見え方） */
-function ContactsSection() {
-  const [tab, setTab] = useState<"direct" | "second">("direct");
-  const direct = directPeople();
-  const second = secondDegreePeople();
-  const people: readonly Person[] = tab === "direct" ? direct : second;
+/** マイページの知り合いの短い行：顔・名前・会社と役職。その先の人は、だれ経由かも出す */
+function ContactRow({ person, far }: { person: Person; far: boolean }) {
+  const company = companyOf(person);
   return (
-    <>
-      <div className="sn-sec"><div className="sn-sec-h"><h2>知り合い</h2><span>見本には{direct.length + second.length}人</span></div></div>
-      <div className="sn-tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={tab === "direct"} onClick={() => setTab("direct")}>知り合い {direct.length}</button>
-        <button type="button" role="tab" aria-selected={tab === "second"} onClick={() => setTab("second")}>知り合いの知り合い {second.length}</button>
-      </div>
-      {tab === "second" && <p className="sn-count">知り合いを通して紹介をたのめる人です。紹介の道を見せない設定の人は出ません</p>}
-      {people.length === 0 ? (
-        <p className="sn-empty">{tab === "direct" ? "まだ知り合いがいません。招待URLを送って、つながってください" : "知り合いの知り合いは、まだいません"}</p>
-      ) : (
-        <div className="sn-list">{people.map((p) => <PersonRow key={p.id} person={p} />)}</div>
-      )}
-    </>
+    <SnLink to={`/people/${person.id}`} className="sn-me-row">
+      <Avatar person={person} />
+      <span>
+        <b>{person.name}</b>
+        <small>{company ? `${company.name}・${person.title}` : person.title}</small>
+        {far && <RelationLine relation={relationTo(person.id)} />}
+      </span>
+      <ChevronRight aria-hidden />
+    </SnLink>
   );
 }
 
