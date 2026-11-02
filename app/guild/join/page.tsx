@@ -6,7 +6,7 @@ import { GuildSceneArt } from "@/components/guild/guild-scene-art";
 import { StoreProvider } from "@/components/guild/store-context";
 import { JoinForm } from "@/components/guild/join-form";
 import { InviteSignup } from "@/components/guild/invite-signup";
-import { inviteErrorText } from "@/lib/guild/join";
+import { FREE_JOIN_COPY, inviteErrorText } from "@/lib/guild/join";
 import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { getGuildContext } from "@/lib/guild/server-data";
 import { findStore, storeOrDefault, storeThemeAttrs, type StoreConfig } from "@/lib/guild/stores";
@@ -60,8 +60,8 @@ export default async function JoinPage({ searchParams }: Props) {
   return (
     <JoinPageFrame config={config}>
       <PageTitle
-        title={prepared ? "あなたへの招待状" : "招待リンクから入会"}
-        lead="GIAのアカウントを作成、またはログインして入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"
+        title={prepared ? "あなたへの招待状" : config.freeJoin ? FREE_JOIN_COPY.title : "招待リンクから入会"}
+        lead={config.freeJoin ? FREE_JOIN_COPY.lead : "GIAのアカウントを作成、またはログインして入会フォームへお進みください。詳しいプロフィールはあとから登録できます。"}
       />
       {valid && prepared?.introduction && !authData.user && <Window title={`${check.inviter_name || "招待した人"}さんからの紹介`}>
         <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{prepared.introduction}</p>
@@ -107,15 +107,12 @@ function JoinPageFrame({ config, children }: { config: StoreConfig; children: Re
           <span className="c-chip">招待状を受け取った方へ</span>
         </header>
         <nav aria-label="入会までの流れ" className="c-window px-4 py-4 sm:px-6">
-          <ol className="grid gap-2 text-sm sm:grid-cols-3 sm:gap-0">
+          <ol className="grid gap-2 text-sm sm:grid-cols-2 sm:gap-0">
             <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-guild-scene-text/30 sm:pr-4">
-              <span className="c-label guild-px">01</span><span>招待状を確認</span>
-            </li>
-            <li className="flex items-center gap-2 sm:border-r sm:border-dashed sm:border-guild-scene-text/30 sm:px-4">
-              <span className="c-label guild-px">02</span><span>登録・ログイン</span>
+              <span className="c-label guild-px">01</span><span>登録・ログイン</span>
             </li>
             <li className="flex items-center gap-2 sm:pl-4">
-              <span className="c-label guild-px">03</span><span>酒場へ入会</span>
+              <span className="c-label guild-px">02</span><span>酒場へ入会</span>
             </li>
           </ol>
         </nav>

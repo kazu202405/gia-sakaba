@@ -57,6 +57,8 @@ export type StoreConfig = {
   /** ホーム画面に追加したときのアプリの id と開始位置。GIAの酒場は昔の値のまま（入れ直しにならないように） */
   pwa: { id: string; startPath: string };
   landing?: StoreLanding;
+  /** 登録の入口で「無料で登録できます」と約束してよい店（FREE_JOIN_COPY を出す）。有料の入口にする店には付けない */
+  freeJoin?: boolean;
 };
 
 /** 店が決まらないとき・店に属さない画面で使う店。昔の道（/guild/…）の転送先もここ */
@@ -65,6 +67,7 @@ export const DEFAULT_STORE_SLUG = "gia";
 const GIA: StoreConfig = {
   slug: "gia",
   name: "GIAの酒場",
+  freeJoin: true,
   theme: "tavern",
   terms: { member: "仲間", quest: "クエスト", party: "パーティ", master: "ギルドマスター", status: "ステータス" },
   rosterLabel: "ギルド",
