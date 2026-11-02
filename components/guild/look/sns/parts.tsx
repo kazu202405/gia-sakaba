@@ -7,21 +7,25 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, Circle, Clock, FileText, HardHat, House, MapPin, Send, type LucideIcon } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
+import { PERMIT_LABELS } from "@/lib/guild/look/sns-construction";
 import {
   INDUSTRY_KIND,
   INTRO_NOTE_MAX,
   ME_ID,
   answersFor,
   areaText,
+  canReveal,
   companyOf,
   dueInfo,
   findPerson,
   kindOfCompany,
   kindOfPerson,
+  personContactRows,
   postRegions,
   relationText,
   relationTo,
   relationToCompany,
+  revealLabel,
   routeTo,
   shortName,
   type Company,
@@ -165,6 +169,43 @@ export function LicenseTags({ licenses }: { licenses: readonly License[] }) {
   );
 }
 
+/**
+ * 会社の中身（会社のページとマイページで同じもの）。前半が会社の基本、後半が探すで使われる内容。
+ * 番地・電話・FAX・メールは、本人が選んだ見せる相手（company.reveal）と relation で出し分ける。
+ * showReveal＝マイページ用。本人に「だれに見せているか」を札で見せる。
+ */
+export function CompanyFacts({ company: c, relation, showReveal = false }: { company: Company; relation: Relation; showReveal?: boolean }) {
+  const works = (c.construction ?? []).map((w) => `${w.trade}（${PERMIT_LABELS[w.permit]}）`).join("・");
+  const see = (field: keyof Company["reveal"]) => canReveal(c.reveal[field], relation);
+  const tag = (field: keyof Company["reveal"], text?: string) => showReveal && <span className="sn-reveal">{text}{revealLabel(c.reveal[field])}</span>;
+  // 知り合いになれば見られる項目があるときだけ案内する（「見せない」は案内しない）
+  const locked = (["street", "phone", "fax", "email"] as const).some((f) => c[f] && c.reveal[f] === "friends" && !see(f));
+  const rows: readonly (readonly [string, React.ReactNode])[] = [
+    ["所在地", see("street") ? <>{`${c.postalCode && `〒${c.postalCode} `}${c.prefecture}${c.city}${c.street}`}{tag("street", "番地：")}</> : `${c.prefecture}${c.city}`],
+    ["電話", c.phone && see("phone") && <><a href={`tel:${c.phone}`}>{c.phone}</a>{tag("phone")}</>],
+    ["FAX", c.fax && see("fax") && <>{c.fax}{tag("fax")}</>],
+    ["メール", c.email && see("email") && <><a href={`mailto:${c.email}`}>{c.email}</a>{tag("email")}</>],
+    ["連絡先", locked && "知り合いになると見られます"],
+    ["ホームページ", c.url && <a href={c.url} target="_blank" rel="noopener noreferrer">{c.url}</a>],
+    ["業種", c.industries.join("・")],
+    ["事業の内容", c.business],
+    ["対応エリア", areaText(c.areas)],
+    ["得意なこと", c.specialties.join("・")],
+    ["建設の業種", works],
+    ["不動産の取引", c.estate?.transactions.join("・")],
+    ["物件の種類", c.estate?.properties.join("・")],
+    ["資格", c.professions?.join("・")],
+    ["許可・登録", c.licenses.length > 0 && <LicenseTags licenses={c.licenses} />],
+  ];
+  return (
+    <dl className="sn-dl">
+      {rows.filter(([, value]) => value).map(([label, value]) => (
+        <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+      ))}
+    </dl>
+  );
+}
+
 export function RelationLine({ relation }: { relation: Relation }) {
   return <p className="sn-rel" data-kind={relation.kind}>{relationText(relation)}</p>;
 }
@@ -304,7 +345,7 @@ export function IntroRequestButton({ person, relation }: { person: Person; relat
   if (relation.kind === "self" || relation.kind === "none") return null;
 
   if (relation.kind === "direct") {
-    return <ContactButton person={person} />;
+    return <ContactButton person={person} relation={relation} />;
   }
 
   const via = relation.via;
@@ -394,22 +435,28 @@ export function IntroRequestButton({ person, relation }: { person: Person; relat
 }
 
 /** 直接の知り合いには、連絡先を出す（設計書7：当事者同士で連絡できる） */
-function ContactButton({ person }: { person: Person }) {
+function ContactButton({ person, relation }: { person: Person; relation: Relation }) {
   const [open, setOpen] = useState(false);
-  if (open) {
-    return (
-      <dl className="sn-review" aria-label={`${person.name}さんの連絡先`}>
-        <dt>電話</dt>
-        <dd>{person.contact.phone}</dd>
-        <dt>メール</dt>
-        <dd>{person.contact.email}</dd>
-      </dl>
-    );
-  }
+  const rows = personContactRows(person, relation);
+  if (rows.length === 0) return <p className="sn-meta">連絡先は公開されていません</p>;
+  if (open) return <ContactList person={person} rows={rows} />;
   return (
     <button type="button" className="sn-btn sn-btn--main sn-btn--wide" onClick={() => setOpen(true)}>
       連絡先を見る
     </button>
+  );
+}
+
+export function ContactList({ person, rows }: { person: Pick<Person, "name">; rows: readonly { label: string; value: string }[] }) {
+  return (
+    <dl className="sn-review" aria-label={`${person.name}さんの連絡先`}>
+      {rows.map((r) => (
+        <Fragment key={r.label}>
+          <dt>{r.label}</dt>
+          <dd>{r.value}</dd>
+        </Fragment>
+      ))}
+    </dl>
   );
 }
 

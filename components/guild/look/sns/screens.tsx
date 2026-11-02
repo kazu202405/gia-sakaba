@@ -9,6 +9,7 @@ import { MapPin, Search } from "lucide-react";
 import {
   INCOMING_INTRO_REQUESTS,
   INDUSTRIES,
+  ME_ID,
   NETWORK_SUMMARY,
   RECENT_CONNECTIONS,
   REGION_NAMES,
@@ -18,6 +19,7 @@ import {
   findCompany,
   findPerson,
   peopleOf,
+  personContactRows,
   regionCounts,
   relationTo,
   relationToCompany,
@@ -31,7 +33,7 @@ import {
   type Relation,
   type SearchFilter,
 } from "@/lib/guild/look/sns-mock";
-import { Avatar, CompanyRow, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
+import { Avatar, CompanyFacts, CompanyRow, ContactList, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
 import { SnLink, useSnState } from "./store";
 import { SearchFilters, ActiveSearchFilters } from "./search-filters";
 
@@ -154,6 +156,7 @@ function RecentFaces() {
 // ---------- 探す ----------
 
 export function SearchScreen() {
+  const { myCompany } = useSnState();
   const params = useSearchParams();
   const [tab, setTab] = useState<"people" | "companies">("people");
   const [filter, setFilter] = useState<SearchFilter>(() => {
@@ -168,7 +171,7 @@ export function SearchScreen() {
     };
   });
   const people = searchPeople(filter);
-  const companies = searchCompanies(filter);
+  const companies = searchCompanies(filter, ME_ID, myCompany);
   const set = (patch: Partial<SearchFilter>) => setFilter((f) => ({ ...f, ...patch }));
 
   return (
@@ -244,7 +247,10 @@ export function PersonScreen({ id }: { id: string }) {
  * マイページだけ、名刺の下に heroExtra（編集の入口と数）、プロフィールの下に children（依頼・知り合いなど）を足す。
  */
 export function PersonView({ person, relation, preview = false, heroExtra, children }: { person: Person; relation: Relation; preview?: boolean; heroExtra?: React.ReactNode; children?: React.ReactNode }) {
-  const company = companyOf(person);
+  const { myCompany } = useSnState();
+  const company = person.id === ME_ID ? myCompany : companyOf(person);
+  // 知り合いは「連絡先を見る」から。知り合いでない人には「全員に見せる」にした項目だけ、はじめから出す
+  const openContacts = relation.kind === "direct" || relation.kind === "self" ? [] : personContactRows(person, relation);
   return (
     <div className={children ? "sn-page sn-page--detail sn-page--me sn-person-profile" : "sn-page sn-page--detail sn-person-profile"}>
       <aside className="sn-page-side">
@@ -277,6 +283,7 @@ export function PersonView({ person, relation, preview = false, heroExtra, child
               </div>
             )}
           </div>
+          {openContacts.length > 0 && <div className="sn-open-contact"><ContactList person={person} rows={openContacts} /></div>}
           {heroExtra}
         </div>
         {!preview && <RouteLine person={person} relation={relation} />}
@@ -335,7 +342,8 @@ function OfferWant({ offer, want }: { offer: readonly string[]; want: readonly s
 // ---------- 会社の詳しいページ ----------
 
 export function CompanyScreen({ id }: { id: string }) {
-  const company = findCompany(id);
+  const { myCompany } = useSnState();
+  const company = id === myCompany.id ? myCompany : findCompany(id);
   if (!company) return <p className="sn-empty">この会社は見つかりませんでした</p>;
   const { relation, person } = relationToCompany(company.id);
   const members = peopleOf(company.id);
@@ -362,22 +370,7 @@ export function CompanyScreen({ id }: { id: string }) {
         {person && <RouteLine person={person} relation={relation} />}
       </aside>
       <div className="sn-page-main">
-        <dl className="sn-dl">
-          <div>
-            <dt>対応エリア</dt>
-            <dd>{areaText(company.areas)}</dd>
-          </div>
-          <div>
-            <dt>得意なこと</dt>
-            <dd>{company.specialties.join("・")}</dd>
-          </div>
-          <div>
-            <dt>許可・登録</dt>
-            <dd>
-              <LicenseTags licenses={company.licenses} />
-            </dd>
-          </div>
-        </dl>
+        <CompanyFacts company={company} relation={relation} />
         <OfferWant offer={company.offer} want={company.want} />
         <section>
           <div className="sn-sec">

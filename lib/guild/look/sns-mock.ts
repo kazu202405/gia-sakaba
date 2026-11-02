@@ -40,12 +40,31 @@ export const REGIONS: Readonly<Record<string, readonly string[]>> = {
   九州: ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"],
 };
 export const REGION_NAMES = Object.keys(REGIONS);
+export const PREFECTURES = Object.values(REGIONS).flat();
 
 /** 都道府県（または地域の名前）→ 地域。どちらで持っていても同じ地域にそろえる（案件の入力は地域名、仮データは都道府県） */
 export function regionOf(area: string): string | null {
   if (area in REGIONS) return area;
   return REGION_NAMES.find((r) => REGIONS[r].includes(area)) ?? null;
 }
+
+/** 連絡先を見せる相手。項目ごとに本人が選ぶ（設計書7：連絡先を本人の許可なく公開しない）。初期値は知り合いだけ */
+export const REVEALS = [
+  { key: "all", label: "全員に見せる" },
+  { key: "friends", label: "知り合いだけ" },
+  { key: "hidden", label: "見せない" },
+] as const;
+export type Reveal = (typeof REVEALS)[number]["key"];
+
+export function revealLabel(key: Reveal): string {
+  return REVEALS.find((r) => r.key === key)?.label ?? "";
+}
+
+export type CompanyReveal = Readonly<Record<"street" | "phone" | "fax" | "email", Reveal>>;
+export type PersonReveal = Readonly<Record<"phone" | "email", Reveal>>;
+
+const DEFAULT_COMPANY_REVEAL: CompanyReveal = { street: "friends", phone: "friends", fax: "friends", email: "friends" };
+const DEFAULT_PERSON_REVEAL: PersonReveal = { phone: "friends", email: "friends" };
 
 /** 許可・免許・登録。自己申告と確認済みを混同しない（設計書5-2） */
 /** number は名刺に書く並び（許可行政庁・番号）。見本の番号は架空 */
@@ -54,9 +73,20 @@ export type License = { name: string; number?: string; verified: boolean };
 export type Company = {
   id: string;
   name: string;
+  kana: string;
   /** ロゴの代わりの1文字 */
   mark: string;
+  postalCode: string;
+  /** 所在地。都道府県・市区町村まではだれにでも見える（「所在地」で探すときも prefecture を使う） */
   prefecture: string;
+  city: string;
+  /** 番地・電話・FAX・メールを見せる相手は reveal で項目ごとに決める（郵便番号は番地と同じ） */
+  street: string;
+  phone: string;
+  fax: string;
+  email: string;
+  reveal: CompanyReveal;
+  url: string;
   industries: readonly Industry[];
   /** 業種の言い方（電気工事業・売買仲介 など） */
   business: string;
@@ -89,16 +119,31 @@ export type Person = {
   want: readonly string[];
   /** 知り合いの知り合いに、紹介の道を見せてよいか（設計書7：公開を止められる） */
   openToIntro: boolean;
-  /** 直接の知り合いにだけ見える連絡先 */
+  /** 本人の連絡先。見せる相手は contactReveal で項目ごとに決める */
   contact: { phone: string; email: string };
+  contactReveal: PersonReveal;
 };
 
 export const ME_ID = "me";
 
-export const COMPANIES: readonly Company[] = [
+export const ME_COMPANY_ID = "sakaba-office";
+
+// 見せる相手は、書いていなければ初期値（知り合いだけ）
+export const COMPANIES: readonly Company[] = ([
+  {
+    id: ME_COMPANY_ID, name: "建設・不動産の酒場 運営事務局", kana: "けんせつふどうさんのさかば うんえいじむきょく", mark: "酒",
+    postalCode: "530-0000", prefecture: "大阪府", city: "大阪市北区", street: "0-0-0", phone: "06-0000-0000", fax: "", email: "office@sakaba.example.com", url: "",
+    industries: ["その他"], business: "建設・不動産の人の集まりの運営",
+    areas: ["大阪府", "京都府", "兵庫県", "奈良県", "滋賀県", "和歌山県", "三重県"], specialties: ["人の引き合わせ", "アプリ・システムの相談"], licenses: [],
+    about: "建設・不動産の人たちが、紹介し合える集まりを運営しています。",
+    offer: ["建設・不動産の人の引き合わせ", "アプリ・システムの相談"], want: ["各地の工務店・不動産会社の方"],
+  },
   {
     construction: [{ trade: "電気", permit: "special" }],
-    id: "yamamoto-densetsu", name: "株式会社山本電設", mark: "山", prefecture: "東京都", industries: ["建設"], business: "電気工事業",
+    reveal: { ...DEFAULT_COMPANY_REVEAL, phone: "all" },
+    id: "yamamoto-densetsu", name: "株式会社山本電設", kana: "やまもとでんせつ", mark: "山", prefecture: "東京都",
+    postalCode: "105-0000", city: "港区", street: "芝0-0-1", phone: "03-0000-1001", fax: "03-0000-1002", email: "info@yamamoto-densetsu.example.com", url: "https://yamamoto-densetsu.example.com",
+    industries: ["建設"], business: "電気工事業",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["受変電設備", "LED改修"],
     licenses: [{ name: "電気工事業（特定）", number: "東京都知事 第12345号", verified: true }],
     about: "ビル・工場の受変電設備の更新を中心に、関東一円で工事をしています。",
@@ -106,7 +151,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     construction: [{ trade: "管", permit: "general" }, { trade: "電気", permit: "none" }],
-    id: "minato-setsubi", name: "有限会社ミナト設備", mark: "ミ", prefecture: "神奈川県", industries: ["建設"], business: "管工事・電気工事",
+    id: "minato-setsubi", name: "有限会社ミナト設備", kana: "みなとせつび", mark: "ミ", prefecture: "神奈川県",
+    postalCode: "231-0000", city: "横浜市中区", street: "本町0-0-2", phone: "045-000-1003", fax: "", email: "info@minato-setsubi.example.com", url: "https://minato-setsubi.example.com",
+    industries: ["建設"], business: "管工事・電気工事",
     areas: ["神奈川県", "東京都"], specialties: ["空調", "店舗の設備", "外壁改修"],
     licenses: [{ name: "管工事業（一般）", number: "神奈川県知事 第08812号", verified: false }],
     about: "店舗・小さなビルの空調と電気をまとめて見ています。外壁の改修も協力会社と請けます。",
@@ -114,7 +161,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     construction: [{ trade: "電気", permit: "general" }],
-    id: "hokushin", name: "北辰エンジニアリング", mark: "北", prefecture: "埼玉県", industries: ["建設"], business: "電気工事業",
+    id: "hokushin", name: "北辰エンジニアリング", kana: "ほくしんえんじにありんぐ", mark: "北", prefecture: "埼玉県",
+    postalCode: "330-0000", city: "さいたま市大宮区", street: "桜木町0-0-3", phone: "048-000-1004", fax: "048-000-1005", email: "info@hokushin.example.com", url: "https://hokushin.example.com",
+    industries: ["建設"], business: "電気工事業",
     areas: ["埼玉県", "群馬県", "栃木県"], specialties: ["太陽光", "蓄電池"],
     licenses: [{ name: "電気工事業（一般）", number: "埼玉県知事 第20417号", verified: true }],
     about: "住宅・工場の太陽光と蓄電池の設置と保守。",
@@ -122,7 +171,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     construction: [{ trade: "建築一式", permit: "general" }, { trade: "大工", permit: "unknown" }, { trade: "内装仕上", permit: "none" }],
-    id: "sato-komuten", name: "株式会社佐藤工務店", mark: "佐", prefecture: "大阪府", industries: ["建設"], business: "工務店",
+    id: "sato-komuten", name: "株式会社佐藤工務店", kana: "さとうこうむてん", mark: "佐", prefecture: "大阪府",
+    postalCode: "530-0000", city: "大阪市北区", street: "梅田0-0-4", phone: "06-0000-1006", fax: "06-0000-1007", email: "info@sato-komuten.example.com", url: "https://sato-komuten.example.com",
+    industries: ["建設"], business: "工務店",
     areas: ["大阪府", "京都府", "兵庫県"], specialties: ["木造の新築", "リフォーム"],
     licenses: [{ name: "建築工事業（一般）", number: "大阪府知事 第31560号", verified: true }],
     about: "木造の注文住宅とリフォーム。関西で40年。",
@@ -130,7 +181,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     estate: { transactions: ["売買", "賃貸", "管理"], properties: ["一棟アパート・マンション", "店舗・テナント", "飲食店舗"] },
-    id: "nakamura-fudosan", name: "中村不動産", mark: "中", prefecture: "神奈川県", industries: ["不動産"], business: "売買仲介・賃貸管理",
+    id: "nakamura-fudosan", name: "中村不動産", kana: "なかむらふどうさん", mark: "中", prefecture: "神奈川県",
+    postalCode: "220-0000", city: "横浜市西区", street: "みなとみらい0-0-5", phone: "045-000-1008", fax: "", email: "info@nakamura-fudosan.example.com", url: "https://nakamura-fudosan.example.com",
+    industries: ["不動産"], business: "売買仲介・賃貸管理",
     areas: ["神奈川県", "東京都"], specialties: ["一棟アパート", "収益物件"],
     licenses: [{ name: "宅地建物取引業", number: "神奈川県知事（3）第27731号", verified: true }],
     about: "横浜を中心に、一棟アパートの売買と管理をしています。",
@@ -138,7 +191,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     estate: { transactions: ["売買", "買取再販"], properties: ["土地", "店舗・テナント", "事務所", "倉庫・工場"] },
-    id: "hayashi-estate", name: "林エステート", mark: "林", prefecture: "大阪府", industries: ["不動産"], business: "売買仲介・買取再販",
+    id: "hayashi-estate", name: "林エステート", kana: "はやしえすてーと", mark: "林", prefecture: "大阪府",
+    postalCode: "541-0000", city: "大阪市中央区", street: "本町0-0-6", phone: "06-0000-1009", fax: "", email: "info@hayashi-estate.example.com", url: "",
+    industries: ["不動産"], business: "売買仲介・買取再販",
     areas: ["大阪府", "兵庫県"], specialties: ["事業用地", "買取再販"],
     licenses: [{ name: "宅地建物取引業", number: "大阪府知事（2）第58203号", verified: false }],
     about: "大阪市内の事業用地と、中古の買取再販。",
@@ -146,7 +201,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     professions: ["建築士"],
-    id: "ono-design", name: "小野設計室", mark: "小", prefecture: "福岡県", industries: ["建設", "士業"], business: "設計事務所",
+    id: "ono-design", name: "小野設計室", kana: "おのせっけいしつ", mark: "小", prefecture: "福岡県",
+    postalCode: "810-0000", city: "福岡市中央区", street: "大名0-0-7", phone: "092-000-1010", fax: "", email: "info@ono-design.example.com", url: "https://ono-design.example.com",
+    industries: ["建設", "士業"], business: "設計事務所",
     areas: ["福岡県", "佐賀県", "熊本県"], specialties: ["中古リノベ", "店舗設計"],
     licenses: [{ name: "一級建築士事務所", number: "福岡県知事登録 第1-60112号", verified: true }],
     about: "福岡で中古住宅のリノベと店舗の設計。",
@@ -154,7 +211,9 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     estate: { transactions: ["売買"], properties: ["土地", "戸建て"] },
-    id: "tanaka-realty", name: "田中リアルティ", mark: "田", prefecture: "福岡県", industries: ["不動産"], business: "売買仲介",
+    id: "tanaka-realty", name: "田中リアルティ", kana: "たなかりあるてぃ", mark: "田", prefecture: "福岡県",
+    postalCode: "812-0000", city: "福岡市博多区", street: "博多駅前0-0-8", phone: "092-000-1011", fax: "", email: "info@tanaka-realty.example.com", url: "",
+    industries: ["不動産"], business: "売買仲介",
     areas: ["福岡県", "長崎県"], specialties: ["土地", "戸建て"],
     licenses: [{ name: "宅地建物取引業", number: "福岡県知事（1）第19045号", verified: true }],
     about: "福岡の土地と戸建ての売買。",
@@ -162,18 +221,20 @@ export const COMPANIES: readonly Company[] = [
   },
   {
     professions: ["行政書士"],
-    id: "mori-gyosei", name: "森行政書士事務所", mark: "森", prefecture: "東京都", industries: ["士業"], business: "行政書士",
+    id: "mori-gyosei", name: "森行政書士事務所", kana: "もりぎょうせいしょしじむしょ", mark: "森", prefecture: "東京都",
+    postalCode: "160-0000", city: "新宿区", street: "西新宿0-0-9", phone: "03-0000-1012", fax: "", email: "info@mori-gyosei.example.com", url: "https://mori-gyosei.example.com",
+    industries: ["士業"], business: "行政書士",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["建設業許可", "経営事項審査"],
     licenses: [{ name: "行政書士", number: "登録 第21081234号", verified: true }],
     about: "建設業許可の取得・更新と、経審の手続き。",
     offer: ["建設業許可の相談"], want: ["許可を取りたい工事会社"],
   },
-];
+] as (Omit<Company, "reveal"> & { reveal?: CompanyReveal })[]).map((c) => ({ reveal: DEFAULT_COMPANY_REVEAL, ...c }));
 
-const P = (p: Person) => p;
+const P = (p: Omit<Person, "contactReveal">): Person => ({ contactReveal: DEFAULT_PERSON_REVEAL, ...p });
 
 export const PEOPLE: readonly Person[] = [
-  P({ id: ME_ID, name: "五島 一将", kana: "ごしま かずまさ", companyId: "", title: "管理者", prefecture: "大阪府", say: "困りごとは、まず聞かせてください",
+  P({ id: ME_ID, name: "五島 一将", kana: "ごしま かずまさ", companyId: ME_COMPANY_ID, title: "管理者", prefecture: "大阪府", say: "困りごとは、まず聞かせてください",
     past: "システムの仕事を15年。建設・不動産の会社の困りごとを聞くうちに、人をつなぐ側になりました。",
     now: "建設・不動産の人たちの集まりを運営しています。相談を聞いて、合う人に引き合わせるのが仕事です。",
     future: "紹介のおねがいが、気軽に頼めて気軽に断れる場にしたい。",
@@ -346,6 +407,22 @@ export function relationToCompany(companyId: string, meId: string = ME_ID): { re
   return best;
 }
 
+/** 見せる相手の設定と、見る人とのつながりから、見せてよいかを決める。本人にはいつも見える。画面ごとに判定を書かない（ここを読む） */
+export function canReveal(reveal: Reveal, relation: Relation): boolean {
+  if (relation.kind === "self") return true;
+  if (reveal === "hidden") return false;
+  return reveal === "all" || relation.kind === "direct";
+}
+
+/** その人に見せてよい本人の連絡先（空の項目は出さない） */
+export function personContactRows(person: Person, relation: Relation): { label: string; value: string }[] {
+  const rows = [
+    { label: "電話", value: person.contact.phone, reveal: person.contactReveal.phone },
+    { label: "メール", value: person.contact.email, reveal: person.contactReveal.email },
+  ];
+  return rows.filter((r) => r.value && canReveal(r.reveal, relation)).map(({ label, value }) => ({ label, value }));
+}
+
 /** つながりの一文（一覧・詳しいページで同じ言い方にする） */
 export function relationText(relation: Relation): string {
   switch (relation.kind) {
@@ -412,13 +489,13 @@ function matchesQuery(texts: readonly string[], query: string): boolean {
 
 const RELATION_ORDER: Record<Relation["kind"], number> = { self: 3, direct: 0, via: 1, none: 2 };
 
-/** 会社を探す。並びは「紹介できる順」（知り合い → 知り合いの知り合い → それ以外） */
-export function searchCompanies(filter: SearchFilter, meId: string = ME_ID): Company[] {
-  return COMPANIES.filter((c) => {
+/** 会社を探す。並びは「紹介できる順」（知り合い → 知り合いの知り合い → それ以外）。mine は編集後の自分の会社（探すにそのまま効かせる） */
+export function searchCompanies(filter: SearchFilter, meId: string = ME_ID, mine?: Company): Company[] {
+  return COMPANIES.map((c) => (c.id === mine?.id ? mine : c)).filter((c) => {
     if (!matchesCompanyFilters(c, filter)) return false;
     const rel = relationToCompany(c.id, meId).relation;
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
-    return matchesQuery([c.name, c.business, c.prefecture, ...c.specialties, ...c.offer, ...c.areas, ...regionsTouching(c.areas)], filter.query);
+    return matchesQuery([c.name, c.kana, c.business, c.prefecture, c.city, ...c.specialties, ...c.offer, ...c.areas, ...regionsTouching(c.areas)], filter.query);
   }).sort((a, b) => RELATION_ORDER[relationToCompany(a.id, meId).relation.kind] - RELATION_ORDER[relationToCompany(b.id, meId).relation.kind]);
 }
 
@@ -431,16 +508,15 @@ export function searchPeople(filter: SearchFilter, meId: string = ME_ID): Person
     if (!matchesCompanyFilters(c, filter)) return false;
     const rel = relationTo(p.id, meId);
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
-    return matchesQuery([p.name, p.kana, p.say, p.now, ...p.offer, c.name, c.business, ...c.specialties, ...c.areas, ...regionsTouching(c.areas)], filter.query);
+    return matchesQuery([p.name, p.kana, p.say, p.now, ...p.offer, c.name, c.kana, c.business, c.city, ...c.specialties, ...c.areas, ...regionsTouching(c.areas)], filter.query);
   }).sort((a, b) => RELATION_ORDER[relationTo(a.id, meId).kind] - RELATION_ORDER[relationTo(b.id, meId).kind]);
 }
 
 /** 対応エリアの見せ方。地域を丸ごと覆っていれば「関東全域」のようにまとめる */
 export function areaText(areas: readonly string[]): string {
-  for (const [region, prefs] of Object.entries(REGIONS)) {
-    if (prefs.every((p) => areas.includes(p))) return `${region}全域`;
-  }
-  return areas.join("・");
+  const whole = REGION_NAMES.filter((r) => REGIONS[r].every((p) => areas.includes(p)));
+  const rest = areas.filter((a) => !whole.some((r) => REGIONS[r].includes(a)));
+  return [...whole.map((r) => `${r}全域`), ...rest].join("・");
 }
 
 /** 紹介のおねがいの「ひとこと」の上限 */

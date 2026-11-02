@@ -3,16 +3,15 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Check, ChevronDown, ChevronRight, MapPin, SlidersHorizontal, X } from "lucide-react";
-import { EMPTY_FILTER, INDUSTRIES, REGIONS, searchCompanies, searchPeople, type SearchFilter, type Industry } from "@/lib/guild/look/sns-mock";
+import { EMPTY_FILTER, INDUSTRIES, ME_ID, REGIONS, searchCompanies, searchPeople, type SearchFilter, type Industry } from "@/lib/guild/look/sns-mock";
+import { toggleValue as toggle } from "@/lib/guild/look/sns-company";
 import { CONSTRUCTION_TRADES, ESTATE_TRANSACTIONS, ESTATE_PROPERTIES } from "@/lib/guild/look/sns-construction";
 
 import { PROFESSIONS, OTHER_BUSINESS_MAX } from "@/lib/guild/look/sns-expertise";
+import { useSnState } from "./store";
 
 type Props = { filter: SearchFilter; onChange: (patch: Partial<SearchFilter>) => void };
 type Panel = "area" | "industry" | "other";
-function toggle<T>(values: readonly T[], value: T): T[] {
-  return values.includes(value) ? values.filter((v) => v !== value) : [...values, value];
-}
 function summary(values: readonly string[], fallback: string) {
   return values.length ? `${values[0]}${values.length > 1 ? ` ほか${values.length - 1}` : ""}` : fallback;
 }
@@ -47,6 +46,7 @@ export function SearchFilters({ filter, onChange, resultType }: Props & { result
 
 /** ネイティブdialogでフォーカスを制御。スクロールするのは本文1か所だけ。 */
 function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initial: SearchFilter; panel: Panel; resultType: "people" | "companies"; onApply: Props["onChange"]; onClose: () => void }) {
+  const { myCompany } = useSnState();
   const [draft, setDraft] = useState(initial);
   const [step, setStep] = useState<"main" | "trades">("main");
   const [tradeQuery, setTradeQuery] = useState("");
@@ -60,7 +60,7 @@ function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initia
   const regionPrefs = REGIONS[region];
   const selectedPrefs = regionPrefs.filter((p) => draft.regions.includes(region) || prefs.includes(p));
   const visibleTrades = CONSTRUCTION_TRADES.filter((t) => `${t}工事業`.includes(tradeQuery.trim()));
-  const count = resultType === "people" ? searchPeople(draft).length : searchCompanies(draft).length;
+  const count = resultType === "people" ? searchPeople(draft).length : searchCompanies(draft, ME_ID, myCompany).length;
   const title = step === "trades" ? "建設の業種を選ぶ" : ({ area: "エリアを選ぶ", industry: "業種を選ぶ", other: "その他の条件" })[panel];
   useEffect(() => {
     const dialog = ref.current;

@@ -7,6 +7,7 @@ export const CONSTRUCTION_TRADES = [
 export type ConstructionTrade = (typeof CONSTRUCTION_TRADES)[number];
 export type ConstructionWork = { trade: ConstructionTrade; permit: "general" | "special" | "none" | "unknown" };
 export type PermitFilter = "any" | "yes" | "no";
+export const PERMIT_LABELS: Readonly<Record<ConstructionWork["permit"], string>> = { general: "一般", special: "特定", none: "許可なし", unknown: "未入力" };
 
 export const ESTATE_TRANSACTIONS = ["売買", "賃貸", "管理", "買取再販"] as const;
 export const ESTATE_PROPERTIES = ["土地", "戸建て", "マンション", "一棟アパート・マンション", "店舗・テナント", "飲食店舗", "事務所", "倉庫・工場"] as const;
