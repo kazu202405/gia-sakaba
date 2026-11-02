@@ -12,6 +12,7 @@ import { APPROVAL_COPY, OTHER_TITLE_MAX, OTHER_WORK_MAX, requiresApproval } from
 import type { PreparedInvite } from "@/lib/guild/prepared-invites";
 import { GROUND_RULES, GUILD_PROMISES, PROMISE_NOTE } from "@/lib/guild/rules";
 import {
+  FREE_JOIN_COPY,
   JOIN_COMPANY_MAX,
   JOIN_NAME_MAX,
   JOIN_SOLVE_MAX,
@@ -24,6 +25,7 @@ import { Window } from "./cards";
 import { LegalLinks } from "./legal-consent";
 import { LoginGuide } from "./login-guide";
 import { CheckBox, Field, TextInput, scrollToFirstError } from "./form-parts";
+import { FreeJoinBand } from "./free-join-band";
 import { useGuildStore } from "@/components/guild/store-context";
 import { Go } from "./go-mark";
 
@@ -59,7 +61,7 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
     <Window title="入会フォーム">
       {preview ? <p className="mb-6 border-2 border-dashed border-guild-ink bg-guild-paper p-3 text-sm">入会フォームのプレビューです。入力しても送信・保存はできません。</p> :
         <p className="c-muted mb-6 text-xs">{inviterName}さんからの 招待状を確認しました。</p>}
-      {!preview && <div className="mb-6"><LoginGuide /></div>}
+      {store.config.freeJoin && <FreeJoinBand />}
       {prepared && <p className="c-card mb-6 px-4 py-3 text-sm leading-relaxed">招待した人が、お名前などを下書きしました。内容を確認し、違うところは直してください。入会するまでは名鑑に表示されません。</p>}
       <form
         noValidate
@@ -173,24 +175,29 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
           </Field>
         </>}
 
-        <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
-          <span className="block text-[15px]">会社名と役職を メンバーめいかんに 出す</span>
-          <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
-        </CheckBox>
-
-        <Field
-          label="いま、なにを 解決したいですか？"
-          hint="任意。あとから マイページで 変えられます"
-          error={errors.want_to_solve}
-        >
-          <TextInput
-            value={draft.want_to_solve}
-            onChange={(v) => set("want_to_solve", v)}
-            max={JOIN_SOLVE_MAX}
-            label="いま、なにを 解決したいですか？"
-            placeholder="例：若い職人が 入ってこない"
-          />
-        </Field>
+        {/* 今すぐ決めなくていいもの。名鑑に出ることは、閉じていても分かるように見出しに書く */}
+        <details className="c-card p-4" open={!!errors.want_to_solve}>
+          <summary className="min-h-6 cursor-pointer text-sm">会社名と役職はメンバーめいかんに出ます（変えられます）</summary>
+          <div className="mt-4 space-y-5">
+            <CheckBox checked={draft.show_company} onChange={(v) => set("show_company", v)}>
+              <span className="block text-[15px]">会社名と役職を メンバーめいかんに 出す</span>
+              <span className="c-muted block text-xs">あとから マイページで 変えられます</span>
+            </CheckBox>
+            <Field
+              label="いま、なにを 解決したいですか？"
+              hint="任意。あとから マイページで 変えられます"
+              error={errors.want_to_solve}
+            >
+              <TextInput
+                value={draft.want_to_solve}
+                onChange={(v) => set("want_to_solve", v)}
+                max={JOIN_SOLVE_MAX}
+                label="いま、なにを 解決したいですか？"
+                placeholder="例：若い職人が 入ってこない"
+              />
+            </Field>
+          </div>
+        </details>
 
         {prepared?.introduction && <div className="c-card space-y-3 p-4">
           <p className="c-label text-xs">{inviterName}さんから見た、あなたの紹介</p>
@@ -204,27 +211,18 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         {/* 儲かるなら何でもいい、ではない。入会の前に 約束に同意してもらう */}
         <div data-field-error={errors.agreed ? "true" : undefined} className="c-card space-y-3 p-4">
           <p className="text-[15px] tracking-wider">ギルドの 約束</p>
-          {[
-            { title: "酒場での しごとの約束", items: GUILD_PROMISES },
-            { title: "話すときの 約束（グランドルール）", items: GROUND_RULES },
-          ].map((group) => (
-            <div key={group.title}>
-              <p className="c-label text-xs">{group.title}</p>
-              <ul className="mt-1 space-y-1.5 text-sm leading-relaxed">
-                {group.items.map((promise) => (
-                  <li key={promise} className="flex gap-2">
-                    <span aria-hidden>・</span>
-                    <span>{promise}</span>
-                  </li>
-                ))}
-              </ul>
+          <PromiseList items={GUILD_PROMISES} />
+          <details className="text-sm">
+            <summary className="min-h-6 cursor-pointer">話すときの 約束と、くわしい決まりを読む</summary>
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="c-label text-xs">話すときの 約束（グランドルール）</p>
+                <PromiseList items={GROUND_RULES} />
+              </div>
+              <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
             </div>
-          ))}
-          <p className="c-muted text-xs leading-relaxed">{PROMISE_NOTE}</p>
-          <div className="space-y-1 border-t border-guild-ink/20 pt-3">
-            <p className="text-sm leading-relaxed">入会の前に、利用規約とプライバシーポリシーもお読みください。</p>
-            <LegalLinks />
-          </div>
+          </details>
+          <LegalLinks />
           <div className="pt-1">
             <CheckBox checked={draft.agreed} onChange={(v) => set("agreed", v)}>
               <span className="text-[15px]">約束を まもり、利用規約と プライバシーポリシーに 同意します</span>
@@ -237,9 +235,24 @@ export function JoinForm({ inviterName, inviteCode, preview = false, initialName
         <button type="submit" disabled={saving || preview} aria-busy={saving} className="rpg-button h-12 w-full text-base disabled:opacity-50 sm:w-auto sm:px-8">
           {preview ? "プレビュー中（送信できません）" : requiresApproval(draft.position)
             ? (saving ? APPROVAL_COPY.submittingLabel : <><Go />{APPROVAL_COPY.submitLabel}</>)
-            : (saving ? "入会手続き中…" : <><Go />入会する</>)}
+            : (saving ? "入会手続き中…" : <><Go />{store.config.freeJoin ? FREE_JOIN_COPY.joinButton : "入会する"}</>)}
         </button>
       </form>
+      {/* 入会後の案内。入会の手前では読まなくていいので、送信ボタンの下に置く */}
+      {!preview && <div className="mt-6"><LoginGuide /></div>}
     </Window>
+  );
+}
+
+function PromiseList({ items }: { items: readonly string[] }) {
+  return (
+    <ul className="mt-1 space-y-1.5 text-sm leading-relaxed">
+      {items.map((promise) => (
+        <li key={promise} className="flex gap-2">
+          <span aria-hidden>・</span>
+          <span>{promise}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

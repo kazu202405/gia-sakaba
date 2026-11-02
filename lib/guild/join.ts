@@ -37,6 +37,15 @@ export const inviteErrorText: Record<Exclude<InviteCheck, { ok: true }>["reason"
   used_up: "この招待リンクは 決められた人数に 達しました。招待してくれた人に 新しいリンクを もらってください。",
 };
 
+/** 登録の入口の約束。フリープラン（0円）で入れて、カードも入れないことが前提。入会の流れに支払いを足すなら、ここも直す */
+export const FREE_JOIN_COPY = {
+  title: "無料で登録できます",
+  points: ["月額0円", "カード登録なし", "自動で有料になりません"],
+  lead: "招待された方は、無料で登録できます。まずは登録だけしておいて、詳しいプロフィールはあとからで大丈夫です。",
+  signupButton: "無料で登録する",
+  joinButton: "無料で入会する",
+} as const;
+
 export const JOIN_SOLVE_MAX = 60;
 
 export type JoinDraft = {
