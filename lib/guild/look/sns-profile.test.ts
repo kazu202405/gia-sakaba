@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { findPerson, kindOfPerson, ME_ID, type Person } from "./sns-mock";
+import { companyOf, findPerson, kindOfPerson, ME_ID, type Person } from "./sns-mock";
 import { PersonView } from "@/components/guild/look/sns/screens";
 import { ProfilePreviewScreen } from "@/components/guild/look/sns/profile-preview";
 
@@ -31,11 +31,32 @@ describe("他の人から見たプロフィール", () => {
     expect(html).not.toContain("プロフィールを編集");
     expect(html).not.toContain("出した依頼");
   });
-  it("知り合いでは連絡先の入口を表示し、仕事の相談を経歴より先に出す", () => {
+  it("知り合いには従来どおり連絡先の入口を表示する", () => {
     const html = renderToStaticMarkup(createElement(PersonView, { person: me, relation: { kind: "direct" }, preview: true }));
     expect(html).toContain("連絡先を見る");
     expect(html).not.toContain(me.contact.phone);
-    expect(html.indexOf("できること")).toBeLessThan(html.indexOf("経歴・人柄をもっと見る"));
+  });
+  it("元のプロフィールの項目・文章・表示順を維持し、折りたたまない", () => {
+    const html = renderToStaticMarkup(createElement(PersonView, { person: me, relation: { kind: "self" } }));
+    for (const text of [me.name, me.title, me.say, me.past, me.now, me.future, ...me.offer, ...me.want, ...me.talk]) expect(html).toContain(text);
+    const headings = ["これまで", "いま", "これから", "できること", "探していること"];
+    const positions = headings.map((heading) => html.indexOf(`>${heading}</p>`));
+    expect(positions.every((p) => p >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(html).not.toContain("<details");
+    expect(html).not.toContain("仕事・紹介の相談");
+  });
+  it("会社情報・許可登録の記載を隠さず、元の名刺内に表示する", () => {
+    const person = findPerson("mori")!;
+    const company = companyOf(person)!;
+    const html = renderToStaticMarkup(createElement(PersonView, { person, relation: { kind: "none" } }));
+    expect(html).toContain(company.name);
+    for (const license of company.licenses) {
+      expect(html).toContain(license.name);
+      if (license.number) expect(html).toContain(license.number);
+    }
+    expect(html.indexOf(company.licenses[0].name)).toBeLessThan(html.indexOf(person.say));
+    expect(html).not.toContain("<details");
   });
   it("紹介経路の非公開設定をプレビューで架空の経路に置き換えない", () => {
     const person: Person = { ...me, openToIntro: false };

@@ -5,7 +5,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, MapPin, Search } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import {
   INCOMING_INTRO_REQUESTS,
   INDUSTRIES,
@@ -239,37 +239,57 @@ export function PersonScreen({ id }: { id: string }) {
   return <PersonView person={person} relation={relationTo(person.id)} />;
 }
 
-/** 相手が判断しやすい順に、名刺 → 相談できること → 経歴 → 紹介経路を見せる。 */
+/** 人の詳しいページの中身（自分のページでも使う。自分なら relation は self で、紹介のボタンは出ない） */
 export function PersonView({ person, relation, preview = false }: { person: Person; relation: Relation; preview?: boolean }) {
   const company = companyOf(person);
   return (
     <div className="sn-page sn-page--detail sn-person-profile">
       <aside className="sn-page-side">
         <div className="sn-hero">
+          {/* 名刺と同じ比率の枠：上に会社と役職、まん中に顔とふりがな・名前、下に許可と所在地 */}
           <div className="sn-card sn-person-card">
             <p className="sn-card-top">
-              {company ? <SnLink to={`/companies/${company.id}`}>{company.name}</SnLink> : <span>建設・不動産の酒場</span>}
+              {company ? <SnLink to={`/companies/${company.id}`}>{company.name}</SnLink> : <span />}
               <span>{person.title}</span>
             </p>
-            <div className="sn-card-mid"><Avatar person={person} asOther={preview} /><div><p className="sn-kana">{person.kana}</p><h1>{person.name}</h1></div></div>
-            <div className="sn-profile-place"><MapPin size={14} aria-hidden /><span>{person.prefecture}{company && ` ／ 対応：${areaText(company.areas)}`}</span></div>
-            {company && <div className="sn-pills"><PlainPill>{company.business}</PlainPill>{company.professions?.map((p) => p !== company.business && <PlainPill key={p}>{p}</PlainPill>)}</div>}
+            <div className="sn-card-mid">
+              <Avatar person={person} asOther={preview} />
+              <div>
+                <p className="sn-kana">{person.kana}</p>
+                <h1>{person.name}</h1>
+              </div>
+            </div>
+            <div className="sn-card-bottom">
+              {company && <LicenseTags licenses={company.licenses} />}
+              {company && <p>{person.prefecture}　対応：{areaText(company.areas)}</p>}
+            </div>
           </div>
           <div className="sn-hero-say">
             <Say>{person.say}</Say>
-            {person.talk.length > 0 && <div className="sn-pills" aria-label="話のきっかけ">{person.talk.map((t) => <PlainPill key={t}>{t}</PlainPill>)}</div>}
+            {person.talk.length > 0 && (
+              <div className="sn-pills" aria-label="話のきっかけ">
+                {person.talk.map((t) => (
+                  <PlainPill key={t}>{t}</PlainPill>
+                ))}
+              </div>
+            )}
           </div>
-          {company && company.licenses.length > 0 && <details className="sn-profile-credentials"><summary>許可・登録 <span>{company.licenses.length}件{company.licenses.some((l) => l.verified) ? "・確認済みあり" : "・自己申告"}</span><ChevronDown size={14} aria-hidden /></summary><LicenseTags licenses={company.licenses} /></details>}
         </div>
+        {!preview && <RouteLine person={person} relation={relation} />}
       </aside>
       <div className="sn-page-main">
-        <section className="sn-profile-work" aria-label="仕事・紹介の相談"><OfferWant offer={person.offer} want={person.want} /></section>
-        {(person.past || person.now || person.future) && <details className="sn-profile-story"><summary>経歴・人柄をもっと見る<ChevronDown size={16} aria-hidden /></summary><div className="sn-story"><Story k="これまで" v={person.past} /><Story k="いま" v={person.now} /><Story k="これから" v={person.future} /></div></details>}
-        {!preview && relation.kind !== "self" && <div className="sn-profile-connection">
-          {relation.kind === "none" ? <p className="sn-meta">まだ紹介できる道がありません</p> : <details className="sn-profile-route"><summary>{relation.kind === "direct" ? "知り合いのつながりを見る" : "紹介のつながりを見る"}<ChevronDown size={16} aria-hidden /></summary><RouteLine person={person} relation={relation} /></details>}
-        </div>}
+        <div className="sn-story">
+          <Story k="これまで" v={person.past} />
+          <Story k="いま" v={person.now} />
+          <Story k="これから" v={person.future} />
+        </div>
+        <OfferWant offer={person.offer} want={person.want} />
       </div>
-      {relation.kind !== "self" && relation.kind !== "none" && <div className="sn-sticky"><IntroRequestButton person={person} relation={relation} /></div>}
+      {relation.kind !== "self" && relation.kind !== "none" && (
+        <div className="sn-sticky">
+          <IntroRequestButton person={person} relation={relation} />
+        </div>
+      )}
     </div>
   );
 }
