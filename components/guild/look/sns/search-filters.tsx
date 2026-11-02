@@ -6,6 +6,8 @@ import { ArrowLeft, Check, ChevronDown, ChevronRight, MapPin, SlidersHorizontal,
 import { EMPTY_FILTER, INDUSTRIES, REGIONS, searchCompanies, searchPeople, type SearchFilter } from "@/lib/guild/look/sns-mock";
 import { CONSTRUCTION_TRADES, ESTATE_TRANSACTIONS, ESTATE_PROPERTIES } from "@/lib/guild/look/sns-construction";
 
+import { PROFESSIONS, OTHER_BUSINESS_MAX } from "@/lib/guild/look/sns-expertise";
+
 type Props = { filter: SearchFilter; onChange: (patch: Partial<SearchFilter>) => void };
 type Panel = "area" | "industry" | "other";
 function toggle<T>(values: readonly T[], value: T): T[] {
@@ -62,7 +64,7 @@ function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initia
   function resetPanel() {
     if (step === "trades") { set({ constructionTrades: [] }); setTradeQuery(""); }
     else if (panel === "area") set({ regions: [], prefectures: [], areaMode: "service" });
-    else if (panel === "industry") set({ industries: [], constructionTrades: [], constructionPermit: "any", estateTransactions: [], estateProperties: [] });
+    else if (panel === "industry") set({ industries: [], constructionTrades: [], constructionPermit: "any", estateTransactions: [], estateProperties: [], professions: [], otherBusiness: "" });
     else set({ licensedOnly: false, introducibleOnly: false });
   }
   function selectPrefecture(pref: string) {
@@ -93,7 +95,7 @@ function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initia
         <div className="sn-choice-grid sn-choice-grid--prefs" role="group" aria-label={`${region}の都道府県`}>{regionPrefs.map((pref) => <label key={pref} className="sn-choice" data-selected={selectedPrefs.includes(pref)}><input type="checkbox" checked={selectedPrefs.includes(pref)} onChange={() => selectPrefecture(pref)} /><span>{pref}</span></label>)}</div>
         <p className="sn-area-summary" aria-live="polite"><b>選択中</b>{[...draft.regions.map((r) => `${r}全域`), ...prefs].join("・") || "全国（指定なし）"}</p>
       </> : panel === "industry" ? <>
-        <div className="sn-choice-grid sn-choice-grid--industries" role="group" aria-label="業種">{INDUSTRIES.map((industry) => <button type="button" key={industry} className="sn-choice" aria-pressed={draft.industries.includes(industry)} onClick={() => set({ industries: toggle(draft.industries, industry), ...(industry === "建設" ? { constructionTrades: [], constructionPermit: "any" } : {}), ...(industry === "不動産" ? { estateTransactions: [], estateProperties: [] } : {}) })}>{industry}{draft.industries.includes(industry) && <Check aria-hidden />}</button>)}</div>
+        <div className="sn-choice-grid sn-choice-grid--industries" role="group" aria-label="業種">{INDUSTRIES.map((industry) => <button type="button" key={industry} className="sn-choice" aria-pressed={draft.industries.includes(industry)} onClick={() => set({ industries: toggle(draft.industries, industry), ...(industry === "建設" ? { constructionTrades: [], constructionPermit: "any" } : {}), ...(industry === "不動産" ? { estateTransactions: [], estateProperties: [] } : {}), ...(industry === "士業" ? { professions: [] } : {}), ...(industry === "その他" ? { otherBusiness: "" } : {}) })}>{industry}{draft.industries.includes(industry) && <Check aria-hidden />}</button>)}</div>
         {draft.industries.includes("建設") && <section className="sn-industry-section">
           <h3>建設</h3><button type="button" className="sn-select-trades" onClick={() => setStep("trades")}><span><small>業種を選ぶ <em>29業種</em></small><b>{summary(trades, "すべての業種")}</b></span><ChevronRight aria-hidden /></button>
           <fieldset className="sn-permit"><legend>建設業許可</legend><div className="sn-segment">{([ ["any", "指定なし"], ["yes", "あり"], ["no", "なし"] ] as const).map(([value, label]) => <label key={value} data-selected={(draft.constructionPermit ?? "any") === value}><input type="radio" name="construction-permit" value={value} checked={(draft.constructionPermit ?? "any") === value} onChange={() => set({ constructionPermit: value })} /><span>{label}</span></label>)}</div></fieldset>
@@ -103,6 +105,17 @@ function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initia
           <fieldset className="sn-filter-group"><legend>取引の種類</legend><div className="sn-choice-grid" role="group" aria-label="不動産の取引の種類">{ESTATE_TRANSACTIONS.map((t) => <label key={t} className="sn-choice" data-selected={(draft.estateTransactions ?? []).includes(t)}><input type="checkbox" checked={(draft.estateTransactions ?? []).includes(t)} onChange={() => set({ estateTransactions: toggle(draft.estateTransactions ?? [], t) })} /><span>{t}</span></label>)}</div></fieldset>
           <fieldset className="sn-filter-group"><legend>物件の種類</legend><div className="sn-choice-grid" role="group" aria-label="不動産の物件の種類">{ESTATE_PROPERTIES.map((p) => <label key={p} className="sn-choice" data-selected={(draft.estateProperties ?? []).includes(p)}><input type="checkbox" checked={(draft.estateProperties ?? []).includes(p)} onChange={() => set({ estateProperties: toggle(draft.estateProperties ?? [], p) })} /><span>{p}</span></label>)}</div></fieldset>
           <p className="sn-filter-help">「店舗・テナント」には飲食店舗も含みます。</p>
+        </section>}
+        {draft.industries.includes("士業") && <section className="sn-industry-section">
+          <h3>士業・専門家 <small>複数選択できます</small></h3>
+          <div className="sn-choice-grid" role="group" aria-label="士業・専門家の種類">
+            {PROFESSIONS.map((p) => <label key={p} className="sn-choice" data-selected={(draft.professions ?? []).includes(p)}><input type="checkbox" checked={(draft.professions ?? []).includes(p)} onChange={() => set({ professions: toggle(draft.professions ?? [], p) })} /><span>{p}</span></label>)}
+          </div>
+          <p className="sn-filter-help">許可申請の相談は行政書士、登記の相談は司法書士など、頼みたい専門分野で選べます。</p>
+        </section>}
+        {draft.industries.includes("その他") && <section className="sn-industry-section">
+          <label className="sn-other-business"><span>具体的な仕事・得意分野</span><input type="text" value={draft.otherBusiness ?? ""} maxLength={OTHER_BUSINESS_MAX} placeholder="例：資材販売、清掃、IT支援" onChange={(e) => set({ otherBusiness: e.target.value })} /></label>
+          <p className="sn-filter-help">「その他」の事業内容・得意分野から探します。空欄ならすべて表示します。</p>
         </section>}
       </> : <div className="sn-extra-conditions">
         <label className="sn-filter-check"><input type="checkbox" checked={draft.licensedOnly} onChange={(e) => set({ licensedOnly: e.target.checked })} /><span>許可・免許・登録が確認済み<small>確認済みの登録情報がある会社に絞る</small></span></label>
@@ -119,11 +132,13 @@ export function ActiveSearchFilters({ filter, onChange }: Props) {
   const chips: { label: string; clear: Partial<SearchFilter> }[] = [
     ...filter.regions.map((v) => ({ label: `${v}全体`, clear: { regions: filter.regions.filter((x) => x !== v) } })),
     ...(filter.prefectures ?? []).map((v) => ({ label: v, clear: { prefectures: filter.prefectures?.filter((x) => x !== v) } })),
-    ...filter.industries.map((v) => ({ label: v, clear: { industries: filter.industries.filter((x) => x !== v), ...(v === "建設" ? { constructionTrades: [], constructionPermit: "any" as const } : {}), ...(v === "不動産" ? { estateTransactions: [], estateProperties: [] } : {}) } })),
+    ...filter.industries.map((v) => ({ label: v, clear: { industries: filter.industries.filter((x) => x !== v), ...(v === "建設" ? { constructionTrades: [], constructionPermit: "any" as const } : {}), ...(v === "不動産" ? { estateTransactions: [], estateProperties: [] } : {}), ...(v === "士業" ? { professions: [] } : {}), ...(v === "その他" ? { otherBusiness: "" } : {}) } })),
     ...(filter.constructionTrades ?? []).map((v) => ({ label: v, clear: { constructionTrades: filter.constructionTrades?.filter((x) => x !== v) } })),
     ...(filter.estateTransactions ?? []).map((v) => ({ label: v, clear: { estateTransactions: filter.estateTransactions?.filter((x) => x !== v) } })),
     ...(filter.estateProperties ?? []).map((v) => ({ label: v, clear: { estateProperties: filter.estateProperties?.filter((x) => x !== v) } })),
   ];
+  for (const p of filter.professions ?? []) chips.push({ label: p, clear: { professions: filter.professions?.filter((v) => v !== p) } });
+  if (filter.otherBusiness?.trim()) chips.push({ label: `その他：${filter.otherBusiness.trim()}`, clear: { otherBusiness: "" } });
   if (filter.constructionPermit && filter.constructionPermit !== "any") chips.push({ label: `建設業許可${filter.constructionPermit === "yes" ? "あり" : "なし"}`, clear: { constructionPermit: "any" } });
   if (filter.licensedOnly) chips.push({ label: "許可・登録確認済み", clear: { licensedOnly: false } });
   if (filter.introducibleOnly) chips.push({ label: "紹介できる人", clear: { introducibleOnly: false } });
@@ -133,6 +148,6 @@ export function ActiveSearchFilters({ filter, onChange }: Props) {
   return <div className="sn-active-filters" aria-label="選択中の検索条件"><div className="sn-chips">
     {(expanded ? chips : chips.slice(0, 3)).map((c) => <button type="button" className="sn-chip" key={c.label} onClick={() => onChange(c.clear)} aria-label={`${c.label}を解除`}>{c.label}<X size={12} aria-hidden /></button>)}
     {chips.length > 3 && <button type="button" className="sn-filter-more" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? "閉じる" : `ほか${chips.length - 3}件`}</button>}
-    <button type="button" className="sn-filter-more" onClick={() => onChange({ ...EMPTY_FILTER, prefectures: [], constructionTrades: [], constructionPermit: "any", estateTransactions: [], estateProperties: [], areaMode: "service" })}>すべて解除</button>
+    <button type="button" className="sn-filter-more" onClick={() => onChange({ ...EMPTY_FILTER, prefectures: [], constructionTrades: [], constructionPermit: "any", estateTransactions: [], estateProperties: [], professions: [], otherBusiness: "", areaMode: "service" })}>すべて解除</button>
   </div></div>;
 }

@@ -1,3 +1,4 @@
+import { matchesOtherBusiness, type Profession } from "./sns-expertise";
 import { matchesEstate, type EstateBusiness, type EstateTransaction, type EstateProperty, matchesConstruction, type ConstructionWork, type ConstructionTrade, type PermitFilter } from "./sns-construction";
 
 // 建設・不動産の酒場の作り直し（人脈ネットワークSNS）の見本（DBなし）の仮データと、つながりの計算。
@@ -64,6 +65,7 @@ export type Company = {
   licenses: readonly License[];
   construction?: readonly ConstructionWork[];
   estate?: EstateBusiness;
+  professions?: readonly Profession[];
   about: string;
   offer: readonly string[];
   want: readonly string[];
@@ -143,6 +145,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["事業用地の情報"], want: ["300坪前後の事業用地"],
   },
   {
+    professions: ["建築士"],
     id: "ono-design", name: "小野設計室", mark: "小", prefecture: "福岡県", industries: ["建設", "士業"], business: "設計事務所",
     areas: ["福岡県", "佐賀県", "熊本県"], specialties: ["中古リノベ", "店舗設計"],
     licenses: [{ name: "一級建築士事務所", number: "福岡県知事登録 第1-60112号", verified: true }],
@@ -158,6 +161,7 @@ export const COMPANIES: readonly Company[] = [
     offer: ["福岡の土地情報"], want: ["関東に対応できる不動産会社"],
   },
   {
+    professions: ["行政書士"],
     id: "mori-gyosei", name: "森行政書士事務所", mark: "森", prefecture: "東京都", industries: ["士業"], business: "行政書士",
     areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], specialties: ["建設業許可", "経営事項審査"],
     licenses: [{ name: "行政書士", number: "登録 第21081234号", verified: true }],
@@ -367,6 +371,8 @@ export type SearchFilter = {
   estateProperties?: readonly EstateProperty[];
   constructionTrades?: readonly ConstructionTrade[];
   constructionPermit?: PermitFilter;
+  professions?: readonly Profession[];
+  otherBusiness?: string;
   licensedOnly: boolean;
   introducibleOnly: boolean;
 };
@@ -382,6 +388,8 @@ function matchesCompanyFilters(c: Company, filter: SearchFilter): boolean {
     if (!c.industries.includes(industry)) return false;
     if (industry === "建設") return matchesConstruction(c.construction ?? [], filter.constructionTrades ?? [], filter.constructionPermit ?? "any");
     if (industry === "不動産") return matchesEstate(c.estate, filter.estateTransactions ?? [], filter.estateProperties ?? []);
+    if (industry === "士業") return !filter.professions?.length || (c.professions ?? []).some((p) => filter.professions?.includes(p));
+    if (industry === "その他") return matchesOtherBusiness([c.business, ...c.specialties, ...c.offer], filter.otherBusiness ?? "");
     return true;
   })) return false;
   if (filter.licensedOnly && !c.licenses.some((l) => l.verified)) return false;
@@ -685,8 +693,8 @@ export function markInvited(cards: readonly BusinessCard[], cardId: string): Bus
 // ---------- 業種の色・紹介の道・地域・期限（23「紹介の道＋地域」） ----------
 
 /** 人の色の種類。自分は「me」、会社のある人はその会社の最初の業種、会社が無ければ「other」 */
-export function kindOfPerson(person: Pick<Person, "id" | "companyId">): KindKey {
-  if (person.id === ME_ID) return "me";
+export function kindOfPerson(person: Pick<Person, "id" | "companyId">, viewerId: string | null = ME_ID): KindKey {
+  if (person.id === viewerId) return "me";
   const company = findCompany(person.companyId);
   return company ? INDUSTRY_KIND[company.industries[0]] : "other";
 }

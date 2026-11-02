@@ -43,8 +43,8 @@ export function KindIcon({ kind, size = 14 }: { kind: Exclude<KindKey, "me">; si
 }
 
 /** 顔。業種の色の輪＋右下に業種の印。自分は墨の丸に「私」。本番では本人の写真。見本は苗字 */
-export function Avatar({ person, size }: { person: Pick<Person, "id" | "name" | "companyId">; size?: "sm" | "lg" }) {
-  const kind = kindOfPerson(person);
+export function Avatar({ person, size, asOther = false }: { person: Pick<Person, "id" | "name" | "companyId">; size?: "sm" | "lg"; asOther?: boolean }) {
+  const kind = kindOfPerson(person, asOther ? null : ME_ID);
   const cls = size ? `sn-fc sn-fc--${size}` : "sn-fc";
   if (kind === "me") return <span className={cls} data-kind="me" aria-hidden>私</span>;
   return (

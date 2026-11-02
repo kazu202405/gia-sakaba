@@ -328,6 +328,46 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 .sn-hero .sn-pills { margin-top: 0.5rem; }
 .sn-hero .sn-v { margin-top: 0.75rem; }
 
+/* 人のプロフィールは、名刺と仕事の相談を先に。詳細は必要なときに開く。 */
+.sn-person-card { aspect-ratio: auto; min-height: 0; gap: 1rem; }
+.sn-profile-place { display: flex; align-items: flex-start; gap: 0.375rem; font-size: 0.75rem; line-height: 1.7; color: var(--sn-muted); }
+.sn-profile-place svg { flex: none; margin-top: 0.1875rem; }
+.sn-profile-credentials { margin-top: 0.75rem; font-size: 0.75rem; }
+.sn-profile-credentials summary { display: flex; gap: 0.5rem; align-items: center; min-height: 2.75rem; cursor: pointer; list-style: none; }
+.sn-profile-credentials summary span { color: var(--sn-muted); flex: 1; }
+.sn-profile-work { padding: 1rem 1.125rem; }
+.sn-person-profile .sn-pair { display: grid; gap: 0.75rem; margin: 0; border: 0; }
+.sn-person-profile .sn-pair > div { min-width: 0; padding: 1rem; border: 0; border-radius: var(--sn-radius-s); background: var(--sn-tint); }
+.sn-person-profile .sn-pair .sn-k { color: var(--sn-accent); font-weight: 700; margin-bottom: 0.5rem; }
+.sn-person-profile .sn-pair li + li { margin-top: 0.375rem; }
+.sn-profile-story, .sn-profile-connection { margin: 0 1.125rem; border-top: 1px solid var(--sn-line); }
+.sn-profile-story > summary, .sn-profile-route > summary { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 3.25rem; padding: 0.75rem 0; cursor: pointer; list-style: none; font-size: 0.8125rem; font-weight: 700; }
+.sn-profile-credentials summary::-webkit-details-marker, .sn-profile-story > summary::-webkit-details-marker, .sn-profile-route > summary::-webkit-details-marker { display: none; }
+.sn-person-profile details[open] > summary > svg { transform: rotate(180deg); }
+.sn-profile-story .sn-story { padding: 0 0 0.75rem; }
+.sn-profile-connection > p { padding: 0.75rem 0; }
+.sn-profile-preview-bar { max-width: 72rem; margin: 0 auto 0.75rem; padding: 1rem 1.125rem; background: var(--sn-tint); border-radius: var(--sn-radius-s); }
+.sn-preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
+.sn-preview-heading h1 { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 700; }
+.sn-preview-heading > a { display: inline-flex; align-items: center; gap: 0.25rem; min-height: 2.75rem; white-space: nowrap; color: var(--sn-accent); font-size: 0.75rem; }
+.sn-profile-preview-bar .sn-segment { background: var(--sn-paper); border: 1px solid var(--sn-line); }
+.sn-profile-preview-bar .sn-segment > button[aria-pressed="true"] { background: var(--sn-accent-soft); box-shadow: none; }
+.sn-profile-preview-bar .sn-segment > button { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+.sn-preview-note { display: flex; align-items: flex-start; gap: 0.375rem; font-size: 0.75rem; margin-top: 0.75rem; }
+.sn-preview-note svg { flex: none; margin-top: 0.1875rem; color: var(--sn-accent); }
+.sn-profile-preview-bar > .sn-meta { font-size: 0.6875rem; margin-top: 0.375rem; }
+.sn-industry-section h3 small { margin-left: 0.5rem; color: var(--sn-muted); font-size: 0.6875rem; font-weight: 400; }
+.sn-other-business > span { display: block; font-weight: 700; font-size: 0.875rem; margin-bottom: 0.625rem; }
+.sn-other-business > input { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; font-size: 1rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); background: var(--sn-paper); }
+.sn-person-profile summary:focus-visible, .sn-profile-preview-bar :is(a, button):focus-visible { outline: 2px solid var(--sn-accent); outline-offset: 3px; }
+@media (min-width: 640px) {
+  .sn-person-profile .sn-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .sn-person-profile .sn-profile-work { padding: 0.5rem 0 1rem; }
+  .sn-person-profile .sn-profile-story, .sn-person-profile .sn-profile-connection { margin-left: 0; margin-right: 0; }
+}
+
 /* 案件1件の頭：だれが・題名・業種と場所 */
 .sn-who { display: flex; gap: 0.625rem; align-items: center; font-size: 0.75rem; color: var(--sn-muted); line-height: 1.5; }
 .sn-who b { color: var(--sn-ink); font-size: 0.875rem; display: block; }

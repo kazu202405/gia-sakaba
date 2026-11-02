@@ -1,8 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { CONSTRUCTION_TRADES, matchesConstruction, matchesEstate } from "./sns-construction";
 import { EMPTY_FILTER, REGIONS, searchCompanies, searchPeople } from "./sns-mock";
+import { matchesOtherBusiness, PROFESSIONS } from "./sns-expertise";
 
 describe("エリア・専門業種の検索", () => {
+  it("士業は専門職を複数選択し、人と会社を同じ条件で探せる", () => {
+    expect(new Set(PROFESSIONS).size).toBe(PROFESSIONS.length);
+    const filter = { ...EMPTY_FILTER, industries: ["士業"] as const, professions: ["行政書士"] as const };
+    expect(searchCompanies(filter).map((c) => c.id)).toEqual(["mori-gyosei"]);
+    expect(searchPeople(filter).map((p) => p.id)).toEqual(["mori"]);
+    expect(searchCompanies({ ...filter, professions: ["行政書士", "建築士"] }).map((c) => c.id)).toEqual(["ono-design", "mori-gyosei"]);
+    expect(searchCompanies({ ...filter, professions: ["司法書士"] })).toEqual([]);
+  });
+  it("士業と建設の同時選択で、士業の条件を建設会社に押し付けない", () => {
+    const ids = searchCompanies({ ...EMPTY_FILTER, industries: ["士業", "建設"], professions: ["行政書士"], constructionTrades: ["電気"], constructionPermit: "yes" }).map((c) => c.id);
+    expect(ids).toContain("mori-gyosei");
+    expect(ids).toContain("yamamoto-densetsu");
+    expect(ids).not.toContain("ono-design");
+    expect(searchCompanies({ ...EMPTY_FILTER, professions: ["司法書士"] })).toEqual(searchCompanies(EMPTY_FILTER));
+  });
+  it("その他の自由入力は全半角・大小・空白を吸収し、具体的な仕事に一致する", () => {
+    expect(matchesOtherBusiness(["ＩＴ支援", "建設業向け業務改善"], "  it　建設業 ")).toBe(true);
+    expect(matchesOtherBusiness(["資材販売"], "清掃")).toBe(false);
+    expect(matchesOtherBusiness([], "　 ")).toBe(true);
+    expect(searchCompanies({ ...EMPTY_FILTER, industries: ["その他"], otherBusiness: "清掃" })).toEqual([]);
+  });
   it("47都道府県が重複せず、建設は29業種", () => {
     const prefs = Object.values(REGIONS).flat();
     expect(prefs).toHaveLength(47);

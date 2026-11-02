@@ -4,6 +4,7 @@
 // プロフィールの編集は /me/edit。
 
 import { useRef, useState } from "react";
+import { Eye } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   ME_ID,
@@ -33,6 +34,7 @@ export function MeScreen() {
         </p>
         <div className="sn-row-acts">
           <SnLink to="/me/edit" className="sn-btn sn-btn--main">プロフィールを編集</SnLink>
+          <SnLink to="/me/preview" className="sn-btn"><Eye aria-hidden />人からの見え方</SnLink>
         </div>
       </div>
       <PersonView person={me} relation={{ kind: "self" }} />
