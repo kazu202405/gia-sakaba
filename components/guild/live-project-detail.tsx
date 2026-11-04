@@ -363,7 +363,7 @@ function DueText({ due, today }: { due: string; today: string }) {
   const store = useGuildStore();
   const label = dueLabel(due, today, store.w);
   const [, m, d] = due.split("-");
-  return <span className={`mt-0.5 block text-xs ${label.overdue ? "text-[#c62828]" : "c-muted"}`}>{store.w("proj.dueText", { m: Number(m), d: Number(d) })}・{label.text}</span>;
+  return <span className={`mt-1 block text-sm font-medium leading-relaxed ${label.overdue ? "text-[#c62828]" : ""}`}>{store.w("proj.dueText", { m: Number(m), d: Number(d) })}・{label.text}</span>;
 }
 
 /** 編集の枠の「くり返し」欄。なし／毎週［曜日］／毎月［日にち］／毎月末 */

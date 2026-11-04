@@ -320,6 +320,9 @@ a.c-card:hover {
   appearance: none;
   display: block;
   max-width: 100%;
+  color-scheme: light;
+  font-size: 1rem;
+  -webkit-text-fill-color: currentColor;
   /* 2つ横に並べたとき「2026/09/19」が 切れないよう、左右の余白を少し詰める */
   padding-left: 0.5rem;
   padding-right: 0.5rem;
@@ -693,34 +696,34 @@ body:has(.guild-theme) [data-ui-toast-action] {
   background: #1b2340;
 }
 
-/* 部品に直接書いてある紺・生成りの色を、夜の画面の中身（main）だけ入れ替える（部品のファイルは触らない。上の帯と下のメニューは別に指定） */
-.guild-scene main [class*="text-[var(--guild-ink)]"] {
+/* 色ユーティリティ（guild-*）と旧来の変数指定の両方を、夜の画面の中身（main）だけ入れ替える。 */
+.guild-scene main :is(.text-guild-ink, [class*="text-[var(--guild-ink)]"]) {
   color: var(--guild-scene-text);
 }
-.guild-scene main [class*="bg-[var(--guild-paper)]"] {
+.guild-scene main :is(.bg-guild-paper, [class*="bg-[var(--guild-paper)]"]) {
   background-color: #0b0f1f;
 }
-.guild-scene main [class*="border-[var(--guild-ink)]"] {
+.guild-scene main :is(.border-guild-ink, [class*="border-[var(--guild-ink)]"]) {
   border-color: rgba(239, 230, 207, 0.55);
 }
-.guild-scene main [class*="divide-[var(--guild-ink)]"] > * {
+.guild-scene main :is(.divide-guild-ink, [class*="divide-[var(--guild-ink)]"]) > * {
   border-color: rgba(239, 230, 207, 0.18);
 }
 /* 生成り・薄い金の地（担当者の選択肢・人ごとの進み具合など）は、文字が生成りになるので紺の地にする */
-.guild-scene main [class*="bg-[var(--guild-bg)]"] {
+.guild-scene main :is(.bg-guild-bg, [class*="bg-[var(--guild-bg)]"]) {
   background-color: #1b2340;
 }
-.guild-scene main [class*="bg-[var(--guild-accent-light)]"] {
+.guild-scene main :is(.bg-guild-accent-light, [class*="bg-[var(--guild-accent-light)]"]) {
   background-color: rgba(217, 180, 90, 0.28);
 }
-.guild-scene main [class*="text-[var(--guild-accent-dark)]"] {
+.guild-scene main :is(.text-guild-accent-dark, [class*="text-[var(--guild-accent-dark)]"]) {
   color: #d9b45a;
 }
 .guild-scene main :is([class*="text-[#c62828]"], [class*="text-[#9d2929]"], .text-red-600) {
   color: #f4a09a;
 }
 /* 並び替えなどの切り替えボタン：選ばれている方を金にして、紺の中でも見分けられるようにする */
-.guild-scene main [class*="bg-[var(--guild-ink)]"][class*="text-[var(--guild-paper)]"] {
+.guild-scene main :is(.bg-guild-ink, [class*="bg-[var(--guild-ink)]"]):is(.text-guild-paper, [class*="text-[var(--guild-paper)]"]) {
   background-color: #d9b45a;
   color: #0b0f1f;
 }
@@ -729,6 +732,34 @@ body:has(.guild-theme) [data-ui-toast-action] {
 }
 .guild-scene main .c-choice {
   border-color: var(--guild-scene-text);
+}
+
+/* 入力の文字と地を一緒に反転する。日付は iOS Safari の文字色もそろえる。 */
+.guild-scene .c-input {
+  color-scheme: dark;
+  background: #151d32;
+  color: var(--guild-scene-text);
+  border-color: rgba(239, 230, 207, 0.55);
+}
+.guild-scene .c-input::placeholder {
+  color: rgba(239, 230, 207, 0.65);
+}
+/* 相手の表：罫線と完了結果も暗い背景で読めるようにする。 */
+.c-project-people .c-muted {
+  color: rgb(var(--guild-ink-rgb) / 0.7);
+}
+.guild-scene .c-project-people .c-muted {
+  color: rgba(239, 230, 207, 0.75);
+}
+.guild-scene .c-project-people tbody tr {
+  border-color: rgba(239, 230, 207, 0.25);
+}
+.c-project-people .tabular-nums {
+  font-family: var(--font-jp-sans), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+.guild-scene .c-project-people [class*="text-[#1f7a3d]"] {
+  color: #8cdbab;
 }
 
 /* スマホの下のメニュー */

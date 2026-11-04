@@ -201,22 +201,22 @@ export function LiveProjectPeople({ projectId, pipeline, members, editable }: { 
   ] as const;
   const shownFollowUp = followUpTabs.find((tab) => tab.key === followUpTab) ?? followUpTabs[0];
 
-  const peopleTable = (contacts: typeof pipeline.contacts, kind: "active" | "followUp") => <div className="overflow-x-auto border-2 border-guild-ink">
+  const peopleTable = (contacts: typeof pipeline.contacts, kind: "active" | "followUp") => <div className="c-project-people overflow-x-auto border-2 border-guild-ink">
       <table className="w-full min-w-max border-collapse text-sm">
         <thead><tr className="bg-guild-bg">
-          <th scope="col" className="sticky left-0 z-10 min-w-28 bg-guild-bg px-3 py-2 text-left text-xs font-normal">相手</th>
-          {visibleSteps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-xs font-normal">{step.name}</th>)}
+          <th scope="col" className="sticky left-0 z-10 min-w-28 bg-guild-bg px-3 py-2 text-left text-sm font-medium">相手</th>
+          {visibleSteps.map((step) => <th key={step.id} scope="col" className="min-w-20 px-2 py-2 text-center text-sm font-medium">{step.name}</th>)}
         </tr></thead>
         <tbody>{contacts.length === 0 && (kind === "followUp" || addingContacts.length === 0) ? <tr><td colSpan={visibleSteps.length + 1} className="c-muted px-3 py-5 text-sm">{kind === "followUp" ? (followUpContacts.length === 0 ? "まだいません。一番右の手順が「完了」になった人がここに移ります。" : "この結果の人はいません。") : "まだ相手がいません。下から追加してください。"}</td></tr> :
           contacts.map((contact) => <tr key={contact.id} className="border-t-2 border-dashed border-guild-ink/15">
             <th scope="row" className="sticky left-0 z-10 bg-guild-paper p-2 text-left font-normal">
-              <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-xs hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-[11px]">{contact.memo}</span>}</button>
-              {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={store.path(`/members/${contact.member_user_id}`)} className="c-muted mt-1 block text-[10px] underline underline-offset-2">メンバーを見る ↗</Link>}
+              <button type="button" disabled={!editable} onClick={() => selectContact(contact.id)} aria-label={`${contact.label}の名前とメモを編集`} className="block w-full text-left text-sm font-medium hover:underline disabled:cursor-default">{contact.label}{contact.memo && <span className="c-muted block text-xs font-normal">{contact.memo}</span>}</button>
+              {contact.member_user_id && members.some((member) => member.id === contact.member_user_id) && <Link href={store.path(`/members/${contact.member_user_id}`)} className="c-muted mt-1 block text-xs underline underline-offset-2">メンバーを見る ↗</Link>}
             </th>
             {visibleSteps.map((step) => {
               const record = recordOverride[`${contact.id}:${step.id}`] ?? pipeline.records.find((item) => item.contact_id === contact.id && item.step_id === step.id);
               return <td key={step.id} className="p-1 text-center">
-                <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-10 w-full px-1 text-xs tabular-nums hover:outline-2 hover:outline-guild-ink disabled:cursor-default">
+                <button type="button" disabled={!editable} onClick={() => selectCell(contact.id, step.id)} aria-label={`${contact.label}の${step.name}を編集`} className="min-h-11 w-full px-1 text-sm tabular-nums hover:outline-2 hover:outline-guild-ink disabled:cursor-default">
                   {record?.done_on ? <span className="bg-guild-ink px-1 text-guild-paper">✓ {shortDate(record.done_on)}</span> : record?.planned_on ? (record.planned_on < todayInJapan() ? <span className="px-1 text-[#c62828]">{shortDate(record.planned_on)} 遅れ</span> : <span className="c-muted">{shortDate(record.planned_on)} 予定</span>) : record?.result ? null : <span className="c-muted">―</span>}
                   {record?.result && <span className={`ml-1 px-1 font-bold ${record.result === "ok" ? "text-[#1f7a3d]" : "text-[#c62828]"}`}>{record.result === "ok" ? "OK" : "NG"}</span>}
                 </button>
