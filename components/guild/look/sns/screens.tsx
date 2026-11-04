@@ -295,6 +295,13 @@ export function PersonView({ person, relation, preview = false, heroExtra, child
           <Story k="これから" v={person.future} />
         </div>
         <OfferWant offer={person.offer} want={person.want} />
+        {/* 他の人から見たときの会社情報（連絡先は本人が選んだ見せる相手どおり）。マイページは自分の「会社情報」があるので出さない */}
+        {company && relation.kind !== "self" && (
+          <section className="sn-person-company">
+            <div className="sn-sec-h"><h2>会社情報</h2><SnLink to={`/companies/${company.id}`}>会社のページ</SnLink></div>
+            <CompanyFacts company={company} relation={relation} />
+          </section>
+        )}
         {children}
       </div>
       {relation.kind !== "self" && relation.kind !== "none" && (

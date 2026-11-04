@@ -64,6 +64,7 @@
   .sn-page--detail .sn-story, .sn-page--detail .sn-dl > div { padding-left: 0; padding-right: 0; }
   .sn-page--detail .sn-pair { border-top: none; margin: 0; }
   .sn-page--detail .sn-pair > div:first-child { padding-left: 0; }
+  .sn-page--detail .sn-person-company { margin-left: 0; margin-right: 0; }
 
   /* マイページ：左の名刺と入口は残したまま、右をプロフィール→依頼→知り合い→招待→設定と読み進める */
   .sn-page--me { --sn-me-pad: 0; grid-template-areas: "side main"; grid-template-rows: auto; }

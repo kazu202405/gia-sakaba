@@ -449,7 +449,13 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 
 .sn-me-sec { margin-top: 2rem; padding: 0 var(--sn-me-pad); scroll-margin-top: 4.25rem; }
 .sn-me-sec > .sn-sec-h { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); margin-bottom: 0.25rem; }
-.sn-me-sec .sn-sec-h a { display: inline-flex; align-items: center; min-height: 2.75rem; margin: -0.75rem 0; font-size: 0.8125rem; font-weight: 700; color: var(--sn-accent); }
+/* 他の人から見たプロフィールの会社情報（マイページのまとまりと同じ区切り方） */
+.sn-person-company { margin: 2rem 1.125rem 0; }
+.sn-person-company > .sn-sec-h { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); margin-bottom: 0.25rem; }
+.sn-person-company .sn-dl { margin-top: 0; }
+.sn-person-company .sn-dl > div { padding-left: 0; padding-right: 0; }
+.sn-person-company .sn-dl dd { overflow-wrap: anywhere; }
+:is(.sn-me-sec, .sn-person-company) .sn-sec-h a { display: inline-flex; flex: none; white-space: nowrap; align-items: center; min-height: 2.75rem; margin: -0.75rem 0; font-size: 0.8125rem; font-weight: 700; color: var(--sn-accent); }
 .sn-me-sec .sn-dl { margin-top: 0; }
 .sn-me-sec .sn-dl > div { padding-left: 0; padding-right: 0; }
 .sn-me-sec .sn-dl dd { overflow-wrap: anywhere; }

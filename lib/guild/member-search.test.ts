@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { memberMatchesQuery } from "./member-search";
 
 const m = {
-  display_name: "五島 一将", name_kana: "ごしま かずまさ", job: "経営者", headline: "人と仕事をつなぐ",
+  display_name: "五島 一将", name_kana: "ごしま かずゆき", job: "経営者", headline: "人と仕事をつなぐ",
   company_name: "GIA", industry: "コンサル", region: "東京", bio: "採用の相談にのります", values_text: "", looking_for: "", keywords: ["決算"],
 };
 
