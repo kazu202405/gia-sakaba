@@ -132,7 +132,7 @@ export const ME_COMPANY_ID = "sakaba-office";
 export const COMPANIES: readonly Company[] = ([
   {
     id: ME_COMPANY_ID, name: "建設・不動産の酒場 運営事務局", kana: "けんせつふどうさんのさかば うんえいじむきょく", mark: "酒",
-    postalCode: "530-0000", prefecture: "大阪府", city: "大阪市北区", street: "0-0-0", phone: "06-0000-0000", fax: "", email: "office@sakaba.example.com", url: "",
+    postalCode: "530-0000", prefecture: "大阪府", city: "大阪市北区", street: "0-0-0", phone: "06-0000-0010", fax: "", email: "office@sakaba.example.com", url: "",
     industries: ["その他"], business: "建設・不動産の人の集まりの運営",
     areas: ["大阪府", "京都府", "兵庫県", "奈良県", "滋賀県", "和歌山県", "三重県"], specialties: ["人の引き合わせ", "アプリ・システムの相談"], licenses: [],
     about: "建設・不動産の人たちが、紹介し合える集まりを運営しています。",
@@ -234,7 +234,7 @@ export const COMPANIES: readonly Company[] = ([
 const P = (p: Omit<Person, "contactReveal">): Person => ({ contactReveal: DEFAULT_PERSON_REVEAL, ...p });
 
 export const PEOPLE: readonly Person[] = [
-  P({ id: ME_ID, name: "五島 一将", kana: "ごしま かずまさ", companyId: ME_COMPANY_ID, title: "管理者", prefecture: "大阪府", say: "困りごとは、まず聞かせてください",
+  P({ id: ME_ID, name: "五島 一将", kana: "ごしま かずゆき", companyId: ME_COMPANY_ID, title: "管理者", prefecture: "大阪府", say: "困りごとは、まず聞かせてください",
     past: "システムの仕事を15年。建設・不動産の会社の困りごとを聞くうちに、人をつなぐ側になりました。",
     now: "建設・不動産の人たちの集まりを運営しています。相談を聞いて、合う人に引き合わせるのが仕事です。",
     future: "紹介のおねがいが、気軽に頼めて気軽に断れる場にしたい。",

@@ -1,7 +1,7 @@
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { companyOf, findPerson, kindOfPerson, ME_ID, type Person } from "./sns-mock";
+import { companyOf, findCompany, findPerson, kindOfPerson, ME_COMPANY_ID, ME_ID, type Person } from "./sns-mock";
 import { PersonView } from "@/components/guild/look/sns/screens";
 import { ProfilePreviewScreen } from "@/components/guild/look/sns/profile-preview";
 import { MeScreen } from "@/components/guild/look/sns/me-screens";
@@ -34,6 +34,28 @@ describe("マイページ", () => {
   it("知り合いは、はじめ数人だけ出し、残りの人数を押して開ける", () => {
     expect(html.match(/class="sn-me-row"/g)).toHaveLength(3);
     expect(html).toMatch(/あと<!-- -->\d+<!-- -->人を見る|あと\d+人を見る/);
+  });
+});
+
+describe("他の人から見たプロフィールの会社情報", () => {
+  const me = findPerson(ME_ID)!;
+  const company = findCompany(ME_COMPANY_ID)!;
+  const view = (kind: "none" | "direct" | "self") =>
+    renderToStaticMarkup(createElement(PersonView, { person: me, relation: { kind }, preview: kind !== "self" }));
+  it("まだつながっていない人にも、会社名・所在地・業種・事業の内容が見える", () => {
+    const html = view("none");
+    expect(html).toContain("<h2>会社情報</h2>");
+    for (const text of [company.name, company.city, company.business, ...company.industries]) expect(html).toContain(text);
+  });
+  it("連絡先は見せる相手どおり（知り合いだけの電話は、知り合いにだけ出る）", () => {
+    expect(company.reveal.phone).toBe("friends");
+    expect(view("none")).not.toContain(company.phone);
+    expect(view("none")).toContain("知り合いになると見られます");
+    expect(view("direct")).toContain(company.phone);
+  });
+  it("マイページでは会社情報を二重に出さない", () => {
+    expect(view("self")).not.toContain("<h2>会社情報</h2>");
+    expect(renderToStaticMarkup(createElement(MeScreen)).match(/<h2>会社情報<\/h2>/g)).toHaveLength(1);
   });
 });
 
