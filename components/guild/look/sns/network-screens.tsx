@@ -69,7 +69,7 @@ export function NetworkScreen() {
           </button>
           <button type="button" role="tab" aria-selected={tab === "replied"} onClick={() => setTab("replied")}>返事した {repliedCount}</button>
           <button type="button" role="tab" aria-selected={tab === "sent"} onClick={() => setTab("sent")}>送った {sentCount}</button>
-          <button type="button" role="tab" aria-selected={tab === "log"} onClick={() => setTab("log")}>紹介の記録 {logCount}</button>
+          <button type="button" role="tab" aria-selected={tab === "log"} onClick={() => setTab("log")}>記録 {logCount}</button>
         </div>
         {tab === "incoming" && <IncomingList />}
         {tab === "replied" && <RepliedList />}
