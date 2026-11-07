@@ -5,9 +5,10 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, Circle, Clock, FileText, HardHat, House, MapPin, Send, type LucideIcon } from "lucide-react";
+import { Check, Circle, Clock, FileText, HardHat, House, MapPin, MessageSquare, Send, type LucideIcon } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import { PERMIT_LABELS } from "@/lib/guild/look/sns-construction";
+import { createIntroRequest, hasOpenRequest, nextIntroId } from "@/lib/guild/look/sns-network";
 import {
   INDUSTRY_KIND,
   INTRO_NOTE_MAX,
@@ -18,16 +19,18 @@ import {
   companyOf,
   dueInfo,
   findPerson,
+  introStatusText,
   kindOfCompany,
   kindOfPerson,
+  maskedLabel,
   personContactRows,
   postRegions,
   relationText,
-  relationTo,
   relationToCompany,
   revealLabel,
   routeTo,
   shortName,
+  todayIso,
   type Company,
   type Industry,
   type KindKey,
@@ -36,7 +39,8 @@ import {
   type Relation,
   type WantPost,
 } from "@/lib/guild/look/sns-mock";
-import { SnLink, useSnState } from "./store";
+import { ComposeFlow } from "./flow";
+import { SnLink, useRelation, useSnState } from "./store";
 
 /** 業種の小さな印（建設＝ヘルメット／不動産＝家／士業＝書類／その他＝丸）。自分は印なし */
 const KIND_ICON: Record<Exclude<KindKey, "me">, LucideIcon> = { build: HardHat, estate: House, pro: FileText, other: Circle };
@@ -78,7 +82,8 @@ export function PlainPill({ icon, children }: { icon?: React.ReactNode; children
  * 自分が出した案件は「あなたの依頼」、道が無い相手は相手の顔だけ。
  */
 export function RoutePath({ author }: { author: Person }) {
-  const route = routeTo(author.id);
+  const { net } = useSnState();
+  const route = routeTo(author.id, ME_ID, net);
   if (author.id === ME_ID) {
     return <div className="sn-path"><Avatar person={author} size="sm" /><span className="sn-path-note">あなたの依頼</span></div>;
   }
@@ -216,7 +221,7 @@ export function RelationLine({ relation }: { relation: Relation }) {
  */
 export function RouteLine({ person, relation }: { person: Person; relation: Relation }) {
   if (relation.kind === "self") return null;
-  if (relation.kind === "none") {
+  if (relation.kind === "none" || relation.kind === "masked") {
     return <div className="sn-steps-route"><p className="sn-step-none">まだ紹介できる道がありません</p></div>;
   }
   const middle = relation.kind === "via" ? relation.via : null;
@@ -251,6 +256,7 @@ function RouteStep({ person, note, link }: { person: Person; note: string; link?
 /** 人の行（探す・人脈・会社の所属で使う）。名刺の並び：ふりがな・名前・会社と役職、右に所在地と対応エリア、その下に一言・許可・つながり */
 export function PersonRow({ person }: { person: Person }) {
   const company = companyOf(person);
+  const relation = useRelation(person.id);
   return (
     <SnLink to={`/people/${person.id}`} className="sn-row sn-mrow">
       <Avatar person={person} />
@@ -265,7 +271,7 @@ export function PersonRow({ person }: { person: Person }) {
         </div>
         <Say className="sn-mrow-say">{person.say}</Say>
         {company && <p className="sn-mrow-lic"><LicenseTags licenses={company.licenses} /></p>}
-        <RelationLine relation={relationTo(person.id)} />
+        <RelationLine relation={relation} />
       </div>
     </SnLink>
   );
@@ -273,6 +279,7 @@ export function PersonRow({ person }: { person: Person }) {
 
 /** 会社の行（探す） */
 export function CompanyRow({ company }: { company: Company }) {
+  const { net } = useSnState();
   return (
     <SnLink to={`/companies/${company.id}`} className="sn-row sn-mrow">
       <Logo company={company} />
@@ -286,7 +293,7 @@ export function CompanyRow({ company }: { company: Company }) {
         </div>
         <p className="sn-mrow-say">得意：{company.specialties.join("・")}</p>
         <p className="sn-mrow-lic"><LicenseTags licenses={company.licenses} /></p>
-        <RelationLine relation={relationToCompany(company.id).relation} />
+        <RelationLine relation={relationToCompany(company.id, ME_ID, net).relation} />
       </div>
     </SnLink>
   );
@@ -330,38 +337,27 @@ export function Modal({ title, onClose, busy = false, children }: { title: strin
 const MOCK_SEND_MS = 900;
 
 /**
- * 紹介をおねがいするボタン（設計書7：A → B に頼み、B が C に確かめる）。
+ * 紹介をおねがいする流れ（設計書7：A → B に頼み、B が承認して C に聞く）。
  * 人に届く文章なので、書く → 「この内容で送りますか？」→ 送る の順。「もどって なおす」で書いた内容は消えない。
- * 錠は押した瞬間にかけ、送ったあとは「おねがい中」のまま押せない（二重に頼まない）。
+ * vias が2人以上なら、書く画面の上に「だれにたのみますか」を出す（最初は1人目。確かめる画面の「届く人」は選んだ人）。
+ * masked＝名前を伏せた相手。書く画面も確かめる画面も、業種・役職の札だけを出す（記録には targetId を持つが、つながるまで名前を出さない）。
+ * 錠は押した瞬間にかけ、送れたら記録の追加・トースト・窓を閉じるを同じ瞬間に行う。
  */
-export function IntroRequestButton({ person, relation }: { person: Person; relation: Relation }) {
-  const { sentIntros, addSentIntro } = useSnState();
-  const [step, setStep] = useState<"closed" | "write" | "review">("closed");
+export function IntroRequestFlow({ vias, target, masked, onClose }: { vias: readonly Person[]; target: Person; masked: boolean; onClose: () => void }) {
+  const { introRecords, addIntroRecord } = useSnState();
+  const [viaId, setViaId] = useState(vias[0]?.id ?? "");
+  const [step, setStep] = useState<"write" | "review">("write");
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  const via = vias.find((v) => v.id === viaId) ?? vias[0];
+  if (!via) return null;
 
-  if (relation.kind === "self" || relation.kind === "none") return null;
-
-  if (relation.kind === "direct") {
-    return <ContactButton person={person} relation={relation} />;
-  }
-
-  const via = relation.via;
-  const sentVia = sentIntros[person.id];
-  if (sentVia) {
-    return (
-      <button type="button" className="sn-btn sn-btn--wide" disabled>
-        おねがい中（{shortName(via)}さんの返事を待っています）
-      </button>
-    );
-  }
-
+  const label = masked ? `${maskedLabel(target)}の方` : `${target.name}さん`;
   const close = () => {
     if (busy) return;
-    setStep("closed");
-    setError("");
+    onClose();
   };
 
   const toReview = () => {
@@ -378,58 +374,147 @@ export function IntroRequestButton({ person, relation }: { person: Person; relat
     lock.current = true;
     setBusy(true);
     window.setTimeout(() => {
-      // 画面の変化（ボタンが「おねがい中」に）とトーストを同じ瞬間に出す。錠は外さない（もう押せない状態になる）
-      addSentIntro(person.id, via.id);
+      const record = createIntroRequest({
+        id: nextIntroId(introRecords), requesterId: ME_ID, introducerId: via.id, targetId: target.id,
+        note, maskedForRequester: masked, at: todayIso(),
+      });
+      if (!record) {
+        uiToast("送れませんでした。内容を確かめてもう一度お試しください", "error");
+        lock.current = false;
+        setBusy(false);
+        setStep("write");
+        return;
+      }
+      // 画面の変化（「おねがい中」の表示）とトーストを同じ瞬間に出す。錠は外さない（この窓は閉じる）
+      addIntroRecord(record);
       setBusy(false);
-      setStep("closed");
+      onClose();
       uiToast(`${shortName(via)}さんにおねがいしました`);
     }, MOCK_SEND_MS);
   };
 
+  if (step === "review") {
+    return (
+      <Modal title="この内容で送りますか？" onClose={() => !busy && setStep("write")} busy={busy}>
+        {!masked && <MeetPicture people={[null, via, target]} />}
+        <dl className="sn-review">
+          <dt>届く人</dt>
+          <dd>{via.name}さん</dd>
+          <dt>紹介してほしい人</dt>
+          <dd>{masked ? `${label}（名前は伏せています）` : `${target.name}さん（${companyOf(target)?.name ?? ""}）`}</dd>
+          <dt>用件</dt>
+          <dd>{note.trim()}</dd>
+        </dl>
+        <div className="sn-modal-acts">
+          <button type="button" className="sn-btn" disabled={busy} onClick={() => setStep("write")}>もどって なおす</button>
+          <button type="button" className="sn-btn sn-btn--main" disabled={busy} onClick={send}>{busy ? "送っています…" : "送る"}</button>
+        </div>
+      </Modal>
+    );
+  }
+  return (
+    <Modal
+      title={masked ? `${shortName(via)}さんに、つながりのある${label}の紹介をおねがいする` : `${shortName(via)}さんに、${shortName(target)}さんの紹介をおねがいする`}
+      onClose={close}
+    >
+      {vias.length >= 2 && (
+        <fieldset className="sn-field sn-via-pick">
+          <legend>だれにたのみますか</legend>
+          {vias.map((v) => (
+            <label key={v.id} className="sn-check sn-via-opt">
+              <input type="radio" name="sn-intro-via" checked={v.id === via.id} onChange={() => setViaId(v.id)} />
+              <Avatar person={v} size="sm" />
+              <span>{v.name}<small>{shortName(v)}さんの知り合い</small></span>
+            </label>
+          ))}
+        </fieldset>
+      )}
+      <p className="sn-meta sn-modal-lead">
+        {shortName(via)}さんが承認して{masked ? "つながりのある方" : `${shortName(target)}さん`}に確かめ、よければつながります。断られることもあります。
+      </p>
+      <label className="sr-only" htmlFor="sn-intro-note">用件</label>
+      <textarea
+        id="sn-intro-note"
+        value={note}
+        maxLength={INTRO_NOTE_MAX}
+        placeholder="例：九州の太陽光の保守で、一度お話を聞きたいです"
+        onChange={(e) => setNote(e.target.value)}
+        aria-invalid={error !== ""}
+        aria-describedby={error ? "sn-intro-error" : undefined}
+      />
+      {error && <p id="sn-intro-error" className="sn-error" role="alert">{error}</p>}
+      <div className="sn-modal-acts">
+        <button type="button" className="sn-btn" onClick={close}>やめる</button>
+        <button type="button" className="sn-btn sn-btn--main" onClick={toReview}>内容を確かめる</button>
+      </div>
+    </Modal>
+  );
+}
+
+/** 直接メッセージ（直接連絡OKの相手だけ）：書く → この内容で送りますか？ → 送る。空は閉じずに赤字で理由 */
+function DirectMessageFlow({ person, onClose }: { person: Person; onClose: () => void }) {
+  const { sendMessage } = useSnState();
+  return (
+    <ComposeFlow
+      title={`${shortName(person)}さんに直接メッセージを送る`}
+      lead={`${shortName(person)}さんは、知り合いからの直接の連絡を受けつけています。`}
+      placeholder="例：はじめまして。太陽光の保守の件で、お話をうかがいたいです"
+      required
+      emptyMessage="メッセージを書いてください"
+      reviewRows={(note) => [
+        { label: "届く人", value: `${person.name}さん` },
+        { label: "メッセージ", value: note },
+      ]}
+      onClose={onClose}
+      onSent={(note) => {
+        // 画面の変化（送った一覧に並ぶ）とトーストを同じ瞬間に出す
+        const ok = sendMessage(person.id, note);
+        onClose();
+        if (ok) uiToast(`${shortName(person)}さんにメッセージを送りました`);
+        else uiToast("送れませんでした。直接連絡できない相手です", "error");
+      }}
+    />
+  );
+}
+
+/**
+ * 紹介をおねがいするボタン。つながりに応じて出し分ける：
+ * 直接の知り合い＝連絡先／紹介の道（直接連絡OKの人がいる）＝「直接メッセージを送る」と「紹介をたのむ」／紹介の道のみ＝「紹介をたのむ」だけ／それ以外は出さない。
+ * 同じ相手に返事待ちの依頼があるあいだは「おねがい中」のまま押せない（二重に頼まない）。
+ */
+export function IntroRequestButton({ person, relation }: { person: Person; relation: Relation }) {
+  const { introRecords } = useSnState();
+  const [flow, setFlow] = useState<"closed" | "intro" | "message">("closed");
+
+  if (relation.kind !== "direct" && relation.kind !== "via") return null;
+  if (relation.kind === "direct") {
+    return <ContactButton person={person} relation={relation} />;
+  }
+
+  const pending = introRecords.find((r) => r.requesterId === ME_ID && r.targetId === person.id && hasOpenRequest([r], ME_ID, person.id));
+  const askLabel = relation.vias.length === 1 ? `${shortName(relation.via)}さんに紹介をたのむ` : "紹介をたのむ";
+  const askButton = pending ? (
+    <button type="button" className="sn-btn sn-btn--wide" disabled>
+      おねがい中（{introStatusText(pending)}）
+    </button>
+  ) : (
+    <button type="button" className={relation.canDirect ? "sn-btn sn-btn--wide" : "sn-btn sn-btn--main sn-btn--wide"} onClick={() => setFlow("intro")}>
+      <Send aria-hidden />{askLabel}
+    </button>
+  );
+
   return (
     <>
-      <button type="button" className="sn-btn sn-btn--main sn-btn--wide" onClick={() => setStep("write")}>
-        <Send aria-hidden />{shortName(via)}さんに紹介をたのむ
-      </button>
-      {step === "write" && (
-        <Modal title={`${shortName(via)}さんに、${shortName(person)}さんの紹介をおねがいする`} onClose={close}>
-          <p className="sn-meta sn-modal-lead">
-            {shortName(via)}さんが{shortName(person)}さんに確かめて、{shortName(person)}さんがよければつながります。断られることもあります。
-          </p>
-          <label className="sr-only" htmlFor="sn-intro-note">用件</label>
-          <textarea
-            id="sn-intro-note"
-            value={note}
-            maxLength={INTRO_NOTE_MAX}
-            placeholder="例：九州の太陽光の保守で、一度お話を聞きたいです"
-            onChange={(e) => setNote(e.target.value)}
-            aria-invalid={error !== ""}
-            aria-describedby={error ? "sn-intro-error" : undefined}
-          />
-          {error && <p id="sn-intro-error" className="sn-error" role="alert">{error}</p>}
-          <div className="sn-modal-acts">
-            <button type="button" className="sn-btn" onClick={close}>やめる</button>
-            <button type="button" className="sn-btn sn-btn--main" onClick={toReview}>内容を確かめる</button>
-          </div>
-        </Modal>
-      )}
-      {step === "review" && (
-        <Modal title="この内容で送りますか？" onClose={() => !busy && setStep("write")} busy={busy}>
-          <MeetPicture people={[null, via, person]} />
-          <dl className="sn-review">
-            <dt>届く人</dt>
-            <dd>{via.name}さん</dd>
-            <dt>紹介してほしい人</dt>
-            <dd>{person.name}さん（{companyOf(person)?.name ?? ""}）</dd>
-            <dt>用件</dt>
-            <dd>{note.trim()}</dd>
-          </dl>
-          <div className="sn-modal-acts">
-            <button type="button" className="sn-btn" disabled={busy} onClick={() => setStep("write")}>もどって なおす</button>
-            <button type="button" className="sn-btn sn-btn--main" disabled={busy} onClick={send}>{busy ? "送っています…" : "送る"}</button>
-          </div>
-        </Modal>
-      )}
+      {relation.canDirect ? (
+        <div className="sn-sticky-pair">
+          {askButton}
+          <button type="button" className="sn-btn sn-btn--main sn-btn--wide" onClick={() => setFlow("message")}>
+            <MessageSquare aria-hidden />直接メッセージを送る
+          </button>
+        </div>
+      ) : askButton}
+      {flow === "intro" && <IntroRequestFlow vias={relation.vias} target={person} masked={false} onClose={() => setFlow("closed")} />}
+      {flow === "message" && <DirectMessageFlow person={person} onClose={() => setFlow("closed")} />}
     </>
   );
 }

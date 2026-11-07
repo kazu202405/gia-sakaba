@@ -26,7 +26,6 @@ import {
   makeWantPost,
   postRegions,
   regionOf,
-  relationTo,
   shortName,
   sortByCloseness,
   suggestIntroducee,
@@ -40,7 +39,7 @@ import {
 } from "@/lib/guild/look/sns-mock";
 import { ComposeFlow, SEND_MS } from "./flow";
 import { Avatar, IndustryPill, MeetPicture, Modal, PlainPill, RouteLine, WantRow } from "./parts";
-import { SnLink, useSn, useSnState } from "./store";
+import { SnLink, useRelation, useSn, useSnState } from "./store";
 import { DateInput } from "@/components/guild/form-parts";
 
 function toggle<T>(list: readonly T[], v: T): T[] {
@@ -50,10 +49,10 @@ function toggle<T>(list: readonly T[], v: T): T[] {
 // ---------- 一覧 ----------
 
 export function PostsScreen() {
-  const { myPosts } = useSnState();
+  const { myPosts, net } = useSnState();
   const [category, setCategory] = useState<PostCategory | null>(null);
   const all = wantPosts(myPosts);
-  const posts = sortByCloseness(filterWantPosts(all, category));
+  const posts = sortByCloseness(filterWantPosts(all, category), ME_ID, net);
 
   return (
     <div className="sn-page sn-page--filters">
@@ -89,9 +88,10 @@ export function PostsScreen() {
 // ---------- 1件 ----------
 
 export function PostScreen({ id }: { id: string }) {
-  const { myPosts, myAnswers, addAnswer } = useSnState();
+  const { myPosts, myAnswers, addAnswer, net } = useSnState();
   const [answering, setAnswering] = useState<AnswerKind | null>(null);
   const post = findWantPost(id, myPosts);
+  const authorRelation = useRelation(post?.authorId ?? "");
   if (!post) return <p className="sn-empty">この案件は見つかりませんでした</p>;
   const author = findPerson(post.authorId);
   if (!author) return <p className="sn-empty">この案件は見つかりませんでした</p>;
@@ -100,7 +100,7 @@ export function PostScreen({ id }: { id: string }) {
   const answers = answersFor(post.id, myAnswers);
   const answered = (kind: AnswerKind) => myAnswers.some((a) => a.postId === post.id && a.kind === kind);
   const due = dueInfo(post.deadline);
-  const introducee = suggestIntroducee(post);
+  const introducee = suggestIntroducee(post, ME_ID, net);
   const knowLabel = introducee ? `${shortName(introducee)}さんを紹介する` : ANSWER_LABEL.know;
 
   return (
@@ -130,7 +130,7 @@ export function PostScreen({ id }: { id: string }) {
             <div className="sn-sec">
               <div className="sn-sec-h"><h2>{shortName(author)}さんに届く道</h2></div>
             </div>
-            <RouteLine person={author} relation={relationTo(author.id)} />
+            <RouteLine person={author} relation={authorRelation} />
           </>
         )}
       </aside>

@@ -7,7 +7,6 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { MapPin, Search } from "lucide-react";
 import {
-  INCOMING_INTRO_REQUESTS,
   INDUSTRIES,
   ME_ID,
   NETWORK_SUMMARY,
@@ -21,7 +20,6 @@ import {
   peopleOf,
   personContactRows,
   regionCounts,
-  relationTo,
   relationToCompany,
   searchCompanies,
   searchPeople,
@@ -33,19 +31,20 @@ import {
   type Relation,
   type SearchFilter,
 } from "@/lib/guild/look/sns-mock";
+import { awaitingReply } from "@/lib/guild/look/sns-network";
 import { Avatar, CompanyFacts, CompanyRow, ContactList, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
-import { SnLink, useSnState } from "./store";
+import { SnLink, useRelation, useSnState } from "./store";
 import { SearchFilters, ActiveSearchFilters } from "./search-filters";
 
 // ---------- ホーム ----------
 
 /** ホーム：検索 → 届いた紹介 → 探しています。地域は一覧の見出しで切り替える。 */
 export function HomeScreen() {
-  const { myPosts } = useSnState();
+  const { myPosts, net } = useSnState();
   const [region, setRegion] = useState<string | null>(null);
   const all = wantPosts(myPosts);
   const counts = regionCounts(all);
-  const posts = sortByCloseness(filterByRegion(all, region));
+  const posts = sortByCloseness(filterByRegion(all, region), ME_ID, net);
   return (
     <div className="sn-page">
       <div className="sn-page-main">
@@ -106,20 +105,23 @@ function NetworkStats() {
 
 /** まだ返事をしていない、届いた紹介のおねがい（藍の面）。押すとやり取りの画面で返事をする */
 function IncomingRequests() {
-  const { introReplies } = useSnState();
-  const waiting = INCOMING_INTRO_REQUESTS.filter((r) => !introReplies[r.id]);
+  const { introRecords } = useSnState();
+  const waiting = awaitingReply(introRecords, ME_ID);
   return (
     <>
       {waiting.map((r) => {
-        const from = findPerson(r.fromId);
-        const to = findPerson(r.toId);
-        if (!from || !to) return null;
+        const from = findPerson(r.requesterId);
+        const to = findPerson(r.targetId);
+        const introducer = findPerson(r.introducerId);
+        if (!from || !to || !introducer) return null;
+        // 自分が間の人（B）なら「あなた経由で〜」、紹介される本人（C）なら「〇〇さんが、あなたを紹介したいそうです」
+        const asTarget = r.status === "asking_target";
         return (
           <div key={r.id} className="sn-ask">
-            <Avatar person={from} />
+            <Avatar person={asTarget ? introducer : from} />
             <p>
-              <b>{from.name}さんから、紹介のおねがい</b>
-              <small>あなた経由で{shortName(to)}さんとつながりたいそうです</small>
+              <b>{asTarget ? `${introducer.name}さんから、紹介のおねがい` : `${from.name}さんから、紹介のおねがい`}</b>
+              <small>{asTarget ? `${shortName(introducer)}さんが、${shortName(from)}さんをあなたに紹介したいそうです` : `あなた経由で${shortName(to)}さんとつながりたいそうです`}</small>
             </p>
             <SnLink to="/network" className="sn-ask-go">中身を見る</SnLink>
           </div>
@@ -156,7 +158,7 @@ function RecentFaces() {
 // ---------- 探す ----------
 
 export function SearchScreen() {
-  const { myCompany } = useSnState();
+  const { myCompany, net } = useSnState();
   const params = useSearchParams();
   const [tab, setTab] = useState<"people" | "companies">("people");
   const [filter, setFilter] = useState<SearchFilter>(() => {
@@ -170,8 +172,8 @@ export function SearchScreen() {
       introducibleOnly: false,
     };
   });
-  const people = searchPeople(filter);
-  const companies = searchCompanies(filter, ME_ID, myCompany);
+  const people = searchPeople(filter, ME_ID, net);
+  const companies = searchCompanies(filter, ME_ID, myCompany, net);
   const set = (patch: Partial<SearchFilter>) => setFilter((f) => ({ ...f, ...patch }));
 
   return (
@@ -237,9 +239,10 @@ function NoHit() {
 
 export function PersonScreen({ id }: { id: string }) {
   const { me } = useSnState();
+  const relation = useRelation(id);
   const person = id === me.id ? me : findPerson(id);
   if (!person) return <p className="sn-empty">この人は見つかりませんでした</p>;
-  return <PersonView person={person} relation={relationTo(person.id)} />;
+  return <PersonView person={person} relation={relation} />;
 }
 
 /**
@@ -304,7 +307,7 @@ export function PersonView({ person, relation, preview = false, heroExtra, child
         )}
         {children}
       </div>
-      {relation.kind !== "self" && relation.kind !== "none" && (
+      {(relation.kind === "direct" || relation.kind === "via") && (
         <div className="sn-sticky">
           <IntroRequestButton person={person} relation={relation} />
         </div>
@@ -349,10 +352,10 @@ function OfferWant({ offer, want }: { offer: readonly string[]; want: readonly s
 // ---------- 会社の詳しいページ ----------
 
 export function CompanyScreen({ id }: { id: string }) {
-  const { myCompany } = useSnState();
+  const { myCompany, net } = useSnState();
   const company = id === myCompany.id ? myCompany : findCompany(id);
   if (!company) return <p className="sn-empty">この会社は見つかりませんでした</p>;
-  const { relation, person } = relationToCompany(company.id);
+  const { relation, person } = relationToCompany(company.id, ME_ID, net);
   const members = peopleOf(company.id);
   return (
     <div className="sn-page sn-page--detail">
@@ -392,7 +395,7 @@ export function CompanyScreen({ id }: { id: string }) {
           </div>
         </section>
       </div>
-      {person && relation.kind !== "self" && relation.kind !== "none" && (
+      {person && (relation.kind === "direct" || relation.kind === "via") && (
         <div className="sn-sticky">
           <IntroRequestButton person={person} relation={relation} />
         </div>

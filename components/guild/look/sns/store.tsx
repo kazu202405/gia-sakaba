@@ -8,36 +8,52 @@ import Link from "next/link";
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import {
+  BASE_NET,
   BUSINESS_CARDS,
   COMPANIES,
   DEFAULT_PALETTE,
+  INTRO_RECORDS_SEED,
   ME_COMPANY_ID,
   ME_ID,
   PALETTES,
   PEOPLE,
   SNS_BASE,
+  makeDirectMessage,
+  openRelation,
+  relationTo,
+  todayIso,
+  withConnection,
+  withOwnerSettings,
   type BusinessCard,
   type Company,
-  type IntroReply,
+  type NetState,
   type PaletteKey,
   type Person,
+  type Relation,
+  type SentMessage,
   type WantAnswer,
   type WantPost,
 } from "@/lib/guild/look/sns-mock";
-
-/** 送った紹介のおねがい（相手の id → おねがいした知り合いの id） */
-type SentIntros = Readonly<Record<string, string>>;
+import type { IntroRecord, NetLevel } from "@/lib/guild/look/sns-network";
 
 type Ctx = {
   palette: PaletteKey;
   setPalette: (p: PaletteKey) => void;
-  sentIntros: SentIntros;
-  addSentIntro: (targetId: string, viaId: string) => void;
   reactions: ReadonlySet<string>;
   toggleReaction: (key: string) => void;
-  /** 届いた紹介のおねがいへの返事（おねがいの id → 返事） */
-  introReplies: Readonly<Record<string, IntroReply>>;
-  addIntroReply: (requestId: string, reply: IntroReply) => void;
+  /** つながりの判定に使う設定と、紹介でつながった人（relationTo などにそのまま渡す） */
+  net: NetState;
+  /** 自分の公開レベルの設定を置き換える（一括と、知り合いごとの個別） */
+  saveNetSettings: (ownerId: string, level: NetLevel, overrides: Readonly<Record<string, NetLevel>>) => void;
+  /** 紹介でつながった2人を知り合いに足す */
+  addConnection: (a: string, b: string) => void;
+  /** 紹介依頼の記録。足す・置き換える（履歴は sns-network.ts の関数が足すだけ） */
+  introRecords: readonly IntroRecord[];
+  addIntroRecord: (record: IntroRecord) => void;
+  updateIntroRecord: (id: string, fn: (record: IntroRecord) => IntroRecord) => void;
+  /** 直接送ったメッセージ。sendMessage は、直接連絡OKの相手にしか送らない（送れたら true） */
+  sentMessages: readonly SentMessage[];
+  sendMessage: (toId: string, text: string) => boolean;
   /** 自分が足した投稿・送った答え */
   myPosts: readonly WantPost[];
   addPost: (post: WantPost) => void;
@@ -106,9 +122,10 @@ let memoryPrefs = "";
 export function SnProvider({ children }: { children: React.ReactNode }) {
   const raw = useSyncExternalStore(subscribePrefs, () => readPrefsRaw() || memoryPrefs, () => "");
   const { palette } = parsePrefs(raw);
-  const [sentIntros, setSentIntros] = useState<SentIntros>({});
   const [reactions, setReactions] = useState<ReadonlySet<string>>(new Set());
-  const [introReplies, setIntroReplies] = useState<Readonly<Record<string, IntroReply>>>({});
+  const [net, setNet] = useState<NetState>(BASE_NET);
+  const [introRecords, setIntroRecords] = useState<readonly IntroRecord[]>(INTRO_RECORDS_SEED);
+  const [sentMessages, setSentMessages] = useState<readonly SentMessage[]>([]);
   const [myPosts, setMyPosts] = useState<readonly WantPost[]>([]);
   const [myAnswers, setMyAnswers] = useState<readonly WantAnswer[]>([]);
   const [me, setMe] = useState<Person>(() => PEOPLE.find((p) => p.id === ME_ID) as Person);
@@ -119,16 +136,26 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Ctx>(() => ({
     palette,
     setPalette: (p) => writePrefs({ palette: p }),
-    sentIntros,
-    addSentIntro: (targetId, viaId) => setSentIntros((prev) => ({ ...prev, [targetId]: viaId })),
     reactions,
     toggleReaction: (key) => setReactions((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
     }),
-    introReplies,
-    addIntroReply: (requestId, reply) => setIntroReplies((prev) => ({ ...prev, [requestId]: reply })),
+    net,
+    saveNetSettings: (ownerId, level, overrides) => setNet((prev) => withOwnerSettings(prev, ownerId, level, overrides)),
+    addConnection: (a, b) => setNet((prev) => withConnection(prev, a, b)),
+    introRecords,
+    addIntroRecord: (record) => setIntroRecords((prev) => [...prev, record]),
+    updateIntroRecord: (id, fn) => setIntroRecords((prev) => prev.map((r) => (r.id === id ? fn(r) : r))),
+    sentMessages,
+    sendMessage: (toId, text) => {
+      // 関数の中でも、直接連絡OKの相手かを確かめる（だめなら何もしない）
+      const message = makeDirectMessage(net, toId, text, todayIso());
+      if (!message) return false;
+      setSentMessages((prev) => [...prev, message]);
+      return true;
+    },
     myPosts,
     addPost: (post) => setMyPosts((prev) => [post, ...prev]),
     myAnswers,
@@ -141,7 +168,7 @@ export function SnProvider({ children }: { children: React.ReactNode }) {
     updateCards: (fn) => setCards((prev) => fn(prev)),
     distinctPairs,
     markDistinct: (key) => setDistinctPairs((prev) => new Set(prev).add(key)),
-  }), [palette, sentIntros, reactions, introReplies, myPosts, myAnswers, me, myCompany, cards, distinctPairs]);
+  }), [palette, reactions, net, introRecords, sentMessages, myPosts, myAnswers, me, myCompany, cards, distinctPairs]);
 
   return <SnContext.Provider value={value}>{children}</SnContext.Provider>;
 }
@@ -166,4 +193,13 @@ export function useSn() {
 /** 見本の中のリンク */
 export function SnLink({ to, ...rest }: { to: string } & Omit<React.ComponentProps<typeof Link>, "href">) {
   return <Link {...rest} href={snPath(to)} />;
+}
+
+/**
+ * 自分から見たその人とのつながり（store の net で決める。画面ごとに判定を書かない）。
+ * 伏せた道は、人のページ・一覧には出さない（道なし扱い）。伏せたつながりは maskedConnections で別に出す。
+ */
+export function useRelation(targetId: string): Relation {
+  const { net } = useSnState();
+  return openRelation(relationTo(targetId, ME_ID, net));
 }

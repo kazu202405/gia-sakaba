@@ -14,7 +14,8 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const ROOTS = ["app/guild-look/sns", "components/guild/look/sns"];
-const EXTRA = ["lib/guild/look/sns-mock.ts", "lib/guild/look/sns-sort.ts", "lib/guild/look/sns-company.ts"];
+// sns-network.ts（人脈の公開レベルと紹介依頼の記録）も見る範囲に足した（見る範囲を狭めてはいない）
+const EXTRA = ["lib/guild/look/sns-mock.ts", "lib/guild/look/sns-sort.ts", "lib/guild/look/sns-company.ts", "lib/guild/look/sns-network.ts"];
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
