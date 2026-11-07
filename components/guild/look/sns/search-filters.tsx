@@ -46,7 +46,7 @@ export function SearchFilters({ filter, onChange, resultType }: Props & { result
 
 /** ネイティブdialogでフォーカスを制御。スクロールするのは本文1か所だけ。 */
 function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initial: SearchFilter; panel: Panel; resultType: "people" | "companies"; onApply: Props["onChange"]; onClose: () => void }) {
-  const { myCompany } = useSnState();
+  const { myCompany, net } = useSnState();
   const [draft, setDraft] = useState(initial);
   const [step, setStep] = useState<"main" | "trades">("main");
   const [tradeQuery, setTradeQuery] = useState("");
@@ -60,7 +60,7 @@ function FilterEditor({ initial, panel, resultType, onApply, onClose }: { initia
   const regionPrefs = REGIONS[region];
   const selectedPrefs = regionPrefs.filter((p) => draft.regions.includes(region) || prefs.includes(p));
   const visibleTrades = CONSTRUCTION_TRADES.filter((t) => `${t}工事業`.includes(tradeQuery.trim()));
-  const count = resultType === "people" ? searchPeople(draft).length : searchCompanies(draft, ME_ID, myCompany).length;
+  const count = resultType === "people" ? searchPeople(draft, ME_ID, net).length : searchCompanies(draft, ME_ID, myCompany, net).length;
   const title = step === "trades" ? "建設の業種を選ぶ" : ({ area: "エリアを選ぶ", industry: "業種を選ぶ", other: "その他の条件" })[panel];
   useEffect(() => {
     const dialog = ref.current;

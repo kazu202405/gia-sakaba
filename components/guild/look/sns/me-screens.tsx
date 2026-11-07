@@ -4,27 +4,32 @@
 // プロフィールの編集は /me/edit。
 
 import { useRef, useState } from "react";
-import { ChevronRight, Eye, Plus, Settings2, ShieldCheck, UserPlus } from "lucide-react";
+import { ChevronRight, Eye, Network, Plus, Settings2, ShieldCheck, UserPlus } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   ME_ID,
   NETWORK_SUMMARY,
   PREFECTURES,
   companyOf,
+  defaultLevelOf,
   directPeople,
+  findPerson,
   inviteUrl,
   joinLines,
-  relationTo,
+  maskedConnections,
+  maskedHeadline,
   secondDegreePeople,
   splitLines,
   wantPosts,
+  type MaskedConnection,
   type Person,
 } from "@/lib/guild/look/sns-mock";
+import { NET_LEVEL_LABEL, isOpenStatus } from "@/lib/guild/look/sns-network";
 import { CopyUrlButton, SEND_MS } from "./flow";
-import { Avatar, CompanyFacts, RelationLine, WantRow } from "./parts";
+import { Avatar, CompanyFacts, IntroRequestFlow, RelationLine, WantRow } from "./parts";
 import { RevealPicker } from "./company-edit";
 import { PersonView } from "./screens";
-import { SnLink, useSn, useSnState } from "./store";
+import { SnLink, useRelation, useSn, useSnState } from "./store";
 
 type ContactTab = "direct" | "second";
 
@@ -32,7 +37,7 @@ type ContactTab = "direct" | "second";
 const CONTACTS_PREVIEW = 3;
 
 export function MeScreen() {
-  const { me, myCompany, myPosts } = useSnState();
+  const { me, myCompany, myPosts, net } = useSnState();
   const [contactTab, setContactTab] = useState<ContactTab>("direct");
   const mine = wantPosts(myPosts).filter((p) => p.authorId === ME_ID);
   const url = inviteUrl(ME_ID);
@@ -95,6 +100,14 @@ export function MeScreen() {
             </span>
             <ChevronRight aria-hidden />
           </SnLink>
+          <SnLink to="/me/network">
+            <Network aria-hidden />
+            <span>
+              <b>人脈の公開範囲</b>
+              <small>初期設定は「{NET_LEVEL_LABEL[defaultLevelOf(net, ME_ID)]}」です</small>
+            </span>
+            <ChevronRight aria-hidden />
+          </SnLink>
           <SnLink to="/admin">
             <ShieldCheck aria-hidden />
             <span><b>管理者の画面へ</b></span>
@@ -108,9 +121,11 @@ export function MeScreen() {
 
 /** 知り合い（直接）と、知り合いの知り合い。マイページは一覧を見に来る所ではないので、行は短く、はじめは数人だけ */
 function ContactsSection({ tab, onTab }: { tab: ContactTab; onTab: (tab: ContactTab) => void }) {
+  const { net } = useSnState();
   const [showAll, setShowAll] = useState(false);
-  const direct = directPeople();
-  const second = secondDegreePeople();
+  const direct = directPeople(ME_ID, net);
+  const second = secondDegreePeople(ME_ID, net);
+  const masked = maskedConnections(ME_ID, net);
   const people: readonly Person[] = tab === "direct" ? direct : second;
   const shown = showAll ? people : people.slice(0, CONTACTS_PREVIEW);
   const pick = (next: ContactTab) => {
@@ -133,6 +148,13 @@ function ContactsSection({ tab, onTab }: { tab: ContactTab; onTab: (tab: Contact
       {shown.length < people.length && (
         <button type="button" className="sn-me-more" onClick={() => setShowAll(true)}>あと{people.length - shown.length}人を見る</button>
       )}
+      {tab === "second" && masked.length > 0 && (
+        <div className="sn-mask-sec">
+          <h3>名前を伏せたつながり</h3>
+          <p className="sn-meta">相手が名前を伏せている人です。間の知り合いに、紹介をたのめます</p>
+          {masked.map((m) => <MaskedRow key={m.key} m={m} />)}
+        </div>
+      )}
     </>
   );
 }
@@ -140,16 +162,43 @@ function ContactsSection({ tab, onTab }: { tab: ContactTab; onTab: (tab: Contact
 /** マイページの知り合いの短い行：顔・名前・会社と役職。その先の人は、だれ経由かも出す */
 function ContactRow({ person, far }: { person: Person; far: boolean }) {
   const company = companyOf(person);
+  const relation = useRelation(person.id);
   return (
     <SnLink to={`/people/${person.id}`} className="sn-me-row">
       <Avatar person={person} />
       <span>
         <b>{person.name}</b>
         <small>{company ? `${company.name}・${person.title}` : person.title}</small>
-        {far && <RelationLine relation={relationTo(person.id)} />}
+        {far && <RelationLine relation={relation} />}
       </span>
       <ChevronRight aria-hidden />
     </SnLink>
+  );
+}
+
+/**
+ * 名前を伏せたつながりの行。名前・会社は出さず、「不動産業の役員と佐藤さんがつながりあり」だけ。
+ * 紹介をたのむ流れは人のページと同じ（書く → この内容で送りますか？ → 送る）。返事待ちのあいだは「おねがい中」のまま押せない。
+ */
+function MaskedRow({ m }: { m: MaskedConnection }) {
+  const { introRecords } = useSnState();
+  const [open, setOpen] = useState(false);
+  const target = findPerson(m.targetId);
+  const pending = introRecords.some((r) => r.requesterId === ME_ID && r.targetId === m.targetId && isOpenStatus(r.status));
+  return (
+    <div className="sn-mask-row">
+      <span className="sn-fc" data-kind="other" aria-hidden>？</span>
+      <span>
+        <b>{maskedHeadline(m)}</b>
+        <small>名前は伏せています</small>
+      </span>
+      {pending ? (
+        <button type="button" className="sn-btn sn-btn--small" disabled>おねがい中</button>
+      ) : (
+        <button type="button" className="sn-btn sn-btn--small" onClick={() => setOpen(true)}>紹介をたのむ</button>
+      )}
+      {open && target && <IntroRequestFlow vias={m.vias} target={target} masked onClose={() => setOpen(false)} />}
+    </div>
   );
 }
 

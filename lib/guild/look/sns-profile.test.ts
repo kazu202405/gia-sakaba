@@ -7,9 +7,12 @@ import { ProfilePreviewScreen } from "@/components/guild/look/sns/profile-previe
 import { MeScreen } from "@/components/guild/look/sns/me-screens";
 
 vi.mock("@/components/guild/look/sns/store", async () => {
-  const { findCompany, findPerson, ME_COMPANY_ID, ME_ID } = await import("./sns-mock");
+  const { BASE_NET, INTRO_RECORDS_SEED, findCompany, findPerson, ME_COMPANY_ID, ME_ID, openRelation, relationTo } = await import("./sns-mock");
+  // 2026-11-07 store に net・introRecords・sentMessages を足したため、画面が読む分をこの見張りの偽の store にも足した（sentIntros は introRecords に置き換わった）
+  const state = { me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, myCompany: findCompany(ME_COMPANY_ID)!, net: BASE_NET, introRecords: INTRO_RECORDS_SEED, sentMessages: [], myPosts: [], myAnswers: [] };
   return {
-    useSnState: () => ({ me: { ...findPerson(ME_ID)!, now: "編集後のプロフィール内容" }, myCompany: findCompany(ME_COMPANY_ID)!, sentIntros: {}, myPosts: [], myAnswers: [] }),
+    useSnState: () => state,
+    useRelation: (id: string) => openRelation(relationTo(id, ME_ID, BASE_NET)),
     SnLink: ({ to, children, ...props }: { to: string; children: ReactNode }) => createElement("a", { href: to, ...props }, children),
   };
 });

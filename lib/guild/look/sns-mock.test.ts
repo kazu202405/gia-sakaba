@@ -22,7 +22,7 @@ import {
   suggestIntroducee,
   BUSINESS_CARDS,
   EMPTY_POST_DRAFT,
-  INCOMING_INTRO_REQUESTS,
+  INTRO_RECORDS_SEED,
   WANT_ANSWERS,
   answerCount,
   answersFor,
@@ -93,7 +93,8 @@ describe("つながり（紹介の道は2段まで）", () => {
   it("一文", () => {
     expect(relationText({ kind: "direct" })).toBe("あなたの知り合いです");
     const via = findPerson("sato")!;
-    expect(relationText({ kind: "via", via })).toBe("佐藤さん経由で紹介できます");
+    // 2026-11-07 紹介の道が複数・直接連絡OKを持てるようになったため、via に vias と canDirect を足した（期待する一文は変えていない）
+    expect(relationText({ kind: "via", via, vias: [via], canDirect: false })).toBe("佐藤さん経由で紹介できます");
   });
 });
 
@@ -102,7 +103,8 @@ describe("探す", () => {
     const people = searchPeople(EMPTY_FILTER);
     expect(people.find((p) => p.id === ME_ID)).toBeUndefined();
     expect(people).toHaveLength(PEOPLE.length - 1);
-    const order = { direct: 0, via: 1, none: 2, self: 3 } as const;
+    // 名前を伏せた道（masked）が増えたため、order に masked を足した（並びの決まりは変えていない。伏せた道は「道なし」と同じ並び）
+    const order = { direct: 0, via: 1, masked: 2, none: 2, self: 3 } as const;
     const kinds = people.map((p) => order[relationTo(p.id).kind]);
     expect(kinds).toEqual([...kinds].sort((a, b) => a - b));
   });
@@ -139,10 +141,12 @@ describe("人脈", () => {
     expect(second).not.toContain("sato");
     for (const id of second) expect(relationTo(id).kind).toBe("via");
   });
-  it("届いた紹介のおねがいは、いる人を指す", () => {
-    for (const r of INCOMING_INTRO_REQUESTS) {
-      expect(findPerson(r.fromId)).not.toBeNull();
-      expect(findPerson(r.toId)).not.toBeNull();
+  // INCOMING_INTRO_REQUESTS（from・to の2人）を、紹介依頼の記録（A・B・C の3人）に置き換えたため、3人ともいる人を指すことを確かめる
+  it("紹介依頼の記録は、A・B・C の3人ともいる人を指す", () => {
+    for (const r of INTRO_RECORDS_SEED) {
+      expect(findPerson(r.requesterId), r.id).not.toBeNull();
+      expect(findPerson(r.introducerId), r.id).not.toBeNull();
+      expect(findPerson(r.targetId), r.id).not.toBeNull();
     }
   });
 });

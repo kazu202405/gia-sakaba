@@ -1,9 +1,13 @@
 import { matchesBusinessKeywords, matchesOtherBusiness, type Profession } from "./sns-expertise";
+import { DEFAULT_NET_LEVEL, INTRO_NOTE_MAX, feeText, levelOf, roleClass, type IntroEvent, type IntroRecord, type NetLevel, type NetSettings } from "./sns-network";
 import { matchesEstate, type EstateBusiness, type EstateTransaction, type EstateProperty, matchesConstruction, type ConstructionWork, type ConstructionTrade, type PermitFilter } from "./sns-construction";
 
 // 建設・不動産の酒場の作り直し（人脈ネットワークSNS）の見本（DBなし）の仮データと、つながりの計算。
 // 仕様：contexts/projects/gia/sakaba_kensetsu_sns_spec_v0.1.md。本物の /guild/<店> の画面・DBとは関係しない。
 // 画面はここの値と関数だけを読む（同じ計算を画面ごとに書かない）。
+
+// 紹介のおねがいの「ひとこと」の上限は sns-network.ts に置く（ここから読めるようにしている）
+export { INTRO_NOTE_MAX };
 
 export const SNS_BASE = "/guild-look/sns";
 export const SNS_NAME = "建設・不動産の酒場";
@@ -347,9 +351,48 @@ export const POSTS: readonly Post[] = [
   { id: "p9", kind: "want", authorId: "sato", ago: "5日前", text: "リフォーム前提の築古の一棟アパートを紹介したいです", category: "offer-property", industry: "不動産", areas: ["大阪府", "兵庫県"], detail: "大阪北部の木造アパートです。持ち主が手放す相談を受けています。", deadline: "2026-12-15", contact: "佐藤まで 06-0000-0004", visibility: "friends", knowCount: 0, canDoCount: 0 },
 ];
 
-/** ホームの「紹介のおねがい」（自分あてに届いたもの） */
-export const INCOMING_INTRO_REQUESTS: readonly { id: string; fromId: string; toId: string; note: string }[] = [
-  { id: "r1", fromId: "tanaka", toId: "minato", note: "関東に移るお客さまの住み替えで、横浜の設備に強い方を探しています" },
+/** ほかの人の公開レベルの設定（見本）。自分（me）・森・中村・湊は書いていない＝紹介経由のみ。自分の設定は store が持つ */
+export const NET_SETTINGS_SEED: NetSettings = {
+  defaults: { sato: "intro" },
+  overrides: {
+    sato: { yamamoto: "open", hayashi: "masked" },
+    ono: { tanaka: "hidden" },
+  },
+};
+
+/** つながりの判定に使う設定と、紹介でつながった人（見本では再読み込みで元に戻る） */
+export type NetState = { settings: NetSettings; extraConnections: readonly (readonly [string, string])[] };
+export const BASE_NET: NetState = { settings: NET_SETTINGS_SEED, extraConnections: [] };
+
+/**
+ * 紹介依頼の記録の見本。
+ * r1：田中 → 自分 → 湊（自分が承認・辞退を試せる）／r2：山本 → 佐藤 → 自分（自分が了承・お断りを試せる）／r3：自分 → 中村 → 田中（辞退された履歴）
+ */
+export const INTRO_RECORDS_SEED: readonly IntroRecord[] = [
+  {
+    id: "r1", requesterId: "tanaka", introducerId: ME_ID, targetId: "minato",
+    note: "関東に移るお客さまの住み替えで、横浜の設備に強い方を探しています",
+    maskedForRequester: false, status: "requested", fee: null,
+    events: [{ at: "2026-11-07", status: "requested", byId: "tanaka", note: "関東に移るお客さまの住み替えで、横浜の設備に強い方を探しています" }],
+  },
+  {
+    id: "r2", requesterId: "yamamoto", introducerId: "sato", targetId: ME_ID,
+    note: "九州の電気工事会社を探していて、まず話を聞かせてもらえませんか",
+    maskedForRequester: false, status: "asking_target", fee: { kind: "percent", percent: 3 },
+    events: [
+      { at: "2026-11-05", status: "requested", byId: "yamamoto", note: "九州の電気工事会社を探していて、まず話を聞かせてもらえませんか" },
+      { at: "2026-11-06", status: "asking_target", byId: "sato", note: "太陽光の保守で相談したいそうです" },
+    ],
+  },
+  {
+    id: "r3", requesterId: ME_ID, introducerId: "nakamura", targetId: "tanaka",
+    note: "福岡の土地の情報を、一度うかがいたいです",
+    maskedForRequester: false, status: "declined_by_introducer", fee: null,
+    events: [
+      { at: "2026-10-20", status: "requested", byId: ME_ID, note: "福岡の土地の情報を、一度うかがいたいです" },
+      { at: "2026-10-21", status: "declined_by_introducer", byId: "nakamura", note: "いまは紹介を控えています" },
+    ],
+  },
 ];
 
 // ---------- 引く・計算する ----------
@@ -370,38 +413,80 @@ export function peopleOf(companyId: string): Person[] {
   return PEOPLE.filter((p) => p.companyId === companyId);
 }
 
-export function friendsOf(id: string): string[] {
-  return CONNECTIONS.flatMap(([a, b]) => (a === id ? [b] : b === id ? [a] : []));
+/** 直接の知り合い。net の extraConnections（紹介でつながった人）も入れる */
+export function friendsOf(id: string, net: NetState = BASE_NET): string[] {
+  const out = new Set<string>();
+  for (const [a, b] of [...CONNECTIONS, ...net.extraConnections]) {
+    if (a === id) out.add(b);
+    else if (b === id) out.add(a);
+  }
+  return [...out];
 }
 
 export type Relation =
   | { kind: "self" }
   | { kind: "direct" }
-  /** 知り合いの知り合い。via＝紹介をおねがいする知り合い */
-  | { kind: "via"; via: Person }
+  /** 知り合いの知り合い。via＝最初の候補（今までの呼び出し元のため残す）、vias＝紹介をたのめる人の全員、canDirect＝だれか1人でも直接連絡OKにしている */
+  | { kind: "via"; via: Person; vias: Person[]; canDirect: boolean }
+  /** 名前を伏せて見せる。vias＝たのめる人、label＝「不動産業の役員」 */
+  | { kind: "masked"; vias: Person[]; label: string }
   | { kind: "none" };
 
+const INDUSTRY_NOUN: Readonly<Record<Industry, string>> = { 建設: "建設業", 不動産: "不動産業", 士業: "士業", その他: "" };
+
+/** 伏せた人の札：「不動産業の役員」。業種が「その他」なら「役員」だけ。company を渡すと、編集中の会社の業種で決める */
+export function maskedLabel(person: Pick<Person, "title" | "companyId">, company: Pick<Company, "industries"> | null = findCompany(person.companyId)): string {
+  const noun = company ? INDUSTRY_NOUN[company.industries[0]] : "";
+  const role = roleClass(person.title);
+  return noun ? `${noun}の${role}` : role;
+}
+
 /**
- * 自分から見たその人とのつながり。紹介の道は2段まで（設計書7）。
- * 相手が紹介の道を見せない設定なら、知り合いの知り合いでも「none」にする。
+ * 自分から見たその人とのつながり（つながりの判定はここ1か所）。紹介の道は2段まで（設計書7）。
+ * 1. 自分 → self。直接の知り合い → direct
+ * 2. 相手がいない、または相手が紹介の道を見せない設定（openToIntro=false）なら none（紹介される本人の設定がいちばん強い）
+ * 3. 共通の知り合い B を、自分の知り合いの並びで見て、B が相手をどう見せているか（levelOf）で分ける：
+ *    open・intro → 紹介をたのめる人（open の B がいれば canDirect）／masked → 名前を伏せる候補／hidden → 捨てる
+ * 4. たのめる人がいれば via、いなければ伏せる候補があれば masked、どちらもなければ none
  */
-export function relationTo(targetId: string, meId: string = ME_ID): Relation {
+export function relationTo(targetId: string, meId: string = ME_ID, net: NetState = BASE_NET): Relation {
   if (targetId === meId) return { kind: "self" };
-  const mine = friendsOf(meId);
+  const mine = friendsOf(meId, net);
   if (mine.includes(targetId)) return { kind: "direct" };
   const target = findPerson(targetId);
   if (!target || !target.openToIntro) return { kind: "none" };
-  const viaId = friendsOf(targetId).find((id) => mine.includes(id));
-  const via = viaId ? findPerson(viaId) : null;
-  return via ? { kind: "via", via } : { kind: "none" };
+  const theirs = friendsOf(targetId, net);
+  const vias: Person[] = [];
+  const masked: Person[] = [];
+  let canDirect = false;
+  for (const bId of mine) {
+    if (!theirs.includes(bId)) continue;
+    const b = findPerson(bId);
+    if (!b) continue;
+    const level = levelOf(net.settings, bId, targetId);
+    if (level === "open" || level === "intro") {
+      vias.push(b);
+      if (level === "open") canDirect = true;
+    } else if (level === "masked") {
+      masked.push(b);
+    }
+  }
+  if (vias.length > 0) return { kind: "via", via: vias[0], vias, canDirect };
+  if (masked.length > 0) return { kind: "masked", vias: masked, label: maskedLabel(target) };
+  return { kind: "none" };
 }
 
-/** 会社とのつながり＝所属する人のうち、いちばん近い人 */
-export function relationToCompany(companyId: string, meId: string = ME_ID): { relation: Relation; person: Person | null } {
+/** 人のページ・一覧に出すつながり。伏せた道は、その人の行・ページには出さない（道なし扱い） */
+export function openRelation(relation: Relation): Relation {
+  return relation.kind === "masked" ? { kind: "none" } : relation;
+}
+
+/** 会社とのつながり＝所属する人のうち、いちばん近い人。伏せた道は none と同じ（会社から、伏せた人が分からないように） */
+export function relationToCompany(companyId: string, meId: string = ME_ID, net: NetState = BASE_NET): { relation: Relation; person: Person | null } {
   const rank = (r: Relation) => (r.kind === "self" ? 0 : r.kind === "direct" ? 1 : r.kind === "via" ? 2 : 3);
   let best: { relation: Relation; person: Person | null } = { relation: { kind: "none" }, person: null };
   for (const p of peopleOf(companyId)) {
-    const r = relationTo(p.id, meId);
+    const r = relationTo(p.id, meId, net);
     if (rank(r) < rank(best.relation)) best = { relation: r, person: p };
   }
   return best;
@@ -410,6 +495,8 @@ export function relationToCompany(companyId: string, meId: string = ME_ID): { re
 /** 見せる相手の設定と、見る人とのつながりから、見せてよいかを決める。本人にはいつも見える。画面ごとに判定を書かない（ここを読む） */
 export function canReveal(reveal: Reveal, relation: Relation): boolean {
   if (relation.kind === "self") return true;
+  // 伏せた相手には、連絡先を見せない
+  if (relation.kind === "masked") return false;
   if (reveal === "hidden") return false;
   return reveal === "all" || relation.kind === "direct";
 }
@@ -428,7 +515,12 @@ export function relationText(relation: Relation): string {
   switch (relation.kind) {
     case "self": return "あなたです";
     case "direct": return "あなたの知り合いです";
-    case "via": return `${shortName(relation.via)}さん経由で紹介できます`;
+    case "via": {
+      const others = relation.vias.length - 1;
+      const who = others > 0 ? `${shortName(relation.via)}さんほか${others}人` : `${shortName(relation.via)}さん`;
+      return `${who}経由で紹介できます${relation.canDirect ? "。直接連絡もできます" : ""}`;
+    }
+    case "masked": return `${shortName(relation.vias[0])}さんがつながりあり（名前は伏せています）`;
     case "none": return "まだ紹介できる道がありません";
   }
 }
@@ -487,29 +579,29 @@ function matchesQuery(texts: readonly string[], query: string): boolean {
   return words.every((w) => hay.includes(w));
 }
 
-const RELATION_ORDER: Record<Relation["kind"], number> = { self: 3, direct: 0, via: 1, none: 2 };
+const RELATION_ORDER: Record<Relation["kind"], number> = { self: 3, direct: 0, via: 1, masked: 2, none: 2 };
 
 /** 会社を探す。並びは「紹介できる順」（知り合い → 知り合いの知り合い → それ以外）。mine は編集後の自分の会社（探すにそのまま効かせる） */
-export function searchCompanies(filter: SearchFilter, meId: string = ME_ID, mine?: Company): Company[] {
+export function searchCompanies(filter: SearchFilter, meId: string = ME_ID, mine?: Company, net: NetState = BASE_NET): Company[] {
   return COMPANIES.map((c) => (c.id === mine?.id ? mine : c)).filter((c) => {
     if (!matchesCompanyFilters(c, filter)) return false;
-    const rel = relationToCompany(c.id, meId).relation;
+    const rel = relationToCompany(c.id, meId, net).relation;
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
     return matchesQuery([c.name, c.kana, c.business, c.prefecture, c.city, ...c.specialties, ...c.offer, ...c.areas, ...regionsTouching(c.areas)], filter.query);
-  }).sort((a, b) => RELATION_ORDER[relationToCompany(a.id, meId).relation.kind] - RELATION_ORDER[relationToCompany(b.id, meId).relation.kind]);
+  }).sort((a, b) => RELATION_ORDER[relationToCompany(a.id, meId, net).relation.kind] - RELATION_ORDER[relationToCompany(b.id, meId, net).relation.kind]);
 }
 
 /** 人を探す。会社の対応エリア・業種・許可で絞る。自分は出さない */
-export function searchPeople(filter: SearchFilter, meId: string = ME_ID): Person[] {
+export function searchPeople(filter: SearchFilter, meId: string = ME_ID, net: NetState = BASE_NET): Person[] {
   return PEOPLE.filter((p) => {
     if (p.id === meId) return false;
     const c = companyOf(p);
     if (!c) return false;
     if (!matchesCompanyFilters(c, filter)) return false;
-    const rel = relationTo(p.id, meId);
+    const rel = relationTo(p.id, meId, net);
     if (filter.introducibleOnly && rel.kind !== "direct" && rel.kind !== "via") return false;
     return matchesQuery([p.name, p.kana, p.say, p.now, ...p.offer, c.name, c.kana, c.business, c.city, ...c.specialties, ...c.areas, ...regionsTouching(c.areas)], filter.query);
-  }).sort((a, b) => RELATION_ORDER[relationTo(a.id, meId).kind] - RELATION_ORDER[relationTo(b.id, meId).kind]);
+  }).sort((a, b) => RELATION_ORDER[relationTo(a.id, meId, net).kind] - RELATION_ORDER[relationTo(b.id, meId, net).kind]);
 }
 
 /** 対応エリアの見せ方。地域を丸ごと覆っていれば「関東全域」のようにまとめる */
@@ -519,22 +611,76 @@ export function areaText(areas: readonly string[]): string {
   return [...whole.map((r) => `${r}全域`), ...rest].join("・");
 }
 
-/** 紹介のおねがいの「ひとこと」の上限 */
-export const INTRO_NOTE_MAX = 200;
-
 // ---------- 人脈 ----------
 
 /** 直接の知り合い（相互承認済み）。ふりがなの五十音順 */
-export function directPeople(meId: string = ME_ID): Person[] {
-  return friendsOf(meId).flatMap((id) => {
+export function directPeople(meId: string = ME_ID, net: NetState = BASE_NET): Person[] {
+  return friendsOf(meId, net).flatMap((id) => {
     const p = findPerson(id);
     return p ? [p] : [];
   }).sort((a, b) => a.kana.localeCompare(b.kana, "ja"));
 }
 
 /** 知り合いの知り合い。紹介の道を見せない人は出さない（relationTo と同じ判定） */
-export function secondDegreePeople(meId: string = ME_ID): Person[] {
-  return PEOPLE.filter((p) => relationTo(p.id, meId).kind === "via");
+export function secondDegreePeople(meId: string = ME_ID, net: NetState = BASE_NET): Person[] {
+  return PEOPLE.filter((p) => relationTo(p.id, meId, net).kind === "via");
+}
+
+/** 名前を伏せたつながり（マイページの「名前を伏せたつながり」）。名前・id・会社名は画面に出さない。targetId は紹介依頼の記録にだけ使う */
+export type MaskedConnection = { key: string; label: string; vias: Person[]; targetId: string };
+
+export function maskedConnections(meId: string = ME_ID, net: NetState = BASE_NET): MaskedConnection[] {
+  const out: MaskedConnection[] = [];
+  for (const p of PEOPLE) {
+    const r = relationTo(p.id, meId, net);
+    if (r.kind === "masked") out.push({ key: `masked-${r.vias[0].id}-${out.length + 1}`, label: r.label, vias: r.vias, targetId: p.id });
+  }
+  return out;
+}
+
+/** 伏せたつながりの見出し：「不動産業の役員と佐藤さんがつながりあり」 */
+export function maskedHeadline(m: Pick<MaskedConnection, "label" | "vias">): string {
+  const names = m.vias.map((v) => `${shortName(v)}さん`).join("・");
+  return `${m.label}と${names}がつながりあり`;
+}
+
+// ---------- 直接メッセージ・つながりの設定の反映 ----------
+
+/** 直接送ったメッセージ（見本では送った一覧に並ぶだけ） */
+export type SentMessage = { id: string; toId: string; text: string; at: string };
+
+/**
+ * 直接メッセージを作る。直接連絡OK（canDirect）の相手にしか作れない（ここでも確かめる。許されなければ null）。
+ * 文章は空不可・上限まで。
+ */
+export function makeDirectMessage(net: NetState, toId: string, text: string, at: string, meId: string = ME_ID): SentMessage | null {
+  const relation = relationTo(toId, meId, net);
+  if (relation.kind !== "via" || !relation.canDirect) return null;
+  const body = text.trim();
+  if (body === "" || body.length > INTRO_NOTE_MAX) return null;
+  return { id: `${meId}-${toId}-${at}-${body.length}`, toId, text: body, at };
+}
+
+/** owner の一括の設定と個別の設定を置き換える（元の net は変えない）。個別は friend → 設定 */
+export function withOwnerSettings(net: NetState, ownerId: string, level: NetLevel, overrides: Readonly<Record<string, NetLevel>>): NetState {
+  return {
+    ...net,
+    settings: {
+      defaults: { ...net.settings.defaults, [ownerId]: level },
+      overrides: { ...net.settings.overrides, [ownerId]: { ...overrides } },
+    },
+  };
+}
+
+/** 紹介でつながった2人を足す（もうつながっていれば何もしない） */
+export function withConnection(net: NetState, a: string, b: string): NetState {
+  if (friendsOf(a, net).includes(b)) return net;
+  return { ...net, extraConnections: [...net.extraConnections, [a, b]] };
+}
+
+/** その人の一括の設定（書いていなければ初期値） */
+export function defaultLevelOf(net: NetState, ownerId: string): NetLevel {
+  return net.settings.defaults[ownerId] ?? DEFAULT_NET_LEVEL;
 }
 
 /** 招待URL（LINEで送る）。見本のURLで、開いても何も起きない */
@@ -542,9 +688,6 @@ export const INVITE_BASE = "https://kensetsu-sakaba.example/invite";
 export function inviteUrl(ownerId: string): string {
   return `${INVITE_BASE}/${ownerId}`;
 }
-
-/** 届いた紹介のおねがいへの返事（ask＝間の人に聞いてみる／decline＝お断り） */
-export type IntroReply = { answer: "ask" | "decline"; note: string };
 
 // ---------- 案件 ----------
 
@@ -785,10 +928,10 @@ export function kindOfCompany(company: Pick<Company, "industries">): Exclude<Kin
  * 相手までの紹介の道（自分は含めない）。直接の知り合いは [相手]、知り合いの知り合いは [間の知り合い, 相手]、
  * 自分・道なしは空。画面の線は「あなた → ここに並ぶ人」の順につなぐ（直接＝実線、2人目から点線）。
  */
-export function routeTo(targetId: string, meId: string = ME_ID): Person[] {
+export function routeTo(targetId: string, meId: string = ME_ID, net: NetState = BASE_NET): Person[] {
   const target = findPerson(targetId);
   if (!target) return [];
-  const rel = relationTo(targetId, meId);
+  const rel = relationTo(targetId, meId, net);
   if (rel.kind === "direct") return [target];
   if (rel.kind === "via") return [rel.via, target];
   return [];
@@ -812,9 +955,9 @@ export function regionCounts(posts: readonly WantPost[]): Record<string, number>
 }
 
 /** 直接の知り合いがいる地域（所在地の都道府県から） */
-export function friendRegions(meId: string = ME_ID): Set<string> {
+export function friendRegions(meId: string = ME_ID, net: NetState = BASE_NET): Set<string> {
   const out = new Set<string>();
-  for (const id of friendsOf(meId)) {
+  for (const id of friendsOf(meId, net)) {
     const p = findPerson(id);
     const r = p ? regionOf(p.prefecture) : null;
     if (r) out.add(r);
@@ -840,9 +983,9 @@ export function dueInfo(deadline: string | null, today: string = todayIso()): { 
 }
 
 /** 案件に「この人を紹介する」と出せる知り合い。同じ業種の知り合いのうち、案件の地域に対応できる人を先に。いなければ null */
-export function suggestIntroducee(post: WantPost, meId: string = ME_ID): Person | null {
+export function suggestIntroducee(post: WantPost, meId: string = ME_ID, net: NetState = BASE_NET): Person | null {
   const regions = postRegions(post);
-  const fits = directPeople(meId).filter((p) => p.id !== post.authorId && companyOf(p)?.industries.includes(post.industry));
+  const fits = directPeople(meId, net).filter((p) => p.id !== post.authorId && companyOf(p)?.industries.includes(post.industry));
   const inArea = (p: Person) => {
     const c = companyOf(p);
     return !!c && c.areas.some((a) => regions.includes(regionOf(a) ?? ""));
@@ -851,7 +994,71 @@ export function suggestIntroducee(post: WantPost, meId: string = ME_ID): Person 
 }
 
 /** 案件を近い順に並べる（自分の依頼 → 知り合い → 知り合いの知り合い → 道なし。同じ近さの中は元の並びのまま） */
-export function sortByCloseness(posts: readonly WantPost[], meId: string = ME_ID): WantPost[] {
-  const rank = (p: WantPost) => (p.authorId === meId ? 0 : routeTo(p.authorId, meId).length || 3);
+export function sortByCloseness(posts: readonly WantPost[], meId: string = ME_ID, net: NetState = BASE_NET): WantPost[] {
+  const rank = (p: WantPost) => (p.authorId === meId ? 0 : routeTo(p.authorId, meId, net).length || 3);
   return posts.map((p, i) => ({ p, i })).sort((a, b) => rank(a.p) - rank(b.p) || a.i - b.i).map((x) => x.p);
+}
+
+// ---------- 紹介の記録の見せ方（名前を入れた一文。判定は sns-network.ts） ----------
+
+/** 「11-07」（記録の日付の見せ方） */
+export function shortDate(iso: string): string {
+  const [, m, d] = iso.split("-");
+  return `${m}-${d}`;
+}
+
+/** 依頼した人（自分）の画面で、まだ C の名前を出してはいけないか（つながるまで伏せる） */
+function hidesTarget(rec: IntroRecord, id: string, meId: string): boolean {
+  return id === rec.targetId && rec.maskedForRequester && rec.requesterId === meId && rec.status !== "connected";
+}
+
+/** 記録の中の人の呼び方（「田中 誠さん」）。自分は「あなた」。伏せるときは札（「不動産業の役員の方」） */
+export function introName(rec: IntroRecord, id: string, meId: string = ME_ID): string {
+  if (id === meId) return "あなた";
+  const person = findPerson(id);
+  if (!person) return "（不明）";
+  if (hidesTarget(rec, id, meId)) return `${maskedLabel(person)}の方`;
+  return `${person.name}さん`;
+}
+
+/** 記録の中の人の短い呼び方（「佐藤さん」）。自分・伏せるときは introName と同じ */
+export function introShortName(rec: IntroRecord, id: string, meId: string = ME_ID): string {
+  const person = findPerson(id);
+  if (!person || id === meId || hidesTarget(rec, id, meId)) return introName(rec, id, meId);
+  return `${shortName(person)}さん`;
+}
+
+/** いまの状態の一文（「中村さんの返事待ち」など） */
+export function introStatusText(rec: IntroRecord, meId: string = ME_ID): string {
+  switch (rec.status) {
+    case "requested": return `${introShortName(rec, rec.introducerId, meId)}の返事待ち`;
+    case "asking_target": return `${introShortName(rec, rec.targetId, meId)}の返事待ち`;
+    case "connected": return "つながりました";
+    case "declined_by_introducer": return `${introShortName(rec, rec.introducerId, meId)}が辞退しました`;
+    case "declined_by_target": return `${introShortName(rec, rec.targetId, meId)}がお断りしました`;
+  }
+}
+
+/** 履歴の1行（「11-07 田中さんが依頼」「11-07 あなたが承認（成約時 3%）」） */
+export function introEventText(rec: IntroRecord, ev: IntroEvent, meId: string = ME_ID): string {
+  const who = introShortName(rec, ev.byId, meId);
+  const what: Record<IntroEvent["status"], string> = {
+    requested: "依頼",
+    asking_target: `承認（${feeText(rec.fee)}）`,
+    connected: "了承（つながりました）",
+    declined_by_introducer: "辞退",
+    declined_by_target: "お断り",
+  };
+  return `${shortDate(ev.at)} ${who}が${what[ev.status]}`;
+}
+
+/** 紹介の記録に自分が入っているか（A・B・C のどれか） */
+export function involvesMe(rec: IntroRecord, meId: string = ME_ID): boolean {
+  return rec.requesterId === meId || rec.introducerId === meId || rec.targetId === meId;
+}
+
+/** 新しい順（最後の出来事の日付が新しい順。同じ日は後から作った記録を先に） */
+export function newestFirst(records: readonly IntroRecord[]): IntroRecord[] {
+  const last = (r: IntroRecord) => r.events[r.events.length - 1]?.at ?? "";
+  return records.map((r, i) => ({ r, i })).sort((a, b) => (last(a.r) < last(b.r) ? 1 : last(a.r) > last(b.r) ? -1 : b.i - a.i)).map((x) => x.r);
 }
