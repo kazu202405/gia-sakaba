@@ -127,12 +127,16 @@ body:has(.sn) { --ui-toast-bottom: 5.5rem; }
 .sn-band.sn-sec { padding-bottom: 0.875rem; }
 .sn-gap { height: 0.75rem; }
 
-/* ---------- 検索（ホームでは押すと検索の画面へ移る欄） ---------- */
+/* ---------- 検索 ---------- */
 .sn-search { display: flex; align-items: center; gap: 0.625rem; height: 2.875rem; padding: 0 0.875rem; border-radius: var(--sn-radius-s); border: 1px solid transparent; background: var(--sn-tint); color: var(--sn-muted); font-size: 0.875rem; width: 100%; }
 .sn-search svg { color: var(--sn-ink); width: 1.125rem; height: 1.125rem; }
 .sn-search input { flex: 1; min-width: 0; border: none; background: transparent; font: inherit; color: var(--sn-ink); outline: none; height: 100%; }
 .sn-search:focus-within { border-color: var(--sn-accent); background: var(--sn-paper); }
 a.sn-search:active { background: var(--sn-accent-soft); }
+/* ホームの検索：入力欄＋探すボタン（押すまで画面は移らない） */
+.sn-home-search { display: flex; gap: 0.5rem; }
+.sn-search-go { flex: none; height: 2.875rem; padding: 0 1rem; border: none; border-radius: var(--sn-radius-s); background: var(--sn-accent); color: var(--sn-accent-ink); font-size: 0.875rem; font-weight: 700; cursor: pointer; }
+.sn-search-go:disabled { opacity: 0.55; cursor: progress; }
 
 /* 絞り込み・選ぶ札：枠だけの丸い札。選んでいるものは藍の面＋白字 */
 .sn-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.625rem; }

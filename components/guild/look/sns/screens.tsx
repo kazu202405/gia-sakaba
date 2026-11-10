@@ -33,10 +33,34 @@ import {
 } from "@/lib/guild/look/sns-mock";
 import { awaitingReply } from "@/lib/guild/look/sns-network";
 import { Avatar, CompanyFacts, CompanyRow, ContactList, IntroRequestButton, LicenseTags, Logo, PersonRow, PlainPill, RouteLine, Say, WantRow } from "./parts";
-import { SnLink, useRelation, useSnState } from "./store";
+import { SnLink, useRelation, useSn, useSnState } from "./store";
 import { SearchFilters, ActiveSearchFilters } from "./search-filters";
 
 // ---------- ホーム ----------
+
+/** ホームの検索：その場で入力でき、決定（Enter・探す）で結果の画面へ移る。押しただけで画面が切り替わらない */
+function HomeSearch() {
+  const { go } = useSn();
+  const [query, setQuery] = useState("");
+  const [sending, setSending] = useState(false);
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (sending) return;
+    setSending(true);
+    const q = query.trim();
+    go(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+  };
+  return (
+    <form role="search" className="sn-home-search" onSubmit={submit}>
+      <label className="sn-search">
+        <Search aria-hidden />
+        <span className="sr-only">人・会社を探す</span>
+        <input type="search" enterKeyHint="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="人・会社を探す（業種・地域・名前）" />
+      </label>
+      <button type="submit" className="sn-search-go" disabled={sending}>{sending ? "探しています…" : "探す"}</button>
+    </form>
+  );
+}
 
 /** ホーム：検索 → 届いた紹介 → 探しています。地域は一覧の見出しで切り替える。 */
 export function HomeScreen() {
@@ -49,10 +73,7 @@ export function HomeScreen() {
     <div className="sn-page">
       <div className="sn-page-main">
         <div className="sn-band sn-sec">
-          <SnLink to="/search" className="sn-search">
-            <Search aria-hidden />
-            人・会社を探す（業種・地域・名前）
-          </SnLink>
+          <HomeSearch />
         </div>
         <IncomingRequests />
         <section>
@@ -121,7 +142,7 @@ function IncomingRequests() {
             <Avatar person={asTarget ? introducer : from} />
             <p>
               <b>{asTarget ? `${introducer.name}さんから、紹介のおねがい` : `${from.name}さんから、紹介のおねがい`}</b>
-              <small>{asTarget ? `${shortName(introducer)}さんが、${shortName(from)}さんをあなたに紹介したいそうです` : `あなた経由で${shortName(to)}さんとつながりたいそうです`}</small>
+              <small>{asTarget ? `${shortName(introducer)}さんが、${shortName(from)}さんをあなたに紹介したいそうです` : `${shortName(to)}さんへの紹介依頼が届いています`}</small>
             </p>
             <SnLink to="/network" className="sn-ask-go">中身を見る</SnLink>
           </div>

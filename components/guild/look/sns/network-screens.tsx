@@ -118,7 +118,7 @@ function IncomingList() {
               <div key={r.id} className="sn-row">
                 <Avatar person={a} />
                 <div className="sn-row-body">
-                  <p><b>{a.name}さん</b>が、あなた経由で<b>{shortName(c)}さん</b>とつながりたいそうです</p>
+                  <p><b>{a.name}さん</b>から、<b>{shortName(c)}さん</b>への紹介依頼が届いています</p>
                   <Say>{r.note}</Say>
                   <div className="sn-row-acts">
                     <button type="button" className="sn-btn sn-btn--main" onClick={() => setReplying({ id: r.id, action: "approve" })}>承認して{shortName(c)}さんに聞く</button>
@@ -230,6 +230,8 @@ function ApproveFlow({ rec, requester, target, onClose }: { rec: IntroRecord; re
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const lock = useRef(false);
+  // 承認するのは自分（間の人）。本人（C）に届く文言と同じ形で見せる
+  const me = findPerson(ME_ID);
 
   const fee = (): FeeTerms => {
     if (kind === "fixed") return { kind, yen: Number(yen.trim()) };
@@ -289,7 +291,7 @@ function ApproveFlow({ rec, requester, target, onClose }: { rec: IntroRecord; re
   return (
     <Modal title={`承認して${shortName(target)}さんに聞く`} onClose={onClose}>
       <p className="sn-meta sn-modal-lead">
-        {shortName(target)}さんに「{shortName(requester)}さんがつながりたいそうです」と伝えます。紹介料の条件を決めてください（記録するだけで、お金のやり取りはこの画面では行いません）。
+        {shortName(target)}さんには「{me ? shortName(me) : "あなた"}さんが、{shortName(requester)}さんをあなたに紹介したいそうです」と届きます。紹介料の条件を決めてください（記録するだけで、お金のやり取りはこの画面では行いません）。
       </p>
       <fieldset className="sn-field sn-fee">
         <legend>紹介料の条件</legend>

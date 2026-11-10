@@ -307,7 +307,6 @@ export const NETWORK_SUMMARY = { direct: 48, second: 312, companies: 36 } as con
 /** 案件・募集のカテゴリー（設計書6-6） */
 export const POST_CATEGORIES = [
   { key: "request-work", label: "仕事を依頼したい" },
-  { key: "seek-work", label: "仕事を探している" },
   { key: "offer-property", label: "物件を紹介したい" },
   { key: "seek-property", label: "物件を探している" },
   { key: "seek-partner", label: "協力会社を探している" },
@@ -347,7 +346,6 @@ export const POSTS: readonly Post[] = [
   { id: "p5", kind: "profile", authorId: "ono", ago: "2日前", field: "これから", text: "福岡で、中古のリノベを始めます。九州の工務店さんとつながりたいです。" },
   { id: "p6", kind: "want", authorId: "tanaka", ago: "2日前", text: "関東に移るお客さまの住み替えを、手伝ってくれる不動産会社を探しています", category: "seek-partner", industry: "不動産", areas: ["東京都", "神奈川県"], detail: "福岡から横浜への住み替えです。来春までに住まいを決めたいそうです。", deadline: "2027-02-28", contact: "田中まで 092-000-0008", visibility: "friends2", knowCount: 0, canDoCount: 0 },
   { id: "p7", kind: "want", authorId: "ono", ago: "3日前", text: "九州の工務店さん、リノベの協力会社になってください", category: "seek-partner", industry: "建設", areas: ["福岡県", "佐賀県", "熊本県"], detail: "中古住宅のリノベで、施工をお願いできる工務店を探しています。設計は小野設計室が持ちます。", deadline: null, contact: "小野まで 092-000-0007", visibility: "friends", knowCount: 0, canDoCount: 0 },
-  { id: "p8", kind: "want", authorId: "mori", ago: "4日前", text: "建設業許可の相談を、工事会社さんから受けたいです", category: "seek-work", industry: "士業", areas: ["東京都", "神奈川県", "埼玉県", "千葉県"], detail: "許可の新規取得・更新・経営事項審査の手続きを承ります。", deadline: null, contact: "森まで 03-0000-0009", visibility: "friends2", knowCount: 0, canDoCount: 0 },
   { id: "p9", kind: "want", authorId: "sato", ago: "5日前", text: "リフォーム前提の築古の一棟アパートを紹介したいです", category: "offer-property", industry: "不動産", areas: ["大阪府", "兵庫県"], detail: "大阪北部の木造アパートです。持ち主が手放す相談を受けています。", deadline: "2026-12-15", contact: "佐藤まで 06-0000-0004", visibility: "friends", knowCount: 0, canDoCount: 0 },
 ];
 
