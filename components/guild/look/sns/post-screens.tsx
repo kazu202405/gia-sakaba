@@ -6,7 +6,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronRight, Clock, MapPin, Package, Plus, Send, SlidersHorizontal, X } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
-import { toggleValue } from "@/lib/guild/look/sns-company";
 import {
   ANSWER_LABEL,
   EMPTY_POST_DRAFT,
@@ -16,16 +15,16 @@ import {
   POST_DETAIL_MAX,
   POST_TITLE_MAX,
   POST_VISIBILITIES,
-  REGION_NAMES,
   answersFor,
+  areaText,
   categoryLabel,
   companyOf,
   dueInfo,
+  expandAreas,
   filterWantPosts,
   findPerson,
   findWantPost,
   makeWantPost,
-  postRegions,
   regionOf,
   shortName,
   sortByCloseness,
@@ -38,26 +37,22 @@ import {
   type PostDraft,
   type PostDraftErrors,
 } from "@/lib/guild/look/sns-mock";
+import { AreaPicker } from "./area-picker";
 import { ComposeFlow, SEND_MS } from "./flow";
 import { Avatar, IndustryPill, MeetPicture, Modal, PlainPill, RouteLine, WantRow } from "./parts";
 import { SnLink, useRelation, useSn, useSnState } from "./store";
 import { DateInput } from "@/components/guild/form-parts";
 
-type PostChoice<Key extends string> = { key: Key; label: string; count?: number };
-
-function PostChoiceDialog<Key extends string>({ title, choices, initial, multiple = false, applyLabel, onApply, onClose }: {
+function PostSelectionDialog({ title, lead, onClose, children, actions }: {
   title: string;
-  choices: readonly PostChoice<Key>[];
-  initial: readonly Key[];
-  multiple?: boolean;
-  applyLabel: string;
-  onApply: (selected: readonly Key[]) => void;
+  lead?: string;
   onClose: () => void;
+  children: React.ReactNode;
+  actions: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
-  const [selected, setSelected] = useState(initial);
 
   useEffect(() => {
     const dialog = ref.current;
@@ -86,29 +81,62 @@ function PostChoiceDialog<Key extends string>({ title, choices, initial, multipl
           <h2 ref={titleRef} id={titleId} tabIndex={-1}>{title}</h2>
           <button type="button" className="sn-filter-icon" aria-label="変更せず閉じる" onClick={onClose}><X aria-hidden /></button>
         </div>
-        {multiple && <p>複数選べます。</p>}
+        {lead && <p>{lead}</p>}
       </header>
-      <div className="sn-filter-dialog-body sn-post-choices" role="group" aria-labelledby={titleId}>
+      <div className="sn-filter-dialog-body">{children}</div>
+      <footer className="sn-filter-dialog-foot">{actions}</footer>
+    </dialog>
+  );
+}
+
+type PostChoice<Key extends string> = { key: Key; label: string; count?: number };
+
+function PostChoiceDialog<Key extends string>({ title, choices, initial, applyLabel, onApply, onClose }: {
+  title: string;
+  choices: readonly PostChoice<Key>[];
+  initial?: Key;
+  applyLabel: string;
+  onApply: (selected: Key) => void;
+  onClose: () => void;
+}) {
+  const name = useId();
+  const [selected, setSelected] = useState(initial);
+
+  function apply() {
+    if (selected === undefined) return;
+    onApply(selected);
+    onClose();
+  }
+
+  return (
+    <PostSelectionDialog title={title} onClose={onClose} actions={
+      <button type="button" className="sn-btn sn-btn--main sn-btn--wide" disabled={selected === undefined} onClick={apply}>{applyLabel}</button>
+    }>
+      <div className="sn-post-choices" role="group" aria-label={title}>
         {choices.map(({ key, label, count }) => (
           <label className="sn-filter-check" key={key}>
-            <input
-              type={multiple ? "checkbox" : "radio"}
-              name={titleId}
-              value={key}
-              checked={selected.includes(key)}
-              onChange={() => setSelected((previous) => multiple ? toggleValue(previous, key) : [key])}
-            />
+            <input type="radio" name={name} value={key} checked={selected === key} onChange={() => setSelected(key)} />
             <span>{label}</span>
             {count !== undefined && <small>{count}件</small>}
           </label>
         ))}
       </div>
-      <footer className="sn-filter-dialog-foot">
-        <button type="button" className="sn-btn sn-btn--main sn-btn--wide" disabled={!multiple && selected.length === 0} onClick={() => { onApply(selected); onClose(); }}>
-          {applyLabel}
-        </button>
-      </footer>
-    </dialog>
+    </PostSelectionDialog>
+  );
+}
+
+function PostAreaDialog({ initial, onApply, onClose }: {
+  initial: readonly string[];
+  onApply: (selected: readonly string[]) => void;
+  onClose: () => void;
+}) {
+  const [areas, setAreas] = useState<readonly string[]>(() => expandAreas(initial));
+  return (
+    <PostSelectionDialog title="探している地域" lead="地方全体でも、都道府県ごとでも選べます。" onClose={onClose} actions={
+      <button type="button" className="sn-btn sn-btn--main sn-btn--wide" onClick={() => { onApply(areas); onClose(); }}>決定する</button>
+    }>
+      <AreaPicker areas={areas} onChange={setAreas} />
+    </PostSelectionDialog>
   );
 }
 
@@ -154,9 +182,9 @@ export function PostsScreen() {
             { key: "all" as const, label: "すべて", count: all.length },
             ...POST_CATEGORIES.map((choice) => ({ ...choice, count: filterWantPosts(all, choice.key).length })),
           ]}
-          initial={[category ?? "all"]}
+          initial={category ?? "all"}
           applyLabel="絞り込む"
-          onApply={([choice]) => setCategory(choice === "all" ? null : choice)}
+          onApply={(choice) => setCategory(choice === "all" ? null : choice)}
           onClose={() => setFiltering(false)}
         />
       )}
@@ -198,7 +226,7 @@ export function PostScreen({ id }: { id: string }) {
           <h1 className="sn-want-title">{post.text}</h1>
           <div className="sn-pills">
             <IndustryPill industry={post.industry} />
-            <PlainPill icon={<MapPin aria-hidden />}>{postRegions(post).join("・")}</PlainPill>
+            <PlainPill icon={<MapPin aria-hidden />}>{areaText(post.areas, 2)}</PlainPill>
             <PlainPill>{categoryLabel(post.category)}</PlainPill>
           </div>
         </div>
@@ -216,7 +244,7 @@ export function PostScreen({ id }: { id: string }) {
       <div className="sn-page-main">
         <div className="sn-facts">
           <div><MapPin aria-hidden /><span>依頼した人</span><b>{regionOf(author.prefecture) ?? author.prefecture}</b></div>
-          <div><Package aria-hidden /><span>探している場所</span><b>{postRegions(post).join("・")}</b></div>
+          <div><Package aria-hidden /><span>探している場所</span><b>{areaText(post.areas)}</b></div>
           <div className={due?.soon ? "sn-facts-soon" : undefined}><Clock aria-hidden /><span>返事の期限</span><b>{due ? due.label : "決めていません"}</b></div>
         </div>
         <div className="sn-story sn-story--plain">
@@ -326,9 +354,7 @@ export function NewPostScreen() {
   const [done, setDone] = useState(false);
   const lock = useRef(false);
   const set = (patch: Partial<PostDraft>) => setDraft((d) => ({ ...d, ...patch }));
-  const regionSummary = draft.regions.length <= 2
-    ? draft.regions.join("・")
-    : `${draft.regions[0]}・${draft.regions[1]} ほか${draft.regions.length - 2}`;
+  const regionSummary = areaText(draft.regions, 2);
 
   const toReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -408,9 +434,9 @@ export function NewPostScreen() {
         <PostChoiceDialog
           title="カテゴリー"
           choices={POST_CATEGORIES}
-          initial={draft.category ? [draft.category] : []}
+          initial={draft.category || undefined}
           applyLabel="決定する"
-          onApply={([category]) => { set({ category }); setErrors((previous) => ({ ...previous, category: undefined })); }}
+          onApply={(category) => { set({ category }); setErrors((previous) => ({ ...previous, category: undefined })); }}
           onClose={() => setPicking(null)}
         />
       )}
@@ -418,21 +444,17 @@ export function NewPostScreen() {
         <PostChoiceDialog
           title="探している業種"
           choices={INDUSTRIES.map((industry) => ({ key: industry, label: industry }))}
-          initial={draft.industry ? [draft.industry] : []}
+          initial={draft.industry || undefined}
           applyLabel="決定する"
-          onApply={([industry]) => { set({ industry }); setErrors((previous) => ({ ...previous, industry: undefined })); }}
+          onApply={(industry) => { set({ industry }); setErrors((previous) => ({ ...previous, industry: undefined })); }}
           onClose={() => setPicking(null)}
         />
       )}
       {picking === "regions" && (
-        <PostChoiceDialog
-          title="探している地域"
-          choices={REGION_NAMES.map((region) => ({ key: region, label: region }))}
+        <PostAreaDialog
           initial={draft.regions}
-          multiple
-          applyLabel="決定する"
           onApply={(regions) => {
-            set({ regions: [...regions] });
+            set({ regions });
             if (regions.length) setErrors((previous) => ({ ...previous, regions: undefined }));
           }}
           onClose={() => setPicking(null)}
@@ -443,7 +465,7 @@ export function NewPostScreen() {
           <dl className="sn-review">
             <dt>タイトル</dt><dd>{draft.title.trim()}</dd>
             <dt>カテゴリー</dt><dd>{draft.category === "" ? "" : categoryLabel(draft.category)}</dd>
-            <dt>探している人</dt><dd>{draft.industry}／{draft.regions.join("・")}</dd>
+            <dt>探している人</dt><dd>{draft.industry}／{areaText(draft.regions)}</dd>
             <dt>内容</dt><dd>{draft.detail.trim()}</dd>
             <dt>返事の期限</dt><dd>{draft.deadline === "" ? "決めていません" : draft.deadline}</dd>
             <dt>問い合わせ先</dt><dd>{draft.contact.trim()}</dd>

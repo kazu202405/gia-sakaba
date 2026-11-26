@@ -184,6 +184,17 @@ describe("案件", () => {
     expect(validatePostDraft({ ...ok, deadline: "2026-10-30" }, "2026-10-30")).toEqual({});
     expect(validatePostDraft({ ...ok, title: "   " }, "2026-10-30").title).toBeTruthy();
   });
+  it("投稿の都道府県を保持して表示し、地方でも絞り込める", () => {
+    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["神奈川県", "大阪府", "兵庫県"], detail: "d", contact: "c" };
+    expect(validatePostDraft(draft)).toEqual({});
+    const post = makeWantPost(draft, "my-1");
+    expect(post.areas).toEqual(draft.regions);
+    expect(areaText(post.areas)).toBe("神奈川県・大阪府・兵庫県");
+    expect(areaText(post.areas, 2)).toBe("神奈川県・大阪府 ほか1");
+    expect(filterByRegion([post], "関東")).toEqual([post]);
+    expect(filterByRegion([post], "中部")).toEqual([]);
+    expect(areaText(["関東", "東京都", "大阪府"])).toBe("関東全域・大阪府");
+  });
   it("確かめを通っていない入力から投稿は作れない", () => {
     expect(() => makeWantPost(EMPTY_POST_DRAFT, "x")).toThrow();
   });

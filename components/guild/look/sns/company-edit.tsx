@@ -9,7 +9,8 @@ import { uiToast } from "@/lib/ui-dialog";
 import { CONSTRUCTION_TRADES, ESTATE_PROPERTIES, ESTATE_TRANSACTIONS, PERMIT_LABELS, type ConstructionTrade, type ConstructionWork } from "@/lib/guild/look/sns-construction";
 import { PROFESSIONS } from "@/lib/guild/look/sns-expertise";
 import { applyCompanyDraft, companyToDraft, toggleValue, validateCompanyDraft, type CompanyDraft, type CompanyDraftErrors } from "@/lib/guild/look/sns-company";
-import { INDUSTRIES, PREFECTURES, REGIONS, REGION_NAMES, REVEALS, areaText, regionOf, type CompanyReveal, type Reveal } from "@/lib/guild/look/sns-mock";
+import { INDUSTRIES, PREFECTURES, REVEALS, type CompanyReveal, type Reveal } from "@/lib/guild/look/sns-mock";
+import { AreaPicker } from "./area-picker";
 import { SEND_MS } from "./flow";
 import { Modal } from "./parts";
 import { SnLink, useSn, useSnState } from "./store";
@@ -48,37 +49,6 @@ function CheckGrid<T extends string>({ label, options, values, onToggle }: { lab
           </label>
         ))}
       </div>
-    </div>
-  );
-}
-
-/** 対応エリア：探すのエリアと同じ、地方→都道府県の選び方 */
-function AreaPicker({ areas, onChange, error }: { areas: readonly string[]; onChange: (next: readonly string[]) => void; error?: string }) {
-  const [region, setRegion] = useState(() => regionOf(areas[0] ?? "") ?? "関西");
-  const prefs = REGIONS[region];
-  const whole = prefs.every((p) => areas.includes(p));
-  return (
-    <div className="sn-field">
-      <span>対応エリア（複数選べます）</span>
-      <div className="sn-area-regions" role="group" aria-label="都道府県を表示する地方">
-        {REGION_NAMES.map((r) => {
-          const n = REGIONS[r].filter((p) => areas.includes(p)).length;
-          return <button type="button" key={r} aria-pressed={region === r} onClick={() => setRegion(r)}>{r}{n > 0 && <span className="sn-area-picked">{n}</span>}</button>;
-        })}
-      </div>
-      <label className="sn-filter-check">
-        <input type="checkbox" checked={whole} onChange={() => onChange(whole ? areas.filter((a) => !prefs.includes(a)) : [...areas.filter((a) => !prefs.includes(a)), ...prefs])} />
-        {region}の全域
-      </label>
-      <div className="sn-choice-grid sn-choice-grid--prefs" role="group" aria-label={`${region}の都道府県`}>
-        {prefs.map((p) => (
-          <label key={p} className="sn-choice" data-selected={areas.includes(p)}>
-            <input type="checkbox" checked={areas.includes(p)} onChange={() => onChange(toggleValue(areas, p))} /><span>{p}</span>
-          </label>
-        ))}
-      </div>
-      <p className="sn-area-summary" aria-live="polite"><b>選択中</b>{areas.length > 0 ? areaText(areas) : "まだ選んでいません"}</p>
-      {error && <small className="sn-error" role="alert">{error}</small>}
     </div>
   );
 }
@@ -196,7 +166,7 @@ export function CompanyEditScreen() {
               {errors.industries && <small className="sn-error" role="alert">{errors.industries}</small>}
             </div>
             <TextField label="事業の内容（必須）" value={draft.business} onChange={(business) => set({ business })} error={errors.business} placeholder="例：電気工事業、売買仲介" />
-            <AreaPicker areas={draft.areas} onChange={(areas) => set({ areas })} error={errors.areas} />
+            <AreaPicker label="対応エリア（複数選べます）" areas={draft.areas} onChange={(areas) => set({ areas })} error={errors.areas} />
             <label className="sn-field">
               <span>得意なこと（1行に1つ）</span>
               <textarea rows={3} value={draft.specialties} placeholder={"例：\nLED改修"} onChange={(e) => set({ specialties: e.target.value })} />

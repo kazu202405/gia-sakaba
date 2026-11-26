@@ -24,7 +24,6 @@ import {
   kindOfPerson,
   maskedLabel,
   personContactRows,
-  postRegions,
   relationText,
   relationToCompany,
   revealLabel,
@@ -151,7 +150,7 @@ export function WantRow({ post }: { post: WantPost }) {
       <div className="sn-want-facts">
         <span><KindIcon kind={INDUSTRY_KIND[post.industry]} />{post.industry}</span>
         <span aria-hidden>·</span>
-        <span><MapPin aria-hidden />{postRegions(post).join("・")}</span>
+        <span><MapPin aria-hidden />{areaText(post.areas, 2)}</span>
       </div>
       <p className="sn-want-sub">
         {author.id === ME_ID ? "あなた" : `${author.name}さん${company ? `・${company.name}` : ""}`}　{post.ago}　返事 {answersFor(post.id, myAnswers).length}件

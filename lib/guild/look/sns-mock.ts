@@ -48,7 +48,7 @@ export const REGIONS: Readonly<Record<string, readonly string[]>> = {
 export const REGION_NAMES = Object.keys(REGIONS);
 export const PREFECTURES = Object.values(REGIONS).flat();
 
-/** 都道府県（または地域の名前）→ 地域。どちらで持っていても同じ地域にそろえる（案件の入力は地域名、仮データは都道府県） */
+/** 都道府県（または地域の名前）→ 地域。どちらで持っていても同じ地域にそろえる */
 export function regionOf(area: string): string | null {
   if (area in REGIONS) return area;
   return REGION_NAMES.find((r) => REGIONS[r].includes(area)) ?? null;
@@ -604,11 +604,20 @@ export function searchPeople(filter: SearchFilter, meId: string = ME_ID, net: Ne
   }).sort((a, b) => RELATION_ORDER[relationTo(a.id, meId, net).kind] - RELATION_ORDER[relationTo(b.id, meId, net).kind]);
 }
 
-/** 対応エリアの見せ方。地域を丸ごと覆っていれば「関東全域」のようにまとめる */
-export function areaText(areas: readonly string[]): string {
-  const whole = REGION_NAMES.filter((r) => REGIONS[r].every((p) => areas.includes(p)));
-  const rest = areas.filter((a) => !whole.some((r) => REGIONS[r].includes(a)));
-  return [...whole.map((r) => `${r}全域`), ...rest].join("・");
+/** 以前の地方名も、都道府県と混在していれば展開して重複を除く */
+export function expandAreas(areas: readonly string[]): string[] {
+  return [...new Set(areas.flatMap((area) => Object.hasOwn(REGIONS, area) ? REGIONS[area] : [area]))];
+}
+
+/** 地方全体を覆っていれば「関東全域」のようにまとめる。コンパクトな行は表示数を指定できる */
+export function areaText(areas: readonly string[], limit?: number): string {
+  const prefectures = expandAreas(areas);
+  const whole = REGION_NAMES.filter((region) => REGIONS[region].every((prefecture) => prefectures.includes(prefecture)));
+  const rest = prefectures.filter((prefecture) => !whole.some((region) => REGIONS[region].includes(prefecture)));
+  const labels = [...whole.map((region) => `${region}全域`), ...rest];
+  const visible = limit === undefined ? labels : labels.slice(0, limit);
+  const extra = labels.length - visible.length;
+  return visible.join("・") + (extra > 0 ? ` ほか${extra}` : "");
 }
 
 // ---------- 人脈 ----------
@@ -937,7 +946,7 @@ export function routeTo(targetId: string, meId: string = ME_ID, net: NetState = 
   return [];
 }
 
-/** 案件の地域（地域名にそろえて重複なし）。入力は地域名・仮データは都道府県のどちらでも同じ結果 */
+/** 案件の地域（絞り込み・件数用）。都道府県と以前の地方名のどちらでも地方にそろえる */
 export function postRegions(post: Pick<WantPost, "areas">): string[] {
   const out: string[] = [];
   for (const a of post.areas) {
