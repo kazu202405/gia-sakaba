@@ -6,7 +6,7 @@
 // 2. 通した道だけ、session 更新を lib/supabase/middleware.ts に委譲する。
 // matcher：静的アセットや画像最適化エンドポイントは除外して負荷を下げる。
 
-import { guildGate } from "@/lib/guild/route-gate";
+import { guildGate, isSnsLookPath } from "@/lib/guild/route-gate";
 import { guardGuildApiRequest } from "@/lib/guild/request-security";
 import { STORE_HEADER, isManifestPath, requestStoreSlug } from "@/lib/guild/store-path";
 import { updateSession } from "@/lib/supabase/middleware";
@@ -28,6 +28,9 @@ export async function proxy(request: NextRequest) {
     if (!gate.keepSearch) url.search = "";
     return NextResponse.redirect(url);
   }
+
+  // SNS のモックはログインもDBも使わない。アプリ設定と通知用のスクリプトも公開する。
+  if (isSnsLookPath(request.nextUrl.pathname)) return NextResponse.next();
 
   const rejected = guardGuildApiRequest({
     pathname: request.nextUrl.pathname,

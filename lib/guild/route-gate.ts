@@ -44,6 +44,10 @@ function isUnder(pathname: string, prefix: string): boolean {
 /** 本番でも開く見本（DBなし）。ほかの /guild-look は開発中だけ */
 const SNS_LOOK = "/guild-look/sns";
 
+export function isSnsLookPath(pathname: string): boolean {
+  return isUnder(pathname, SNS_LOOK);
+}
+
 export function guildGate(pathname: string, options: { allowLook: boolean }): GuildGateResult {
   if (pathname === "/") return { kind: "pass" };
   if (LEGAL_PATHS.has(pathname)) return { kind: "pass" };
@@ -57,7 +61,7 @@ export function guildGate(pathname: string, options: { allowLook: boolean }): Gu
   const legacy = legacyPathToStore(pathname);
   if (legacy) return { kind: "redirect", to: legacy, keepSearch: true };
   if (isUnder(pathname, GUILD_HOME)) return { kind: "pass" };
-  if (isUnder(pathname, SNS_LOOK)) return { kind: "pass" };
+  if (isSnsLookPath(pathname)) return { kind: "pass" };
   if (options.allowLook && isUnder(pathname, "/guild-look")) return { kind: "pass" };
 
   // Next.js の内部（静的ファイル・開発時の自動更新やエラー表示）と、公開してよい固定ファイル

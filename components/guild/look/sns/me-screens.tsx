@@ -4,7 +4,7 @@
 // プロフィールの編集は /me/edit。
 
 import { useRef, useState } from "react";
-import { ChevronRight, Eye, Network, Plus, Settings2, ShieldCheck, UserPlus } from "lucide-react";
+import { Bell, ChevronRight, Eye, Network, Plus, Settings2, ShieldCheck, UserPlus } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
 import {
   ME_ID,
@@ -105,6 +105,14 @@ export function MeScreen() {
             <span>
               <b>人脈の公開範囲</b>
               <small>初期設定は「{NET_LEVEL_LABEL[defaultLevelOf(net, ME_ID)]}」です</small>
+            </span>
+            <ChevronRight aria-hidden />
+          </SnLink>
+          <SnLink to="/me/notifications">
+            <Bell aria-hidden />
+            <span>
+              <b>ホーム画面と通知</b>
+              <small>アプリの追加とテスト通知</small>
             </span>
             <ChevronRight aria-hidden />
           </SnLink>
