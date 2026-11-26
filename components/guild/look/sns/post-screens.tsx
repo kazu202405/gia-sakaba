@@ -3,9 +3,10 @@
 // 見本の案件の画面（設計書6-6）：一覧（カテゴリーで絞る）・1件（うちで受けたい／知り合いを紹介する）・依頼する（何を探していますか？）。
 // 10-31：「相談」より「依頼」「案件」の言葉。一覧の見出しは「探しています」。
 
-import { useRef, useState } from "react";
-import { Clock, MapPin, Package, Plus, Send } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
+import { ChevronRight, Clock, MapPin, Package, Plus, Send, SlidersHorizontal, X } from "lucide-react";
 import { uiToast } from "@/lib/ui-dialog";
+import { toggleValue } from "@/lib/guild/look/sns-company";
 import {
   ANSWER_LABEL,
   EMPTY_POST_DRAFT,
@@ -42,8 +43,73 @@ import { Avatar, IndustryPill, MeetPicture, Modal, PlainPill, RouteLine, WantRow
 import { SnLink, useRelation, useSn, useSnState } from "./store";
 import { DateInput } from "@/components/guild/form-parts";
 
-function toggle<T>(list: readonly T[], v: T): T[] {
-  return list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
+type PostChoice<Key extends string> = { key: Key; label: string; count?: number };
+
+function PostChoiceDialog<Key extends string>({ title, choices, initial, multiple = false, applyLabel, onApply, onClose }: {
+  title: string;
+  choices: readonly PostChoice<Key>[];
+  initial: readonly Key[];
+  multiple?: boolean;
+  applyLabel: string;
+  onApply: (selected: readonly Key[]) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const titleId = useId();
+  const [selected, setSelected] = useState(initial);
+
+  useEffect(() => {
+    const dialog = ref.current;
+    const trigger = document.activeElement;
+    const previous = document.body.style.overflow;
+    dialog?.showModal();
+    titleRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog?.close();
+      document.body.style.overflow = previous;
+      if (trigger instanceof HTMLElement) trigger.focus({ preventScroll: true });
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={ref}
+      className="sn-filter-dialog"
+      aria-labelledby={titleId}
+      onCancel={(event) => { event.preventDefault(); onClose(); }}
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <header className="sn-filter-dialog-head">
+        <div className="sn-filter-title">
+          <h2 ref={titleRef} id={titleId} tabIndex={-1}>{title}</h2>
+          <button type="button" className="sn-filter-icon" aria-label="変更せず閉じる" onClick={onClose}><X aria-hidden /></button>
+        </div>
+        {multiple && <p>複数選べます。</p>}
+      </header>
+      <div className="sn-filter-dialog-body sn-post-choices" role="group" aria-labelledby={titleId}>
+        {choices.map(({ key, label, count }) => (
+          <label className="sn-filter-check" key={key}>
+            <input
+              type={multiple ? "checkbox" : "radio"}
+              name={titleId}
+              value={key}
+              checked={selected.includes(key)}
+              onChange={() => setSelected((previous) => multiple ? toggleValue(previous, key) : [key])}
+            />
+            <span>{label}</span>
+            {count !== undefined && <small>{count}件</small>}
+          </label>
+        ))}
+      </div>
+      <footer className="sn-filter-dialog-foot">
+        <button type="button" className="sn-btn sn-btn--main sn-btn--wide" disabled={!multiple && selected.length === 0} onClick={() => { onApply(selected); onClose(); }}>
+          {applyLabel}
+        </button>
+      </footer>
+    </dialog>
+  );
 }
 
 // ---------- 一覧 ----------
@@ -51,6 +117,7 @@ function toggle<T>(list: readonly T[], v: T): T[] {
 export function PostsScreen() {
   const { myPosts, net } = useSnState();
   const [category, setCategory] = useState<PostCategory | null>(null);
+  const [filtering, setFiltering] = useState(false);
   const all = wantPosts(myPosts);
   const posts = sortByCloseness(filterWantPosts(all, category), ME_ID, net);
 
@@ -58,16 +125,15 @@ export function PostsScreen() {
     <div className="sn-page sn-page--filters">
       <aside className="sn-page-side">
         <div className="sn-band sn-sec">
-          <div className="sn-sec-h"><h2>探しています</h2><span>{posts.length}件・近い順</span></div>
+          <div className="sn-sec-h"><h2>探しています</h2></div>
           <SnLink to="/posts/new" className="sn-btn sn-btn--main sn-btn--wide"><Plus aria-hidden />依頼する</SnLink>
-          <div className="sn-chips" role="group" aria-label="カテゴリー">
-            <button type="button" className="sn-chip" aria-pressed={category === null} onClick={() => setCategory(null)}>すべて {all.length}</button>
-            {POST_CATEGORIES.map((c) => (
-              <button key={c.key} type="button" className="sn-chip" aria-pressed={category === c.key} onClick={() => setCategory(c.key)}>
-                {c.label} {filterWantPosts(all, c.key).length}
-              </button>
-            ))}
-          </div>
+          <button type="button" className="sn-post-select-row sn-post-list-filter" aria-haspopup="dialog" onClick={() => setFiltering(true)}>
+            <span className="sn-post-select-label"><SlidersHorizontal aria-hidden />絞り込み</span>
+            <span className="sn-post-select-value" data-picked={category !== null}>
+              {category === null ? "すべて" : categoryLabel(category)}・{posts.length}件・近い順
+            </span>
+            <ChevronRight aria-hidden />
+          </button>
         </div>
       </aside>
       <div className="sn-page-main">
@@ -81,6 +147,19 @@ export function PostsScreen() {
           </div>
         )}
       </div>
+      {filtering && (
+        <PostChoiceDialog
+          title="案件の絞り込み"
+          choices={[
+            { key: "all" as const, label: "すべて", count: all.length },
+            ...POST_CATEGORIES.map((choice) => ({ ...choice, count: filterWantPosts(all, choice.key).length })),
+          ]}
+          initial={[category ?? "all"]}
+          applyLabel="絞り込む"
+          onApply={([choice]) => setCategory(choice === "all" ? null : choice)}
+          onClose={() => setFiltering(false)}
+        />
+      )}
     </div>
   );
 }
@@ -213,17 +292,43 @@ export function PostScreen({ id }: { id: string }) {
 }
 
 // ---------- 依頼する ----------
+type PostPickerField = "category" | "industry" | "regions";
+
+function PostSelectRow({ label, value, error, onClick }: { label: string; value: string; error?: string; onClick: () => void }) {
+  const errorId = useId();
+  return (
+    <div>
+      <button
+        type="button"
+        className="sn-post-select-row"
+        aria-haspopup="dialog"
+        data-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
+        onClick={onClick}
+      >
+        <span className="sn-post-select-label">{label}</span>
+        <span className="sn-post-select-value" data-picked={Boolean(value)}>{value || "選択する"}</span>
+        <ChevronRight aria-hidden />
+      </button>
+      {error && <p id={errorId} className="sn-error sn-post-select-error" role="alert">{error}</p>}
+    </div>
+  );
+}
 
 export function NewPostScreen() {
   const { myPosts, addPost } = useSnState();
   const { go } = useSn();
   const [draft, setDraft] = useState<PostDraft>(EMPTY_POST_DRAFT);
+  const [picking, setPicking] = useState<PostPickerField | null>(null);
   const [errors, setErrors] = useState<PostDraftErrors>({});
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const lock = useRef(false);
   const set = (patch: Partial<PostDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  const regionSummary = draft.regions.length <= 2
+    ? draft.regions.join("・")
+    : `${draft.regions[0]}・${draft.regions[1]} ほか${draft.regions.length - 2}`;
 
   const toReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,35 +366,11 @@ export function NewPostScreen() {
             {err("title")}
           </label>
 
-          <fieldset className="sn-field">
-            <legend>カテゴリー</legend>
-            <div className="sn-chips">
-              {POST_CATEGORIES.map((c) => (
-                <button key={c.key} type="button" className="sn-chip" aria-pressed={draft.category === c.key} onClick={() => set({ category: c.key })}>{c.label}</button>
-              ))}
-            </div>
-            {err("category")}
-          </fieldset>
-
-          <fieldset className="sn-field">
-            <legend>探している業種</legend>
-            <div className="sn-chips">
-              {INDUSTRIES.map((i) => (
-                <button key={i} type="button" className="sn-chip" aria-pressed={draft.industry === i} onClick={() => set({ industry: i })}>{i}</button>
-              ))}
-            </div>
-            {err("industry")}
-          </fieldset>
-
-          <fieldset className="sn-field">
-            <legend>探している地域（いくつでも）</legend>
-            <div className="sn-chips">
-              {REGION_NAMES.map((r) => (
-                <button key={r} type="button" className="sn-chip" aria-pressed={draft.regions.includes(r)} onClick={() => set({ regions: toggle(draft.regions, r) })}>{r}</button>
-              ))}
-            </div>
-            {err("regions")}
-          </fieldset>
+          <div className="sn-post-select-fields">
+            <PostSelectRow label="カテゴリー" value={draft.category && categoryLabel(draft.category)} error={errors.category} onClick={() => setPicking("category")} />
+            <PostSelectRow label="探している業種" value={draft.industry} error={errors.industry} onClick={() => setPicking("industry")} />
+            <PostSelectRow label="探している地域" value={regionSummary} error={errors.regions} onClick={() => setPicking("regions")} />
+          </div>
 
           <label className="sn-field">
             <span>内容</span>
@@ -323,6 +404,40 @@ export function NewPostScreen() {
           <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={done}>{done ? "依頼を出しました" : "内容を確かめる"}</button>
         </div>
       </form>
+      {picking === "category" && (
+        <PostChoiceDialog
+          title="カテゴリー"
+          choices={POST_CATEGORIES}
+          initial={draft.category ? [draft.category] : []}
+          applyLabel="決定する"
+          onApply={([category]) => { set({ category }); setErrors((previous) => ({ ...previous, category: undefined })); }}
+          onClose={() => setPicking(null)}
+        />
+      )}
+      {picking === "industry" && (
+        <PostChoiceDialog
+          title="探している業種"
+          choices={INDUSTRIES.map((industry) => ({ key: industry, label: industry }))}
+          initial={draft.industry ? [draft.industry] : []}
+          applyLabel="決定する"
+          onApply={([industry]) => { set({ industry }); setErrors((previous) => ({ ...previous, industry: undefined })); }}
+          onClose={() => setPicking(null)}
+        />
+      )}
+      {picking === "regions" && (
+        <PostChoiceDialog
+          title="探している地域"
+          choices={REGION_NAMES.map((region) => ({ key: region, label: region }))}
+          initial={draft.regions}
+          multiple
+          applyLabel="決定する"
+          onApply={(regions) => {
+            set({ regions: [...regions] });
+            if (regions.length) setErrors((previous) => ({ ...previous, regions: undefined }));
+          }}
+          onClose={() => setPicking(null)}
+        />
+      )}
       {reviewing && (
         <Modal title="この内容で依頼を出しますか？" onClose={() => !busy && setReviewing(false)} busy={busy}>
           <dl className="sn-review">

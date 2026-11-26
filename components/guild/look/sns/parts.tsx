@@ -137,7 +137,7 @@ export function Due({ deadline }: { deadline: string | null }) {
   return <span className={due.soon ? "sn-due sn-due--soon" : due.past ? "sn-due sn-due--past" : "sn-due"}><Clock aria-hidden />{due.label}</span>;
 }
 
-/** 「探しています」の1行：紹介の道（横）・期限・題名・業種と場所の札。案件の一覧・ホーム・マイページで同じものを使う */
+/** 「探しています」の1行：紹介の道（横）・期限・題名・業種と場所。案件の一覧・ホーム・マイページで同じものを使う */
 export function WantRow({ post }: { post: WantPost }) {
   const { myAnswers } = useSnState();
   const author = findPerson(post.authorId);
@@ -148,9 +148,10 @@ export function WantRow({ post }: { post: WantPost }) {
       <RoutePath author={author} />
       <Due deadline={post.deadline} />
       <p className="sn-want-w">{post.text}</p>
-      <div className="sn-pills">
-        <IndustryPill industry={post.industry} />
-        <PlainPill icon={<MapPin aria-hidden />}>{postRegions(post).join("・")}</PlainPill>
+      <div className="sn-want-facts">
+        <span><KindIcon kind={INDUSTRY_KIND[post.industry]} />{post.industry}</span>
+        <span aria-hidden>·</span>
+        <span><MapPin aria-hidden />{postRegions(post).join("・")}</span>
       </div>
       <p className="sn-want-sub">
         {author.id === ME_ID ? "あなた" : `${author.name}さん${company ? `・${company.name}` : ""}`}　{post.ago}　返事 {answersFor(post.id, myAnswers).length}件
