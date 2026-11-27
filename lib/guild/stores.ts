@@ -29,7 +29,6 @@ export type StoreTerms = {
 /** 未ログインで /guild/<店> を開いたときの案内ページ。無い店は、ログイン画面へ送る。
  *  文言の | は折り返してよい位置（components/guild/phrase.tsx の Ph）。| 以外では折り返さない */
 export type StoreLanding = {
-  eyebrow: string;
   headline: string;
   lead: string;
   points: { title: string; body: string }[];
@@ -88,19 +87,22 @@ const KENSETSU_FUDOSAN: StoreConfig = {
   rosterLabel: "名簿",
   words: KENSETSU_FUDOSAN_WORDS,
   profileFields: ["headline", "industry_choice", "work_areas", "work_types", "licenses", "bio", "work_photos", "looking_for", "hometown", "hobbies", "life_story"],
-  description: "建設・不動産のメンバーどうしで、案件・探しもの・紹介を持ち寄る、招待制の集まりです。",
+  description: "工事の相談、協力会社探し、知り合いからの紹介。建設・不動産の招待制の酒場です。",
   pwa: { id: "/guild/kensetsu-fudosan", startPath: "/guild/kensetsu-fudosan" },
-  // 案内ページの文言は仮。物件の掲載や広告に読めない書き方にしている（宅建業法・五島さんと詰める）
   landing: {
-    eyebrow: "招待制のコミュニティ",
-    headline: "現場と不動産の|仕事の話が、|次の一歩になる場所。",
-    lead: "建設・不動産に|関わるメンバーどうしで、|案件・探しもの・|人の紹介を|持ち寄ります。|顔の見える相手とだけ、|落ち着いて|相談できる場です。",
+    headline: "工事の相談、|協力会社探し、|知り合いからの紹介。",
+    lead: "建設・不動産のメンバー同士で、|相談や依頼ができる|招待制の酒場です。",
     points: [
-      { title: "案件・探しものを|出せる", body: "「こんな工事の|相手を探している」|「この分野に|詳しい人は|いないか」を、|メンバーに向けて|出せます。" },
-      { title: "メンバーを|紹介してもらえる", body: "管理者が|間に入り、|合いそうな|メンバーどうしを|つなぎます。|連絡先は、|お互いが|了承してから|開きます。" },
-      { title: "進行を|ひとつの場所で", body: "話が|動き出したら、|プロジェクトとして|期限や担当を|共有できます。" },
+      {
+        title: "案件・探しものを出す",
+        body: "外壁塗装を頼める会社や、|リノベの協力会社を探せます。|依頼を出すと、|メンバーから返事を受け取れます。",
+      },
+      {
+        title: "知り合いに紹介を頼む",
+        body: "間に入る知り合いと、|紹介してほしい相手が|了承すると、つながれます。",
+      },
     ],
-    inviteNote: "会員は招待制です。|招待リンクを|受け取った方は、|そのリンクから|入会してください。",
+    inviteNote: "招待を受けた方は、|届いた招待リンクから入会できます。",
   },
 };
 
