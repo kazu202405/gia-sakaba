@@ -17,7 +17,9 @@
   --sn-line: #dde1e5;
   --sn-line-strong: #c4cad0;
   --sn-tint: #f2f5f8;
-  --sn-accent: #2b4a6f;
+  --sn-color-ai: #2b4a6f;
+  --sn-color-fukamidori: #2c5e4a;
+  --sn-accent: var(--sn-color-ai);
   --sn-accent-ink: #ffffff;
   --sn-accent-soft: #e4ebf3;
   /* 業種の色と薄い色（建設・不動産・士業・その他） */
@@ -66,7 +68,7 @@
   --sn-line: #e1e6e2;
   --sn-line-strong: #c9d0cb;
   --sn-tint: #f3f6f3;
-  --sn-accent: #2c5e4a;
+  --sn-accent: var(--sn-color-fukamidori);
   --sn-accent-soft: #e4ede8;
   --sn-me: #2a2f2c;
   --sn-skel: #edf1ee;
@@ -486,6 +488,11 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 .sn-me-invite h2 svg { width: 1.25rem; height: 1.25rem; color: var(--sn-accent); }
 .sn-me-invite .sn-meta { color: var(--sn-ink); }
 .sn-me-invite .sn-url { background: var(--sn-paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; word-break: normal; }
+.sn-theme-setting { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.375rem 0.75rem; padding: 0.5rem 0; border-bottom: 1px solid var(--sn-line); }
+.sn-theme-setting > b { font-size: 0.9375rem; }
+.sn-theme-setting .sn-segment > button { gap: 0.375rem; padding: 0 0.625rem; white-space: nowrap; }
+.sn-theme-swatch { width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--sn-color-ai); }
+.sn-theme-swatch[data-color="fukamidori"] { background: var(--sn-color-fukamidori); }
 .sn-me-links a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; min-height: 3.5rem; padding: 0.625rem 0; border-bottom: 1px solid var(--sn-line); }
 .sn-me-links a > svg:first-child { width: 1.25rem; height: 1.25rem; color: var(--sn-accent); }
 .sn-me-links b { display: block; font-size: 0.9375rem; font-weight: 700; line-height: 1.5; }

@@ -14,14 +14,6 @@ export const SNS_NAME = "建設・不動産の酒場";
 export const SNS_PWA_NAME = "建設・不動産の酒場（モック）";
 export const SNS_PWA_ICON = "/images/sakaba/guild-icon-20260929";
 
-/** 見本の上で切り替える色（10-31：23「紹介の道＋地域」。藍が既定・深緑は見比べ用）。値は sns.css の [data-palette] */
-export const PALETTES = [
-  { key: "ai", label: "藍" },
-  { key: "fukamidori", label: "深緑" },
-] as const;
-export type PaletteKey = (typeof PALETTES)[number]["key"];
-export const DEFAULT_PALETTE: PaletteKey = "ai";
-
 export const INDUSTRIES = ["建設", "不動産", "士業", "その他"] as const;
 export type Industry = (typeof INDUSTRIES)[number];
 

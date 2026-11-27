@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { ApprovalGate } from "@/components/guild/approval-gate";
 import { ConstructionFrame } from "@/components/guild/construction/frame";
@@ -12,6 +13,7 @@ import { countNavBadges } from "@/lib/guild/nav-badges";
 import { listGuildNotifications } from "@/lib/guild/server-data";
 import { storeShareMetadata } from "@/lib/guild/site-meta";
 import { guildPath } from "@/lib/guild/store-path";
+import { CONSTRUCTION_PALETTE_COOKIE, resolvePalette } from "@/lib/guild/sns-theme";
 import { CONSTRUCTION_STORE_SLUG, findStore, storeThemeAttrs } from "@/lib/guild/stores";
 import { createClient } from "@/lib/supabase/server";
 
@@ -72,10 +74,11 @@ export default async function StoreLayout({ children, params }: Props) {
     // 数字なし
   }
   if (store.slug === CONSTRUCTION_STORE_SLUG && gate === "active") {
+    const palette = resolvePalette((await cookies()).get(CONSTRUCTION_PALETTE_COOKIE)?.value);
     return (
       <StoreProvider slug={config.slug}>
         <div {...storeThemeAttrs(config)} className={snsFontClass}>
-          <ConstructionFrame base={store.path()} title={config.name} slug={store.slug} initialUnread={initialBadges.total}>{children}</ConstructionFrame>
+          <ConstructionFrame base={store.path()} title={config.name} slug={store.slug} initialUnread={initialBadges.total} initialPalette={palette}>{children}</ConstructionFrame>
         </div>
       </StoreProvider>
     );

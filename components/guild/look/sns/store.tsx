@@ -7,15 +7,14 @@
 import Link from "next/link";
 import { createContext, useCallback, useContext, useMemo, useState, useSyncExternalStore } from "react";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
+import { resolvePalette, type PaletteKey } from "@/lib/guild/sns-theme";
 import {
   BASE_NET,
   BUSINESS_CARDS,
   COMPANIES,
-  DEFAULT_PALETTE,
   INTRO_RECORDS_SEED,
   ME_COMPANY_ID,
   ME_ID,
-  PALETTES,
   PEOPLE,
   SNS_BASE,
   makeDirectMessage,
@@ -27,7 +26,6 @@ import {
   type BusinessCard,
   type Company,
   type NetState,
-  type PaletteKey,
   type Person,
   type Relation,
   type SentMessage,
@@ -102,7 +100,7 @@ function parsePrefs(raw: string): { palette: PaletteKey } {
   }
   return {
     // 昔の色の名前（常磐など）が残っていても、既定の藍に戻る
-    palette: PALETTES.find((x) => x.key === obj.palette)?.key ?? DEFAULT_PALETTE,
+    palette: resolvePalette(obj?.palette),
   };
 }
 

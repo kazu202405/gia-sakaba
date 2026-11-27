@@ -11,6 +11,7 @@ import { constructionContext, constructionRows } from "@/lib/guild/construction-
 import { areaText } from "@/lib/guild/look/sns-mock";
 import { getGuildContext, getMyGuildProfile, getMyMemberInvite, getMyProfileDraft } from "@/lib/guild/server-data";
 import { ConstructionPostRows } from "./post-rows";
+import { ConstructionThemeSettings } from "./frame";
 
 export async function ConstructionMyPage() {
   const { db, store, userId } = await constructionContext();
@@ -63,6 +64,7 @@ export async function ConstructionMyPage() {
       </details>
       <section className="sn-me-sec">
         <div className="sn-sec-h"><h2>設定</h2></div>
+        <ConstructionThemeSettings />
         <div className="sn-me-links">
           <Link href={store.path("/me/status")}><Settings2 aria-hidden /><span><b>プロフィールと公開範囲</b></span><ChevronRight aria-hidden /></Link>
           <Link href={store.path("/network/company")}><Building2 aria-hidden /><span><b>会社情報</b></span><ChevronRight aria-hidden /></Link>

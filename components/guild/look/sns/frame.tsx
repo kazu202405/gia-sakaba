@@ -8,7 +8,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bell, ChevronLeft, ClipboardList, House, MessageCircle, Plus, User, type LucideIcon } from "lucide-react";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
-import { PALETTES, SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
+import { SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
+import { PALETTES, type PaletteKey } from "@/lib/guild/sns-theme";
 import { PageSkeleton } from "./parts";
 import { SnProvider, useSnState } from "./store";
 import "./sns.css";
@@ -71,7 +72,7 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
   children: React.ReactNode;
   base: string;
   title: string;
-  palette?: string;
+  palette?: PaletteKey;
   notice?: { href: string; unread: number };
   mockControls?: React.ReactNode;
 }) {
