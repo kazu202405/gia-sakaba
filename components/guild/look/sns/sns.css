@@ -20,6 +20,7 @@
   --sn-color-ai: #2b4a6f;
   --sn-color-fukamidori: #2c5e4a;
   --sn-accent: var(--sn-color-ai);
+  --sn-accent-strong: #233f60;
   --sn-accent-ink: #ffffff;
   --sn-accent-soft: #e4ebf3;
   /* 業種の色と薄い色（建設・不動産・士業・その他） */
@@ -69,10 +70,20 @@
   --sn-line-strong: #c9d0cb;
   --sn-tint: #f3f6f3;
   --sn-accent: var(--sn-color-fukamidori);
+  --sn-accent-strong: #254f3e;
   --sn-accent-soft: #e4ede8;
   --sn-me: #2a2f2c;
   --sn-skel: #edf1ee;
 }
+/* 会員画面で共用する招待・共有などの部品も、選択中の配色を使う。 */
+[data-store="kensetsu-fudosan"] .sn {
+  --guild-accent: var(--sn-accent);
+  --guild-accent-dark: var(--sn-accent-strong);
+  --guild-accent-light: var(--sn-accent-soft);
+  --guild-accent-hover: var(--sn-accent-strong);
+  --guild-accent-ink: var(--sn-accent-ink);
+}
+
 .sn [data-kind="build"] { --sn-k: var(--sn-build); --sn-k-soft: var(--sn-build-soft); }
 .sn [data-kind="estate"] { --sn-k: var(--sn-estate); --sn-k-soft: var(--sn-estate-soft); }
 .sn [data-kind="pro"] { --sn-k: var(--sn-pro); --sn-k-soft: var(--sn-pro-soft); }
