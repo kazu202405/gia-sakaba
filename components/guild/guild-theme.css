@@ -920,11 +920,13 @@ body:has(.guild-theme) [data-ui-toast-action] {
   color: var(--guild-accent);
 }
 
-/* 未ログインの店の案内ページ */
+/* 未ログインの店の案内ページ（D案・2026-11-27 五島さん決定：濃い色の帯のヒーロー＋つながりの図＋手順） */
 .guild-landing {
+  --landing-muted: rgb(var(--guild-ink-rgb) / 0.72);
+  --landing-line: rgb(var(--guild-ink-rgb) / 0.14);
+  --landing-on-band-soft: color-mix(in srgb, var(--guild-accent-ink) 80%, transparent);
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: 3rem;
   background: var(--guild-paper);
   color: var(--guild-ink);
   font-family: var(--font-sn-body), var(--font-jp-sans), sans-serif;
@@ -934,7 +936,7 @@ body:has(.guild-theme) [data-ui-toast-action] {
   margin-inline: auto;
   padding-inline: clamp(1.25rem, 5vw, 2.5rem);
 }
-.guild-landing-header { border-bottom: 1px solid rgb(var(--guild-ink-rgb) / 0.14); }
+.guild-landing-band { background: var(--guild-accent-dark); color: var(--guild-accent-ink); }
 .guild-landing-header > div {
   display: flex;
   flex-wrap: wrap;
@@ -942,45 +944,97 @@ body:has(.guild-theme) [data-ui-toast-action] {
   justify-content: space-between;
   gap: 0.25rem 0.75rem;
   min-height: 3.75rem;
-  padding-block: 0.375rem;
+  padding-block: 0.5rem;
 }
 .guild-landing-name { font-size: 0.9375rem; font-weight: 700; }
 .guild-landing-login {
   display: inline-grid;
   align-items: center;
   min-height: 2.75rem;
-  padding-inline: 0.625rem;
+  padding-inline: 0.75rem;
   border: 1px solid currentColor;
   border-radius: var(--guild-radius);
-  color: var(--guild-accent-dark);
-  font-size: 0.8125rem;
-  font-weight: 700;
-}
-.guild-landing-login:hover { background: var(--guild-bg); }
-.guild-landing-login:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
-.guild-landing-hero { padding-block: clamp(1.75rem, 6vw, 3rem) 1.5rem; }
-.guild-landing-hero h1 {
-  font-family: var(--font-sn-head), var(--font-sn-body), var(--font-jp-sans), sans-serif;
-  font-size: clamp(1.625rem, 8vw, 3rem);
-  font-weight: 900;
-  line-height: 1.22;
-}
-.guild-landing-hero h1 > span { display: block; }
-.guild-landing-hero h1 > span:last-child { color: var(--guild-accent-dark); }
-.guild-landing-hero p { margin-top: 0.875rem; font-size: 0.9375rem; line-height: 1.7; }
-.guild-landing-invite {
-  padding-block: 0.875rem;
-  border-block: 1px solid var(--guild-accent-light);
-  background: var(--guild-bg);
-  color: var(--guild-accent-dark);
   font-size: 0.875rem;
   font-weight: 700;
-  line-height: 1.65;
 }
-.guild-landing-points > li { padding-block: 1.25rem; }
-.guild-landing-points > li + li { border-top: 1px solid rgb(var(--guild-ink-rgb) / 0.14); }
-.guild-landing-points h2 { font-size: 1.0625rem; font-weight: 700; line-height: 1.45; }
-.guild-landing-points p { margin-top: 0.375rem; font-size: 0.875rem; line-height: 1.75; }
+.guild-landing :is(a, button):focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.guild-landing-hero { padding-block: clamp(1.25rem, 5vw, 2.5rem) 2rem; }
+.guild-landing-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; color: var(--guild-accent-light); }
+.guild-landing-hero h1 {
+  margin-top: 0.625rem;
+  font-family: var(--font-sn-head), var(--font-sn-body), var(--font-jp-sans), sans-serif;
+  font-size: clamp(1.625rem, 8.2vw, 3rem);
+  font-weight: 900;
+  line-height: 1.35;
+}
+.guild-landing-hero h1 > span { display: block; }
+.guild-landing-hero h1 em { font-style: normal; border-bottom: 3px solid var(--guild-accent-light); }
+.guild-landing-lead { margin-top: 0.875rem; font-size: 0.9375rem; line-height: 1.8; color: var(--landing-on-band-soft); }
+.guild-landing-cta,
+.guild-landing-cta-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.25rem;
+  border-radius: var(--guild-radius);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.guild-landing-cta { margin-top: 1.375rem; background: var(--guild-accent-ink); color: var(--guild-accent-dark); }
+.guild-landing-cta:hover { background: var(--guild-bg); }
+.guild-landing-invite { margin-top: 0.625rem; font-size: 0.8125rem; line-height: 1.7; text-align: center; color: var(--landing-on-band-soft); }
+.guild-landing-h2 {
+  font-family: var(--font-sn-head), var(--font-sn-body), var(--font-jp-sans), sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.guild-landing-path { padding-block: 1.875rem 1.75rem; }
+.guild-landing-figure { display: block; width: 100%; max-width: 26rem; height: auto; margin: 0.75rem auto 0; font-family: inherit; }
+.guild-landing-figure text { text-anchor: middle; }
+.guild-landing-figure .fig-line { fill: none; stroke: var(--guild-accent); stroke-width: 2.5; stroke-dasharray: 6 6; }
+.guild-landing-figure .fig-you { fill: var(--guild-accent); }
+.guild-landing-figure .fig-you-text { fill: var(--guild-accent-ink); font-size: 14px; font-weight: 700; }
+.guild-landing-figure .fig-middle { fill: var(--guild-paper); stroke: var(--guild-accent); stroke-width: 2.5; }
+.guild-landing-figure .fig-middle-text { fill: var(--guild-accent-dark); font-size: 13px; font-weight: 700; }
+.guild-landing-figure .fig-end { fill: var(--guild-accent-light); }
+.guild-landing-figure .fig-end-text { fill: var(--guild-accent-dark); font-size: 12px; font-weight: 700; }
+.guild-landing-figure .fig-end-sub { fill: var(--guild-accent-dark); font-size: 10px; }
+.guild-landing-figure .fig-note { fill: var(--landing-muted); font-size: 12px; }
+.guild-landing-figure .fig-role { fill: var(--landing-muted); font-size: 11px; }
+.guild-landing-path-caption { margin-top: 0.375rem; font-size: 0.8125rem; line-height: 1.7; text-align: center; color: var(--landing-muted); }
+.guild-landing-steps { padding-block: 1.75rem 0.25rem; background: var(--guild-bg); }
+.guild-landing-steps ol { margin-top: 1.125rem; }
+.guild-landing-steps li { position: relative; display: flex; gap: 0.875rem; padding-bottom: 1.375rem; }
+.guild-landing-steps li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 15px;
+  top: 34px;
+  bottom: 4px;
+  width: 2px;
+  background: var(--guild-accent-light);
+}
+.guild-landing-step-no {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: var(--guild-accent);
+  color: var(--guild-accent-ink);
+  font-weight: 700;
+}
+.guild-landing-steps h3 { margin-top: 0.25rem; font-size: 1rem; font-weight: 700; line-height: 1.5; }
+.guild-landing-steps p { margin-top: 0.25rem; font-size: 0.875rem; line-height: 1.75; color: var(--landing-muted); }
+.guild-landing-end { padding-block: 1.75rem 2.5rem; }
+.guild-landing-cta-sub { border: 1px solid var(--guild-accent); background: var(--guild-paper); color: var(--guild-accent-dark); }
+.guild-landing-cta-sub:hover { background: var(--guild-bg); }
+@media (min-width: 48rem) {
+  .guild-landing-cta, .guild-landing-cta-sub { display: inline-flex; padding-inline: 2.5rem; }
+  .guild-landing-invite { text-align: left; }
+}
 
 /* 建設・不動産の酒場の色（C案・2026-10-24 五島さん決定：白＋深い緑） */
 [data-store="kensetsu-fudosan"] {

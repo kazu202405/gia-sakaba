@@ -100,6 +100,9 @@ describe("店の設定", () => {
       expect(point.title).not.toBe("");
       expect(point.body).not.toBe("");
     }
+    // 強調する言葉は見出しの1行の中にある（行をまたぐと強調されない）
+    expect(landing?.headline.split("|").some((line) => line.includes(landing.headlineEmphasis))).toBe(true);
+    for (const value of Object.values(landing?.path ?? {})) expect(value.trim()).not.toBe("");
     // GIAの酒場の案内は / （app/page.tsx）。ここには持たない
     expect(STORES.gia.landing).toBeUndefined();
   });
