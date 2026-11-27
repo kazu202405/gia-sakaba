@@ -62,9 +62,9 @@ function feeDescription(intro: ConstructionIntro): string | null {
   }
 }
 
-export default async function ConstructionNetworkPage({ searchParams }: { searchParams: Promise<{ via?: string; q?: string }> }) {
+export default async function ConstructionNetworkPage({ searchParams }: { searchParams: Promise<{ via?: string; q?: string; tab?: string }> }) {
   const { db, store, userId } = await constructionContext();
-  const { via, q } = await searchParams;
+  const { via, q, tab } = await searchParams;
   const query = typeof q === "string" ? q.trim().slice(0, 100) : "";
   const [members, connections, intros, settingsResult] = await Promise.all([
     listGuildMembers(),
@@ -84,7 +84,36 @@ export default async function ConstructionNetworkPage({ searchParams }: { search
   const searchable = members.filter((member) => member.id !== userId && !ids.has(member.id) && (
     !query || [member.display_name, member.name_kana ?? "", member.industry, member.region].join(" ").includes(query)
   ));
-  return <div className="space-y-6">
+  const incoming = intros.filter((intro) => (intro.introducer_id === userId && intro.status === "requested")
+    || (intro.target_id === userId && intro.status === "asking_target"));
+  const tabs = [
+    { key: "incoming", name: "届いた", items: incoming },
+    { key: "replied", name: "返事した", items: intros.filter((intro) => intro.events.some((event) => event.status !== "requested" && event.actor_id === userId)) },
+    { key: "sent", name: "送った", items: intros.filter((intro) => intro.requester_id === userId) },
+    { key: "history", name: "記録", items: intros },
+  ] as const;
+  const selected = tabs.find((item) => item.key === tab) ?? tabs[0];
+  return <div className="sn-page sn-page--search">
+    <nav className="sn-tabs" aria-label="やり取り">
+      {tabs.map((item) => <Link key={item.key} className="sn-live-tab" aria-current={item.key === selected.key ? "page" : undefined}
+        href={store.path("/network?tab=" + item.key)}>{item.name}{item.items.length > 0 && " " + item.items.length}</Link>)}
+    </nav>
+    <section id="introductions"><ConstructionPanel title="紹介のやり取り">
+      {selected.items.length ? <ul className="divide-y">{selected.items.map((intro) => {
+        const isIntroducer = intro.introducer_id === userId && intro.status === "requested";
+        const isTarget = intro.target_id === userId && intro.status === "asking_target";
+        return <li className="space-y-3 py-4" key={intro.id}>
+          <p className="font-bold">{name(intro.requester_id)} → {name(intro.introducer_id)} → {intro.target_id ? name(intro.target_id) : "氏名非公開"}</p>
+          <p className="text-sm c-muted">{statuses[intro.status]}</p>
+          <p className="whitespace-pre-wrap break-words">{intro.note}</p>
+          {feeDescription(intro) && <p className="text-sm">{feeDescription(intro)}</p>}
+          {intro.events.some((event) => event.status !== "requested") && <details><summary className="cursor-pointer">返事の履歴</summary>
+            <ol className="mt-2 space-y-2 text-sm">{intro.events.filter((event) => event.status !== "requested").map((event) => <li className="whitespace-pre-wrap break-words" key={event.status}>{statuses[event.status]}{event.note && " · " + event.note}</li>)}</ol>
+          </details>}
+          {(isIntroducer || isTarget) && <IntroResponse id={intro.id} introducer={isIntroducer} />}
+        </li>;
+      })}</ul> : <p>まだ紹介のやり取りはありません。</p>}
+    </ConstructionPanel></section>
     <ConstructionPanel title="知り合い">
       <div className="flex flex-wrap gap-4 text-sm"><Link className="underline" href={store.path("/network/company")}>会社情報を登録・編集</Link><Link className="underline" href={store.path("/me")}>自分のプロフィール</Link></div>
       <details><summary className="cursor-pointer">人脈の公開範囲</summary><VisibilityForm level={settings.default_level} /></details>
@@ -128,21 +157,5 @@ export default async function ConstructionNetworkPage({ searchParams }: { search
       ))}</ul> : <p>紹介を頼める候補はまだいません。</p>}
     </ConstructionPanel></section>}
 
-    <ConstructionPanel title="紹介のやり取り">
-      {intros.length ? <ul className="divide-y">{intros.map((intro) => {
-        const isIntroducer = intro.introducer_id === userId && intro.status === "requested";
-        const isTarget = intro.target_id === userId && intro.status === "asking_target";
-        return <li className="space-y-3 py-4" key={intro.id}>
-          <p className="font-bold">{name(intro.requester_id)} → {name(intro.introducer_id)} → {intro.target_id ? name(intro.target_id) : "氏名非公開"}</p>
-          <p className="text-sm c-muted">{statuses[intro.status]}</p>
-          <p className="whitespace-pre-wrap break-words">{intro.note}</p>
-          {feeDescription(intro) && <p className="text-sm">{feeDescription(intro)}</p>}
-          {intro.events.some((event) => event.status !== "requested") && <details><summary className="cursor-pointer">返事の履歴</summary>
-            <ol className="mt-2 space-y-2 text-sm">{intro.events.filter((event) => event.status !== "requested").map((event) => <li className="whitespace-pre-wrap break-words" key={event.status}>{statuses[event.status]}{event.note && " · " + event.note}</li>)}</ol>
-          </details>}
-          {(isIntroducer || isTarget) && <IntroResponse id={intro.id} introducer={isIntroducer} />}
-        </li>;
-      })}</ul> : <p>まだ紹介のやり取りはありません。</p>}
-    </ConstructionPanel>
   </div>;
 }

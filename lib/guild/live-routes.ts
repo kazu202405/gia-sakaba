@@ -31,7 +31,7 @@ const STORE_PATTERNS = [
   new RegExp(`^/quests/${UUID}(?:/(?:edit|applicants))?$`, "i"),
 ];
 
-const CONSTRUCTION_PATHS = new Set(["/posts", "/posts/new", "/network", "/network/company"]);
+const CONSTRUCTION_PATHS = new Set(["/posts", "/posts/new", "/network", "/network/company", "/search"]);
 const CONSTRUCTION_POST = new RegExp(`^/posts/${UUID}$`, "i");
 function isConstructionRest(rest: string): boolean {
   return CONSTRUCTION_PATHS.has(rest) || CONSTRUCTION_POST.test(rest);

@@ -10,6 +10,7 @@ import {
   listGuildNotifications,
   listGuildProjects,
 } from "@/lib/guild/server-data";
+import { ConstructionHome } from "@/components/guild/construction/home";
 import { StoreLanding } from "@/components/guild/store-landing";
 import { currentStore } from "@/lib/guild/current-store";
 import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
@@ -18,7 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Go } from "@/components/guild/go-mark";
 
 // welcome=1 は、入会した直後だけ付く（初回のあいさつを出す）
-export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
+export default async function GuildHomePage({ searchParams }: { searchParams: Promise<{ welcome?: string; region?: string }> }) {
   const store = await currentStore();
   // 未ログインで開けるのは、案内ページを持つ店だけ（proxy も同じ判定）。持たない店はログインへ
   const { data: { user } } = await (await createClient()).auth.getUser();
@@ -26,7 +27,8 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
     if (store.config.landing) return <StoreLanding config={store.config} />;
     redirect(outsideStorePath("login", `?next=${encodeURIComponent(store.path())}`));
   }
-  const { welcome } = await searchParams;
+  const { welcome, region } = await searchParams;
+  if (store.slug === CONSTRUCTION_STORE_SLUG) return <ConstructionHome region={region} />;
   const isFirstVisit = welcome === "1";
   const [me, notifications, projects, shareNudgeDone] = await Promise.all([
     getMyGuildProfile(),
@@ -40,12 +42,6 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
   const unread = notifications.filter((item) => item.read_at === null).length;
 
   return <div className="space-y-10">
-    {store.slug === CONSTRUCTION_STORE_SLUG && <Window title="案件">
-      <div className="flex flex-wrap gap-3">
-        <Link className="c-button-main px-4 py-2" href={store.path("/posts")}>案件を見る</Link>
-        <Link className="c-button-sub px-4 py-2" href={store.path("/posts/new")}>依頼を出す</Link>
-      </div>
-    </Window>}
     <Window title={store.w("notifications.title")}>
       {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
       <TypeLines

@@ -570,3 +570,7 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 .sn-mask-row small { display: block; font-size: 0.75rem; color: var(--sn-muted); }
 .sn-log-events { margin: 0.5rem 0 0; padding: 0; list-style: none; font-size: 0.8125rem; line-height: 1.7; border-left: 2px solid var(--sn-line-strong); padding-left: 0.75rem; }
 .sn-log-events small { display: block; color: var(--sn-muted); }
+
+/* 実データの一覧でも、タブは同じ位置・同じ押せる幅にそろえる。 */
+.sn-tabs .sn-live-tab { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; flex: 1; min-height: 2.75rem; padding: 0.25rem; color: var(--sn-muted); font-size: 0.8125rem; }
+.sn-tabs .sn-live-tab[aria-current="page"] { color: var(--sn-accent); border-bottom: 2px solid var(--sn-accent); font-weight: 700; }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ApprovalGate } from "@/components/guild/approval-gate";
+import { ConstructionFrame } from "@/components/guild/construction/frame";
+import { snsFontClass } from "@/components/guild/look/sns/typography";
 import { GuildShell } from "@/components/guild/guild-shell";
 import { NotMemberNotice } from "@/components/guild/not-member-notice";
 import { StoreProvider } from "@/components/guild/store-context";
@@ -10,7 +12,7 @@ import { countNavBadges } from "@/lib/guild/nav-badges";
 import { listGuildNotifications } from "@/lib/guild/server-data";
 import { storeShareMetadata } from "@/lib/guild/site-meta";
 import { guildPath } from "@/lib/guild/store-path";
-import { findStore, storeThemeAttrs } from "@/lib/guild/stores";
+import { CONSTRUCTION_STORE_SLUG, findStore, storeThemeAttrs } from "@/lib/guild/stores";
 import { createClient } from "@/lib/supabase/server";
 
 type Props = { children: React.ReactNode; params: Promise<{ store: string }> };
@@ -68,6 +70,15 @@ export default async function StoreLayout({ children, params }: Props) {
     initialBadges = countNavBadges(await listGuildNotifications());
   } catch {
     // 数字なし
+  }
+  if (store.slug === CONSTRUCTION_STORE_SLUG && gate === "active") {
+    return (
+      <StoreProvider slug={config.slug}>
+        <div {...storeThemeAttrs(config)} className={snsFontClass}>
+          <ConstructionFrame base={store.path()} title={config.name} slug={store.slug} initialUnread={initialBadges.total}>{children}</ConstructionFrame>
+        </div>
+      </StoreProvider>
+    );
   }
   return (
     <StoreProvider slug={config.slug}>

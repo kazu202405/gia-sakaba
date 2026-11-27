@@ -19,11 +19,14 @@ import { getConfiguredSakabaPrices } from "@/lib/stripe/client";
 import { getAuthenticatedUserId, getGuildContext, getMyGuildBilling, getMyGuildProfile, getMyMemberInvite, getMyProfileDraft, listGuildMemberIntroductions, listGuildProjects, listGuildQuests } from "@/lib/guild/server-data";
 import { currentStore } from "@/lib/guild/current-store";
 import { Go } from "@/components/guild/go-mark";
+import { ConstructionMyPage } from "@/components/guild/construction/my-page";
+import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
 
 export const metadata: Metadata = { title: "マイページ" };
 
 export default async function MyPage() {
   const store = await currentStore();
+  if (store.slug === CONSTRUCTION_STORE_SLUG) return <ConstructionMyPage />;
   const [context, me, quests, projects, invite, currentUserId, billing] = await Promise.all([
     getGuildContext(), getMyGuildProfile(), listGuildQuests(), listGuildProjects(), getMyMemberInvite(), getAuthenticatedUserId(), getMyGuildBilling(),
   ]);
