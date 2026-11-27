@@ -22,7 +22,7 @@ import { setAppIconBadge } from "@/lib/guild/app-badge";
 import type { GuildNotification } from "@/lib/guild/types";
 import { useGuildStore } from "@/components/guild/store-context";
 import { outsideStorePath, parseGuildPath, storeRestOf } from "@/lib/guild/store-path";
-import type { StoreConfig } from "@/lib/guild/stores";
+import { CONSTRUCTION_STORE_SLUG, type StoreConfig } from "@/lib/guild/stores";
 
 type NavItem = {
   /** 店の中の道（""＝ホーム）。実際のリンクは store.path(to) で作る */
@@ -39,12 +39,15 @@ type NavItem = {
 
 // メニューの呼び名は店の設定（lib/guild/stores.ts）から。「クエスト」は DB の terms.quest と同じ
 function buildNav(config: StoreConfig): { main: NavItem[]; master: NavItem } {
+  const construction = config.slug === CONSTRUCTION_STORE_SLUG;
   return {
     main: [
       { to: "", label: "ホーム", short: "ホーム", icon: "tavern", exact: true },
       { to: "/members", label: config.rosterLabel, short: config.rosterLabel, icon: "guild", also: ["/requests"], badge: "guild" },
-      { to: "/quests", label: config.terms.quest, short: config.terms.quest, icon: "scroll", badge: "quests" },
-      { to: "/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
+      { to: construction ? "/posts" : "/quests", label: config.terms.quest, short: config.terms.quest, icon: "scroll", badge: "quests" },
+      construction
+        ? { to: "/network", label: "やり取り", short: "やり取り", icon: "guild" }
+        : { to: "/projects", label: "プロジェクト", short: "プロ\nジェクト", icon: "map" },
       { to: "/me", label: "マイページ", short: "マイ\nページ", icon: "hero" },
     ],
     master: { to: "/master", label: "管理者", short: "管理者", icon: "key", badge: "master" },

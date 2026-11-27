@@ -326,7 +326,11 @@ export type NotificationKind =
   | "profile_draft_waiting"
   /** 本人が下書きをステータスに載せた／いらないと選んだ（書いたオーナー・マスターあて・0130） */
   | "profile_draft_applied"
-  | "profile_draft_declined";
+  | "profile_draft_declined"
+  | "construction_reply"
+  | "construction_connection_request"
+  | "construction_intro_request"
+  | "construction_intro_progress";
 
 /**
  * 酒場の中の「おしらせ」。メール・LINEにはまだ送らない。

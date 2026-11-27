@@ -77,8 +77,10 @@ const GIA: StoreConfig = {
   pwa: { id: "/guild", startPath: "/guild" },
 };
 
+export const CONSTRUCTION_STORE_SLUG = "kensetsu-fudosan";
+
 const KENSETSU_FUDOSAN: StoreConfig = {
-  slug: "kensetsu-fudosan",
+  slug: CONSTRUCTION_STORE_SLUG,
   name: "建設・不動産の酒場",
   theme: "plain",
   // 呼び名は五島さんが決めた（2026-10-24）。直すときは DB の terms（migration 0133）と一緒に

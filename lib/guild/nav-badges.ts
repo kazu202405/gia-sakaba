@@ -30,6 +30,10 @@ const BADGE_OF_KIND: Record<NotificationKind, NavBadgeKey | null> = {
   profile_draft_waiting: "guild",
   profile_draft_applied: "guild",
   profile_draft_declined: "guild",
+  construction_reply: "quests",
+  construction_connection_request: null,
+  construction_intro_request: null,
+  construction_intro_progress: null,
 };
 
 export function countNavBadges(items: GuildNotification[]): NavBadges {

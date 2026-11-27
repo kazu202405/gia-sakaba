@@ -12,6 +12,7 @@ import {
 } from "@/lib/guild/server-data";
 import { StoreLanding } from "@/components/guild/store-landing";
 import { currentStore } from "@/lib/guild/current-store";
+import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
 import { outsideStorePath } from "@/lib/guild/store-path";
 import { createClient } from "@/lib/supabase/server";
 import { Go } from "@/components/guild/go-mark";
@@ -39,6 +40,12 @@ export default async function GuildHomePage({ searchParams }: { searchParams: Pr
   const unread = notifications.filter((item) => item.read_at === null).length;
 
   return <div className="space-y-10">
+    {store.slug === CONSTRUCTION_STORE_SLUG && <Window title="案件">
+      <div className="flex flex-wrap gap-3">
+        <Link className="c-button-main px-4 py-2" href={store.path("/posts")}>案件を見る</Link>
+        <Link className="c-button-sub px-4 py-2" href={store.path("/posts/new")}>依頼を出す</Link>
+      </div>
+    </Window>}
     <Window title={store.w("notifications.title")}>
       {/* 文言は前と同じ。1文字ずつ出す演出だけ足している */}
       <TypeLines

@@ -140,6 +140,14 @@ export function notificationText(n: GuildNotification, ctx: NotificationContext)
       return { text: w("notif.draftApplied", { name: n.actor_id ? ctx.name(n.actor_id) : "メンバー" }), href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
     case "profile_draft_declined":
       return { text: w("notif.draftDeclined", { name: n.actor_id ? ctx.name(n.actor_id) : "メンバー" }), href: n.actor_id ? ctx.path(`/members/${n.actor_id}`) : ctx.path("/members") };
+    case "construction_reply":
+      return { text: "案件に返信が届きました", href: ctx.path("/posts") };
+    case "construction_connection_request":
+      return { text: "つながりの申請が届きました", href: ctx.path("/network") };
+    case "construction_intro_request":
+      return { text: "紹介依頼が届きました", href: ctx.path("/network") };
+    case "construction_intro_progress":
+      return { text: "紹介依頼に返事が届きました", href: ctx.path("/network") };
     case "intro_progress": {
       const r = n.intro_request_id ? ctx.intro(n.intro_request_id) : undefined;
       if (!r || !n.intro_status) return { text: w("notif.introFallback"), href: ctx.path("/requests") };

@@ -3,7 +3,7 @@
 // 一覧に無い道は、ログイン済みでも入口（/guild）へ戻される。道を足したら、ここにも足す（live-routes.test.ts が app/guild の画面と突き合わせる）。
 
 import { parseGuildPath } from "./store-path";
-import { findStore } from "./stores";
+import { CONSTRUCTION_STORE_SLUG, findStore } from "./stores";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}";
 
@@ -31,9 +31,15 @@ const STORE_PATTERNS = [
   new RegExp(`^/quests/${UUID}(?:/(?:edit|applicants))?$`, "i"),
 ];
 
+const CONSTRUCTION_PATHS = new Set(["/posts", "/posts/new", "/network", "/network/company"]);
+const CONSTRUCTION_POST = new RegExp(`^/posts/${UUID}$`, "i");
+function isConstructionRest(rest: string): boolean {
+  return CONSTRUCTION_PATHS.has(rest) || CONSTRUCTION_POST.test(rest);
+}
+
 /** 店の中の道（rest）として開いてよいか */
 export function isLiveStoreRest(rest: string): boolean {
-  return STORE_EXACT.has(rest) || STORE_PATTERNS.some((pattern) => pattern.test(rest));
+  return STORE_EXACT.has(rest) || STORE_PATTERNS.some((pattern) => pattern.test(rest)) || isConstructionRest(rest);
 }
 
 /** 店に属さない画面のうち、ログイン済みでも開いてよい道（ログイン画面は別扱い＝画面側で戻す） */
@@ -60,7 +66,10 @@ export function isPublicGuildPath(pathname: string): boolean {
 export function isLiveGuildPath(pathname: string): boolean {
   const parsed = parseGuildPath(pathname);
   if (parsed.kind === "root") return true;
-  if (parsed.kind === "store") return isLiveStoreRest(parsed.rest);
+  if (parsed.kind === "store") {
+    if (isConstructionRest(parsed.rest)) return parsed.slug === CONSTRUCTION_STORE_SLUG;
+    return isLiveStoreRest(parsed.rest);
+  }
   if (parsed.kind === "outside") return OUTSIDE_LIVE.has(`${parsed.segment}${parsed.rest}`);
   return false;
 }
