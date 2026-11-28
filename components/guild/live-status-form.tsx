@@ -153,6 +153,12 @@ export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor,
     return next;
   }, [store.slug, storeOnly]);
 
+  // 画面を離れるとき（建設の店は枠の「もどる」で保存せずに離れる）、まだ保存していない入力があれば保存しておく
+  useEffect(() => () => {
+    if (profileDraft) return;
+    if (JSON.stringify(latestRef.current) !== lastSavedRef.current) void saveCurrent("auto");
+  }, [profileDraft, saveCurrent]);
+
   useEffect(() => {
     latestRef.current = { draft };
     if (profileDraft) return;
