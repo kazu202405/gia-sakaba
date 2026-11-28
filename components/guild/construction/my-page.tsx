@@ -42,7 +42,7 @@ export async function ConstructionMyPage() {
           <Link className="sn-btn" href={store.path("/members/" + userId)}>人からの見え方</Link>
         </div>
         <nav className="sn-me-stats" aria-label="マイページの中の場所">
-          <Link href={store.path("/network")}><b>{connected}</b>知り合い</Link>
+          <Link href={store.path("/me/network")}><b>{connected}</b>知り合い</Link>
           <a href="#my-construction-posts"><b>{mine.length}</b>出した依頼</a>
         </nav>
       </div>
@@ -68,7 +68,7 @@ export async function ConstructionMyPage() {
         <div className="sn-me-links">
           <Link href={store.path("/me/status")}><Settings2 aria-hidden /><span><b>プロフィールと公開範囲</b></span><ChevronRight aria-hidden /></Link>
           <Link href={store.path("/network/company")}><Building2 aria-hidden /><span><b>会社情報</b></span><ChevronRight aria-hidden /></Link>
-          <Link href={store.path("/network")}><Network aria-hidden /><span><b>人脈の公開範囲</b></span><ChevronRight aria-hidden /></Link>
+          <Link href={store.path("/me/network")}><Network aria-hidden /><span><b>人脈の公開範囲</b></span><ChevronRight aria-hidden /></Link>
           <Link href={store.path("/me#push")}><Bell aria-hidden /><span><b>ホーム画面と通知</b></span><ChevronRight aria-hidden /></Link>
           {draft.ok && draft.draft && <Link href={store.path("/me/status/draft")}><Settings2 aria-hidden /><span><b>プロフィールの下書き</b></span><ChevronRight aria-hidden /></Link>}
           {manager && <Link href={store.path("/master")}><ShieldCheck aria-hidden /><span><b>管理者の画面へ</b></span><ChevronRight aria-hidden /></Link>}
