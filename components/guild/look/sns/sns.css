@@ -516,6 +516,7 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 .sn-fields { padding: 0 1.125rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
 .sn-fields--post { padding-bottom: 1.5rem; }
 .sn-post-review-actions { padding-top: 0.5rem; }
+.sn-post-visibility-hint { margin-top: 0.375rem; }
 .sn-field { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; border: none; min-width: 0; font-size: 0.9375rem; }
 .sn-field > span, .sn-field > legend { font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); padding: 0; }
 .sn-field :is(input[type="text"], input[type="tel"], input[type="email"], input[type="url"], input[type="date"], select), .sn-field textarea { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); font: inherit; color: var(--sn-ink); background: var(--sn-paper); }

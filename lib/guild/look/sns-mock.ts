@@ -308,11 +308,13 @@ export const POST_CATEGORIES = [
 ] as const;
 export type PostCategory = (typeof POST_CATEGORIES)[number]["key"];
 
-/** 案件の公開範囲（設計書16章「案件掲示板の公開範囲」は未確定。見本では2段） */
+/** 案件の公開範囲。全会員はこの酒場の有効な会員を指す。 */
 export const POST_VISIBILITIES = [
   { key: "friends", label: "知り合いまで" },
   { key: "friends2", label: "知り合いの知り合いまで" },
+  { key: "members", label: "この酒場の会員全員" },
 ] as const;
+export const POST_VISIBILITY_HINT = "案件の内容と問い合わせ先は、選んだ範囲の会員に表示されます。";
 export type PostVisibility = (typeof POST_VISIBILITIES)[number]["key"];
 
 export type Post =

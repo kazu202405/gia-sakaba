@@ -1,4 +1,4 @@
--- 0137 を適用したローカル検証DB専用。auth.uid() は test.uid の UUID を返すこと。
+-- 0139 を適用したローカル検証DB専用。auth.uid() は test.uid の UUID を返すこと。
 begin;
 set local plpgsql.check_asserts = on;
 
@@ -18,6 +18,9 @@ declare
   v_route uuid;
   v_post uuid;
   v_friends_post uuid;
+  v_members_post uuid;
+  v_prefectures text[];
+  v_prefecture text;
   v_intro uuid;
 begin
   insert into auth.users (id, email)
@@ -207,6 +210,31 @@ begin
     reset role;
     raise notice 'PASS: recipient isolation, deduplication and Web Push candidates for 0138';
   end if;
+  select array_agg(p.name order by p.name) into v_prefectures from sakaba.construction_prefectures p;
+  set local role authenticated;
+  perform set_config('test.uid', v_a::text, true);
+  v_members_post := public.sakaba_construction_create_post(
+    '全国の協力会社を募集', 'seek-partner', '建設', '案件の本文', '案件用連絡先', v_prefectures, 'members'
+  );
+  perform set_config('test.uid', v_d::text, true);
+  assert (select p.visibility = 'members' and p.areas = v_prefectures and cardinality(p.areas) = 47
+    and p.contact = '案件用連絡先' from public.sakaba_construction_list_posts(v_members_post) p),
+    'unconnected active member sees all 47 prefectures and the post contact';
+  foreach v_prefecture in array v_prefectures loop
+    assert exists (select 1 from public.sakaba_construction_list_posts(p_post_id => v_members_post, p_prefecture => v_prefecture)),
+      'nationwide post matches each prefecture filter';
+  end loop;
+  assert public.sakaba_construction_reply(v_members_post, 'know', '紹介できます'), 'unconnected member can reply';
+  perform set_config('test.uid', v_a::text, true);
+  assert exists (select 1 from public.sakaba_construction_list_replies(v_members_post) where author_id = v_d), 'author can see the reply';
+  perform set_config('test.uid', v_gia_only::text, true);
+  begin
+    perform 1 from public.sakaba_construction_list_posts(v_members_post);
+    raise exception 'GIA-only member could read member-wide construction post';
+  exception when insufficient_privilege then null;
+  end;
+  reset role;
+
   update sakaba.guild_members m set suspended_at = now() where m.guild_id = v_ken and m.user_id = v_a;
   set local role authenticated;
   perform set_config('test.uid', v_a::text, true);
@@ -215,7 +243,10 @@ begin
     raise exception 'Suspended member accessed intros';
   exception when insufficient_privilege then null;
   end;
-  raise notice 'PASS: suspended member denied';
+  perform set_config('test.uid', v_d::text, true);
+  assert not exists (select 1 from public.sakaba_construction_list_posts(v_members_post)), 'inactive author remains hidden from all members';
+  assert not exists (select 1 from public.sakaba_construction_list_replies(v_members_post)), 'replies also remain hidden';
+  raise notice 'PASS: member-wide nationwide posts, replies and filters, store isolation, suspended member denied';
   reset role;
 end;
 $$;

@@ -15,6 +15,7 @@ import {
   POST_DETAIL_MAX,
   POST_TITLE_MAX,
   POST_VISIBILITIES,
+  POST_VISIBILITY_HINT,
   answersFor,
   areaText,
   categoryLabel,
@@ -298,14 +299,18 @@ export function NewPostScreen() {
             {err("contact")}
           </label>
 
-          <fieldset className="sn-field">
-            <legend>公開範囲</legend>
-            <div className="sn-chips">
-              {POST_VISIBILITIES.map((v) => (
-                <button key={v.key} type="button" className="sn-chip" aria-pressed={draft.visibility === v.key} onClick={() => set({ visibility: v.key })}>{v.label}</button>
-              ))}
-            </div>
-          </fieldset>
+          <div>
+            <label className="sn-field">
+              <span>公開範囲</span>
+              <select value={draft.visibility} aria-describedby="post-visibility-hint" onChange={(event) => {
+                const selected = POST_VISIBILITIES.find(({ key }) => key === event.target.value);
+                if (selected) set({ visibility: selected.key });
+              }}>
+                {POST_VISIBILITIES.map(({ key, label }) => <option key={key} value={key}>{label}</option>)}
+              </select>
+            </label>
+            <p className="sn-field-note sn-post-visibility-hint" id="post-visibility-hint">{POST_VISIBILITY_HINT}</p>
+          </div>
         </div>
         <div className="sn-sticky">
           <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={done}>{done ? "依頼を出しました" : "内容を確かめる"}</button>
