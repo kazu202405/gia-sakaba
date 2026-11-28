@@ -8,12 +8,16 @@ import { DeadlineChoice, PostAreaDialog, PostChoiceDialog, PostSelectRow, PostSe
 import { Modal } from "@/components/guild/look/sns/parts";
 import type { ConstructionResult } from "@/lib/guild/construction-forms";
 
-export function ConstructionForm({ action, children, submit, className, reviewPost = false }: {
+export function ConstructionForm({ action, children, submit, className, reviewPost = false, onCancel, submitClassName = "sn-btn sn-btn--main" }: {
   action: (form: FormData) => Promise<ConstructionResult>;
   children: React.ReactNode;
   submit: string;
   className?: string;
   reviewPost?: boolean;
+  /** 窓の中で使うとき：「やめる」を送るボタンの横に並べる */
+  onCancel?: () => void;
+  /** 送るボタンの見た目（ふつうは主役のボタン。2番手の操作は "sn-btn"） */
+  submitClassName?: string;
 }) {
   const router = useGuildRouter();
   const [result, setResult] = useState<ConstructionResult>();
@@ -55,7 +59,10 @@ export function ConstructionForm({ action, children, submit, className, reviewPo
         {children}
         {reviewPost ? <div className="sn-post-review-actions">
           <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={pending}>{pending ? "処理中…" : "内容を確かめる"}</button>
-        </div> : <button type="submit" className="sn-btn sn-btn--main" disabled={pending}>{pending ? "処理中…" : submit}</button>}
+        </div> : onCancel ? <div className="sn-modal-acts">
+          <button type="button" className="sn-btn" disabled={pending} onClick={onCancel}>やめる</button>
+          <button type="submit" className="sn-btn sn-btn--main" disabled={pending}>{pending ? "処理中…" : submit}</button>
+        </div> : <button type="submit" className={submitClassName} disabled={pending}>{pending ? "処理中…" : submit}</button>}
       </fieldset>
       {/* 確認は見本と同じ下から出る窓。窓は .sn の直下に出るので、送るボタンは form 属性でこのフォームにつなぐ */}
       {review && <Modal title="この内容で依頼を出しますか？" onClose={closeReview} busy={pending}>

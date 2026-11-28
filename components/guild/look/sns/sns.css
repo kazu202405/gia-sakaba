@@ -597,3 +597,15 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 /* 実データの一覧でも、タブは同じ位置・同じ押せる幅にそろえる。 */
 .sn-tabs .sn-live-tab { display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem; flex: 1; min-height: 2.75rem; padding: 0.25rem; color: var(--sn-muted); font-size: 0.8125rem; }
 .sn-tabs .sn-live-tab[aria-current="page"] { color: var(--sn-accent); border-bottom: 2px solid var(--sn-accent); font-weight: 700; }
+
+/* 実データのやり取り・人脈（/network と /me/network）：見本の行の並びのまま、空の案内の中のボタン・畳める設定・検索の行 */
+.sn-empty .sn-empty-act { margin-top: 0.875rem; }
+.sn-fold { margin-top: 0.5rem; border-top: 1px solid var(--sn-line); padding-top: 0.25rem; }
+.sn-fold > summary { display: flex; align-items: center; min-height: 2.75rem; cursor: pointer; font-size: 0.8125rem; font-weight: 700; color: var(--sn-accent); list-style: none; }
+.sn-fold > summary::-webkit-details-marker { display: none; }
+.sn-fold > summary::after { content: "＋"; margin-left: 0.5rem; }
+.sn-fold[open] > summary::after { content: "－"; }
+.sn-mynet .sn-sec { padding: 1.25rem 1.125rem 0; }
+.sn-mynet .sn-list { margin: 0 -1.125rem; }
+.sn-mynet-search { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 0.75rem; }
+.sn-row-title a { color: inherit; }

@@ -71,6 +71,7 @@ export async function changeConstructionConnection(form: FormData): Promise<Cons
     : await call("sakaba_construction_answer_connection", { p_connection_id: id.data, p_accept: intent.data === "accept" }, "この申請に返事できませんでした。");
   if ("error" in result) return { error: result.error ?? "つながりを更新できませんでした。" };
   revalidatePath(store.path("/network"));
+  revalidatePath(store.path("/me/network"));
   revalidatePath(store.path("/posts"));
   return { message: intent.data === "request" ? "つながりを申請しました。" : intent.data === "accept" ? "知り合いになりました。" : "申請を見送りました。" };
 }
@@ -125,6 +126,7 @@ export async function setConstructionNetworkVisibility(form: FormData): Promise<
   }, "人脈の公開範囲を保存できませんでした。");
   if ("error" in result) return { error: result.error ?? "保存できませんでした。" };
   revalidatePath(store.path("/network"));
+  revalidatePath(store.path("/me/network"));
   revalidatePath(store.path("/posts"));
   return { message: "人脈の公開範囲を保存しました。" };
 }
