@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronRight, X } from "lucide-react";
 import { expandAreas } from "@/lib/guild/look/sns-mock";
+import { DateInput } from "@/components/guild/form-parts";
 import { AreaPicker } from "./area-picker";
 
 export function PostSelectionDialog({ title, lead, onClose, children, actions }: {
@@ -119,6 +120,33 @@ export function PostSelectRow({ label, value, error, onClick }: { label: string;
         <ChevronRight aria-hidden />
       </button>
       {error && <p id={errorId} className="sn-error sn-post-select-error" role="alert">{error}</p>}
+    </div>
+  );
+}
+
+// 返事の期限：先に「なし／あり」を選び、「あり」のときだけ日付の欄を出す（本番の依頼と見本で共通）。
+// 「なし」に戻すと日付も消す。ボタンを label で包まない（iPhone では押すと日付の欄が開くため）
+export function DeadlineChoice({ on, onToggle, value, onChange, min, error }: {
+  on: boolean;
+  onToggle: (on: boolean) => void;
+  value: string;
+  onChange: (value: string) => void;
+  min?: string;
+  error?: string;
+}) {
+  return (
+    <div className="sn-field" role="group" aria-label="返事の期限">
+      <span>返事の期限</span>
+      <div className="sn-segment">
+        {([[false, "なし"], [true, "あり"]] as const).map(([value, label]) => (
+          <button key={label} type="button" aria-pressed={on === value} onClick={() => {
+            onToggle(value);
+            if (!value) onChange("");
+          }}>{label}</button>
+        ))}
+      </div>
+      {on && <DateInput value={value} onChange={onChange} label="返事の期限の日付" min={min} required />}
+      {error && <p className="sn-error" role="alert">{error}</p>}
     </div>
   );
 }

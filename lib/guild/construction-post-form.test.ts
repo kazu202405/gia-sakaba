@@ -29,16 +29,17 @@ describe("案件の問い合わせ先をなくしたこと", () => {
     expect(read("supabase/migrations/0140_sakaba_construction_post_contact_optional.sql")).toContain("alter column contact drop not null");
   });
 
-  it("返事の期限は空に戻せる", () => {
-    expect(read("components/guild/construction/forms.tsx")).toContain('clearLabel="期限なしにする"');
-    expect(read("components/guild/look/sns/post-screens.tsx")).toContain('clearLabel="期限なしにする"');
+  it("返事の期限は「なし／あり」を選ぶ共通部品で、本番と見本の両方が使う", () => {
+    expect(read("components/guild/construction/forms.tsx")).toContain("<DeadlineChoice ");
+    expect(read("components/guild/look/sns/post-screens.tsx")).toContain("<DeadlineChoice ");
+    expect(read("app/guild/[store]/posts/new/page.tsx")).toContain("<ConstructionDeadline ");
   });
 
-  it("期限の欄は label で包まない（iPhone でボタンを押すと日付の欄が開いてしまう）", () => {
-    expect(read("app/guild/[store]/posts/new/page.tsx")).toContain('<ConstructionField label="返事の期限（任意）" group>');
-    const mock = read("components/guild/look/sns/post-screens.tsx");
-    const at = mock.indexOf('clearLabel="期限なしにする"');
-    const before = mock.slice(0, at);
-    expect(before.lastIndexOf('<label className="sn-field">')).toBeLessThan(before.lastIndexOf('<div className="sn-field" role="group"'));
+  it("期限の部品は label で包まない（iPhone でボタンを押すと日付の欄が開いてしまう）", () => {
+    const picker = read("components/guild/look/sns/post-picker.tsx");
+    const part = picker.slice(picker.indexOf("export function DeadlineChoice"));
+    expect(part).toContain('<div className="sn-field" role="group"');
+    expect(part).not.toContain("<label");
+    expect(read("app/guild/[store]/posts/new/page.tsx")).not.toMatch(/<ConstructionField[^>]*>\s*<ConstructionDeadline/);
   });
 });

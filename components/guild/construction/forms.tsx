@@ -1,11 +1,10 @@
 "use client";
 
 import { useId, useRef, useState, useTransition } from "react";
-import { DateInput } from "@/components/guild/form-parts";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { areaText, INDUSTRIES, POST_CATEGORIES, POST_VISIBILITIES, PREFECTURES, REGION_NAMES, type Industry, type PostCategory } from "@/lib/guild/look/sns-mock";
 import { ChevronRight, SlidersHorizontal } from "lucide-react";
-import { PostAreaDialog, PostChoiceDialog, PostSelectRow, PostSelectionDialog } from "@/components/guild/look/sns/post-picker";
+import { DeadlineChoice, PostAreaDialog, PostChoiceDialog, PostSelectRow, PostSelectionDialog } from "@/components/guild/look/sns/post-picker";
 import { Modal } from "@/components/guild/look/sns/parts";
 import type { ConstructionResult } from "@/lib/guild/construction-forms";
 
@@ -109,10 +108,11 @@ export function ConstructionAreas({ label, initial = [] }: { label: string; init
 
 
 export function ConstructionDeadline({ min }: { min: string }) {
+  const [on, setOn] = useState(false);
   const [date, setDate] = useState("");
   return <>
-    <DateInput value={date} onChange={setDate} label="返事の期限" min={min} clearLabel="期限なしにする" />
-    <input type="hidden" name="deadline" value={date} />
+    <DeadlineChoice on={on} onToggle={setOn} value={date} onChange={setDate} min={min} />
+    <input type="hidden" name="deadline" value={on ? date : ""} />
   </>;
 }
 

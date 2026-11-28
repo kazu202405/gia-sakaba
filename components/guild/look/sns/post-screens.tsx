@@ -29,6 +29,7 @@ import {
   shortName,
   sortByCloseness,
   suggestIntroducee,
+  todayIso,
   validatePostDraft,
   visibilityLabel,
   wantPosts,
@@ -37,11 +38,10 @@ import {
   type PostDraft,
   type PostDraftErrors,
 } from "@/lib/guild/look/sns-mock";
-import { PostAreaDialog, PostChoiceDialog, PostSelectRow } from "./post-picker";
+import { DeadlineChoice, PostAreaDialog, PostChoiceDialog, PostSelectRow } from "./post-picker";
 import { ComposeFlow, SEND_MS } from "./flow";
 import { Avatar, IndustryPill, MeetPicture, Modal, PlainPill, RouteLine, WantRow } from "./parts";
 import { SnLink, useRelation, useSn, useSnState } from "./store";
-import { DateInput } from "@/components/guild/form-parts";
 
 // ---------- 一覧 ----------
 
@@ -230,6 +230,7 @@ export function NewPostScreen() {
   const [draft, setDraft] = useState<PostDraft>(EMPTY_POST_DRAFT);
   const [picking, setPicking] = useState<PostPickerField | null>(null);
   const [errors, setErrors] = useState<PostDraftErrors>({});
+  const [hasDeadline, setHasDeadline] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -240,6 +241,7 @@ export function NewPostScreen() {
   const toReview = (e: React.FormEvent) => {
     e.preventDefault();
     const found = validatePostDraft(draft);
+    if (hasDeadline && draft.deadline === "") found.deadline = "日付を選んでください（期限を決めないときは「なし」）";
     setErrors(found);
     if (Object.keys(found).length === 0) setReviewing(true);
   };
@@ -285,13 +287,7 @@ export function NewPostScreen() {
             {err("detail")}
           </label>
 
-          {/* 「期限なしにする」ボタンがあるので label で包まない（iPhone ではボタンを押しても日付の欄が開くため） */}
-          <div className="sn-field" role="group" aria-label="返事の期限">
-            <span>返事の期限（なくても大丈夫です）</span>
-            {/* 日付の欄は酒場の共通部品（iOS Safari で枠からはみ出さないように） */}
-            <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="返事の期限" clearLabel="期限なしにする" />
-            {err("deadline")}
-          </div>
+          <DeadlineChoice on={hasDeadline} onToggle={setHasDeadline} value={draft.deadline} onChange={(deadline) => set({ deadline })} min={todayIso()} error={errors.deadline} />
 
           <div>
             <label className="sn-field">
