@@ -9,6 +9,7 @@ import { LivePushSettings } from "@/components/guild/live-push-settings";
 import type { ConstructionCompany, ConstructionConnection, ConstructionPost } from "@/lib/guild/construction-forms";
 import { constructionContext, constructionRows } from "@/lib/guild/construction-server";
 import { areaText } from "@/lib/guild/look/sns-mock";
+import { industryLabel } from "@/lib/guild/store-profile";
 import { getGuildContext, getMyGuildProfile, getMyMemberInvite, getMyProfileDraft } from "@/lib/guild/server-data";
 import { ConstructionPostRows } from "./post-rows";
 import { ConstructionThemeSettings } from "./frame";
@@ -31,8 +32,11 @@ export async function ConstructionMyPage() {
     <div className="sn-page-main">
       <div className="sn-hero">
         <div className="sn-card">
-          <div className="sn-card-top">{me.region || company?.prefecture}<span>{me.industry || company?.industries.join("・")}</span></div>
-          <div className="sn-card-mid"><span className="sn-fc sn-fc--lg" data-kind="me" aria-hidden="true">私</span><div>
+          <div className="sn-card-top">{me.region || company?.prefecture}<span>{(me.industry && (industryLabel(me.industry) || me.industry)) || company?.industries.join("・")}</span></div>
+          <div className="sn-card-mid"><span className="sn-fc sn-fc--lg" data-kind="me" aria-hidden="true">{me.photo_url
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img className="sn-fc-photo" src={me.photo_url} alt="" />
+            : "私"}</span><div>
             <h1>{me.display_name}</h1>{me.name_kana && <p className="sn-meta">{me.name_kana}</p>}
           </div></div>
           <div className="sn-card-bottom">{[company?.name ?? me.company_name, me.job, me.headline].filter(Boolean).join(" · ")}</div>

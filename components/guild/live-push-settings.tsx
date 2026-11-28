@@ -140,12 +140,15 @@ export function LivePushSettings() {
     </div> :
       !supported ? <p className="c-muted mt-3 text-sm">このブラウザーはプッシュ通知に対応していません。</p> :
       <div className="mt-4 space-y-4">
+        {/* 2つのボタンは同じ行に並べ、幅が足りないときは左をそろえて折り返す（ml だと折り返した行がずれる） */}
+        <div className="flex flex-wrap gap-2">
         <button type="button" disabled={busy || !settings?.vapidPublicKey} onClick={() => void (enabled ? disable() : enable())}
           className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">
           {busy ? "変更中…" : enabled ? "この端末の通知をオフにする" : "この端末の通知をオンにする"}
         </button>
         {enabled && <button type="button" disabled={busy} onClick={() => void testOnThisDevice()}
-          className="c-button-sub ml-2 h-11 px-4 text-sm disabled:opacity-50">この端末で表示テスト</button>}
+          className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">この端末で表示テスト</button>}
+        </div>
         {settings && <div className="space-y-3">
           <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.actions_enabled} disabled={busy} onChange={(event) => void changePreference("actions_enabled", event.target.checked)} className="accent-guild-ink" />{store.w("push.actions")}</label>
           <label className="flex cursor-pointer items-center gap-3 text-sm"><input type="checkbox" checked={settings.preferences.deadlines_enabled} disabled={busy} onChange={(event) => void changePreference("deadlines_enabled", event.target.checked)} className="accent-guild-ink" />{store.w("push.deadlines", { quest: store.config.terms.quest })}</label>
