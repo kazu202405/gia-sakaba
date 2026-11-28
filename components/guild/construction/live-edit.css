@@ -1,0 +1,48 @@
+/* ---------- プロフィールの編集（実データ）：酒場と共通の入力部品を、建設・不動産の店の見た目にそろえる ----------
+ * 対象は .sn-live-edit の中だけ（建設・不動産の店でだけ付く）。酒場のプロフィール編集には当たらない。
+
+ * sns.css に置かないのは、sns-guard.test.ts が sns.css に酒場のクラス名（c-window など）を書くことを禁じているため。
+ * 部品（Field・TextInput・Window・名刺・連絡先・写真）は酒場と共用なので、作り直さず、ここで見た目だけを上書きする。 */
+.sn .sn-live-edit .sn-fields { gap: 1.25rem; padding-bottom: 1.5rem; }
+.sn .sn-live-edit.sn-live-card { padding: 0 1.125rem 1.5rem; }
+.sn .sn-live-lead { padding: 0 1.125rem 1rem; }
+.sn .sn-live-hint { font-size: 0.8125rem; line-height: 1.6; color: var(--sn-muted); }
+.sn .sn-live-status { min-height: 1.25rem; margin-top: 0.25rem; font-size: 0.75rem; color: var(--sn-muted); }
+.sn .sn-live-note { padding: 0.75rem 1rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.8125rem; line-height: 1.7; }
+.sn .sn-live-back { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 1.125rem; border: none; background: transparent; font-size: 0.875rem; color: var(--sn-muted); cursor: pointer; }
+.sn .sn-live-back:disabled { opacity: 0.5; cursor: not-allowed; }
+.sn .sn-live-submit { padding-top: 0.5rem; }
+.sn .sn-live-edit h3, .sn .sn-live-edit .c-window-title { position: static; max-width: none; margin: 0; padding: 0; background: none; color: var(--sn-ink); font-family: var(--sn-head); font-size: 1rem; font-weight: 900; letter-spacing: 0; line-height: 1.5; }
+.sn .sn-live-edit .sn-form-sec:is(section, details) { padding-top: 1.25rem; border-top: 1px solid var(--sn-line); }
+.sn .sn-live-edit .sn-form-sec:first-child { padding-top: 0; border-top: none; }
+.sn .sn-live-details > summary { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.75rem; margin-top: 0.5rem; cursor: pointer; font-size: 0.9375rem; letter-spacing: 0; }
+.sn .sn-live-details[open] > summary { margin-bottom: 0.75rem; }
+.sn .sn-live-edit .sn-live-details-body.sn-form-sec { padding-top: 0; border-top: none; }
+/* 項目名・必須・任意・補足 */
+.sn .sn-live-edit .guild-px { font-family: var(--sn-font); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0; color: var(--sn-muted); }
+.sn .sn-live-edit .guild-px > span { color: var(--sn-danger); font-weight: 400; }
+.sn .sn-live-edit .guild-px > .c-muted { color: var(--sn-muted); }
+.sn .sn-live-edit .c-muted { color: var(--sn-muted); }
+.sn .sn-live-edit .c-label { color: var(--sn-ink); }
+.sn .sn-live-edit [role="alert"] { color: var(--sn-danger); }
+/* 入力欄・選択 */
+.sn .sn-live-edit :is(.c-input, textarea) { font-family: inherit; }
+.sn .sn-live-edit textarea.c-input { padding: 0.625rem 0.75rem; }
+.sn .sn-live-edit :is(input[type="radio"], input[type="checkbox"]) { accent-color: var(--sn-accent); }
+.sn .sn-live-edit label > span[aria-hidden="true"] { border-width: 1px; border-color: var(--sn-line-strong); border-radius: 6px; background: var(--sn-paper); color: var(--sn-accent); }
+/* 選ぶ小さなボタン（業種・エリア・得意な工事・アイコン） */
+.sn .sn-live-edit button[aria-pressed] { border-width: 1px; border-color: var(--sn-line-strong); border-radius: var(--sn-radius-s); background: var(--sn-paper); color: var(--sn-ink); }
+.sn .sn-live-edit button[aria-pressed="true"] { border-color: var(--sn-accent); background: var(--sn-accent-soft); font-weight: 700; }
+/* 写真（丸く） */
+.sn .sn-live-photo { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.sn .sn-live-edit [role="img"] { border-width: 0; border-radius: 50%; box-shadow: none; }
+.sn .sn-live-edit [role="img"] img { border-radius: 50%; }
+/* 窓・カード・ボタン（名刺・連絡先・伝えたいことの写真） */
+.sn .sn-live-edit .c-window { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.25rem 0 0; border: none; border-top: 1px solid var(--sn-line); border-radius: 0; background: none; box-shadow: none; }
+.sn .sn-live-edit .c-card { border: 1px solid var(--sn-line); border-radius: var(--sn-radius); background: var(--sn-tint); box-shadow: none; }
+.sn .sn-live-edit .c-dashed-top { border-top: 1px solid var(--sn-line); }
+.sn .sn-live-edit .c-button-sub { border: 1px solid var(--sn-ink); border-radius: var(--sn-radius-s); background: transparent; box-shadow: none; color: var(--sn-ink); font-weight: 700; }
+.sn .sn-live-edit .c-button-sub:hover { background: var(--sn-tint); }
+.sn .sn-live-edit .c-button-sub:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); opacity: 1; cursor: not-allowed; }
+.sn .sn-live-edit .c-button-danger { border: 1px solid var(--sn-danger); border-radius: var(--sn-radius-s); background: transparent; box-shadow: none; color: var(--sn-danger); font-weight: 700; }
+.sn .sn-live-edit .c-button-danger:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); opacity: 1; cursor: not-allowed; }

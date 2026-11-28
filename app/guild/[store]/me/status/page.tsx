@@ -9,6 +9,7 @@ import { signBusinessCards, signWorkPhotos } from "@/lib/guild/business-card-ser
 import { mergeDraftIntoProfile } from "@/lib/guild/profile-drafts";
 import { getGuildContext, getMyGuildProfile, getMyProfileDraft } from "@/lib/guild/server-data";
 import { createClient } from "@/lib/supabase/server";
+import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await currentStore()).w("status.editTitle") };
@@ -33,9 +34,12 @@ export default async function StatusEditPage({ searchParams }: { searchParams: P
   const contactItems: GuildContactItem[] | null = contactError ? null : (parseContactItemsMap(contactData)[profile.id] ?? []).flatMap((item, index) =>
     item.value === null ? [] : [{ kind: item.kind, label: item.label, value: item.value, visibility: item.visibility ?? "approved", sort_order: index }]);
   const workPhotoUrls = await signWorkPhotos(supabase, profile.work_photos ?? []);
-  return <div className="space-y-11">
+  const sns = store.slug === CONSTRUCTION_STORE_SLUG;
+  return <div className={sns ? "sn-form sn-live-page" : "space-y-11"}>
     <LiveStatusForm initial={profile} guildId={guild.id} workPhotoUrls={workPhotoUrls} profileDraft={draft && merge ? { id: draft.id, from: draft.drafted_by_name, skipped: merge.skipped } : undefined} contactEditor={<ContactItemsEditor initial={contactItems} />} />
     {/* 名刺は画像を選んだその場で保存する（上の「保存して戻る」とは別） */}
-    <BusinessCardEditor userId={profile.id} guildId={guild.id} initial={card} initialUrls={urls} />
+    {sns
+      ? <div className="sn-live-edit sn-live-card"><BusinessCardEditor userId={profile.id} guildId={guild.id} initial={card} initialUrls={urls} /></div>
+      : <BusinessCardEditor userId={profile.id} guildId={guild.id} initial={card} initialUrls={urls} />}
   </div>;
 }

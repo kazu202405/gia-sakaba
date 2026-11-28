@@ -16,6 +16,8 @@ import { useGuildStore } from "@/components/guild/store-context";
 import { Go } from "./go-mark";
 import { StoreOnlyFields, WorkPhotosEditor } from "./store-profile-fields";
 import { avatarPath, hasStoreOnlyFields, storeHasField, type ProfileField } from "@/lib/guild/store-profile";
+import "@/components/guild/construction/live-edit.css";
+import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
 
 type Snapshot = { draft: MyGuildProfile };
 
@@ -78,6 +80,16 @@ async function persist(slug: string, storeOnly: boolean, { draft }: Snapshot) {
   });
 }
 
+/** まとまりの見出し。建設・不動産の店（sns）はやわらかい見出し、酒場は窓の名札 */
+function SecTitle({ sns, children }: { sns: boolean; children: React.ReactNode }) {
+  return sns ? <h3>{children}</h3> : <span className="c-window-title">{children}</span>;
+}
+
+/** 保存の状態の文言（上の小さな表示に出す） */
+function saveStateLabel(state: "saved" | "editing" | "saving" | "error"): string {
+  return state === "editing" ? "未保存の変更があります" : state === "saving" ? "保存中…" : state === "error" ? "まだ保存されていません" : "保存済み";
+}
+
 // contactEditor：連絡先の窓（別に自動保存する。置き場所だけここ）
 // profileDraft：届いたステータスの下書きを入れて開いたとき（0130）。自動保存はせず、「保存して載せる」を押したときだけ保存して、下書きを済みにする
 export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor, profileDraft }: {
@@ -89,6 +101,9 @@ export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor,
   profileDraft?: { id: string; from: string; skipped: DraftField[] };
 }) {
   const store = useGuildStore();
+  // 建設・不動産の店は、店の枠（SnsFrame）の中の見た目（sn-）に合わせる。動きと保存の中身は酒場と同じ
+  const sns = store.slug === CONSTRUCTION_STORE_SLUG;
+  const sectionClass = sns ? "sn-form-sec" : "c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11";
   const has = (field: ProfileField) => storeHasField(store.config, field);
   const storeOnly = hasStoreOnlyFields(store.config);
   const router = useGuildRouter();
@@ -224,24 +239,34 @@ export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor,
     }
   }
 
-  return <div className="mx-auto max-w-2xl space-y-7">
-    <button type="button" onClick={() => profileDraft ? leaveWithoutSaving() : void saveAndLeave()} disabled={leaving || photoUploading} className="c-muted inline-block text-sm disabled:opacity-50">{profileDraft ? <><Go back />下書きの画面へ戻る（保存しません）</> : <><Go back />マイページへ戻る</>}</button>
-    <div><h1 className="text-2xl tracking-[0.12em]">{store.w("status.editButton")}</h1><p className="mt-2 text-sm">{store.w("status.formLead")}</p>{profileDraft
-      ? <div className="c-card mt-3 space-y-1 px-4 py-3 text-sm leading-relaxed">
-        <p>{profileDraft.from}さんが書いた下書きを入れてあります。直したいところは直してください。<strong>{store.w("status.draftNotice")}</strong>この画面では自動保存しません。</p>
-        {profileDraft.skipped.length > 0 && <p className="c-muted text-xs">すでに書いてあるので、下書きを入れていない項目：{profileDraft.skipped.map((key) => draftFieldLabelFor(store.w)[key]).join("・")}</p>}
-      </div>
-      : <p className="c-muted mt-1 text-sm">入力が止まってから約2秒で自動保存します。途中でやめても、書いたところまで残ります。</p>}<p role="status" aria-live="polite" className="c-muted mt-2 min-h-5 text-xs">{saveState === "editing" ? "未保存の変更があります" : saveState === "saving" ? "保存中…" : saveState === "error" ? "まだ保存されていません" : "保存済み"}</p></div>
-    <form onSubmit={saveAndLeave} className="space-y-7">
-      <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{store.w("status.sectionBasic")}</span>
-        <div className="flex flex-wrap items-center gap-4">
+  const draftBanner = profileDraft && <div className={sns ? "sn-live-note" : "c-card mt-3 space-y-1 px-4 py-3 text-sm leading-relaxed"}>
+    <p>{profileDraft.from}さんが書いた下書きを入れてあります。直したいところは直してください。<strong>{store.w("status.draftNotice")}</strong>この画面では自動保存しません。</p>
+    {profileDraft.skipped.length > 0 && <p className="c-muted text-xs">すでに書いてあるので、下書きを入れていない項目：{profileDraft.skipped.map((key) => draftFieldLabelFor(store.w)[key]).join("・")}</p>}
+  </div>;
+  const statusLine = <p role="status" aria-live="polite" className={sns ? "sn-live-status" : "c-muted mt-2 min-h-5 text-xs"}>{saveStateLabel(saveState)}</p>;
+
+  return <div className={sns ? "sn-live-edit" : "mx-auto max-w-2xl space-y-7"}>
+    {/* 建設・不動産の店は枠に「もどる」があるので、保存して戻る方の戻るリンクは出さない（下書きから来たときの「保存しない戻り」だけは残す） */}
+    {(!sns || profileDraft) && <button type="button" onClick={() => profileDraft ? leaveWithoutSaving() : void saveAndLeave()} disabled={leaving || photoUploading} className={sns ? "sn-live-back" : "c-muted inline-block text-sm disabled:opacity-50"}>{profileDraft ? <><Go back />下書きの画面へ戻る（保存しません）</> : <><Go back />マイページへ戻る</>}</button>}
+    {sns
+      ? <>
+        <div className="sn-sec"><div className="sn-sec-h"><h2>プロフィールを編集</h2></div></div>
+        <div className="sn-live-lead">
+          {draftBanner || <p className="sn-live-hint">必須はお名前と会社名だけです。入力は自動で保存されます。</p>}
+          {statusLine}
+        </div>
+      </>
+      : <div><h1 className="text-2xl tracking-[0.12em]">{store.w("status.editButton")}</h1><p className="mt-2 text-sm">{store.w("status.formLead")}</p>{draftBanner || <p className="c-muted mt-1 text-sm">入力が止まってから約2秒で自動保存します。途中でやめても、書いたところまで残ります。</p>}{statusLine}</div>}
+    <form onSubmit={saveAndLeave} className={sns ? "sn-fields" : "space-y-7"}>
+      <section className={sectionClass}>
+        <SecTitle sns={sns}>{store.w("status.sectionBasic")}</SecTitle>
+        <div className={sns ? "sn-live-photo" : "flex flex-wrap items-center gap-4"}>
           <JobAvatar icon={draft.job_icon} photoUrl={draft.photo_url} name={draft.display_name} />
           <div className="max-w-md space-y-1.5">
             <p className="c-label text-sm">顔がわかる写真がおすすめ</p>
             <p className="c-muted text-xs leading-relaxed">仕事の相談や紹介では、顔がわかると相手が安心して声をかけやすくなります。むずかしい場合は、アイコンのままでも利用できます。</p>
             <input ref={photoInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="顔写真を選ぶ" onChange={(event) => { choosePhoto(event.target.files?.[0]); event.target.value = ""; }} />
-            <button type="button" disabled={photoUploading} onClick={() => photoInputRef.current?.click()} className="c-button-sub h-11 px-4 text-sm disabled:opacity-50">{photoUploading ? "顔写真を追加中…" : draft.photo_url ? "顔写真を変更する" : "顔写真を追加する"}</button>
+            <button type="button" disabled={photoUploading} onClick={() => photoInputRef.current?.click()} className={sns ? "sn-btn sn-btn--small" : "c-button-sub h-11 px-4 text-sm disabled:opacity-50"}>{photoUploading ? "顔写真を追加中…" : draft.photo_url ? "顔写真を変更する" : "顔写真を追加する"}</button>
             <p className="c-muted text-xs">JPEG・PNG・WebP／20MBまで</p>
           </div>
         </div>
@@ -280,13 +305,13 @@ export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor,
         <CheckBox checked={draft.show_company} onChange={(value) => set("show_company", value)}>{store.w("status.showCompany")}</CheckBox>
       </section>
 
-      {showPersonal && <details className="c-window p-5 pt-10 sm:p-7 sm:pt-11" open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
-        <span className="c-window-title">人となり</span>
+      {showPersonal && <details className={sns ? "sn-form-sec sn-live-details" : "c-window p-5 pt-10 sm:p-7 sm:pt-11"} open={personalOpen} onToggle={(event) => setPersonalOpen(event.currentTarget.open)}>
+        <SecTitle sns={sns}>人となり</SecTitle>
         <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-[15px] tracking-wider">
           <span><Go />出身地・誕生日・趣味などを書く</span>
           <span className="c-muted text-xs">任意</span>
         </summary>
-        <div className="mt-5 space-y-5">
+        <div className={sns ? "sn-form-sec sn-live-details-body" : "mt-5 space-y-5"}>
           <p className="c-muted text-xs">{store.w("status.personalNote")}</p>
           {has("hometown") && <Field label={store.w("personal.hometown")} optional hint="育った場所など、伝えたい地域を自由に書けます"><TextInput value={draft.hometown ?? ""} onChange={(value) => set("hometown", value)} max={80} label="出身地" placeholder="例：大阪府" /></Field>}
           {has("birthday") && <Field label={store.w("personal.birthday")} optional hint="月日だけでも登録できます。生まれた年も伝えたい場合だけ選んでください">
@@ -301,26 +326,26 @@ export function LiveStatusForm({ initial, guildId, workPhotoUrls, contactEditor,
         </div>
       </details>}
 
-      {has("bio") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{store.w("group.work.title")}</span>
+      {has("bio") && <section className={sectionClass}>
+        <SecTitle sns={sns}>{store.w("group.work.title")}</SecTitle>
         <Field label={store.w("status.bioLabel")} optional hint="仕事の内容、得意なこと、頼まれたらできることなどを自由に書けます"><TextArea value={draft.bio} onChange={(value) => set("bio", value)} max={1200} rows={6} label={store.w("status.bioLabel")} /></Field>
         {has("work_photos") && <WorkPhotosEditor userId={draft.id} guildId={guildId} initialPaths={initial.work_photos ?? []} initialUrls={workPhotoUrls} />}
       </section>}
 
-      {has("values_text") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{store.w("group.values.title")}</span>
+      {has("values_text") && <section className={sectionClass}>
+        <SecTitle sns={sns}>{store.w("group.values.title")}</SecTitle>
         <Field label="自由に書いてください" optional hint={store.w("status.valuesHint")}><TextArea value={draft.values_text} onChange={(value) => set("values_text", value)} max={1200} rows={6} label={store.w("group.values.title")} /></Field>
       </section>}
 
-      {has("looking_for") && <section className="c-window space-y-5 p-5 pt-10 sm:p-7 sm:pt-11">
-        <span className="c-window-title">{store.w("group.connect.title")}</span>
+      {has("looking_for") && <section className={sectionClass}>
+        <SecTitle sns={sns}>{store.w("group.connect.title")}</SecTitle>
         <Field label={store.w("member.connectLabel")} optional hint="仕事、情報、協力してほしいこと、話してみたい人などを自由に書けます"><TextArea value={draft.looking_for} onChange={(value) => set("looking_for", value)} max={1200} rows={6} label={store.w("member.connectLabel")} /></Field>
       </section>}
 
       {contactEditor}
 
       {error && <p role="alert" className="text-sm text-[#c62828]">{error}</p>}
-      <div className="flex justify-end"><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className="rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto">{leaving || photoUploading ? (profileDraft ? "載せています…" : "保存を確認中…") : profileDraft ? <><Go />保存して載せる</> : <><Go />保存して戻る</>}</button></div>
+      <div className={sns ? "sn-live-submit" : "flex justify-end"}><button type="submit" disabled={leaving || photoUploading} aria-busy={leaving || photoUploading} className={sns ? "sn-btn sn-btn--main sn-btn--wide" : "rpg-button h-12 w-full px-6 text-base disabled:opacity-50 sm:w-auto"}>{leaving || photoUploading ? (profileDraft ? "載せています…" : "保存を確認中…") : profileDraft ? <><Go />保存して載せる</> : <><Go />保存して戻る</>}</button></div>
     </form>
     <ImageCropDialog open={cropSrc !== null} src={cropSrc} onCancel={closeCropper} onConfirm={(blob) => void uploadPhoto(blob)} />
   </div>;
