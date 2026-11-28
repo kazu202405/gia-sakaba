@@ -1,0 +1,48 @@
+/* ---------- メンバーのプロフィール（実データ）：建設・不動産の店だけ。見本 PersonScreen の見た目に寄せる ----------
+ * 対象は .sn の中の .sn-mp-* と .sn-member-* だけ（酒場のメンバー画面には当たらない）。
+ * sns.css に置かないのは、酒場の部品（rpg-button・c-card など）の上書きを含むため（sns-guard.test.ts の決まり）。 */
+.sn .sn-mp-note { margin: 1rem 1.125rem 0; padding: 0.625rem 0.875rem; border-radius: var(--sn-radius); background: var(--sn-tint); color: var(--sn-muted); font-size: 0.75rem; line-height: 1.7; }
+.sn .sn-mp-note--foot { margin: 0.875rem 0 0; padding: 0; background: none; }
+.sn .sn-mp-hero .sn-card h1 { font-size: 1.375rem; letter-spacing: 0; overflow-wrap: anywhere; }
+.sn .sn-mp-hero .sn-card-mid > div { min-width: 0; }
+.sn .sn-kana { font-size: 0.6875rem; color: var(--sn-muted); letter-spacing: 0; }
+/* 顔写真：本物の写真があれば丸く、なければ頭文字（sn-fc） */
+.sn .sn-mp-photo { overflow: hidden; padding: 0; border: 1px solid var(--sn-line); background: var(--sn-tint); }
+.sn .sn-mp-photo img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.sn .sn-mp-say { overflow-wrap: anywhere; }
+.sn .sn-mp-pills { margin-top: 0.625rem; }
+.sn .sn-mp-chip { display: inline-flex; align-items: center; padding: 0.125rem 0.625rem; border-radius: var(--sn-radius-pill); background: var(--sn-accent-soft); color: var(--sn-ink); font-size: 0.75rem; font-weight: 700; }
+.sn .sn-mp-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; list-style: none; padding: 0; margin: 0; }
+.sn .sn-mp-connected { margin-top: 0.75rem; }
+/* 基本情報の行：名前と値 */
+.sn .sn-mp-sec .sn-dl { margin-top: 0; }
+.sn .sn-mp-sec .sn-dl > div { padding-left: 0; padding-right: 0; }
+.sn .sn-mp-sec .sn-dl dd { overflow-wrap: anywhere; }
+.sn .sn-mp-sec .sn-dl a { text-decoration: underline; text-underline-offset: 3px; }
+.sn .sn-mp-locked { font-size: 0.75rem; color: var(--sn-muted); }
+.sn .sn-mp-text { margin-top: 0.25rem; font-size: 0.9375rem; line-height: 1.8; overflow-wrap: anywhere; white-space: pre-line; }
+.sn .sn-mp-muted { margin-top: 0.25rem; font-size: 0.8125rem; line-height: 1.7; color: var(--sn-muted); }
+.sn .sn-mp-muted a { margin-left: 0.5rem; text-decoration: underline; text-underline-offset: 3px; }
+.sn .sn-mp-block + .sn-mp-block { margin-top: 1.125rem; padding-top: 1.125rem; border-top: 1px solid var(--sn-line); }
+.sn .sn-mp-block h3 { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--sn-muted); }
+.sn .sn-mp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.75rem; list-style: none; padding: 0; }
+.sn .sn-mp-photos li { aspect-ratio: 1; overflow: hidden; border-radius: var(--sn-radius-s); background: var(--sn-tint); }
+.sn .sn-mp-photos img { width: 100%; height: 100%; object-fit: cover; }
+/* 紹介のためのURL：目立たせず静かに */
+.sn .sn-mp-share .sn-meta { margin-top: 0.125rem; }
+.sn .sn-mp-share .sn-btn { margin-top: 0.75rem; }
+/* つながり申請のボタン（酒場と共用の部品）を sn-btn の見た目に */
+.sn .sn-member-action > :is(button, a) { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 3.25rem; padding: 0.5rem 1.125rem; border: 1px solid var(--sn-accent); border-radius: var(--sn-radius-s); background: var(--sn-accent); box-shadow: none; color: var(--sn-accent-ink); font-size: 1rem; font-weight: 700; letter-spacing: 0; cursor: pointer; }
+.sn .sn-member-action > a { background: transparent; border-color: var(--sn-ink); color: var(--sn-ink); }
+.sn .sn-member-action > p { border: 0; border-radius: var(--sn-radius); background: var(--sn-tint); box-shadow: none; font-size: 0.8125rem; color: var(--sn-muted); }
+.sn .sn-member-action > button:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); cursor: not-allowed; }
+/* 名刺・入会のつながり・紹介状など、酒場と共用の窓：sn-live-edit の枠はずしに、余白だけ足す */
+.sn .sn-member-more { padding: 0.5rem 1.125rem 1.5rem; }
+.sn .sn-member-more > * + * { margin-top: 1.25rem; }
+.sn .sn-member-more .rpg-button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0.5rem 1.125rem; border: 1px solid var(--sn-accent); border-radius: var(--sn-radius-s); background: var(--sn-accent); box-shadow: none; color: var(--sn-accent-ink); font-weight: 700; letter-spacing: 0; }
+.sn .sn-member-more .rpg-button:disabled { background: var(--sn-line); border-color: var(--sn-line); color: var(--sn-muted); }
+.sn .sn-member-more ul > li.relative { border: 1px solid var(--sn-line); border-radius: var(--sn-radius); background: var(--sn-tint); box-shadow: none; }
+.sn .sn-member-more ul > li.relative > span.absolute { display: none; }
+.sn .sn-member-more div.border-dashed { border: 1px solid var(--sn-line); border-radius: var(--sn-radius); background: var(--sn-tint); }
+.sn .sn-member-more .c-card.border-dashed { border-style: solid; }
+.sn .sn-member-more a { text-underline-offset: 3px; }
