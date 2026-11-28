@@ -10,12 +10,15 @@ import { useRouter } from "next/navigation";
 
 export const GUILD_NAVIGATE_EVENT = "guild:navigate";
 
-/** 外枠に「これから href へ移る」と知らせる。同じ画面の中（#だけ違う等）なら何もしない（仮の画面が消えなくなるため） */
+/**
+ * 外枠に「これから href へ移る」と知らせる。知らせる中身は「道＋?以降」（?tab= だけ変わる移動も仮の画面を出すため）。
+ * 同じ画面の中（#だけ違う等）なら何もしない（仮の画面が消えなくなるため）
+ */
 export function announceGuildNavigation(href: string) {
   if (typeof window === "undefined") return;
   const url = new URL(href, window.location.href);
-  if (url.origin !== window.location.origin || url.pathname === window.location.pathname) return;
-  window.dispatchEvent(new CustomEvent<string>(GUILD_NAVIGATE_EVENT, { detail: url.pathname }));
+  if (url.origin !== window.location.origin || url.pathname + url.search === window.location.pathname + window.location.search) return;
+  window.dispatchEvent(new CustomEvent<string>(GUILD_NAVIGATE_EVENT, { detail: url.pathname + url.search }));
 }
 
 export function useGuildRouter() {

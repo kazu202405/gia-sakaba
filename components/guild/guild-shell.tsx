@@ -129,8 +129,10 @@ export function GuildShell({ children, isMaster, initialBadges }: { children: Re
     document.addEventListener("click", onClick);
     // ボタンから移るとき（useGuildRouter の push / replace）も、リンクと同じ仮の画面を出す
     const onNavigate = (event: Event) => {
-      const path = (event as CustomEvent<string>).detail;
-      if (typeof path === "string" && path !== window.location.pathname) setPending(path);
+      const detail = (event as CustomEvent<string>).detail;
+      // 知らせは「道＋?以降」。GIA の外枠は今までどおり道が変わるときだけ仮の画面を出す
+      const path = typeof detail === "string" ? detail.split("?")[0] : null;
+      if (path && path !== window.location.pathname) setPending(path);
     };
     window.addEventListener(GUILD_NAVIGATE_EVENT, onNavigate);
     return () => {

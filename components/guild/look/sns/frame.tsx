@@ -2,10 +2,11 @@
 
 // 見本の外枠：上のバー・見本だけのつまみ（色）・下のメニュー・読み込み中の仮の画面。
 // リンクを押した瞬間（ボタンからの移動も）に、行き先が届くまで仮の画面を出す。
+// ?tab= など ? 以降だけ変わる移動（やり取りのタブ等）も同じ（2026-11-28 五島さん「やり取りの中の移動はロードがない」）。
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { Bell, ChevronLeft, ClipboardList, House, MessageCircle, Plus, User, type LucideIcon } from "lucide-react";
 import { GUILD_NAVIGATE_EVENT } from "@/components/guild/use-guild-router";
 import { SNS_BASE, SNS_NAME } from "@/lib/guild/look/sns-mock";
@@ -79,6 +80,7 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
   const pathname = usePathname();
   const rest = isUnder(pathname, base) ? pathname.slice(base.length) : "";
 
+  // pending は行き先の「道＋?以降」（"back" はもどるボタン）
   const [pending, setPending] = useState<string | null>(null);
   const [seenPath, setSeenPath] = useState(pathname);
   if (seenPath !== pathname) {
@@ -86,6 +88,12 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
     setSeenPath(pathname);
     setPending(null);
   }
+  // ? 以降だけ変わったときも、届いたら消す（useSearchParams は Suspense の中で読む）
+  const [seenSearch, setSeenSearch] = useState<string | null>(null);
+  const onSearch = (search: string) => {
+    if (seenSearch !== null && seenSearch !== search) setPending(null);
+    setSeenSearch(search);
+  };
   useEffect(() => {
     if (pending === null) return;
     const timer = window.setTimeout(() => setPending(null), PENDING_LIMIT_MS);
@@ -99,14 +107,14 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
       if (!(anchor instanceof HTMLAnchorElement) || (anchor.target && anchor.target !== "_self")) return;
       const url = new URL(anchor.href, window.location.href);
       if (url.origin !== window.location.origin || !isUnder(url.pathname, base)) return;
-      if (url.pathname === window.location.pathname) return;
-      setPending(url.pathname);
+      if (url.pathname + url.search === window.location.pathname + window.location.search) return;
+      setPending(url.pathname + url.search);
     };
     document.addEventListener("click", onClick);
     // ボタンから移るとき（useGuildRouter 経由）も同じ仮の画面
     const onNavigate = (event: Event) => {
       const path = (event as CustomEvent<string>).detail;
-      if (typeof path === "string" && isUnder(path, base) && path !== window.location.pathname) setPending(path);
+      if (typeof path === "string" && isUnder(path.split("?")[0], base) && path !== window.location.pathname + window.location.search) setPending(path);
     };
     window.addEventListener(GUILD_NAVIGATE_EVENT, onNavigate);
     return () => {
@@ -115,12 +123,14 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
     };
   }, [base]);
 
-  const shownRest = pending && isUnder(pending, base) ? pending.slice(base.length) : rest;
+  const pendingPath = pending?.split("?")[0] ?? null;
+  const shownRest = pendingPath && isUnder(pendingPath, base) ? pendingPath.slice(base.length) : rest;
   const isTop = NAV.some((n) => n.to === shownRest);
   const activeTo = activeNavTo(shownRest);
 
   return (
     <div className="sn" data-palette={palette}>
+      <Suspense fallback={null}><SearchWatcher onChange={onSearch} /></Suspense>
       <header className="sn-top">
         <div className="sn-top-in">
           {isTop ? (
@@ -159,6 +169,13 @@ export function SnsFrame({ children, base, title, palette, notice, mockControls 
       </nav>
     </div>
   );
+}
+
+// ? 以降が変わったことを外枠に知らせるだけの部品（画面には何も出さない）
+function SearchWatcher({ onChange }: { onChange: (search: string) => void }) {
+  const search = useSearchParams().toString();
+  useEffect(() => { onChange(search); }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
 }
 
 function BackButton({ base, onPress }: { base: string; onPress: () => void }) {
