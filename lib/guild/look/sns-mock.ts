@@ -601,9 +601,10 @@ export function expandAreas(areas: readonly string[]): string[] {
   return [...new Set(areas.flatMap((area) => Object.hasOwn(REGIONS, area) ? REGIONS[area] : [area]))];
 }
 
-/** 地方全体を覆っていれば「関東全域」のようにまとめる。コンパクトな行は表示数を指定できる */
+/** 全国や地方全域にまとめる。コンパクトな行は表示数を指定できる */
 export function areaText(areas: readonly string[], limit?: number): string {
   const prefectures = expandAreas(areas);
+  if (PREFECTURES.every((prefecture) => prefectures.includes(prefecture))) return "全国";
   const whole = REGION_NAMES.filter((region) => REGIONS[region].every((prefecture) => prefectures.includes(prefecture)));
   const rest = prefectures.filter((prefecture) => !whole.some((region) => REGIONS[region].includes(prefecture)));
   const labels = [...whole.map((region) => `${region}全域`), ...rest];

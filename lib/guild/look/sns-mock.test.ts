@@ -9,6 +9,7 @@ import {
   RECENT_CONNECTIONS,
   ANSWER_LABEL,
   REGIONS,
+  PREFECTURES,
   REGION_NAMES,
   dueInfo,
   filterByRegion,
@@ -194,6 +195,15 @@ describe("案件", () => {
     expect(filterByRegion([post], "関東")).toEqual([post]);
     expect(filterByRegion([post], "中部")).toEqual([]);
     expect(areaText(["関東", "東京都", "大阪府"])).toBe("関東全域・大阪府");
+  });
+  it("全国の投稿は確認・一覧で全国と表示し、どの地方の絞り込みにも含める", () => {
+    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: [...PREFECTURES], detail: "d", contact: "c" };
+    const post = makeWantPost(draft, "my-1");
+    expect(post.areas).toHaveLength(47);
+    expect(areaText(post.areas)).toBe("全国");
+    expect(areaText(post.areas, 2)).toBe("全国");
+    expect(areaText(post.areas.filter((area) => area !== "東京都"), 2)).not.toBe("全国");
+    for (const region of REGION_NAMES) expect(filterByRegion([post], region)).toEqual([post]);
   });
   it("確かめを通っていない入力から投稿は作れない", () => {
     expect(() => makeWantPost(EMPTY_POST_DRAFT, "x")).toThrow();

@@ -51,7 +51,9 @@ export function ConstructionForm({ action, children, submit, className, reviewPo
     }}>
       <fieldset className="min-w-0 space-y-4" disabled={pending} hidden={Boolean(review)}>
         {children}
-        <button type="submit" className={reviewPost ? "sn-btn sn-btn--main sn-btn--wide" : "sn-btn sn-btn--main"} disabled={pending}>{pending ? "処理中…" : reviewPost ? "内容を確かめる" : submit}</button>
+        {reviewPost ? <div className="sn-post-review-actions">
+          <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={pending}>{pending ? "処理中…" : "内容を確かめる"}</button>
+        </div> : <button type="submit" className="sn-btn sn-btn--main" disabled={pending}>{pending ? "処理中…" : submit}</button>}
       </fieldset>
       {review && <div className="space-y-3">
         <h2 className="font-bold">この内容で依頼を出しますか？</h2>

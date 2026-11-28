@@ -266,7 +266,7 @@ export function NewPostScreen() {
     <div className="sn-form">
       <form onSubmit={toReview} noValidate>
         <div className="sn-sec"><div className="sn-sec-h"><h2>何を探していますか？</h2></div></div>
-        <div className="sn-fields">
+        <div className="sn-fields sn-fields--post">
           <label className="sn-field">
             <span>ひとことで（タイトル）</span>
             <input type="text" value={draft.title} maxLength={POST_TITLE_MAX} placeholder="例：関東で外壁塗装をたのめる会社を探しています" onChange={(e) => set({ title: e.target.value })} aria-invalid={!!errors.title} />

@@ -2,21 +2,27 @@
 
 import { useState } from "react";
 import { toggleValue } from "@/lib/guild/look/sns-company";
-import { REGIONS, REGION_NAMES, areaText, regionOf } from "@/lib/guild/look/sns-mock";
+import { PREFECTURES, REGIONS, REGION_NAMES, areaText, regionOf } from "@/lib/guild/look/sns-mock";
 
 /** 地方ごとに都道府県を選ぶ。全域の選択も都道府県の一覧として扱う。 */
-export function AreaPicker({ label, areas, onChange, error }: {
+export function AreaPicker({ label, areas, onChange, error, allowNationwide = false }: {
   label?: string;
   areas: readonly string[];
   onChange: (next: readonly string[]) => void;
   error?: string;
+  allowNationwide?: boolean;
 }) {
   const [region, setRegion] = useState(() => regionOf(areas[0] ?? "") ?? "関西");
   const prefs = REGIONS[region];
+  const nationwide = allowNationwide && PREFECTURES.every((p) => areas.includes(p));
   const whole = prefs.every((p) => areas.includes(p));
   return (
     <div className="sn-field">
       {label && <span>{label}</span>}
+      {allowNationwide && <label className="sn-filter-check sn-area-nationwide">
+        <input type="checkbox" checked={nationwide} onChange={() => onChange(nationwide ? [] : PREFECTURES)} />
+        全国（すべての都道府県）
+      </label>}
       <div className="sn-area-regions" role="group" aria-label="都道府県を表示する地方">
         {REGION_NAMES.map((r) => {
           const n = REGIONS[r].filter((p) => areas.includes(p)).length;

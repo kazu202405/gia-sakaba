@@ -94,10 +94,10 @@ export function PostAreaDialog({ initial, onApply, onClose }: {
 }) {
   const [areas, setAreas] = useState<readonly string[]>(() => expandAreas(initial));
   return (
-    <PostSelectionDialog title="探している地域" lead="地方全体でも、都道府県ごとでも選べます。" onClose={onClose} actions={
+    <PostSelectionDialog title="探している地域" lead="全国・地方全域・都道府県から選べます。" onClose={onClose} actions={
       <button type="button" className="sn-btn sn-btn--main sn-btn--wide" onClick={() => { onApply(areas); onClose(); }}>決定する</button>
     }>
-      <AreaPicker areas={areas} onChange={setAreas} />
+      <AreaPicker areas={areas} onChange={setAreas} allowNationwide />
     </PostSelectionDialog>
   );
 }

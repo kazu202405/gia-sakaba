@@ -188,6 +188,7 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 .sn-segment > button, .sn-segment > label { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; min-height: 2.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); cursor: pointer; }
 .sn-segment > button[aria-pressed="true"], .sn-segment > label[data-selected="true"] { background: var(--sn-paper); color: var(--sn-accent); box-shadow: 0 0 0 1px var(--sn-line); }
 .sn-segment input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.sn-area-nationwide { border-bottom: 1px solid var(--sn-line); font-weight: 700; }
 .sn-area-regions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.375rem; margin: 1rem 0; }
 .sn-area-regions button { display: flex; align-items: center; justify-content: center; gap: 0.25rem; min-height: 2.75rem; padding: 0.25rem; border-radius: var(--sn-radius-s); background: var(--sn-tint); color: var(--sn-muted); font-size: 0.8125rem; font-weight: 700; cursor: pointer; }
 .sn-area-regions button[aria-pressed="true"] { background: var(--sn-accent); color: var(--sn-accent-ink); }
@@ -513,6 +514,8 @@ a.sn-btn[aria-disabled="true"] { pointer-events: none; }
 .sn-page--me .sn-page-main { padding-bottom: 1rem; }
 
 .sn-fields { padding: 0 1.125rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
+.sn-fields--post { padding-bottom: 1.5rem; }
+.sn-post-review-actions { padding-top: 0.5rem; }
 .sn-field { display: flex; flex-direction: column; gap: 0.375rem; margin: 0; padding: 0; border: none; min-width: 0; font-size: 0.9375rem; }
 .sn-field > span, .sn-field > legend { font-size: 0.8125rem; font-weight: 700; color: var(--sn-muted); padding: 0; }
 .sn-field :is(input[type="text"], input[type="tel"], input[type="email"], input[type="url"], input[type="date"], select), .sn-field textarea { width: 100%; min-height: 2.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--sn-line-strong); border-radius: var(--sn-radius-s); font: inherit; color: var(--sn-ink); background: var(--sn-paper); }
