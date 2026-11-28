@@ -161,7 +161,7 @@ describe("案件", () => {
     expect(partner.every((p) => p.category === "seek-partner")).toBe(true);
   });
   it("自分の投稿は先頭に出る", () => {
-    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d", contact: "c" }, "my-1");
+    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d" }, "my-1");
     expect(wantPosts([mine])[0].id).toBe("my-1");
   });
   it("見本の答えの数は、投稿の数字と合っている", () => {
@@ -178,15 +178,15 @@ describe("案件", () => {
   });
   it("投稿の入力の確かめ：空は理由つきで止める", () => {
     const e = validatePostDraft(EMPTY_POST_DRAFT, "2026-10-30");
-    expect(Object.keys(e).sort()).toEqual(["category", "contact", "detail", "industry", "regions", "title"]);
-    const ok = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["関東"], detail: "d", contact: "c" };
+    expect(Object.keys(e).sort()).toEqual(["category", "detail", "industry", "regions", "title"]);
+    const ok = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["関東"], detail: "d" };
     expect(validatePostDraft(ok, "2026-10-30")).toEqual({});
     expect(validatePostDraft({ ...ok, deadline: "2026-10-29" }, "2026-10-30").deadline).toBeTruthy();
     expect(validatePostDraft({ ...ok, deadline: "2026-10-30" }, "2026-10-30")).toEqual({});
     expect(validatePostDraft({ ...ok, title: "   " }, "2026-10-30").title).toBeTruthy();
   });
   it("投稿の都道府県を保持して表示し、地方でも絞り込める", () => {
-    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["神奈川県", "大阪府", "兵庫県"], detail: "d", contact: "c" };
+    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: ["神奈川県", "大阪府", "兵庫県"], detail: "d" };
     expect(validatePostDraft(draft)).toEqual({});
     const post = makeWantPost(draft, "my-1");
     expect(post.areas).toEqual(draft.regions);
@@ -197,7 +197,7 @@ describe("案件", () => {
     expect(areaText(["関東", "東京都", "大阪府"])).toBe("関東全域・大阪府");
   });
   it("全国の投稿は確認・一覧で全国と表示し、どの地方の絞り込みにも含める", () => {
-    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: [...PREFECTURES], detail: "d", contact: "c" };
+    const draft = { ...EMPTY_POST_DRAFT, title: "t", category: "other" as const, industry: "建設" as const, regions: [...PREFECTURES], detail: "d" };
     const post = makeWantPost(draft, "my-1");
     expect(post.areas).toHaveLength(47);
     expect(areaText(post.areas)).toBe("全国");
@@ -318,7 +318,7 @@ describe("業種の色・紹介の道・期限", () => {
     expect(dueInfo("2026-10-30", "2026-10-31")).toMatchObject({ past: true, soon: false });
   });
   it("近い順：自分の依頼 → 知り合い → 知り合いの知り合い → 道なし。同じ近さは元の並び", () => {
-    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d", contact: "c" }, "my-1");
+    const mine = makeWantPost({ ...EMPTY_POST_DRAFT, title: "t", category: "other", industry: "建設", regions: ["関東"], detail: "d" }, "my-1");
     const sorted = sortByCloseness(wantPosts([mine]));
     expect(sorted[0].id).toBe("my-1");
     const rank = (authorId: string) => (authorId === ME_ID ? 0 : routeTo(authorId).length || 3);

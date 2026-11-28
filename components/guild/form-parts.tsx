@@ -170,13 +170,16 @@ export function DateInput({
   onChange,
   label,
   min,
+  clearLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
   label: string;
   min?: string;
+  /** 任意の日付で「空に戻す」ボタンを出すときの文言。iPhone の日付欄は一度選ぶと空に戻せないため */
+  clearLabel?: string;
 }) {
-  return (
+  const input = (
     <input
       type="date"
       value={value}
@@ -185,5 +188,12 @@ export function DateInput({
       onChange={(e) => onChange(e.target.value)}
       className="c-input c-date h-11"
     />
+  );
+  if (!clearLabel) return input;
+  return (
+    <div className="c-date-row">
+      {input}
+      {value && <button type="button" className="c-date-clear" onClick={() => onChange("")}>{clearLabel}</button>}
+    </div>
   );
 }

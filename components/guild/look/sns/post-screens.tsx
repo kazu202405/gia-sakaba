@@ -154,7 +154,6 @@ export function PostScreen({ id }: { id: string }) {
           <div><p className="sn-k">内容</p><p className="sn-v">{post.detail}</p></div>
         </div>
         <dl className="sn-dl">
-          <div><dt>問い合わせ先</dt><dd>{post.contact}</dd></div>
           <div><dt>公開範囲</dt><dd>{visibilityLabel(post.visibility)}</dd></div>
         </dl>
         <section>
@@ -289,14 +288,8 @@ export function NewPostScreen() {
           <label className="sn-field">
             <span>返事の期限（なくても大丈夫です）</span>
             {/* 日付の欄は酒場の共通部品（iOS Safari で枠からはみ出さないように） */}
-            <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="返事の期限" />
+            <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="返事の期限" clearLabel="期限なしにする" />
             {err("deadline")}
-          </label>
-
-          <label className="sn-field">
-            <span>問い合わせ先</span>
-            <input type="text" value={draft.contact} placeholder="例：中村まで 045-000-0000" onChange={(e) => set({ contact: e.target.value })} aria-invalid={!!errors.contact} />
-            {err("contact")}
           </label>
 
           <div>
@@ -354,7 +347,6 @@ export function NewPostScreen() {
             <dt>探している人</dt><dd>{draft.industry}／{areaText(draft.regions)}</dd>
             <dt>内容</dt><dd>{draft.detail.trim()}</dd>
             <dt>返事の期限</dt><dd>{draft.deadline === "" ? "決めていません" : draft.deadline}</dd>
-            <dt>問い合わせ先</dt><dd>{draft.contact.trim()}</dd>
             <dt>見える人</dt><dd>{visibilityLabel(draft.visibility)}</dd>
           </dl>
           <div className="sn-modal-acts">

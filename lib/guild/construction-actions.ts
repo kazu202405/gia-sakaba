@@ -21,14 +21,14 @@ export async function publishConstructionPost(form: FormData): Promise<Construct
   const { store } = await constructionContext();
   const parsed = constructionPost.safeParse({
     title: form.get("title"), category: form.get("category"), industry: form.get("industry"), body: form.get("body"),
-    contact: form.get("contact"), areas: form.getAll("area"), visibility: form.get("visibility"), deadline: readText(form, "deadline"),
+    areas: form.getAll("area"), visibility: form.get("visibility"), deadline: readText(form, "deadline"),
   });
   if (!parsed.success) return { error: "記入内容を確認してください。地域はひとつ以上選んでください。" };
   const post = parsed.data;
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" });
   if (post.deadline && post.deadline < today) return { error: "返事の期限は今日以降を選んでください。" };
   const result = await call("sakaba_construction_create_post", {
-    p_title: post.title, p_category: post.category, p_industry: post.industry, p_body: post.body, p_contact: post.contact,
+    p_title: post.title, p_category: post.category, p_industry: post.industry, p_body: post.body, p_contact: null,
     p_prefectures: post.areas, p_visibility: post.visibility, p_deadline: post.deadline || null,
   }, "案件を投稿できませんでした。入力を確認し、もう一度お試しください。");
   if ("error" in result) return { error: result.error ?? "案件を投稿できませんでした。" };

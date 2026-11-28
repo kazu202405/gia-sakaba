@@ -13,7 +13,6 @@ export const constructionPost = z.object({
   category,
   industry,
   body: z.string().trim().min(1).max(600),
-  contact: z.string().trim().min(1).max(300),
   areas,
   visibility,
   deadline: z.union([z.literal(""), z.string().date()]),
@@ -26,7 +25,7 @@ export type ConstructionPost = {
   category: (typeof POST_CATEGORIES)[number]["key"];
   industry: (typeof INDUSTRIES)[number];
   body: string;
-  contact: string;
+  contact: string | null;
   deadline: string | null;
   visibility: (typeof POST_VISIBILITIES)[number]["key"];
   areas: string[];

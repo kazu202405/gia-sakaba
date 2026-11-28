@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { DateInput } from "@/components/guild/form-parts";
 import { useGuildRouter } from "@/components/guild/use-guild-router";
 import { areaText, INDUSTRIES, POST_CATEGORIES, POST_VISIBILITIES, PREFECTURES, REGION_NAMES, type Industry, type PostCategory } from "@/lib/guild/look/sns-mock";
 import { ChevronRight, SlidersHorizontal } from "lucide-react";
 import { PostAreaDialog, PostChoiceDialog, PostSelectRow, PostSelectionDialog } from "@/components/guild/look/sns/post-picker";
+import { Modal } from "@/components/guild/look/sns/parts";
 import type { ConstructionResult } from "@/lib/guild/construction-forms";
 
 export function ConstructionForm({ action, children, submit, className, reviewPost = false }: {
@@ -20,9 +21,11 @@ export function ConstructionForm({ action, children, submit, className, reviewPo
   const [review, setReview] = useState<FormData | null>(null);
   const [pending, startTransition] = useTransition();
   const lock = useRef(false);
+  const formId = useId();
+  const closeReview = () => { if (!pending) { setReview(null); setResult(undefined); } };
 
   return (
-    <form className={className} onSubmit={(event) => {
+    <form id={formId} className={className} onSubmit={(event) => {
       event.preventDefault();
       if (lock.current) return;
       const fields = review ?? new FormData(event.currentTarget);
@@ -49,36 +52,49 @@ export function ConstructionForm({ action, children, submit, className, reviewPo
         }
       });
     }}>
-      <fieldset className="min-w-0 space-y-4" disabled={pending} hidden={Boolean(review)}>
+      <fieldset className="min-w-0 space-y-4" disabled={pending}>
         {children}
         {reviewPost ? <div className="sn-post-review-actions">
           <button type="submit" className="sn-btn sn-btn--main sn-btn--wide" disabled={pending}>{pending ? "処理中…" : "内容を確かめる"}</button>
         </div> : <button type="submit" className="sn-btn sn-btn--main" disabled={pending}>{pending ? "処理中…" : submit}</button>}
       </fieldset>
-      {review && <div className="space-y-3">
-        <h2 className="font-bold">この内容で依頼を出しますか？</h2>
-        <dl className="space-y-2">
-          {[
-            ["タイトル", review.get("title")],
-            ["カテゴリー", POST_CATEGORIES.find((choice) => choice.key === review.get("category"))?.label],
-            ["探している業種", review.get("industry")],
-            ["探している地域", areaText(review.getAll("area").map(String))],
-            ["内容", review.get("body")],
-            ["返事の期限", review.get("deadline") || "未設定"],
-            ["問い合わせ先", review.get("contact")],
-            ["公開範囲", POST_VISIBILITIES.find((choice) => choice.key === review.get("visibility"))?.label],
-          ].map(([label, value]) => <div key={String(label)}><dt className="text-sm font-bold">{String(label)}</dt><dd className="whitespace-pre-wrap break-words">{String(value ?? "")}</dd></div>)}
-        </dl>
-        <div className="flex flex-wrap gap-3">
-          <button type="button" className="sn-btn" disabled={pending} onClick={() => { setReview(null); setResult(undefined); }}>もどってなおす</button>
-          <button type="submit" className="sn-btn sn-btn--main" disabled={pending}>{pending ? "処理中…" : submit}</button>
+      {/* 確認は見本と同じ下から出る窓。窓は .sn の直下に出るので、送るボタンは form 属性でこのフォームにつなぐ */}
+      {review && <Modal title="この内容で依頼を出しますか？" onClose={closeReview} busy={pending}>
+        <PostReview fields={review} />
+        {result && "error" in result && <p className="mt-3 text-sm text-red-700" role="alert">{result.error}</p>}
+        <div className="sn-modal-acts">
+          <button type="button" className="sn-btn" disabled={pending} onClick={closeReview}>もどって なおす</button>
+          <button type="submit" form={formId} className="sn-btn sn-btn--main" disabled={pending}>{pending ? "出しています…" : submit}</button>
         </div>
-      </div>}
-      {result && ("error" in result
+      </Modal>}
+      {result && !review && ("error" in result
         ? <p className="my-2 text-sm text-red-700" role="alert">{result.error}</p>
         : <p className="my-2 text-sm" role="status">{result.message}</p>)}
     </form>
   );
+}
+
+// 依頼の確認：見本（post-screens.tsx の確認の窓）と同じ並び・同じ見た目
+function PostReview({ fields }: { fields: FormData }) {
+  const text = (name: string) => String(fields.get(name) ?? "").trim();
+  const deadline = text("deadline");
+  const rows: [string, string][] = [
+    ["タイトル", text("title")],
+    ["カテゴリー", POST_CATEGORIES.find((choice) => choice.key === text("category"))?.label ?? ""],
+    ["探している人", text("industry") + "／" + areaText(fields.getAll("area").map(String))],
+    ["内容", text("body")],
+    ["返事の期限", deadline ? deadlineText(deadline) : "決めていません"],
+    ["見える人", POST_VISIBILITIES.find((choice) => choice.key === text("visibility"))?.label ?? ""],
+  ];
+  return <dl className="sn-review">{rows.map(([label, value]) => <div key={label}><dt>{label}</dt><dd className="break-words">{value}</dd></div>)}</dl>;
+}
+
+// 2026-11-28 → 2026年11月28日（土）
+function deadlineText(iso: string) {
+  const [year, month, day] = iso.split("-").map(Number);
+  if (!year || !month || !day) return iso;
+  const week = "日月火水木金土"[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
+  return `${year}年${month}月${day}日（${week}）`;
 }
 
 export function ConstructionAreas({ label, initial = [] }: { label: string; initial?: string[] }) {
@@ -95,7 +111,7 @@ export function ConstructionAreas({ label, initial = [] }: { label: string; init
 export function ConstructionDeadline({ min }: { min: string }) {
   const [date, setDate] = useState("");
   return <>
-    <DateInput value={date} onChange={setDate} label="返事の期限" min={min} />
+    <DateInput value={date} onChange={setDate} label="返事の期限" min={min} clearLabel="期限なしにする" />
     <input type="hidden" name="deadline" value={date} />
   </>;
 }

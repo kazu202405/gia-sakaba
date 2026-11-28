@@ -314,7 +314,7 @@ export const POST_VISIBILITIES = [
   { key: "friends2", label: "知り合いの知り合いまで" },
   { key: "members", label: "この酒場の会員全員" },
 ] as const;
-export const POST_VISIBILITY_HINT = "案件の内容と問い合わせ先は、選んだ範囲の会員に表示されます。";
+export const POST_VISIBILITY_HINT = "案件の内容は、選んだ範囲の会員に表示されます。返事は案件のページに届きます。";
 export type PostVisibility = (typeof POST_VISIBILITIES)[number]["key"];
 
 export type Post =
@@ -325,8 +325,6 @@ export type Post =
       category: PostCategory; industry: Industry; areas: readonly string[]; detail: string;
       /** 募集期限（任意。YYYY-MM-DD） */
       deadline: string | null;
-      /** 問い合わせ先または連絡方法 */
-      contact: string;
       visibility: PostVisibility;
       knowCount: number; canDoCount: number;
     }
@@ -335,14 +333,14 @@ export type Post =
   | { id: string; kind: "profile"; authorId: string; ago: string; field: string; text: string };
 
 export const POSTS: readonly Post[] = [
-  { id: "p1", kind: "want", authorId: "nakamura", ago: "1時間前", text: "関東で一棟アパートの外壁塗装、頼める会社を探しています", category: "request-work", industry: "建設", areas: ["東京都", "神奈川県"], detail: "木造2階建て・12戸の外壁塗装です。足場はこちらで手配します。", deadline: "2026-11-30", contact: "中村まで 045-000-0005", visibility: "friends2", knowCount: 3, canDoCount: 1 },
+  { id: "p1", kind: "want", authorId: "nakamura", ago: "1時間前", text: "関東で一棟アパートの外壁塗装、頼める会社を探しています", category: "request-work", industry: "建設", areas: ["東京都", "神奈川県"], detail: "木造2階建て・12戸の外壁塗装です。足場はこちらで手配します。", deadline: "2026-11-30", visibility: "friends2", knowCount: 3, canDoCount: 1 },
   { id: "p2", kind: "news", authorId: "yamamoto", ago: "3時間前", text: "品川のビル、受変電の入れ替えが終わりました。夜通しの作業、みんなお疲れさまでした。", photo: "現場の写真", likeCount: 12, commentCount: 3 },
   { id: "p3", kind: "connected", authorId: "sato", otherId: "hayashi", ago: "5時間前" },
-  { id: "p4", kind: "want", authorId: "hayashi", ago: "1日前", text: "大阪市内で300坪前後の事業用地を探しています", category: "seek-property", industry: "不動産", areas: ["大阪府"], detail: "物流倉庫の用地です。駅からの近さより、大型車が入れる道を優先します。", deadline: null, contact: "林まで 06-0000-0006", visibility: "friends2", knowCount: 1, canDoCount: 0 },
+  { id: "p4", kind: "want", authorId: "hayashi", ago: "1日前", text: "大阪市内で300坪前後の事業用地を探しています", category: "seek-property", industry: "不動産", areas: ["大阪府"], detail: "物流倉庫の用地です。駅からの近さより、大型車が入れる道を優先します。", deadline: null, visibility: "friends2", knowCount: 1, canDoCount: 0 },
   { id: "p5", kind: "profile", authorId: "ono", ago: "2日前", field: "これから", text: "福岡で、中古のリノベを始めます。九州の工務店さんとつながりたいです。" },
-  { id: "p6", kind: "want", authorId: "tanaka", ago: "2日前", text: "関東に移るお客さまの住み替えを、手伝ってくれる不動産会社を探しています", category: "seek-partner", industry: "不動産", areas: ["東京都", "神奈川県"], detail: "福岡から横浜への住み替えです。来春までに住まいを決めたいそうです。", deadline: "2027-02-28", contact: "田中まで 092-000-0008", visibility: "friends2", knowCount: 0, canDoCount: 0 },
-  { id: "p7", kind: "want", authorId: "ono", ago: "3日前", text: "九州の工務店さん、リノベの協力会社になってください", category: "seek-partner", industry: "建設", areas: ["福岡県", "佐賀県", "熊本県"], detail: "中古住宅のリノベで、施工をお願いできる工務店を探しています。設計は小野設計室が持ちます。", deadline: null, contact: "小野まで 092-000-0007", visibility: "friends", knowCount: 0, canDoCount: 0 },
-  { id: "p9", kind: "want", authorId: "sato", ago: "5日前", text: "リフォーム前提の築古の一棟アパートを紹介したいです", category: "offer-property", industry: "不動産", areas: ["大阪府", "兵庫県"], detail: "大阪北部の木造アパートです。持ち主が手放す相談を受けています。", deadline: "2026-12-15", contact: "佐藤まで 06-0000-0004", visibility: "friends", knowCount: 0, canDoCount: 0 },
+  { id: "p6", kind: "want", authorId: "tanaka", ago: "2日前", text: "関東に移るお客さまの住み替えを、手伝ってくれる不動産会社を探しています", category: "seek-partner", industry: "不動産", areas: ["東京都", "神奈川県"], detail: "福岡から横浜への住み替えです。来春までに住まいを決めたいそうです。", deadline: "2027-02-28", visibility: "friends2", knowCount: 0, canDoCount: 0 },
+  { id: "p7", kind: "want", authorId: "ono", ago: "3日前", text: "九州の工務店さん、リノベの協力会社になってください", category: "seek-partner", industry: "建設", areas: ["福岡県", "佐賀県", "熊本県"], detail: "中古住宅のリノベで、施工をお願いできる工務店を探しています。設計は小野設計室が持ちます。", deadline: null, visibility: "friends", knowCount: 0, canDoCount: 0 },
+  { id: "p9", kind: "want", authorId: "sato", ago: "5日前", text: "リフォーム前提の築古の一棟アパートを紹介したいです", category: "offer-property", industry: "不動産", areas: ["大阪府", "兵庫県"], detail: "大阪北部の木造アパートです。持ち主が手放す相談を受けています。", deadline: "2026-12-15", visibility: "friends", knowCount: 0, canDoCount: 0 },
 ];
 
 /** ほかの人の公開レベルの設定（見本）。自分（me）・森・中村・湊は書いていない＝紹介経由のみ。自分の設定は store が持つ */
@@ -748,16 +746,15 @@ export type PostDraft = {
   regions: readonly string[];
   detail: string;
   deadline: string;
-  contact: string;
   visibility: PostVisibility;
 };
 
 export const POST_TITLE_MAX = 60;
 export const POST_DETAIL_MAX = 600;
 
-export const EMPTY_POST_DRAFT: PostDraft = { title: "", category: "", industry: "", regions: [], detail: "", deadline: "", contact: "", visibility: "friends2" };
+export const EMPTY_POST_DRAFT: PostDraft = { title: "", category: "", industry: "", regions: [], detail: "", deadline: "", visibility: "friends2" };
 
-export type PostDraftErrors = Partial<Record<"title" | "category" | "industry" | "regions" | "detail" | "deadline" | "contact", string>>;
+export type PostDraftErrors = Partial<Record<"title" | "category" | "industry" | "regions" | "detail" | "deadline", string>>;
 
 /** 今日の日付（YYYY-MM-DD）。期限の確かめに使う */
 export function todayIso(d: Date = new Date()): string {
@@ -776,7 +773,6 @@ export function validatePostDraft(d: PostDraft, today: string = todayIso()): Pos
   if (d.detail.trim() === "") e.detail = "内容を書いてください。答える人が判断しやすくなります";
   else if (d.detail.trim().length > POST_DETAIL_MAX) e.detail = `内容は${POST_DETAIL_MAX}字までです`;
   if (d.deadline !== "" && d.deadline < today) e.deadline = "募集期限は今日より先の日にしてください";
-  if (d.contact.trim() === "") e.contact = "問い合わせ先を書いてください（電話・メールなど）";
   return e;
 }
 
@@ -785,7 +781,7 @@ export function makeWantPost(d: PostDraft, id: string, meId: string = ME_ID): Wa
   if (d.category === "" || d.industry === "") throw new Error("入力の確かめを通っていない投稿です");
   return {
     id, kind: "want", authorId: meId, ago: "いま", text: d.title.trim(), category: d.category, industry: d.industry,
-    areas: [...d.regions], detail: d.detail.trim(), deadline: d.deadline === "" ? null : d.deadline, contact: d.contact.trim(),
+    areas: [...d.regions], detail: d.detail.trim(), deadline: d.deadline === "" ? null : d.deadline,
     visibility: d.visibility, knowCount: 0, canDoCount: 0,
   };
 }

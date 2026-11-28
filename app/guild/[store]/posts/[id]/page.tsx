@@ -35,7 +35,6 @@ export default async function ConstructionPostPage({ params }: { params: Promise
         <div><Clock aria-hidden /><span>返事の期限</span><b>{post.deadline ?? "決めていません"}</b></div>
       </div>
       <div className="sn-story sn-story--plain"><div><p className="sn-k">内容</p><p className="sn-v whitespace-pre-wrap break-words">{post.body}</p></div></div>
-      <dl className="sn-dl"><div><dt>問い合わせ先</dt><dd className="whitespace-pre-wrap break-words">{post.contact}</dd></div></dl>
       <section className="sn-sec" aria-label="みんなの返信">
         <h2 className="mb-2 font-bold">みんなの返信（{replies.length}件）</h2>
         {replies.length ? <ul className="divide-y">{replies.map((reply) => (

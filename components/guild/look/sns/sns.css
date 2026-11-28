@@ -427,6 +427,7 @@ a.sn-search:active { background: var(--sn-accent-soft); }
 .sn-review { padding: 0.75rem 1rem; border-radius: var(--sn-radius); background: var(--sn-tint); font-size: 0.875rem; line-height: 1.8; }
 .sn-review dt { font-size: 0.75rem; color: var(--sn-muted); }
 .sn-review dd + dt { margin-top: 0.5rem; }
+.sn-review > div + div { margin-top: 0.5rem; }
 .sn-review dd { white-space: pre-wrap; }
 /* 見直しの上の「あなたが間に入る」絵：左の人 — あなた — 右の人 */
 .sn-meet { display: flex; align-items: flex-start; justify-content: center; padding: 1rem 0.5rem; margin-bottom: 0.75rem; background: var(--sn-tint); border-radius: var(--sn-radius); }
