@@ -24,6 +24,8 @@ import { getAuthenticatedUserId, getGuildContext, getMemberProfileDraft, getMyPl
 import type { Profile, VisibleGroup } from "@/lib/guild/types";
 import { currentStore } from "@/lib/guild/current-store";
 import { Go } from "@/components/guild/go-mark";
+import { ConstructionMemberProfile } from "@/components/guild/construction/member-profile";
+import { CONSTRUCTION_STORE_SLUG } from "@/lib/guild/stores";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -72,6 +74,32 @@ export default async function MemberStatusPage({ params }: Props) {
   const shareToken = isMe ? (myShare?.enabled ? myShare.token : null) : linkInfo?.share_token ?? null;
   const showShareUrl = isMe ? Boolean(myShare) : Boolean(linkInfo);
   const memberTerm = context.guild.terms.member;
+  const existingRequest = requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null;
+
+  // 建設・不動産の店だけ、店の枠（sn-）の見た目で出す。出す内容・見せる相手は下の酒場の画面と同じ
+  if (store.slug === CONSTRUCTION_STORE_SLUG) {
+    return <ConstructionMemberProfile
+      profile={p}
+      isMe={isMe}
+      config={store.config}
+      w={store.w}
+      contactItems={contactItems}
+      contactError={Boolean(contactError)}
+      inviteConnected={Boolean(linkInfo?.invite_connected)}
+      showShareUrl={showShareUrl}
+      shareToken={shareToken}
+      workPhotos={has("work_photos") ? (p.work_photos ?? []).flatMap((path) => workPhotoUrls[path] ? [workPhotoUrls[path]] : []) : []}
+      action={isMe ? null : <LiveIntroRequestButton target={p} existing={existingRequest} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} inviteConnected={Boolean(linkInfo?.invite_connected)} />}
+      more={<>
+        {memberDraft && (memberDraft.ok
+          ? <LiveMemberProfileDraft key={memberDraft.draft?.id ?? "none"} memberId={p.id} memberName={p.display_name} initial={memberDraft.draft} />
+          : <Window title={store.w("status.draftTitle")}><p className="text-sm">下書きを読み込めませんでした。時間をおいて開き直してください。</p></Window>)}
+        <BusinessCardView card={card} urls={cardUrls} isMe={isMe} />
+        <InvitePathWindow path={invitePath} isMe={isMe} failed={Boolean(invitePathResult.error)} />
+        <LiveMemberIntroductions targetId={p.id} targetName={p.display_name} currentUserId={currentUserId} initial={introductions} />
+      </>}
+    />;
+  }
 
   return (
     <div className="space-y-11">
@@ -117,7 +145,7 @@ export default async function MemberStatusPage({ params }: Props) {
             : "連絡先は、本人が選んだ相手にだけ表示しています。🔒 のものは、つながり申請を承諾し合うと見えるようになります。"}
         </p>
         {!isMe && linkInfo?.invite_connected && <p className="mt-5"><span className="c-chip">入会のつながりで、つながっています</span></p>}
-        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={requests.find((request) => request.requester_id === currentUserId && request.target_id === p.id && ["requested", "reviewing", "proposed", "accepted", "introduced"].includes(request.status)) ?? null} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} inviteConnected={Boolean(linkInfo?.invite_connected)} /></div>}
+        {!isMe && <div className="mt-5"><LiveIntroRequestButton target={p} existing={existingRequest} quota={usage ? { plan: usage.plan, slot: usage.intro } : null} inviteConnected={Boolean(linkInfo?.invite_connected)} /></div>}
         {showShareUrl && <MemberShareUrl token={shareToken} isMe={isMe} />}
       </Window>
 
