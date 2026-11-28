@@ -33,4 +33,12 @@ describe("案件の問い合わせ先をなくしたこと", () => {
     expect(read("components/guild/construction/forms.tsx")).toContain('clearLabel="期限なしにする"');
     expect(read("components/guild/look/sns/post-screens.tsx")).toContain('clearLabel="期限なしにする"');
   });
+
+  it("期限の欄は label で包まない（iPhone でボタンを押すと日付の欄が開いてしまう）", () => {
+    expect(read("app/guild/[store]/posts/new/page.tsx")).toContain('<ConstructionField label="返事の期限（任意）" group>');
+    const mock = read("components/guild/look/sns/post-screens.tsx");
+    const at = mock.indexOf('clearLabel="期限なしにする"');
+    const before = mock.slice(0, at);
+    expect(before.lastIndexOf('<label className="sn-field">')).toBeLessThan(before.lastIndexOf('<div className="sn-field" role="group"'));
+  });
 });

@@ -285,12 +285,13 @@ export function NewPostScreen() {
             {err("detail")}
           </label>
 
-          <label className="sn-field">
+          {/* 「期限なしにする」ボタンがあるので label で包まない（iPhone ではボタンを押しても日付の欄が開くため） */}
+          <div className="sn-field" role="group" aria-label="返事の期限">
             <span>返事の期限（なくても大丈夫です）</span>
             {/* 日付の欄は酒場の共通部品（iOS Safari で枠からはみ出さないように） */}
             <DateInput value={draft.deadline} onChange={(v) => set({ deadline: v })} label="返事の期限" clearLabel="期限なしにする" />
             {err("deadline")}
-          </label>
+          </div>
 
           <div>
             <label className="sn-field">
